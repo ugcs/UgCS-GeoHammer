@@ -55,19 +55,18 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 public class SceneAmplitudeMap {
 
 	private Model model;
-	
-	//private CoordinateManager data;	
-	//private Settings settings;
 	
 	private AmpMapDrawer drawer;
 	private BufferedImage img;
 	
 	private ScreenCoordinatesCalculator coordinator;
 	//private BufferedImage spectrumImg;
+	private VerticalCut verticalCut;
 	
 	private TextField bottom = new TextField();
 	{
@@ -87,6 +86,7 @@ public class SceneAmplitudeMap {
 	private BaseSlider zoomSlider;
 	private BaseCheckBox autoGainCheckbox;
 	
+	private Stage verticalCutStage;
 	
 	public SceneAmplitudeMap(Model model) {
 		this.model = model;
@@ -104,6 +104,14 @@ public class SceneAmplitudeMap {
 		radiusSlider = new RadiusSlider(settings, sliderListener);
 		zoomSlider = new ZoomSlider(settings, recalcSliderListener);
 		autoGainCheckbox = new BaseCheckBox(settings, autoGainListener);
+		
+		
+		verticalCut = new VerticalCut(model);
+		
+		verticalCutStage = new Stage();
+		verticalCutStage.setTitle("vertical cut");
+        //stage.setScene(new Scene(bPane, 450, 450));
+		verticalCutStage.setScene(verticalCut.build());
 		
 	}
 
@@ -231,12 +239,7 @@ public class SceneAmplitudeMap {
 		button2.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
-//		    	Stage st = primaryStage;// (Stage)scene1.getWindow();
-//		    	
-//		    	st.hide();
-//		    	st.setScene(scene2);
-//		    	st.sizeToScene();
-//		    	st.show();
+		    	verticalCutStage.show();
 		    }
 		});
 		
@@ -319,8 +322,11 @@ public class SceneAmplitudeMap {
             	
             	updateStatusLine();            	
             	            	
-            	
             	controller.render(RecalculationLevel.JUST_AUX_GRAPHICS);
+            	
+            	if(verticalCutStage.isShowing()) {
+            		verticalCut.recalc();
+            	}
             }
 
 		});
