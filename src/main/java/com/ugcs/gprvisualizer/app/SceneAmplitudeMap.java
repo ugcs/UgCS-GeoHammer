@@ -236,6 +236,7 @@ public class SceneAmplitudeMap {
 		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));		
 		Button button2 = new Button(null, new ImageView(imageFilter));
 		
+		button2.setDisable(true);
 		button2.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
@@ -247,6 +248,7 @@ public class SceneAmplitudeMap {
 		
 		Image imageRemove = new Image(getClass().getClassLoader().getResourceAsStream("broom2.png"));
 		Button button3 = new Button(null, new ImageView(imageRemove));
+		button3.setDisable(true);
 		
 		toolBar.getItems().addAll(button2, button3);
 		
