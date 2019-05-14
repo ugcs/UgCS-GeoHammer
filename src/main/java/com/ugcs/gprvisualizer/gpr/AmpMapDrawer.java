@@ -53,7 +53,7 @@ public class AmpMapDrawer {
 
 		drawScale(g2);
 
-		imgProfile(g2);
+		//imgProfile(g2);
 
 		g2.dispose();
 
