@@ -15,6 +15,8 @@ import com.ugcs.gprvisualizer.gpr.ScanBuilder;
 import com.ugcs.gprvisualizer.gpr.ScreenCoordinatesCalculator;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
+import com.ugcs.gprvisualizer.math.CalmanFilter;
+import com.ugcs.gprvisualizer.math.ManuilovFilter;
 import com.ugcs.gprvisualizer.ui.BaseCheckBox;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
 import com.ugcs.gprvisualizer.ui.DepthSlider;
@@ -406,7 +408,13 @@ public class SceneAmplitudeMap {
         SgyLoader loader = new SgyLoader(false);
         
         ScanBuilder scanBuilder = loader.processFileList(list);
-
+        
+        //new CalmanFilter().filter(scanBuilder.getScans());
+        
+        new ManuilovFilter().filter(scanBuilder.getScans());
+        scanBuilder.calc3DPoints();
+        
+        
         model.setScans(scanBuilder.getScans());
         model.setBounds(scanBuilder.getBounds());        
         model.getSettings().selectedScanIndex = -1;

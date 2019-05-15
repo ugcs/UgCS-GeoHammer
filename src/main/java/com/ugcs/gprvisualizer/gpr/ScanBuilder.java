@@ -31,7 +31,6 @@ public class ScanBuilder {
 	
 	public void put(double lon, double lat, float[] values){
 		
-		//System.out.println(String.format(" %.6f,  %.6f  ", lon, lat));
 		if(Math.abs(lon) < 0.1 && Math.abs(lat) < 0.1) {
 			return;
 		}
@@ -42,9 +41,7 @@ public class ScanBuilder {
 		double rlon = convertDegreeFraction(lon); 
 		double rlat = convertDegreeFraction(lat);
 
-		//putInt( lon / 100.0 * Math.PI / 180.0, lat / 100.0 * Math.PI / 180.0 , values );
 		putInt( rlon , rlat , values );
-		
 	}
 	
 	private double convertDegreeFraction(double org) {
@@ -61,12 +58,26 @@ public class ScanBuilder {
 		//depthSpectrum.analyze(values);
 		
 		Scan scan = new Scan();
+		
 		scan.lon_dgr = lon_dgr;
 		scan.lat_dgr = lat_dgr;
+		scan.values = normalize(values);
+		
+		scans.add(scan);
 		
 		
-		double lon = lon_dgr * Math.PI / 180.0; 
-		double lat = lat_dgr * Math.PI / 180.0;
+	}
+	
+	
+	public void calc3DPoints() {
+		for(Scan scan : scans) {
+			calcPoint(scan);
+		}
+	}
+	
+	protected void calcPoint(Scan scan) {
+		double lon = scan.lon_dgr * Math.PI / 180.0; 
+		double lat = scan.lat_dgr * Math.PI / 180.0;
 		
 		// long			lat
 		//-4003.4102    6518.38
@@ -89,8 +100,8 @@ public class ScanBuilder {
 		p = new Point3D(p.y, p.x, p.z);
 		
 		scan.point = p; 
-		scan.values = normalize(values);
-		scans.add(scan);
+		
+		
 		
 		minX = (minX == null || minX > p.x) ? p.x : minX;
 		minY = (minY == null || minY > p.y) ? p.y : minY;

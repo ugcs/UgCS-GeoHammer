@@ -25,6 +25,7 @@ import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormatBuilder;
 import com.github.thecoldwine.sigrun.serialization.FormatEntry;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormatBuilder;
+import com.ugcs.gprvisualizer.math.CalmanFilter;
 
 public class SgyLoader {
     private static final Logger logger = LoggerFactory.getLogger(SgyLoader.class.getName());
@@ -109,6 +110,8 @@ public class SgyLoader {
 				e.printStackTrace();
 			}
     	}
+
+    	
     	
     	return scanBuilder;
 	

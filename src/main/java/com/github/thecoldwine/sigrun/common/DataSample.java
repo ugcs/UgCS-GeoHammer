@@ -59,7 +59,6 @@ public enum DataSample {
      * @return a new instance of DataSample class
      */
     public static DataSample create(short code) {
-    	System.out.println("----  DataSample code " + code);
         switch (code) {
             case 1:
                 return IBM_FP;

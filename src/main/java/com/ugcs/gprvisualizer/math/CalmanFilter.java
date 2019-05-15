@@ -25,11 +25,11 @@ public class CalmanFilter {
 			list.get(i).setLatDgr(ll[0][i]);
 			list.get(i).setLonDgr(ll[1][i]);
 			
-			double[] lla = new double[3];
-			lla[0] = ll[0][i];
-			lla[1] = ll[1][i];
-			lla[2] = 0;
-			EcefLla.lla2ecef(lla);
+//			double[] lla = new double[3];
+//			lla[0] = ll[0][i];
+//			lla[1] = ll[1][i];
+//			lla[2] = 0;
+//			EcefLla.lla2ecef(lla);
 			//list.get(i).gpsPoint = EcefLla.llaToGpsPoint(lla);
 		}	
 		
