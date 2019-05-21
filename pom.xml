@@ -6,7 +6,7 @@
     <version>0.9.0</version>
     <name>UgCS GPR data visualizer</name>
     <url>https://github.com/ugsc/gprvisualizer</url>
-    <description>UgCS GPR data visualizer</description>
+    <description>UgCS GPR data viewer</description>
 
     <licenses>
         <license>
@@ -65,8 +65,31 @@
                     </goals>
                 </execution>
             </executions>
-        </plugin>			
-        </plugins>
+        </plugin>
+        
+        
+        
+        
+		<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>src/main/assembly/zip.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>        
+        			
+      </plugins>
     </build>
 
     <dependencies>
