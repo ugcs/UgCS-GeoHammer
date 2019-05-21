@@ -1,1 +1,1 @@
-java -cp gprvisualizer-0.9.0-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainJavafx
+java -cp gprvisualizer-0.9.1-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainJavafx

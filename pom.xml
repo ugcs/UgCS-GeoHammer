@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>gprvisualizer</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.0</version>
+    <version>0.9.1</version>
     <name>UgCS GPR data visualizer</name>
     <url>https://github.com/ugsc/gprvisualizer</url>
     <description>UgCS GPR data viewer</description>
@@ -135,20 +135,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!-- When releasing, do Source and JavaDoc jars too -->
-                    <!-- <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.7</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin> -->
                 </plugins>
             </build>
         </profile>
