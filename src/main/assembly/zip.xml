@@ -9,7 +9,7 @@
     </formats>
     <files>
         <file>
-            <source> ${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</source>
+            <source> ${project.build.directory}/${project.artifactId}-jar-with-dependencies.jar</source>
             <outputDirectory>/</outputDirectory>
         </file>
         <file>

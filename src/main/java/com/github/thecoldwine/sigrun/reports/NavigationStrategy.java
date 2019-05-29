@@ -10,7 +10,7 @@ import java.io.OutputStream;
 @Deprecated
 @SuppressWarnings({"WeakerAccess", "UnusedDeclaration"})
 public class NavigationStrategy extends ReportStrategy {
-    public static final int ESTIMATED_STRING_LENGTH = 512;
+    //public static final int ESTIMATED_STRING_LENGTH = 0;
 
     public NavigationStrategy() {
         super();

@@ -609,6 +609,13 @@ public class TraceHeader {
      */
     @Reportable(value = "Source Measurement Unit", startPosition = 230, endPosition = 232)
     private Short sourceMeasurementUnit;
+    
+    
+    
+    private Double longitude;
+    
+    private Double latitude;
+    
     /**
      * Unassigned - For optional information
      * <p/>
@@ -1564,4 +1571,20 @@ public class TraceHeader {
         result = 31 * result + (optional != null ? Arrays.hashCode(optional) : 0);
         return result;
     }
+
+	public Double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
+
+	public Double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
 }

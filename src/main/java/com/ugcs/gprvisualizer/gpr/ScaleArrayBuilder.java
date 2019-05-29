@@ -4,10 +4,12 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 
 	private Settings settings;
 
-	private double[][] scaleArray = new double[2][512];
+	private double[][] scaleArray;
 	
 	public ScaleArrayBuilder(Settings settings) {
 		this.settings = settings;
+		
+		
 	}
 	
 	/* (non-Javadoc)
@@ -15,6 +17,7 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 	 */
 	@Override
 	public double[][] build() {
+		scaleArray = new double[2][settings.maxsamples];
 		
 		for(int i=0; i < settings.maxsamples; i++) {
 			scaleArray[0][i] = settings.threshold;

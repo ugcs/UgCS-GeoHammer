@@ -77,7 +77,7 @@ public class SceneAmplitudeMap {
 	}
 	
 	private ImageView imageView = new ImageView();
-	private ImageView spectrumView = new ImageView();
+	//private ImageView spectrumView = new ImageView();
 
 	private BaseSlider depthSlider;
 	private BaseSlider depthWindowSlider;
@@ -261,14 +261,13 @@ public class SceneAmplitudeMap {
 		VBox vBox = new VBox(); 
 		vBox.setPadding(new Insets(3, 13, 3, 3));
 		
-        HBox root = new HBox();
-        root.setStyle("-fx-border-color: black");
-        root.setAlignment(Pos.CENTER_RIGHT);
-        root.setPadding(new Insets(5));
-        root.setSpacing(5);        
-        root.getChildren().addAll(spectrumView);
+//        HBox root = new HBox();
+//        root.setStyle("-fx-border-color: black");
+//        root.setAlignment(Pos.CENTER_RIGHT);
+//        root.setPadding(new Insets(5));
+//        root.setSpacing(5);        
+//		vBox.getChildren().add(root);
 		
-		vBox.getChildren().add(root);
 		vBox.getChildren().add(depthSlider.produce());
 		vBox.getChildren().add(depthWindowSlider.produce());
 		vBox.getChildren().add(autoGainCheckbox.produce());
@@ -411,7 +410,7 @@ public class SceneAmplitudeMap {
         
         //new CalmanFilter().filter(scanBuilder.getScans());
         
-        new ManuilovFilter().filter(scanBuilder.getScans());
+        //new ManuilovFilter().filter(scanBuilder.getScans());
         scanBuilder.calc3DPoints();
         
         
@@ -419,6 +418,7 @@ public class SceneAmplitudeMap {
         model.setBounds(scanBuilder.getBounds());        
         model.getSettings().selectedScanIndex = -1;
         model.getSettings().maxsamples = model.getScans().get(0).values.length;
+        System.out.println("model.getSettings().maxsamples: " + model.getSettings().maxsamples);
         
         drawer.clear();
         

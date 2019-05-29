@@ -24,6 +24,10 @@ public class TraceHeaderReader {
     public TraceHeader read(byte[] buffer) {
         TraceHeader traceHeader = new TraceHeader();
 
+        
+        traceHeader.setLongitude(ByteANumberConverter.byteToDbl(buffer, 182));
+        traceHeader.setLatitude(ByteANumberConverter.byteToDbl(buffer, 190));
+        
         if (format.traceSequenceNumberWLFormat != null)
             traceHeader.setTraceSequenceNumberWL(ByteANumberConverter.byteAToInt(buffer, format.traceSequenceNumberWLFormat.posStart));
 

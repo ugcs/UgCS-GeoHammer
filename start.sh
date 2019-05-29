@@ -1,2 +1,2 @@
 #!/bin/sh
-java -cp gprvisualizer-0.9.1-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainJavafx
+java -cp gprviewer-jar-with-dependencies.jar --module-path /usr/share/openjfx/lib --add-modules javafx.controls,javafx.swing com.ugcs.gprvisualizer.app.MainJavafx

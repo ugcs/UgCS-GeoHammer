@@ -4,6 +4,10 @@ mvn clean install
 
 
 
-to run application 
+to run application:
+target/gprviewer-jar-with-dependencies.jar
 
-target/gprvisualizer-0.9.0-jar-with-dependencies.jar
+
+
+for Ubuntu:
+sudo apt install openjdk-13-jre-headless openjfx

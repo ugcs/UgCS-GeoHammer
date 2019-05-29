@@ -22,9 +22,11 @@ public class SettingsVisualizer {
 		}		
 	}
 	
-	double[] scaleArray = new double[512];
+	double[] scaleArray;
 	
 	private void prepareScaleArray(Settings settings) {
+		scaleArray = new double[settings.maxsamples];
+		
 		for(int i=0; i< scaleArray.length; i++) {
 			
 			scaleArray[i] = (settings.topscale + (settings.bottomscale - settings.topscale) * i / scaleArray.length) / 100.0 * settings.cutscale / 100.0;

@@ -138,4 +138,11 @@ public final class ByteANumberConverter {
          //System.out.println("float: " + f);
          return f;
     }
+
+	public static Double byteToDbl(byte[] source, int offset) {
+		return ByteBuffer
+    	.wrap(source, offset, 8)
+    	.order(ByteOrder.LITTLE_ENDIAN)
+    	.getDouble();	
+	}
 }

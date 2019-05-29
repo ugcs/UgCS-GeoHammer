@@ -66,6 +66,9 @@ public class SgyLoader {
 
     public static TraceHeaderFormat makeTraceHeaderFormat() {
         return TraceHeaderFormatBuilder.aTraceHeaderFormat().
+        		
+        		withTraceSequenceNumberWLFormat(FormatEntry.create(0, 4)).
+        		
                 withEnsembleNumberFormat(FormatEntry.create(20, 24)).
                 
                 withCoordinateUnitsCodeFormat(FormatEntry.create(70, 72)).
@@ -76,6 +79,8 @@ public class SgyLoader {
                 withXOfCDPPositionFormat(FormatEntry.create(180, 184)).
                 withYOfCDPPositionFormat(FormatEntry.create(184, 188)).
                 withNumberOfSamplesFormat(FormatEntry.create(114, 116)).
+                
+                //withLongtitude(FormatEntry.create(72, 76)).
                 build();
     }
 
@@ -134,14 +139,31 @@ public class SgyLoader {
 			printBinHeaderInfo(segyStream.getBinaryHeader());
 		}
 
-		
 		for (SeismicTrace trace : segyStream) {
-			scanBuilder.put(trace.getHeader().getSourceX(), trace.getHeader().getSourceY(), trace.getValues());
+			
+			//System.out.println("TraceSequenceNumberWL " + trace.getHeader().getTraceSequenceNumberWL());
+			//System.out.println("getxOfCDPPosition: " + trace.getHeader().getxOfCDPPosition() + "  getyOfCDPPosition: " + trace.getHeader().getyOfCDPPosition());
+			//System.out.println("lonitude: " + trace.getHeader().getLongitude() + "  latitude: " + trace.getHeader().getLatitude());
+			
+			scanBuilder.put(
+				retrieveVal(trace.getHeader().getLongitude(), trace.getHeader().getSourceX()), 
+				retrieveVal(trace.getHeader().getLatitude(), trace.getHeader().getSourceY()), 
+				trace.getValues());
 		}
 	}
 
+	private double retrieveVal(Double v1, Float v2) {
+		if(v1 != null && Math.abs(v1) > 0.01) {
+			
+			return v1;
+		}
+		return v2;
+	}
+	
 	private static void printTextHeader(TextHeader header) {
         System.out.println("Text Header info...");
+        
+                
         for (String s : header.getContents()) {
             System.out.println(s);
         }
@@ -150,6 +172,8 @@ public class SgyLoader {
     private static void printBinHeaderInfo(BinaryHeader binaryHeader) {
         System.out.println("Binary Header info...");
         System.out.println("Data sample code:" + binaryHeader.getDataSampleCode());
+        
+        //binaryHeader.getTraceSequenceNumberWL();
     }
 
     private static void printTraceInfo(SeismicTrace trace) {

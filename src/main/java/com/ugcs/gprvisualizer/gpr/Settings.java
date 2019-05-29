@@ -2,7 +2,7 @@ package com.ugcs.gprvisualizer.gpr;
 
 public class Settings {
 
-	public int maxsamples = 512;
+	public int maxsamples = 0;
 	
 	public int width = 800;
 	public int height = 600;
