@@ -1,7 +1,13 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.awt.geom.Point2D;
+
 public class Settings {
 
+	
+	public Point2D middleLatLonDgr;
+	public Point2D middleLatLonRad;
+	
 	public int maxsamples = 0;
 	
 	public int width = 800;

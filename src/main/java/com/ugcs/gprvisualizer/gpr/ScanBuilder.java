@@ -7,6 +7,7 @@ import java.util.List;
 import com.ugcs.gprvisualizer.math.DronMath;
 import com.ugcs.gprvisualizer.math.EcefLla;
 import com.ugcs.gprvisualizer.math.GPSPoint;
+import com.ugcs.gprvisualizer.math.MinMaxAvg;
 import com.ugcs.gprvisualizer.math.Point3D;
 
 import Jama.Matrix;
@@ -18,6 +19,16 @@ public class ScanBuilder {
 	private Double minX, maxX, minY, maxY;
 	private List<Scan> scans = new ArrayList<>();
 	
+	private MinMaxAvg lonMid = new MinMaxAvg();
+	private MinMaxAvg latMid = new MinMaxAvg();
+	
+	public MinMaxAvg getLonMid() { 
+		return lonMid;
+	}
+	
+	public MinMaxAvg getLatMid() {
+		return latMid;
+	}	
 	
 	public Rectangle2D.Double getBounds(){
 		
@@ -41,7 +52,10 @@ public class ScanBuilder {
 		double rlon = convertDegreeFraction(lon); 
 		double rlat = convertDegreeFraction(lat);
 
-		putInt( rlon , rlat , values );
+		lonMid.put(rlon);
+		latMid.put(rlat);
+		
+		putInt( rlon, rlat, values );
 	}
 	
 	private double convertDegreeFraction(double org) {
@@ -61,6 +75,7 @@ public class ScanBuilder {
 		
 		scan.lon_dgr = lon_dgr;
 		scan.lat_dgr = lat_dgr;
+		scan.originalvalues = values;
 		scan.values = normalize(values);
 		
 		scans.add(scan);

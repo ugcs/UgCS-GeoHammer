@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
@@ -69,6 +70,9 @@ public class SceneAmplitudeMap {
 	private ScreenCoordinatesCalculator coordinator;
 	//private BufferedImage spectrumImg;
 	private VerticalCut verticalCut;
+	private Stage verticalCutStage;
+	
+	private LayersWindowBuilder layersWindowBuilder; 
 	
 	private TextField bottom = new TextField();
 	{
@@ -88,7 +92,8 @@ public class SceneAmplitudeMap {
 	private BaseSlider zoomSlider;
 	private BaseCheckBox autoGainCheckbox;
 	
-	private Stage verticalCutStage;
+	
+	
 	
 	public SceneAmplitudeMap(Model model) {
 		this.model = model;
@@ -109,12 +114,11 @@ public class SceneAmplitudeMap {
 		
 		
 		verticalCut = new VerticalCut(model);
-		
 		verticalCutStage = new Stage();
 		verticalCutStage.setTitle("vertical cut");
-        //stage.setScene(new Scene(bPane, 450, 450));
 		verticalCutStage.setScene(verticalCut.build());
 		
+		layersWindowBuilder = new LayersWindowBuilder(model);
 	}
 
 	private EventHandler<DragEvent> dragHandler = new EventHandler<DragEvent>() {
@@ -238,7 +242,7 @@ public class SceneAmplitudeMap {
 		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));		
 		Button button2 = new Button(null, new ImageView(imageFilter));
 		
-		button2.setDisable(true);
+		//button2.setDisable(true);
 		button2.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
@@ -250,7 +254,14 @@ public class SceneAmplitudeMap {
 		
 		Image imageRemove = new Image(getClass().getClassLoader().getResourceAsStream("broom2.png"));
 		Button button3 = new Button(null, new ImageView(imageRemove));
-		button3.setDisable(true);
+		//button3.setDisable(true);
+		button3.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		        
+		    	layersWindowBuilder.getStage().show();
+		    }
+		});
+		
 		
 		toolBar.getItems().addAll(button2, button3);
 		
@@ -407,6 +418,17 @@ public class SceneAmplitudeMap {
         SgyLoader loader = new SgyLoader(false);
         
         ScanBuilder scanBuilder = loader.processFileList(list);
+        
+        model.getSettings().middleLatLonDgr = 
+        	new Point2D.Double(
+        		scanBuilder.getLatMid().getMid(),
+        		scanBuilder.getLonMid().getMid()        			
+        	);
+        model.getSettings().middleLatLonRad = 
+            	new Point2D.Double(
+            		model.getSettings().middleLatLonDgr.getX() * Math.PI / 180,
+            		model.getSettings().middleLatLonDgr.getY() * Math.PI / 180            		        			
+            	);
         
         //new CalmanFilter().filter(scanBuilder.getScans());
         

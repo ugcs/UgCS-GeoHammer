@@ -8,6 +8,8 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
+import com.ugcs.gprvisualizer.draw.LocalScan;
+
 public class AmpMapDrawer {
 
 	private Model model;
@@ -100,20 +102,20 @@ public class AmpMapDrawer {
 	}
 
 	private void drawSelection(Graphics2D g2) {
-		Scan scan = getSelectedScan();
+		LocalScan scan = getSelectedScan();
 		if (scan != null) {
 			g2.setColor(Color.WHITE);
 			g2.setStroke(new BasicStroke(4.0f));
 			int r = 20;
 			// g2.drawOval(scan.localX-10, scan.localY-10, 20, 20);
-			g2.drawLine(scan.localX - r, scan.localY, scan.localX + r, scan.localY);
-			g2.drawLine(scan.localX, scan.localY - r, scan.localX, scan.localY + r);
+			g2.drawLine(scan.getLocalX() - r, scan.getLocalY(), scan.getLocalX() + r, scan.getLocalY());
+			g2.drawLine(scan.getLocalX(), scan.getLocalY() - r, scan.getLocalX(), scan.getLocalY() + r);
 
 			g2.setColor(Color.BLACK);
 			g2.setStroke(new BasicStroke(2.0f));
 			// g2.drawOval(scan.localX-10, scan.localY-10, 20, 20);
-			g2.drawLine(scan.localX - r, scan.localY, scan.localX + r, scan.localY);
-			g2.drawLine(scan.localX, scan.localY - r, scan.localX, scan.localY + r);
+			g2.drawLine(scan.getLocalX() - r, scan.getLocalY(), scan.getLocalX() + r, scan.getLocalY());
+			g2.drawLine(scan.getLocalX(), scan.getLocalY() - r, scan.getLocalX(), scan.getLocalY() + r);
 
 		}
 	}
@@ -125,33 +127,33 @@ public class AmpMapDrawer {
 
 		Integer x = null;
 		Integer y = null;
-		for (Scan scan : model.getScans()) {
+		for (LocalScan scan : model.getLocalScans()) {
 
 			if (x != null) {
 
-				g2.drawLine(x, y, scan.localX, scan.localY);
+				g2.drawLine(x, y, scan.getLocalX(), scan.getLocalY());
 			}
 
-			x = scan.localX;
-			y = scan.localY;
+			x = scan.getLocalX();
+			y = scan.getLocalY();
 		}
 	}
 
 	private DblArray calculateDblArray() {
 		
 		DblArray da = new DblArray(model.getSettings().getWidth(), model.getSettings().getHeight());
-		if(model.getScans() == null) {
+		if(model.getLocalScans() == null) {
 			return da;
 		}
 		
 		int start = norm(model.getSettings().layer, 0, model.getSettings().maxsamples);
 		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getSettings().maxsamples);
 
-		for (Scan scan : model.getScans()) {
-			int dx = scan.localX;
-			int dy = scan.localY;
+		for (LocalScan scan : model.getLocalScans()) {
+			int dx = scan.getLocalX();
+			int dy = scan.getLocalY();
 
-			double alpha = calcAlpha(scan.values, start, finish);
+			double alpha = calcAlpha(scan.getScan().values, start, finish);
 
 			da.drawCircle(dx, dy, model.getSettings().radius, alpha);
 
@@ -180,9 +182,9 @@ public class AmpMapDrawer {
 		return Math.min(Math.max(i, min), max - 1);
 	}
 
-	public Scan getSelectedScan() {
+	public LocalScan getSelectedScan() {
 		if (model.getSettings().selectedScanIndex >= 0) {
-			return model.getScans().get(model.getSettings().selectedScanIndex);
+			return model.getLocalScans().get(model.getSettings().selectedScanIndex);
 		}
 		return null;
 	}
@@ -199,8 +201,8 @@ public class AmpMapDrawer {
 		// int width = 2048;
 		int height = model.getSettings().getHeight() / 2;
 
-		float[] values = getSelectedScan().values;
-		float[] avgvalues = avgabs(getSelectedScan().values);
+		float[] values = getSelectedScan().getScan().values;
+		float[] avgvalues = avgabs(getSelectedScan().getScan().values);
 
 		g2d.setColor(Color.black);
 		g2d.setStroke(new BasicStroke(1.0f));

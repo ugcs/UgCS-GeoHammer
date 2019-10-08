@@ -8,10 +8,9 @@ public class Scan {
 	double lat_dgr;
 	public Point3D point;
 	
-	public int localX;
-	public int localY;
-	
 	public float[] values;
+	public float[] originalvalues;
+	
 
 	public double getLonDgr() {
 		return lon_dgr;

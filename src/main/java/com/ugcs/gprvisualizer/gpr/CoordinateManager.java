@@ -25,10 +25,7 @@ public class CoordinateManager {
 	
 	private	Settings settings;
 	private	Model model;
-	
-	//private List<Scan> scans = new ArrayList<Scan>();
 	private DepthSpectrum depthSpectrum;
-	//private DblArray dblArray;
 	
 	public CoordinateManager(Settings settings, Model model) {
 		this.settings = settings;

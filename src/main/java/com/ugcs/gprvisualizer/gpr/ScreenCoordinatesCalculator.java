@@ -1,5 +1,8 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.util.ArrayList;
+
+import com.ugcs.gprvisualizer.draw.LocalScan;
 import com.ugcs.gprvisualizer.math.Point3D;
 
 public class ScreenCoordinatesCalculator {
@@ -34,6 +37,8 @@ public class ScreenCoordinatesCalculator {
 		model.getSettings().stx = stx;
 		model.getSettings().sty = sty;
 		
+		model.setLocalScans(new ArrayList<>());
+		
 	    for(Scan scan : model.getScans()){
 	    	Point3D p = scan.point;
 			
@@ -43,32 +48,22 @@ public class ScreenCoordinatesCalculator {
 	    	int dx = (int)(wx - cx - stx );
 	    	int dy = (int)(wy - cy - sty );
 	    	
-	    	scan.localX = dx;
-	    	scan.localY = dy;
+	    	model.getLocalScans().add(new LocalScan(scan, dx, dy, false));
 	    }
 		
-//	    dx = settings.width  - cx - stx;
-//	    cx = settings.width  - stx - dx;
-//	    
-//	    (p.x - minX) * kf = settings.width  - stx - dx;
-//	    p.x = (settings.width  - stx - dx) / kf + minX;
 	}
 	
 	public void findNearestScan(int scrx, int scry) {
-		
-		//double localX = (settings.width  - settings.stx - scrx) / settings.kf + minX;
-		//double localY = (settings.height - settings.sty - scry) / settings.kf + minY;
-		
 		double localX = scrx;
 		double localY = scry;
 		
 		double currentDist = -1;
 		int selectedScanIndex = -1; 
 		
-		for(int i = 0; i < model.getScans().size(); i++) {
-			Scan scan = model.getScans().get(i);
+		for(int i = 0; i < model.getLocalScans().size(); i++) {
+			LocalScan scan = model.getLocalScans().get(i);
 			
-			double dist = getDist2(localX, localY, scan.localX, scan.localY);
+			double dist = getDist2(localX, localY, scan.getLocalX(), scan.getLocalY());
 			if(selectedScanIndex == -1 || dist < currentDist) {
 				selectedScanIndex = i;
 				currentDist = dist;
