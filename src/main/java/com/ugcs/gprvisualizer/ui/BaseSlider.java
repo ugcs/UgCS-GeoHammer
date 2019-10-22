@@ -64,6 +64,7 @@ public abstract class BaseSlider {
         root.setSpacing(5);        
         root.getChildren().addAll(label, slider);
         
+        updateUI();
         return root;
 	}
 	

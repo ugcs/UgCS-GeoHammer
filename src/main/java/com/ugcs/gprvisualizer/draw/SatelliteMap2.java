@@ -15,6 +15,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 import de.pentabyte.googlemaps.Location;
 import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
+import javafx.scene.input.MouseEvent;
 
 public class SatelliteMap2 implements Layer{
 
@@ -82,6 +83,25 @@ public class SatelliteMap2 implements Layer{
 			img = bi;
 			listener.repaint();
 		}
+	}
+
+
+	@Override
+	public boolean mousePressed(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean mouseRelease(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean mouseMove(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
 	};
 
 }

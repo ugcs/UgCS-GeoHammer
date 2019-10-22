@@ -2,13 +2,17 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
 import javax.swing.text.StyleContext.SmallAttributeSet;
 
+import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
+import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
+import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
 import com.ugcs.gprvisualizer.draw.SatelliteMap2;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -34,54 +38,119 @@ public class LayersWindowBuilder extends Work{
 	private BufferedImage img;
 	private int[] palette = new PaletteBuilder().build();
 	private Stage stage;
+	private Loader loader;
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
+		loader = new Loader(model, listener);
 		
 		stage = new Stage();
 		stage.setTitle("layers");
-		stage.setScene(build());
-		
+		stage.setScene(build());		
 		
 		
 		getLayers().add(new SatelliteMap(model, listener));
 		//getLayers().add(new SatelliteMap2(model, listener));
-		//getLayers().add(new SatelliteMap2(model, listener));
 		getLayers().add(new RadarMap(model, listener));
 		getLayers().add(new GpsTrack(model, listener));
+		
+		getLayers().add(new TraceCutter(model, listener));
 		// layers.add(new AuxControl());
 		
+		
+		imageView.setOnMousePressed(mousePressHandler);
+		imageView.setOnMouseReleased(mouseReleaseHandler);
+		//imageView.setOnMouseMoved(mouseMoveHandler);
+		
+		//img = new BufferedImage(250, 250, BufferedImage.TYPE_INT_RGB);
+		//imageView.setImage(SwingFXUtils.toFXImage(img, null));
+		
+	    imageView.setVisible(true);
+	    
 	}
 	
+	EventHandler mousePressHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+        	System.out.println(event.getX() + " " + event.getY());
+        	
+        	Point p = new Point((int)event.getX(), (int)event.getY());
+        	
+        	for(int i = getLayers().size()-1; i>=0; i--) {
+        		Layer layer = getLayers().get(i);
+        		
+        		if(layer.mousePressed(event)) {
+        			return;
+        		}        		
+        	}
+        }
+	};
+
+	EventHandler mouseReleaseHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {        	
+        	
+        	for(int i = getLayers().size()-1; i>=0; i--) {
+        		Layer layer = getLayers().get(i);
+        		
+        		if(layer.mouseRelease(event)) {
+        			return;
+        		}        		
+        	}
+        	
+        }
+	};
+	
+	EventHandler mouseMoveHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+        	System.out.println("lwb mouse move " );
+        	for(int i = getLayers().size()-1; i>=0; i--) {
+        		Layer layer = getLayers().get(i);
+        		
+        		if(layer.mouseMove(event)) {
+        			return;
+        		}        		
+        	}
+        	
+        	
+        }
+	};
+
 	public Stage getStage() {
 		return stage;
 	}
-	
-	public void recalc() {
-		//controller.render(null);
-	}
-	
-	
-	
 		
 	public Scene build() {
 		
 		BorderPane bPane = new BorderPane();   
 		bPane.setCenter(imageView);
 		
-		bPane.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-            	System.out.println("mouse click");
-            	WhatChanged sc = new WhatChanged();
-            	sc.setFileopened(true);
-				somethingChanged(sc);            	
-            }
-		});
+		bPane.setOnDragOver(loader.getDragHandler());		
+		bPane.setOnDragDropped(loader.getDropHandler());
+		
+		bPane.setOnScroll(event -> { 
+	    	model.getField().setZoom( model.getField().getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
+	    	
+	    	WhatChanged sc = new WhatChanged();
+        	sc.setZoom(true);
+			somethingChanged(sc);
+	    } );		
 		
 		
 		Scene scene = new Scene(bPane, 1024, 768);
+
+		scene.addEventFilter(MouseEvent.DRAG_DETECTED , new EventHandler<MouseEvent>() {
+		    @Override
+		    public void handle(MouseEvent mouseEvent) {
+		    	System.out.println("DRAG_DETECTED");	
+		        scene.startFullDrag();
+		    }
+		});		
+
+		imageView.setOnMouseDragEntered(mouseMoveHandler);		
+		
 		
 		return scene;
 	}
@@ -94,18 +163,6 @@ public class LayersWindowBuilder extends Work{
 	}
 
 	
-//	private RecalculationController controller = new RecalculationController(new Consumer<RecalculationLevel>() {
-//
-//		@Override
-//		public void accept(RecalculationLevel obj) {
-//
-//			img = render();
-//			
-//			updateWindow();			
-//		}
-//
-//	});
-
 	private void updateWindow() {
 		Platform.runLater(new Runnable() {
             @Override

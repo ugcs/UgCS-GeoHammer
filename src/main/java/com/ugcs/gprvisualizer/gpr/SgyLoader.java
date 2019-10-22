@@ -111,7 +111,7 @@ public class SgyLoader {
     			
 				this.execute(path, scanBuilder);
 				
-			} catch (FileNotFoundException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
     	}

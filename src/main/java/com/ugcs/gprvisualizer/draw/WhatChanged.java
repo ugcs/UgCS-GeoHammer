@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.draw;
 
 public class WhatChanged {
 
+	private boolean mapscroll;
 	private boolean zoom;
 	private boolean adjusting;
 	private boolean traces;
@@ -30,6 +31,12 @@ public class WhatChanged {
 	}
 	public void setFileopened(boolean fileopened) {
 		this.fileopened = fileopened;
+	}
+	public boolean isMapscroll() {
+		return mapscroll;
+	}
+	public void setMapscroll(boolean mapscroll) {
+		this.mapscroll = mapscroll;
 	}
 	
 	

@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings;
 
+import javafx.scene.input.MouseEvent;
+
 public class RadarMap implements Layer{
 
 	private RepaintListener listener;
@@ -83,6 +85,24 @@ public class RadarMap implements Layer{
 		}
 
 	};
+
+	@Override
+	public boolean mousePressed(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean mouseRelease(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean mouseMove(MouseEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	
 	
 

@@ -30,6 +30,11 @@ public class Settings {
 	public double kf;
 	public double stx;
 	public double sty;
+	
+	
+	public int widthZoomKf = 30;
+	public int heightZoomKf = 100;
+	public int heightStart = 60;
     
 	public int getWidth() {
 		return (int)(width * zoom / 100.0);

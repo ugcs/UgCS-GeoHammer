@@ -31,6 +31,9 @@ public class Work {
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
+		
+		g2.translate(width/2, height/2);
+		
 		for (Layer l : getLayers()) {
 			l.draw(g2);
 		}

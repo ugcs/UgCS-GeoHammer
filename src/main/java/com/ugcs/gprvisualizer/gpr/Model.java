@@ -3,10 +3,15 @@ package com.ugcs.gprvisualizer.gpr;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 
 public class Model {
 
+	private Field field = new Field();
+	private FileManager fileManager = new FileManager();
+	
 	private Settings settings = new Settings();
 	private List<Scan> scans;
 	private List<LocalScan> localScans;
@@ -44,6 +49,12 @@ public class Model {
 	public Rectangle2D.Double getBounds(){
 		return bounds;
 	}
-	
-	
+
+	public Field getField() {
+		return field;
+	}
+
+	public FileManager getFileManager() {
+		return fileManager;
+	}
 }
