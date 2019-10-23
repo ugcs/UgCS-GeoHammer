@@ -9,7 +9,9 @@ public class LatLon {
 	
 	public String toString() {
 		
-		return dgrToDMS(getLatDgr(), true ) +  " " + dgrToDMS(getLonDgr(), false); 
+		//return dgrToDMS(getLatDgr(), true ) +  " " + dgrToDMS(getLonDgr(), false);
+		
+		return getLatDgr() +  "   " + getLonDgr();
 	}
 	
 	public LatLon(double lat_dgr, double lon_dgr) {

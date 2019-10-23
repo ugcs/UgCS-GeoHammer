@@ -16,16 +16,21 @@ public class Field {
 		new Field().test();
 	}
 	
+	
+	protected void tst(LatLon ll) {
+		Point2D p = latLonToScreenD(ll);
+		LatLon ll2 = screenTolatLon(p);
+		
+		System.out.println(ll + " -> " + p + " -> " + ll2);
+		
+	}
+	
 	protected void test() {
-		setSceneCenter(new LatLon(65, 40));
-		setZoom(19);
-		
-		System.out.println(latLonToScreen(new LatLon(65.000, 40.000)));
-		System.out.println(latLonToScreen(new LatLon(65.001, 40.001)));
-		
-
-		System.out.println(screenTolatLon(new Point(0, 0)));
-		System.out.println(screenTolatLon(new Point(157, -372)));
+		setSceneCenter(new LatLon(15, 40));
+		setZoom(19);		
+		tst(new LatLon(15, 40));
+		tst(new LatLon(15.001, 40.001));
+		tst(new LatLon(15.002, 40.002));
 		
 	}
 	
@@ -51,7 +56,7 @@ public class Field {
 		return result;		
 	}
 	
-	public LatLon screenTolatLon(Point point) {
+	public LatLon screenTolatLon(Point2D point) {
 		
 		LatLon result = pixelsToLatLon(point.getX(), point.getY(), zoom);
 		
@@ -67,11 +72,12 @@ public class Field {
 	
 	
 	double tileSize = 256;
-	double initialResolution = 2 * Math.PI * 6378137 / tileSize;
+	double R = 6378137;
+	double initialResolution = 2 * Math.PI * R / tileSize;
 	//# 156543.03392804062 for tileSize 256 pixels
 	double originShift = 0;//2 * Math.PI * 6378137 / 2.0;
 	
-	private Point2D latLonToMeters(double  lat, double lon) {
+	private Point2D latLonToMeters_(double  lat, double lon) {
 		//"Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"
 
 		double mx = lon * originShift / 180.0;
@@ -90,8 +96,8 @@ public class Field {
 	        //"Converts EPSG:900913 to pyramid pixel coordinates in given zoom level"
 
 		double res = resolution( zoom );
-		double px = (meters.getX() + originShift) / res;
-		double py = (meters.getY() + originShift) / res;
+		double px = meters.getX() / res;
+		double py = meters.getY() / res;
         return new Point2D.Double(px, py);
 		
 	}
@@ -100,23 +106,30 @@ public class Field {
 	    //"Converts pixel coordinates in given zoom level of pyramid to EPSG:900913"
 
 		double res = resolution(zoom);
-		double mx = px * res - originShift;
-		double my = py * res - originShift;
+		double mx = px * res;
+		double my = py * res;
 	    return new Point2D.Double(mx, my);
 	}
 
 	private LatLon metersToLatLon(Point2D meters) {
 	    //"Converts XY point from Spherical Mercator EPSG:900913 to lat/lon in WGS84 Datum"
 
-		double lon = (meters.getX() / originShift) * 180.0;
-		double lat = (meters.getY() / originShift) * 180.0;
-		lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180.0)) - Math.PI / 2.0);
+		double lat = sceneCenter.getLatDgr() - meters.getY() * 180.0 / (R * Math.PI);
+		
+		
+		double r = R * Math.cos(toRad(sceneCenter.getLatDgr()));
+		double lon = sceneCenter.getLonDgr() + meters.getX() * 180.0 / (r * Math.PI);		
+		
+		
+		
+		//double lat = (meters.getY() / originShift) * 180.0;
+		//lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180.0)) - Math.PI / 2.0);
 		
 	    return new LatLon(lat, lon);
 	}
 	
-	private Point2D latLonToPixels(double lat, double lon, double zoom) {
-		return metersToPixels(latLonToMeters(lat, lon), zoom);
+	private Point2D latLonToPixels_(double lat, double lon, double zoom) {
+		return metersToPixels(latLonToMeters_(lat, lon), zoom);
 	}
 
 	private Point2D latLonToPixels(double cntlat, double cntlon, double lat, double lon, double zoom) {
@@ -141,8 +154,25 @@ public class Field {
 		double  dLon = toRad(lon2) - toRad(lon1);
 		
 		double  a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-	    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-	    Math.sin(dLon/2) * Math.sin(dLon/2);
+			Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+			Math.sin(dLon/2) * Math.sin(dLon/2);
+		
+		double  c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+		double  d = R * c;
+	    return d * 1000; // meters
+	}	
+
+	
+	private double measureHor(double lat1, double lon1, double lon2){  // generally used geo measurement function
+		// lon - долгота - горизонталь
+		// lat - шиорта - вертикаль
+		double  R = 6378.137; // Radius of earth in KM
+		double  dLon = toRad(lon2) - toRad(lon1);
+		
+		double  a = 
+			Math.cos(toRad(lat1)) * Math.cos(toRad(lat1)) *
+			Math.sin(dLon/2) * Math.sin(dLon/2);
+		
 		double  c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 		double  d = R * c;
 	    return d * 1000; // meters

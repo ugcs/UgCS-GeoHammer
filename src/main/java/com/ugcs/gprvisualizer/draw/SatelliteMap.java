@@ -5,9 +5,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.awt.geom.Point2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -22,6 +25,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 import de.pentabyte.googlemaps.Location;
 import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 public class SatelliteMap implements Layer{
@@ -34,7 +38,9 @@ public class SatelliteMap implements Layer{
 	private Random rand = new Random();
 	private Color color = new Color(rand.nextInt(16777215));
 
-	private Point dragPoint = null;
+	private Point2D dragPoint = null;
+	
+	private LatLon click;
 	
 	public SatelliteMap(Model model,  RepaintListener listener) {
 		this.listener = listener;
@@ -53,6 +59,13 @@ public class SatelliteMap implements Layer{
 				(int)offst.getY() -_img.getHeight()/2, 
 				null);
 		}		
+		
+		if(click != null) {
+			Point p = model.getField().latLonToScreen(click);
+			
+			g2.drawOval(p.x-3, p.y-3, 7, 7);
+		}
+		
 	}
 
 	@Override
@@ -122,16 +135,19 @@ public class SatelliteMap implements Layer{
 	}
 
 	@Override
-	public boolean mousePressed(MouseEvent event) {
+	public boolean mousePressed(Point2D point) {
 		
-		dragPoint = new Point((int)event.getSceneX(), (int)event.getSceneY());
+		dragPoint = point;
 		
+		
+		click = model.getField().screenTolatLon(dragPoint);
+		listener.repaint();
 		System.out.println("sat map mousePressed");
 		return true;
 	}
 
 	@Override
-	public boolean mouseRelease(MouseEvent event) {
+	public boolean mouseRelease(Point2D point) {
 		
 		dragPoint = null;
 		
@@ -141,17 +157,18 @@ public class SatelliteMap implements Layer{
 	}
 
 	@Override
-	public boolean mouseMove(MouseEvent event) {
+	public boolean mouseMove(Point2D point) {
 		
 		if(dragPoint == null) {
 			return false;
 		}
-		System.out.println("sat map mouse move " + dragPoint);
+
+		Point2D p = new Point2D.Double(
+			dragPoint.getX() - point.getX(), 
+			dragPoint.getY() - point.getY());
+		LatLon sceneCenter = model.getField().screenTolatLon(p);
+		dragPoint = point;
 		
-		int px = (int)(event.getSceneX() - dragPoint.getX());
-		int py = (int)(event.getSceneY() - dragPoint.getY());
-		
-		LatLon sceneCenter = model.getField().screenTolatLon(new Point(px, py));
 		model.getField().setSceneCenter(sceneCenter);
 		
 		listener.repaint();
@@ -159,4 +176,10 @@ public class SatelliteMap implements Layer{
 		return true;
 	};
 
+	@Override
+	public List<Node> getToolNodes() {
+		
+		return Collections.EMPTY_LIST;
+	}
+	
 }

@@ -3,7 +3,10 @@ package com.github.thecoldwine.sigrun.common.ext;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.draw.Layer;
@@ -11,6 +14,13 @@ import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 public class TraceCutter implements Layer{
@@ -32,24 +42,24 @@ public class TraceCutter implements Layer{
 	public void init() {
 		
 		points = new ArrayList<>();
-		points.add(field.screenTolatLon(new Point(300,300)));
-		points.add(field.screenTolatLon(new Point(300,-300)));
-		points.add(field.screenTolatLon(new Point(-300,-300)));
-		points.add(field.screenTolatLon(new Point(-300,300)));
+		points.add(field.screenTolatLon(new Point(200, 200)));
+		points.add(field.screenTolatLon(new Point(200,-200)));
+		points.add(field.screenTolatLon(new Point(-200,-200)));
+		points.add(field.screenTolatLon(new Point(-200, 200)));
 		
 	}
 	
-	public boolean mousePressed(MouseEvent event){
+	public boolean mousePressed(Point2D point){
 		if(points == null) {
 			return false;
 		}
 		
-		Point pressPoint = new Point((int)event.getSceneX(), (int)event.getSceneY());
+		
 		
 		List<Point> border = getScreenPoligon();
 		for(int i=0; i<border.size(); i++) {
 			Point p = border.get(i);
-			if(pressPoint.distance(p) < RADIUS) {
+			if(point.distance(p) < RADIUS) {
 				active = i;
 				listener.repaint();
 				return true;
@@ -59,7 +69,7 @@ public class TraceCutter implements Layer{
 		return false;
 	}
 	
-	public boolean mouseRelease(MouseEvent event) {
+	public boolean mouseRelease(Point2D point) {
 		if(points == null) {
 			return false;
 		}
@@ -73,7 +83,7 @@ public class TraceCutter implements Layer{
 		return false;
 	}
 	
-	public boolean mouseMove(MouseEvent event) {
+	public boolean mouseMove(Point2D point) {
 		if(points == null) {
 			return false;
 		}
@@ -81,8 +91,8 @@ public class TraceCutter implements Layer{
 		if(active == null) {
 			return false;
 		}
-		Point pressPoint = new Point((int)event.getSceneX(), (int)event.getSceneY());
-		points.get(active).from(field.screenTolatLon(pressPoint));
+		
+		points.get(active).from(field.screenTolatLon(point));
 		listener.repaint();		
 		return true;
 	}
@@ -161,6 +171,22 @@ public class TraceCutter implements Layer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 				
+	}
+
+	@Override
+	public List<Node> getToolNodes() {
+		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));		
+		Button button2 = new Button("Cut", new ImageView(imageFilter));
+		
+		button2.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		        
+		    	init();
+		    	listener.repaint();
+		    }
+		});
+		
+		return Arrays.asList(button2,  new Label("LABEL"));
 	}
 	
 	

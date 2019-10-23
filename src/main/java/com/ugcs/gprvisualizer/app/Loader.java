@@ -37,11 +37,7 @@ public class Loader {
 
         @Override
         public void handle(DragEvent event) {
-            if (//event.getGestureSource() != scrollPane
-                  //  && 
-                    event.getDragboard().hasFiles()) {
-
-            	
+            if (event.getDragboard().hasFiles()) {
                 event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             }
             event.consume();

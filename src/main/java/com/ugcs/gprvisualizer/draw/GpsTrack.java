@@ -5,12 +5,15 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Scan;
 import com.ugcs.gprvisualizer.gpr.Settings;
 
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 public class GpsTrack implements Layer{
@@ -69,21 +72,27 @@ public class GpsTrack implements Layer{
 	}
 
 	@Override
-	public boolean mousePressed(MouseEvent event) {
+	public boolean mousePressed(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseRelease(MouseEvent event) {
+	public boolean mouseRelease(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMove(MouseEvent event) {
+	public boolean mouseMove(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public List<Node> getToolNodes() {
+		
+		return Collections.EMPTY_LIST;
 	}
 	
 }

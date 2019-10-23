@@ -2,9 +2,12 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -15,6 +18,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 import de.pentabyte.googlemaps.Location;
 import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 public class SatelliteMap2 implements Layer{
@@ -87,21 +91,27 @@ public class SatelliteMap2 implements Layer{
 
 
 	@Override
-	public boolean mousePressed(MouseEvent event) {
+	public boolean mousePressed(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseRelease(MouseEvent event) {
+	public boolean mouseRelease(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMove(MouseEvent event) {
+	public boolean mouseMove(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
-	};
+	}
 
+	@Override
+	public List<Node> getToolNodes() {
+		
+		return Collections.EMPTY_LIST;
+	}
+	
 }

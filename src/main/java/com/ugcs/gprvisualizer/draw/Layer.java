@@ -1,6 +1,10 @@
 package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
+import java.util.List;
+
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 public interface Layer {
@@ -12,9 +16,13 @@ public interface Layer {
 	void somethingChanged(WhatChanged changed);
 	
 	
-	boolean mousePressed(MouseEvent event);
+	boolean mousePressed(Point2D point);
 	
-	boolean mouseRelease(MouseEvent event);
+	boolean mouseRelease(Point2D point);
 	
-	boolean mouseMove(MouseEvent event);
+	boolean mouseMove(Point2D point);
+
+	List<Node> getToolNodes();
+	
+	
 }

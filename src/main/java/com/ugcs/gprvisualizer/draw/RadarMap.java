@@ -1,7 +1,10 @@
 package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings;
 
+import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
 public class RadarMap implements Layer{
@@ -87,23 +91,28 @@ public class RadarMap implements Layer{
 	};
 
 	@Override
-	public boolean mousePressed(MouseEvent event) {
+	public boolean mousePressed(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseRelease(MouseEvent event) {
+	public boolean mouseRelease(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMove(MouseEvent event) {
+	public boolean mouseMove(Point2D point) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 	
 	
+	@Override
+	public List<Node> getToolNodes() {
+		
+		return Collections.EMPTY_LIST;
+	}
 
 }
