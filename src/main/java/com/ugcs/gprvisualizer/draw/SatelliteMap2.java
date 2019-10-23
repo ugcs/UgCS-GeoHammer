@@ -53,10 +53,10 @@ public class SatelliteMap2 implements Layer{
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		System.out.println("satell");
+		
 		if(changed.isFileopened() || changed.isZoom()) {
 			
-			System.out.println("start");
+		
 			
 			Thread thread = new Calc();
 			thread.start();
@@ -68,7 +68,7 @@ public class SatelliteMap2 implements Layer{
 	
 	class Calc extends Thread {
 		public void run() {
-			System.out.println("satel run");
+
 			BufferedImage bi = new BufferedImage(400, 400, BufferedImage.TYPE_INT_ARGB); 
 			
 			Graphics2D g2 = (Graphics2D)bi.getGraphics();

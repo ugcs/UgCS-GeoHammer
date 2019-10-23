@@ -16,6 +16,7 @@ public class MainJavafx extends Application {
 	private Model model = new Model();
 	
 	private SceneAmplitudeMap sceneAmplitudeMap = new SceneAmplitudeMap(model);
+	private LayersWindowBuilder layersWindowBuilder = new LayersWindowBuilder(model);
 	
 	Scene scene1;
 	Scene scene2;
@@ -25,7 +26,9 @@ public class MainJavafx extends Application {
 		
 		this.primaryStage = primaryStage;
 
-		scene1 = sceneAmplitudeMap.build();//new Scene(bPane, 1024, 768); 
+		//scene1 = sceneAmplitudeMap.build();//new Scene(bPane, 1024, 768); 
+		
+		scene1 = layersWindowBuilder.build();
 		
 		scene2 = new Scene(getScene2(), 1024, 768); 
 		

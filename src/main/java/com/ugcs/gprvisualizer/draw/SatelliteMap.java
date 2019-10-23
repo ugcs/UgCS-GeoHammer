@@ -15,6 +15,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.SceneAmplitudeMap;
@@ -76,10 +77,9 @@ public class SatelliteMap implements Layer{
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		System.out.println("satell");
+
 		if(changed.isFileopened() || changed.isZoom()) {
 			
-			System.out.println("start");
 			
 			Thread thread = new Calc();
 			thread.start();
@@ -93,6 +93,8 @@ public class SatelliteMap implements Layer{
 		BufferedImage img = null;
 		
 		StaticMap map = new StaticMap(640, 640, "");
+		
+		map.setScale(Field.MAP_SCALE);
 		map.setMaptype(Maptype.hybrid);
 		
 		LatLon midlPoint = model.getField().getSceneCenter();

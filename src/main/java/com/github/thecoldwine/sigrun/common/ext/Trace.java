@@ -13,7 +13,8 @@ public class Trace {
     
     private LatLon latLon;
     private boolean active = true;
-
+    private boolean end = false;
+    
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
     	
@@ -54,6 +55,14 @@ public class Trace {
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public boolean isEnd() {
+		return end;
+	}
+
+	public void setEnd(boolean end) {
+		this.end = end;
 	}
     
 	

@@ -71,7 +71,8 @@ public class Field {
 	}
 	
 	
-	double tileSize = 256;
+	public static final int MAP_SCALE = 2;
+	double tileSize = 256 * MAP_SCALE;
 	double R = 6378137;
 	double initialResolution = 2 * Math.PI * R / tileSize;
 	//# 156543.03392804062 for tileSize 256 pixels

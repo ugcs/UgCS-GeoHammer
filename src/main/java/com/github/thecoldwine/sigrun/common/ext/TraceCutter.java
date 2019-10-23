@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -31,12 +34,21 @@ public class TraceCutter implements Layer{
 	Integer active = null;
 	Model model;
 	RepaintListener listener;
+	Button buttonApply = new Button("Apply");
+	Button buttonSave = new Button("Save");
 	
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
 		this.listener = listener;
 		
 		field = model.getField();
+	}
+	
+	
+	public void clear() {
+		
+		points = null;
+		active = null;
 	}
 	
 	public void init() {
@@ -175,19 +187,97 @@ public class TraceCutter implements Layer{
 
 	@Override
 	public List<Node> getToolNodes() {
-		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));		
-		Button button2 = new Button("Cut", new ImageView(imageFilter));
+		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
+		ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
 		
-		button2.setOnAction(new EventHandler<ActionEvent>() {
+		
+		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
-		    	init();
+		    	if(buttonCutMode.isSelected()) {
+		    		init();
+		    	}else{
+		    		clear();
+		    	}
 		    	listener.repaint();
 		    }
 		});
+
 		
-		return Arrays.asList(button2,  new Label("LABEL"));
+		buttonApply.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	apply(model.getFileManager().getTraces());
+		    	listener.repaint();
+		    }
+		});
+
+		
+		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	//apply(model.getFileManager().getTraces());
+		    	//listener.repaint();
+		    	
+		    	save();
+		    			    	
+		    }
+		});
+		
+		return Arrays.asList(buttonCutMode, buttonApply, buttonSave, new Label("LABEL"));
 	}
 	
+
+	private void save() {
+		for(SgyFile file : model.getFileManager().getFiles()) {
+			int part = 1;
+			List<Trace> sublist = new ArrayList<>();
+			for(Trace trace : file.getTraces()) {
+				
+				if(trace.isActive()) {
+					sublist.add(trace);
+				}else {
+					if(!sublist.isEmpty()){					
+						savePart(file, part++, sublist);
+						sublist.clear();
+					}		
+				}
+			}
+			//for last
+			if(!sublist.isEmpty()){					
+				savePart(file, part++, sublist);
+				sublist.clear();
+			}		
+		}
+		
+	}
+
+	private void savePart(SgyFile file, int part, List<Trace> sublist) {
+		List<Block> blocks = getBlocks(sublist); 
+
+		try {
+			String name = file.getFile().getName();
+			int pos = name.lastIndexOf(".");
+			String onlyname = name.substring(0, pos);
+			File nfolder = new File(file.getFile().getParentFile(), onlyname + "processed");
+			nfolder.mkdir();
+			File nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
+			
+			
+			file.savePart(nfile.getAbsolutePath(), blocks);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private List<Block> getBlocks(List<Trace> sublist) {
+		
+		List<Block> blocks = new ArrayList<>();
+		for(Trace trace : sublist) {
+			blocks.add(trace.getHeaderBlock());
+			blocks.add(trace.getDataBlock());
+		}
+		
+		return blocks;
+	}
 	
 }

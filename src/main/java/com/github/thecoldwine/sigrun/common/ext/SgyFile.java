@@ -41,10 +41,12 @@ public class SgyFile {
     private BlockFile blockFile;	
 	private Block txtHdrBlock;
 	private Block binHdrBlock;
-			
-	public void open(String fileName) throws IOException {
+	private File file;
+	
+	public void open(File file) throws IOException {
+		this.file = file;
 		
-		blockFile = BlockFile.open(fileName);
+		blockFile = BlockFile.open(file);
 		
 		txtHdrBlock = blockFile.next(TextHeader.TEXT_HEADER_SIZE);
 		binHdrBlock = blockFile.next(BinaryHeader.BIN_HEADER_LENGTH);
@@ -72,6 +74,10 @@ public class SgyFile {
 			e.printStackTrace();
 			
 			System.out.println("traces.size(): " + traces.size() );
+		}
+		
+		if(!traces.isEmpty()) {
+			traces.get(traces.size()-1).setEnd(true);
 		}
 		
 		return traces;
@@ -176,8 +182,10 @@ public class SgyFile {
 
 	private void setTraces(List<Trace> traces) {
 		this.traces = traces;
-	}	
-	
-	
+	}
+
+	public File getFile() {
+		return file;
+	}
 	
 }

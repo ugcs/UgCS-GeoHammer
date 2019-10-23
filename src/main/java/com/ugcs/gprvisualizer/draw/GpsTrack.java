@@ -33,9 +33,8 @@ public class GpsTrack implements Layer{
 	}
 
 	private void drawGPSPath(Graphics2D g2) {
-		g2.setStroke(new BasicStroke(1.1f));
-		g2.setColor(Color.RED);
-		Point2D p2 = null;
+		g2.setStroke(new BasicStroke(1.1f));		
+		Point2D pPrev = null;
 		
 		//g2.translate(ofs, ofs);
 		
@@ -44,15 +43,21 @@ public class GpsTrack implements Layer{
 				
 			Point2D p = model.getField().latLonToScreenD(trace.getLatLon());
 			if(trace.isActive()) {
-				if (p2 != null) {				
-					g2.drawLine((int)p2.getX(), (int)p2.getY(), (int)p.getX(), (int)p.getY());
+				if (pPrev != null) {			
+					g2.setColor(Color.RED);
+					g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)p.getX(), (int)p.getY());
 				}
 				
-				p2 = p;
-			}else {
+				if(trace.isEnd()) {
+					pPrev = null;
+				}else {
+					pPrev = p;
+				}
+			}else{
 				//dot
-				g2.drawLine((int)p.getX(), (int)p.getY(), (int)p.getX()+1, (int)p.getY());
-				p2 = null;
+				g2.setColor(Color.GRAY);
+				g2.drawLine((int)p.getX(), (int)p.getY(), (int)p.getX(), (int)p.getY());
+				pPrev = null;
 			}			
 		}
 	}

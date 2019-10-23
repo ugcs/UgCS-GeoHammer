@@ -1,5 +1,6 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,9 +11,9 @@ public class BlockFile {
 	private FileChannel chan;
 	private int position = 0;
 	
-	public static BlockFile open(String fileName) throws FileNotFoundException {
+	public static BlockFile open(File file) throws FileNotFoundException {
 		
-		FileChannel chan = new FileInputStream(fileName).getChannel();
+		FileChannel chan = new FileInputStream(file).getChannel();
 		
 		return new BlockFile(chan);
 	}

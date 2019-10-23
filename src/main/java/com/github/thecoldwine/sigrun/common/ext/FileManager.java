@@ -33,21 +33,21 @@ public class FileManager {
 	}
 
 	public void processFolder(File folder) {
-
+		traces = null;
 		processFileList(Arrays.asList(folder.listFiles(filter)));
 
 	}
 
 	public void processFileList(List<File> fileList) {
-
+		traces = null;
 		files = new ArrayList<>();
 		for (File fl : fileList) {
 
-			String path = fl.getAbsolutePath();
+			//String path = fl.getAbsolutePath();
 
 			try {
 				SgyFile sgyFile = new SgyFile();
-				sgyFile.open(path);
+				sgyFile.open(fl);
 				files.add(sgyFile);
 
 			} catch (Exception e) {
