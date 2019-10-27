@@ -53,7 +53,10 @@ public class SatelliteMap implements Layer{
 		BufferedImage _img = img;
 		if(_img != null) {
 			
-			Point offst = model.getField().latLonToScreen(imgLatLon);
+			System.out.println("imgLatLon  " + imgLatLon.toString());
+			System.out.println("scnLatLon  " + model.getField().getSceneCenter().toString());
+			
+			Point2D offst = model.getField().latLonToScreen(imgLatLon);
 			
 			g2.drawImage(_img, 
 				(int)offst.getX() -_img.getWidth()/2, 
@@ -62,9 +65,9 @@ public class SatelliteMap implements Layer{
 		}		
 		
 		if(click != null) {
-			Point p = model.getField().latLonToScreen(click);
+			Point2D p = model.getField().latLonToScreen(click);
 			
-			g2.drawOval(p.x-3, p.y-3, 7, 7);
+			g2.drawOval((int)p.getX()-3, (int)p.getY()-3, 7, 7);
 		}
 		
 	}
@@ -121,6 +124,11 @@ public class SatelliteMap implements Layer{
 		
 		//drawTrack(img);
 		
+		Graphics2D g2 = (Graphics2D)img.getGraphics();
+		int r = 40;
+		g2.drawLine(img.getWidth()/2-r, img.getHeight()/2, img.getWidth()/2+r, img.getHeight()/2);
+		g2.drawLine(img.getWidth()/2, img.getHeight()/2-r, img.getWidth()/2, img.getHeight()/2+r);
+		
 		this.img = img;
 		this.imgLatLon = midlPoint;
 		
@@ -143,8 +151,10 @@ public class SatelliteMap implements Layer{
 		
 		
 		click = model.getField().screenTolatLon(dragPoint);
+		
+		System.out.println("sat map mousePressed " + click.toString());
 		listener.repaint();
-		System.out.println("sat map mousePressed");
+		
 		return true;
 	}
 
@@ -152,8 +162,6 @@ public class SatelliteMap implements Layer{
 	public boolean mouseRelease(Point2D point) {
 		
 		dragPoint = null;
-		
-		System.out.println("sat map mouseRelease");
 		
 		return true;
 	}

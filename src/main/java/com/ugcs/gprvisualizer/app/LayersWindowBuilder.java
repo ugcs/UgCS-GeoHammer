@@ -13,6 +13,7 @@ import javax.swing.text.StyleContext.SmallAttributeSet;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
+import com.ugcs.gprvisualizer.draw.ChangeListener;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
@@ -27,7 +28,7 @@ import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -41,7 +42,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-public class LayersWindowBuilder extends Work{
+public class LayersWindowBuilder extends Work implements ChangeListener{
 	
 	private ImageView imageView = new ImageView();
 	private BufferedImage img;
@@ -53,7 +54,7 @@ public class LayersWindowBuilder extends Work{
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
-		loader = new Loader(model, listener);
+		loader = new Loader(model, listener, this);
 		
 		getLayers().add(new SatelliteMap(model, listener));
 		getLayers().add(new RadarMap(model, listener));

@@ -36,12 +36,20 @@ public class GpsTrack implements Layer{
 		g2.setStroke(new BasicStroke(1.1f));		
 		Point2D pPrev = null;
 		
-		//g2.translate(ofs, ofs);
+		double sumdist = 0;
+		double threshold =
+				model.getField().getSceneCenter().getDistance(
+				model.getField().screenTolatLon(new Point2D.Double(0, 3)));// meter
 		
 		for (Trace trace : model.getFileManager().getTraces()) {
 
+			sumdist += trace.getPrevDist();
+			if(sumdist < threshold && !trace.isEnd()) {				
+				continue;
+			}
+			sumdist = 0;
 				
-			Point2D p = model.getField().latLonToScreenD(trace.getLatLon());
+			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
 			if(trace.isActive()) {
 				if (pPrev != null) {			
 					g2.setColor(Color.RED);

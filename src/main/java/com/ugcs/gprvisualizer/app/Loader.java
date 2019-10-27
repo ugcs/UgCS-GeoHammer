@@ -5,7 +5,9 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.draw.ChangeListener;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
@@ -18,10 +20,13 @@ public class Loader {
 
 	private Model model;
 	private RepaintListener listener;
-	public Loader(Model model, RepaintListener listener) {
+	private ChangeListener changeListener;
+	
+	public Loader(Model model, RepaintListener listener, ChangeListener changeListener) {
 		
 		this.model = model;
 		this.listener = listener;
+		this.changeListener = changeListener;
 		
 	}
 	
@@ -75,7 +80,10 @@ public class Loader {
 			e.printStackTrace();
 		}
 		
-		listener.repaint();
+		WhatChanged changed = new WhatChanged();
+		changed.setFileopened(true);
+		//listener.repaint();
+		changeListener.somethingChanged(changed );
 	}
 
 	private void initField() {

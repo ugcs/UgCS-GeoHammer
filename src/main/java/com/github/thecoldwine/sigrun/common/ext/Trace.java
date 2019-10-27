@@ -14,6 +14,7 @@ public class Trace {
     private LatLon latLon;
     private boolean active = true;
     private boolean end = false;
+    private double prevDist = 100000;
     
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
@@ -63,6 +64,14 @@ public class Trace {
 
 	public void setEnd(boolean end) {
 		this.end = end;
+	}
+
+	public double getPrevDist() {
+		return prevDist;
+	}
+
+	public void setPrevDist(double prevDist) {
+		this.prevDist = prevDist;
 	}
     
 	

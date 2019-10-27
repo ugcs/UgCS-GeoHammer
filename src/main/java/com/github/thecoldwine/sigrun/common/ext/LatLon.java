@@ -2,6 +2,8 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.util.Locale;
 
+import com.ugcs.gprvisualizer.math.CoordinatesMath;
+
 public class LatLon {
 
 	private double lat_dgr;
@@ -9,9 +11,9 @@ public class LatLon {
 	
 	public String toString() {
 		
-		//return dgrToDMS(getLatDgr(), true ) +  " " + dgrToDMS(getLonDgr(), false);
+		return dgrToDMS(getLatDgr(), true ) +  "  " + dgrToDMS(getLonDgr(), false);
 		
-		return getLatDgr() +  "   " + getLonDgr();
+		//return getLatDgr() +  "   " + getLonDgr();
 	}
 	
 	public LatLon(double lat_dgr, double lon_dgr) {
@@ -50,6 +52,15 @@ public class LatLon {
 		// 40°02'04.0"S 65°11'00.2"E
 		return String.format(Locale.ROOT, "%d°%d'%.3f\"%s", justdgr, justmin, justsec, postfix);
 		//return justdgr + "°" + justmin + "'" + justsec + "\"" + postfix;
+		
+	}
+	
+	public double getDistance(LatLon another) {
+		
+		return CoordinatesMath.measure(
+				getLatDgr(), getLonDgr(), 
+				another.getLatDgr(), another.getLonDgr());
+		
 		
 	}
 	

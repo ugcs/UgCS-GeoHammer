@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.sun.javafx.cursor.CursorType;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -18,6 +19,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -34,14 +36,24 @@ public class TraceCutter implements Layer{
 	Integer active = null;
 	Model model;
 	RepaintListener listener;
-	Button buttonApply = new Button("Apply");
+	Button buttonSet = new Button("Apply");
+	Button buttonMinus = new Button("Minus");
+	Button buttonPlus = new Button("Plus");
+	
 	Button buttonSave = new Button("Save");
+	
+	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
+	ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
+	
 	
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
 		this.listener = listener;
 		
 		field = model.getField();
+		
+		
+		
 	}
 	
 	
@@ -68,9 +80,9 @@ public class TraceCutter implements Layer{
 		
 		
 		
-		List<Point> border = getScreenPoligon();
+		List<Point2D> border = getScreenPoligon();
 		for(int i=0; i<border.size(); i++) {
-			Point p = border.get(i);
+			Point2D p = border.get(i);
 			if(point.distance(p) < RADIUS) {
 				active = i;
 				listener.repaint();
@@ -114,60 +126,66 @@ public class TraceCutter implements Layer{
 			return ;
 		}
 		
-		List<Point> border = getScreenPoligon();
+		List<Point2D> border = getScreenPoligon();
 		
 		for(int i=0; i<border.size(); i++) {
 			
-			Point p1 = border.get(i);
-			Point p2 = border.get((i+1) % border.size());
+			Point2D p1 = border.get(i);
+			Point2D p2 = border.get((i+1) % border.size());
 			
 			g2.setColor(Color.YELLOW);
-			g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+			g2.drawLine((int)p1.getX(), (int)p1.getY(), (int)p2.getX(), (int)p2.getY());
 		}
 		
 		for(int i=0; i<border.size(); i++) {
-			Point p1 = border.get(i);			
+			Point2D p1 = border.get(i);			
 			
 			g2.setColor(Color.RED);
-			g2.fillOval(p1.x - RADIUS, p1.y - RADIUS, 2*RADIUS, 2*RADIUS);
+			g2.fillOval((int)p1.getX() - RADIUS, (int)p1.getY() - RADIUS, 2*RADIUS, 2*RADIUS);
 			if(active != null && active == i) {
 				g2.setColor(Color.BLUE);
-				g2.drawOval(p1.x - RADIUS, p1.y - RADIUS, 2*RADIUS, 2*RADIUS);
+				g2.drawOval((int)p1.getX() - RADIUS, (int)p1.getY() - RADIUS, 2*RADIUS, 2*RADIUS);
 			}			
 		}		
 	}
 	
-	public void apply(List<Trace> traces) {
+	public void apply(List<Trace> traces, boolean plus, boolean minus) {
 		
-		List<Point> border = getScreenPoligon();
+		List<Point2D> border = getScreenPoligon();
 		
 		for(Trace trace : traces) {
 			
-			Point p = field.latLonToScreen(trace.getLatLon());
+			Point2D p = field.latLonToScreen(trace.getLatLon());
 			
-			trace.setActive(inside(p, border));
+			
+			boolean ins = inside(p, border);
+			
+			if(ins && !trace.isActive() && plus ||
+			  !ins &&  trace.isActive() && minus){
+				  trace.setActive(ins);
+			}
 		}	
 		
 	}
 
-	private List<Point> getScreenPoligon() {
+	private List<Point2D> getScreenPoligon() {
 
-		List<Point> border = new ArrayList<>();
+		List<Point2D> border = new ArrayList<>();
 		for(LatLon ll : points) {
 			border.add(field.latLonToScreen(ll));
 		}
 		return border;
 	}
 
-	private boolean inside(Point p, List<Point> border) {
+	private boolean inside(Point2D p, List<Point2D> border) {
 		
 		boolean result = false;
 		for(int i=0; i<border.size(); i++) {
-			Point pt1 = border.get(i);
-			Point pt2 = border.get((i+1) % border.size());
+			Point2D pt1 = border.get(i);
+			Point2D pt2 = border.get((i+1) % border.size());
 		
-			if ((pt1.y > p.y) != (pt2.y > p.y) &&
-		           (p.x < (pt2.x - pt1.x) * (p.y - pt1.y) / (pt2.y-pt1.y) + pt1.x)) {
+			if ((pt1.getY() > p.getY()) != (pt2.getY() > p.getY()) &&
+		           (p.getX() < (pt2.getX() - pt1.getX()) * (p.getY() - pt1.getY()) / (pt2.getY()-pt1.getY()) + pt1.getX())) {
 		         result = !result;
 		    }		
 		}
@@ -182,47 +200,66 @@ public class TraceCutter implements Layer{
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-				
+		
+		if(changed.isFileopened()) {
+			buttonCutMode.setDisable(false);
+		}
 	}
 
 	@Override
 	public List<Node> getToolNodes() {
-		Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
-		ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
 		
+		buttonCutMode.setDisable(true);
+		buttonSet.setVisible(false);
+		buttonSave.setVisible(false);
 		
 		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
 		    	if(buttonCutMode.isSelected()) {
 		    		init();
+		    		buttonSet.setVisible(true);
+		    		buttonSave.setVisible(true);
 		    	}else{
 		    		clear();
+		    		buttonSet.setVisible(false);
+		    		buttonSave.setVisible(false);
 		    	}
 		    	listener.repaint();
 		    }
 		});
 
 		
-		buttonApply.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		    	apply(model.getFileManager().getTraces());
+		buttonSet.setOnAction(e -> {
+		    	apply(model.getFileManager().getTraces(), true, true);
 		    	listener.repaint();
-		    }
+			});
+		buttonPlus.setOnAction(e -> {
+	    	apply(model.getFileManager().getTraces(), true, false);
+	    	listener.repaint();
+		});
+		buttonMinus.setOnAction(e -> {
+	    	apply(model.getFileManager().getTraces(), false, true);
+	    	listener.repaint();
 		});
 
 		
+		buttonSave.managedProperty().bind(buttonSave.visibleProperty());
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		    	//apply(model.getFileManager().getTraces());
 		    	//listener.repaint();
+		    	buttonSave.setDisable(true);
 		    	
+		    	Cursor cursor = buttonSave.getCursor();
+		    	buttonSave.setCursor(Cursor.WAIT);
 		    	save();
-		    			    	
+		    	buttonSave.setDisable(false);
+		    	buttonSave.setCursor(cursor);
 		    }
 		});
-		
-		return Arrays.asList(buttonCutMode, buttonApply, buttonSave, new Label("LABEL"));
+		//, new Label("LABEL")
+		return Arrays.asList(buttonCutMode, /*buttonMinus, buttonPlus,*/ buttonSet,  buttonSave);
 	}
 	
 
@@ -257,7 +294,7 @@ public class TraceCutter implements Layer{
 			String name = file.getFile().getName();
 			int pos = name.lastIndexOf(".");
 			String onlyname = name.substring(0, pos);
-			File nfolder = new File(file.getFile().getParentFile(), onlyname + "processed");
+			File nfolder = new File(file.getFile().getParentFile(), onlyname + "_processed");
 			nfolder.mkdir();
 			File nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
 			

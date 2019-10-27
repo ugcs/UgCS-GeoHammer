@@ -23,6 +23,7 @@ import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
+import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 public class SgyFile {
 
@@ -61,9 +62,17 @@ public class SgyFile {
 		List<Trace> traces = new ArrayList<>();
 		
 		try {
+			Trace tracePrev = null;
 			while(blockFile.hasNext()) {
 				
 				Trace trace = next();
+				
+				if(tracePrev != null) {
+					trace.setPrevDist(CoordinatesMath.measure(
+						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr()));
+				}
+				tracePrev = trace;
 				
 				if(trace != null) {
 					traces.add(trace);
