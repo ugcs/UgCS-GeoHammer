@@ -8,6 +8,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +41,16 @@ public class SatelliteMap implements Layer{
 	private Random rand = new Random();
 	private Color color = new Color(rand.nextInt(16777215));
 
+	private static String GOOGLE_API_KEY;
+	static {
+		InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
+		//StringWriter writer = new StringWriter();
+		//IOUtils.copy(inputStream, writer, "UTF-8");
+		//GOOGLE_API_KEY = writer.toString();
+		java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
+		GOOGLE_API_KEY = s.hasNext() ? s.next() : "";		
+	}
+	
 	private Point2D dragPoint = null;
 	
 	private LatLon click;
@@ -53,8 +65,8 @@ public class SatelliteMap implements Layer{
 		BufferedImage _img = img;
 		if(_img != null) {
 			
-			System.out.println("imgLatLon  " + imgLatLon.toString());
-			System.out.println("scnLatLon  " + model.getField().getSceneCenter().toString());
+			//System.out.println("imgLatLon  " + imgLatLon.toString());
+			//System.out.println("scnLatLon  " + model.getField().getSceneCenter().toString());
 			
 			Point2D offst = model.getField().latLonToScreen(imgLatLon);
 			
@@ -95,7 +107,7 @@ public class SatelliteMap implements Layer{
 		
 		BufferedImage img = null;
 		
-		StaticMap map = new StaticMap(640, 640, "");
+		StaticMap map = new StaticMap(640, 640, GOOGLE_API_KEY);
 		
 		map.setScale(Field.MAP_SCALE);
 		map.setMaptype(Maptype.hybrid);

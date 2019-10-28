@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.draw.ChangeListener;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -20,9 +20,9 @@ public class Loader {
 
 	private Model model;
 	private RepaintListener listener;
-	private ChangeListener changeListener;
+	private SmthChangeListener changeListener;
 	
-	public Loader(Model model, RepaintListener listener, ChangeListener changeListener) {
+	public Loader(Model model, RepaintListener listener, SmthChangeListener changeListener) {
 		
 		this.model = model;
 		this.listener = listener;

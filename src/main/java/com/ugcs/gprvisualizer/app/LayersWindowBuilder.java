@@ -1,40 +1,26 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.function.Consumer;
-
-import javax.swing.text.StyleContext.SmallAttributeSet;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
-import com.ugcs.gprvisualizer.draw.ChangeListener;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
-import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
-import com.ugcs.gprvisualizer.draw.SatelliteMap2;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
-import com.ugcs.gprvisualizer.gpr.RecalculationController;
-import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 
 import javafx.application.Platform;
-import javafx.beans.value.ObservableValue;
+import javafx.beans.value.ChangeListener;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -42,7 +28,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-public class LayersWindowBuilder extends Work implements ChangeListener{
+public class LayersWindowBuilder extends Work implements SmthChangeListener{
 	
 	private ImageView imageView = new ImageView();
 	private BufferedImage img;
@@ -60,21 +46,11 @@ public class LayersWindowBuilder extends Work implements ChangeListener{
 		getLayers().add(new RadarMap(model, listener));
 		getLayers().add(new GpsTrack(model, listener));		
 		getLayers().add(new TraceCutter(model, listener));
-		// layers.add(new AuxControl());
-		
-	    //imageView.setVisible(true);
 
 		stage = new Stage();
 		stage.setTitle("layers");
 		stage.setScene(build());
 		
-//		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-//			System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
-//			listener.repaint();
-//		};
-//
-//	    stage.widthProperty().addListener(stageSizeListener);
-//	    stage.heightProperty().addListener(stageSizeListener); 
 		
 	}
 	
@@ -89,6 +65,17 @@ public class LayersWindowBuilder extends Work implements ChangeListener{
 		bPane.setTop(getToolBar());
 		
 		bPane.setCenter(imageView);
+		
+		
+		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
+			//System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
+			System.out.println("Height: " + bPane.getHeight() + " Width: " + bPane.getWidth());
+			listener.repaint();
+		};
+	    bPane.widthProperty().addListener(stageSizeListener);
+	    bPane.heightProperty().addListener(stageSizeListener); 
+		
+		
 		
 		bPane.setOnDragOver(loader.getDragHandler());		
 		bPane.setOnDragDropped(loader.getDropHandler());

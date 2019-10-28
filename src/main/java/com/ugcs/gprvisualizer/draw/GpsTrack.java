@@ -28,6 +28,9 @@ public class GpsTrack implements Layer{
 	
 	@Override
 	public void draw(Graphics2D g2) {
+		if(model.getField().getSceneCenter() == null) {
+			return;
+		}
 		
 		drawGPSPath(g2);
 	}

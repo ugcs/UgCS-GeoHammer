@@ -1,6 +1,6 @@
 package com.ugcs.gprvisualizer.draw;
 
-public interface ChangeListener {
+public interface SmthChangeListener {
 
 	void somethingChanged(WhatChanged changed);
 }
