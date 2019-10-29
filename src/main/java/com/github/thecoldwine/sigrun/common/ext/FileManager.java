@@ -31,6 +31,10 @@ public class FileManager {
 		//
 
 	}
+	
+	public boolean isActive() {
+		return files != null && !files.isEmpty();
+	}
 
 	public void processFolder(File folder) {
 		traces = null;

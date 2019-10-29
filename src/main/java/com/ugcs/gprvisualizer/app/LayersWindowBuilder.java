@@ -21,6 +21,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -37,6 +38,9 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 	private Loader loader;
 	private Scene scene;
 	
+	
+	private VerticalCut verticalCut;
+	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
@@ -51,6 +55,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 		stage.setTitle("layers");
 		stage.setScene(build());
 		
+		verticalCut = new VerticalCut(model);
 		
 	}
 	
@@ -123,6 +128,10 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 	}
 	
 	protected void repaintEvent() {
+		if(bPane.getHeight() == 0) {
+			return;
+		}
+			
 		img = draw(
 				(int)bPane.getWidth(), 
 				(int)bPane.getHeight());
@@ -156,6 +165,17 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 				toolBar.getItems().addAll(l);
 			}
 		}
+		
+		Button btnShowVerticalCut = new Button("Vertical ");
+		btnShowVerticalCut.setOnAction(e -> {
+			
+			verticalCut.init();
+			verticalCut.show();
+		});
+
+		
+		toolBar.getItems().add(btnShowVerticalCut);
+		
 		
 		return toolBar;
 	}

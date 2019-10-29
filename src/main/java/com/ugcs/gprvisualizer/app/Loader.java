@@ -9,6 +9,7 @@ import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 import javafx.event.EventHandler;
@@ -79,6 +80,10 @@ public class Loader {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+
+		
+		LevelFilter filt = new LevelFilter(); 		
+		filt.execute(model);
 		
 		WhatChanged changed = new WhatChanged();
 		changed.setFileopened(true);

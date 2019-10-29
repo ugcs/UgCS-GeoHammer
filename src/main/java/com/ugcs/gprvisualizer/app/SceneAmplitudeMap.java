@@ -116,7 +116,7 @@ public class SceneAmplitudeMap {
 		verticalCut = new VerticalCut(model);
 		verticalCutStage = new Stage();
 		verticalCutStage.setTitle("vertical cut");
-		verticalCutStage.setScene(verticalCut.build());
+		//verticalCutStage.setScene(verticalCut.build());
 		
 		layersWindowBuilder = new LayersWindowBuilder(model);
 	}

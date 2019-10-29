@@ -16,6 +16,8 @@ public class Trace {
     private boolean end = false;
     private double prevDist = 100000;
     
+    public int maxindex;
+    
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
     	
@@ -37,12 +39,20 @@ public class Trace {
     public float[] getOriginalValues() {
     	return originalvalues;
     }
+
+    public void setOriginalValues(float[] vals) {
+    	originalvalues = vals;
+    }
     
     public float[] getNormValues() {
     	return normvalues;
     }
 
-	public Block getHeaderBlock() {
+    public void setNormValues(float[] vals) {
+    	normvalues = vals;
+    }
+
+    public Block getHeaderBlock() {
 		return headerBlock;
 	}
 
