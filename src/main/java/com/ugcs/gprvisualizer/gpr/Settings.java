@@ -26,15 +26,15 @@ public class Settings {
 	
 	public int threshold = 1000;
     
-	public int distBetweenTraces = 200;
+	public int distBetweenTraces = 50;
 	public int selectedScanIndex = 200;
 	public double kf;
 	public double stx;
 	public double sty;
 	
 	
-	public int widthZoomKf = 5;
-	public int heightZoomKf = 200;
+	public int widthZoomKf = 25;
+	public int heightZoomKf = 600;
 	public int heightStart = 0;
     
 	public int getWidth() {

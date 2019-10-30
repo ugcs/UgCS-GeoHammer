@@ -172,11 +172,14 @@ public class VerticalCut {
     		g2.setColor(Color.RED);
     		drawGraph(trace.getNormValues(), startx, g2);
     		
-    		g2.setColor(Color.YELLOW);
-    		
-    		int rad = 3;
+    		int rad = 2;
+    		g2.setColor(Color.YELLOW);    		
     		g2.fillOval(startx - rad, 
     			(int)((trace.maxindex-model.getSettings().heightStart) * getHZoom()), 
+    			rad*2, rad*2);
+    		g2.setColor(Color.GREEN);    		
+    		g2.drawOval(startx - rad, 
+    			(int)((trace.maxindex2-model.getSettings().heightStart) * getHZoom()), 
     			rad*2, rad*2);
     		
 	    }
@@ -330,7 +333,7 @@ public class VerticalCut {
 
 		public void updateUI() {
 			slider.setMax(500);		
-			slider.setMin(2);
+			slider.setMin(1);
 			slider.setValue(settings.distBetweenTraces);
 		}
 		

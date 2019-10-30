@@ -17,6 +17,7 @@ public class Trace {
     private double prevDist = 100000;
     
     public int maxindex;
+    public int maxindex2;
     
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
