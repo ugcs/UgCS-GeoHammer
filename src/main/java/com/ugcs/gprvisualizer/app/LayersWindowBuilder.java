@@ -7,6 +7,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
@@ -14,6 +15,7 @@ import com.ugcs.gprvisualizer.draw.SatelliteMap;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -35,16 +37,18 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 	private BufferedImage img;
 	private Stage stage;
 	private BorderPane bPane;
-	private Loader loader;
+	//private Loader loader;
 	private Scene scene;
-	
+	//private LevelFilter levelFilter;
 	
 	private VerticalCut verticalCut;
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
-		loader = new Loader(model, listener, this);
+		AppContext.levelFilter = new LevelFilter(model);
+		
+		AppContext.loader = new Loader(model, listener, this);
 		
 		getLayers().add(new SatelliteMap(model, listener));
 		getLayers().add(new RadarMap(model, listener));
@@ -82,8 +86,8 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 		
 		
 		
-		bPane.setOnDragOver(loader.getDragHandler());		
-		bPane.setOnDragDropped(loader.getDropHandler());
+		bPane.setOnDragOver(AppContext.loader.getDragHandler());		
+		bPane.setOnDragDropped(AppContext.loader.getDropHandler());
 		
 		bPane.setOnScroll(event -> {
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
@@ -166,6 +170,8 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 			}
 		}
 		
+		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
+		
 		Button btnShowVerticalCut = new Button("Vertical ");
 		btnShowVerticalCut.setOnAction(e -> {
 			
@@ -241,5 +247,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
     			imgCoord.getY() - imageView.getBoundsInLocal().getHeight()/2);
 		return p;
 	}
+
 	
 }

@@ -33,8 +33,8 @@ public class Settings {
 	public double sty;
 	
 	
-	public int widthZoomKf = 25;
-	public int heightZoomKf = 600;
+	public int widthZoomKf = 30;
+	public int heightZoomKf = 1000;
 	public int heightStart = 0;
     
 	public int getWidth() {

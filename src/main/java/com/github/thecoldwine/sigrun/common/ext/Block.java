@@ -7,7 +7,7 @@ import java.nio.channels.ReadableByteChannel;
 
 import com.github.thecoldwine.sigrun.common.TextHeader;
 
-public class Block {
+public class Block implements ByteBufferProducer {
 
 	private FileChannel chan;
 	private int start;

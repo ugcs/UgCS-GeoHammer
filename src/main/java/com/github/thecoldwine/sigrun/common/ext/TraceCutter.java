@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.sun.javafx.cursor.CursorType;
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Loader;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -41,14 +43,16 @@ public class TraceCutter implements Layer{
 	Button buttonPlus = new Button("Plus");
 	
 	Button buttonSave = new Button("Save");
+	Button buttonSaveReload = new Button("Save&Reload");
 	
 	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
 	ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
-	
+	//private Loader loader;
 	
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
 		this.listener = listener;
+		//this.loader = loader;
 		
 		field = model.getField();
 		
@@ -212,6 +216,7 @@ public class TraceCutter implements Layer{
 		buttonCutMode.setDisable(true);
 		buttonSet.setVisible(false);
 		buttonSave.setVisible(false);
+		buttonSaveReload.setVisible(false);
 		
 		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
@@ -220,10 +225,12 @@ public class TraceCutter implements Layer{
 		    		init();
 		    		buttonSet.setVisible(true);
 		    		buttonSave.setVisible(true);
+		    		buttonSaveReload.setVisible(true);
 		    	}else{
 		    		clear();
 		    		buttonSet.setVisible(false);
 		    		buttonSave.setVisible(false);
+		    		buttonSaveReload.setVisible(false);
 		    	}
 		    	listener.repaint();
 		    }
@@ -247,23 +254,39 @@ public class TraceCutter implements Layer{
 		buttonSave.managedProperty().bind(buttonSave.visibleProperty());
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-		    	//apply(model.getFileManager().getTraces());
-		    	//listener.repaint();
 		    	buttonSave.setDisable(true);
 		    	
 		    	Cursor cursor = buttonSave.getCursor();
 		    	buttonSave.setCursor(Cursor.WAIT);
-		    	save();
+		    	List<File> newfiles = save();
+		    	
 		    	buttonSave.setDisable(false);
 		    	buttonSave.setCursor(cursor);
 		    }
 		});
+		
+		buttonSaveReload.managedProperty().bind(buttonSaveReload.visibleProperty());
+		buttonSaveReload.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	buttonSaveReload.setDisable(true);
+		    	
+		    	Cursor cursor = buttonSaveReload.getCursor();
+		    	buttonSaveReload.setCursor(Cursor.WAIT);
+		    	List<File> newfiles = save();
+		    	AppContext.loader.load(newfiles);
+		    	
+		    	buttonSaveReload.setDisable(false);
+		    	buttonSaveReload.setCursor(cursor);
+		    }
+		});
+		
 		//, new Label("LABEL")
-		return Arrays.asList(buttonCutMode, /*buttonMinus, buttonPlus,*/ buttonSet,  buttonSave);
+		return Arrays.asList(buttonCutMode, /*buttonMinus, buttonPlus,*/ buttonSet,  buttonSave, buttonSaveReload);
 	}
 	
 
-	private void save() {
+	private List<File> save() {
+		List<File> newfiles = new ArrayList<>();
 		for(SgyFile file : model.getFileManager().getFiles()) {
 			int part = 1;
 			List<Trace> sublist = new ArrayList<>();
@@ -273,45 +296,49 @@ public class TraceCutter implements Layer{
 					sublist.add(trace);
 				}else {
 					if(!sublist.isEmpty()){					
-						savePart(file, part++, sublist);
+						newfiles.add(savePart(file, part++, sublist));
 						sublist.clear();
 					}		
 				}
 			}
 			//for last
 			if(!sublist.isEmpty()){					
-				savePart(file, part++, sublist);
+				newfiles.add(savePart(file, part++, sublist));
 				sublist.clear();
 			}		
 		}
 		
+		return newfiles;
 	}
 
-	private void savePart(SgyFile file, int part, List<Trace> sublist) {
-		List<Block> blocks = getBlocks(sublist); 
-
+	private File savePart(SgyFile file, int part, List<Trace> sublist) {
+		List<ByteBufferProducer> blocks = getBlocks(sublist); 
+		File nfile = null;
 		try {
 			String name = file.getFile().getName();
 			int pos = name.lastIndexOf(".");
 			String onlyname = name.substring(0, pos);
 			File nfolder = new File(file.getFile().getParentFile(), onlyname + "_processed");
 			nfolder.mkdir();
-			File nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
+			nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
 			
 			
 			file.savePart(nfile.getAbsolutePath(), blocks);
 			
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return nfile;
 	}
 
-	private List<Block> getBlocks(List<Trace> sublist) {
+	private List<ByteBufferProducer> getBlocks(List<Trace> sublist) {
 		
-		List<Block> blocks = new ArrayList<>();
+		List<ByteBufferProducer> blocks = new ArrayList<>();
 		for(Trace trace : sublist) {
 			blocks.add(trace.getHeaderBlock());
-			blocks.add(trace.getDataBlock());
+			//blocks.add(trace.getDataBlock());
+			blocks.add(new ByteBufferHolder(trace));
 		}
 		
 		return blocks;

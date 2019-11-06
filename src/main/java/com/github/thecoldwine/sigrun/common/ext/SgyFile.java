@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -157,6 +158,7 @@ public class SgyFile {
 		for(Trace trace : traces) {
 			write(writechan, trace.getHeaderBlock());
 			write(writechan, trace.getDataBlock());
+			
 		}		
 		
 		writechan.close();
@@ -168,7 +170,7 @@ public class SgyFile {
 		writechan.write(ByteBuffer.wrap(block.read().array()));
 	}
 	
-	public void savePart(String fileName, List<Block> blocks) throws IOException {
+	public void savePart(String fileName, List<ByteBufferProducer> blocks) throws IOException {
 		
 		FileOutputStream fos = new FileOutputStream(fileName);
 		FileChannel writechan = fos.getChannel();		
@@ -176,7 +178,7 @@ public class SgyFile {
 		writechan.write(ByteBuffer.wrap(txtHdrBlock.read().array()));
 		writechan.write(ByteBuffer.wrap(binHdrBlock.read().array()));		
 
-		for(Block block : blocks) {
+		for(ByteBufferProducer block : blocks) {
 			writechan.write(ByteBuffer.wrap(block.read().array()));
 		}		
 		

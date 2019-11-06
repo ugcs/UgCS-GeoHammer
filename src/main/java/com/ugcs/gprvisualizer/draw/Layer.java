@@ -7,7 +7,7 @@ import java.util.List;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
-public interface Layer {
+public interface Layer extends ToolProducer{
 
 	void draw(Graphics2D g2);
 	
@@ -22,7 +22,7 @@ public interface Layer {
 	
 	boolean mouseMove(Point2D point);
 
-	List<Node> getToolNodes();
+	
 	
 	
 }

@@ -1,5 +1,10 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.github.thecoldwine.sigrun.common.TraceHeader;
 
 public class Trace {
@@ -18,6 +23,8 @@ public class Trace {
     
     public int maxindex;
     public int maxindex2;
+    
+    public Set<Integer> max = new HashSet<>();
     
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
@@ -46,7 +53,7 @@ public class Trace {
     }
     
     public float[] getNormValues() {
-    	return normvalues;
+    	return normvalues != null ? normvalues : originalvalues;
     }
 
     public void setNormValues(float[] vals) {
@@ -85,5 +92,6 @@ public class Trace {
 		this.prevDist = prevDist;
 	}
     
+	
 	
 }

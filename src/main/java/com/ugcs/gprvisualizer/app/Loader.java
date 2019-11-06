@@ -69,7 +69,7 @@ public class Loader {
 
     };
     
-	private void load(List<File> files) {
+	public void load(List<File> files) {
 		
 		System.out.println("load() ");
 		try {
@@ -81,9 +81,9 @@ public class Loader {
 			e.printStackTrace();
 		}
 
-		
-		LevelFilter filt = new LevelFilter(); 		
-		filt.execute(model);
+		//AppContext.levelFilter.execute();
+		//LevelFilter filt = new LevelFilter(); 		
+		//filt.execute(model);
 		
 		WhatChanged changed = new WhatChanged();
 		changed.setFileopened(true);

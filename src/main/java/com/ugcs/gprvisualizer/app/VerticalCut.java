@@ -149,9 +149,17 @@ public class VerticalCut {
 	    
 	    
 	    
+	    //draw hor grid
+	    g2.setColor(Color.GRAY);
+	    for(int i=0; i<30; i++) {
+	    	
+	    	int h = (int)((i-model.getSettings().heightStart) * getHZoom());
+	    	g2.drawLine(0, h, width, h);
+	    }
+	    
 	    int rangx = width / model.getSettings().distBetweenTraces / 2;
 	    for(int x=-rangx; x<rangx; x++){
-	    	System.out.print("+");
+	    	
     		int scanNum = model.getSettings().selectedScanIndex + x;
     		if(scanNum<0 || scanNum >= model.getFileManager().getTraces().size()) {
     			continue;
@@ -171,12 +179,18 @@ public class VerticalCut {
     		
     		g2.setColor(Color.RED);
     		drawGraph(trace.getNormValues(), startx, g2);
-    		
+    	
+    		if(trace.isEnd()) {
+    			g2.setColor(Color.LIGHT_GRAY);
+    			g2.drawLine(startx,0, startx, height/2);
+    		}
     		int rad = 2;
-    		g2.setColor(Color.YELLOW);    		
-    		g2.fillOval(startx - rad, 
-    			(int)((trace.maxindex-model.getSettings().heightStart) * getHZoom()), 
-    			rad*2, rad*2);
+    		for(Integer i : trace.max) {
+    			g2.setColor(Color.YELLOW);    		
+    			g2.fillOval(startx - rad, 
+    					(int)((i-model.getSettings().heightStart) * getHZoom()), 
+    					rad*2, rad*2);
+    		}
     		g2.setColor(Color.GREEN);    		
     		g2.drawOval(startx - rad, 
     			(int)((trace.maxindex2-model.getSettings().heightStart) * getHZoom()), 
@@ -220,7 +234,7 @@ public class VerticalCut {
 	}
 
 	private float getHZoom() {
-		float kfy = (float)model.getSettings().heightZoomKf / 100.0f;
+		float kfy = (float)model.getSettings().heightZoomKf / 10.0f;
 		return kfy;
 	}
 	
@@ -286,8 +300,8 @@ public class VerticalCut {
 		}
 
 		public void updateUI() {
-			slider.setMax(1500);		
-			slider.setMin(10);
+			slider.setMax(250);		
+			slider.setMin(5);
 			slider.setValue(settings.heightZoomKf);
 		}
 		
