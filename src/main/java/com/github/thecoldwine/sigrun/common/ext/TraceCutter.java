@@ -287,6 +287,9 @@ public class TraceCutter implements Layer{
 
 	private List<File> save() {
 		List<File> newfiles = new ArrayList<>();
+		
+		
+		File folder = createFolder();
 		for(SgyFile file : model.getFileManager().getFiles()) {
 			int part = 1;
 			List<Trace> sublist = new ArrayList<>();
@@ -296,14 +299,14 @@ public class TraceCutter implements Layer{
 					sublist.add(trace);
 				}else {
 					if(!sublist.isEmpty()){					
-						newfiles.add(savePart(file, part++, sublist));
+						newfiles.add(savePart(file, part++, sublist, folder));
 						sublist.clear();
 					}		
 				}
 			}
 			//for last
 			if(!sublist.isEmpty()){					
-				newfiles.add(savePart(file, part++, sublist));
+				newfiles.add(savePart(file, part++, sublist, folder));
 				sublist.clear();
 			}		
 		}
@@ -311,15 +314,28 @@ public class TraceCutter implements Layer{
 		return newfiles;
 	}
 
-	private File savePart(SgyFile file, int part, List<Trace> sublist) {
+	private File createFolder() {
+		File someFile = model.getFileManager().getFiles().get(0).getFile();
+		File nfolder;
+		int cnt=0;
+		do {
+			cnt++;
+			String name = String.format("processed_%03d", cnt);
+			nfolder = new File(someFile.getParentFile(), name);
+		}while(nfolder.exists());
+		
+		nfolder.mkdir();
+		return nfolder;
+	}
+
+
+	private File savePart(SgyFile file, int part, List<Trace> sublist, File nfolder) {
 		List<ByteBufferProducer> blocks = getBlocks(sublist); 
 		File nfile = null;
 		try {
 			String name = file.getFile().getName();
 			int pos = name.lastIndexOf(".");
 			String onlyname = name.substring(0, pos);
-			File nfolder = new File(file.getFile().getParentFile(), onlyname + "_processed");
-			nfolder.mkdir();
 			nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
 			
 			

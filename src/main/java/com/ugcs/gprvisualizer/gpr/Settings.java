@@ -34,7 +34,7 @@ public class Settings {
 	
 	
 	public int widthZoomKf = 30;
-	public int heightZoomKf = 1000;
+	public int heightZoomKf = 100;
 	public int heightStart = 0;
     
 	public int getWidth() {

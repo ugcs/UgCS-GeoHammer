@@ -19,6 +19,7 @@ public class LevelFilter implements ToolProducer {
 
 	Button buttonNoise = new Button("noise-");
 	Button buttonFindLevel = new Button("find level");
+	Button buttonSmoothLevel = new Button("smooth level");
 	Button buttonSet = new Button("leveling");
 
 	Model model;
@@ -27,17 +28,12 @@ public class LevelFilter implements ToolProducer {
 		this.model = model;
 	}
 
-	public void execute() {
-
+	public void removeConstantNoise() {
+		BackgroundRemovalFilter brf = new BackgroundRemovalFilter();
 		for (SgyFile sf : model.getFileManager().getFiles()) {
 			List<Trace> lst = sf.getTraces();
-			removeConstantNoise(lst);
-		
+			brf.removeConstantNoise(lst);
 		}
-		//removeConstantNoise(model.getFileManager().getTraces());
-
-
-		// leveling(lst);
 	}
 
 	public void findGroundLevel() {
@@ -60,14 +56,16 @@ public class LevelFilter implements ToolProducer {
 			st = getNearestMax(st, trace);
 			trace.max.addAll(st);
 			
-			trace.maxindex = getMaxAmpIndex(trace, 1, trace.getNormValues().length);
+			trace.maxindex = getMaxAmpIndex(trace, model.getSettings().heightStart, trace.getNormValues().length);
+			trace.maxindex2 = trace.maxindex;
+			
 			if (lastMaxIndex == -1 || Math.abs(lastMaxIndex - trace.maxindex) > WND) {
 				continGrps.add(new ArrayList<>());
 			}
 			lastMaxIndex = trace.maxindex;
 			continGrps.get(continGrps.size() - 1).add(trace);
 
-			trace.maxindex2 = trace.maxindex;
+			
 		}
 
 		int largesIndex = getLargestGrpIndex(continGrps);
@@ -79,6 +77,8 @@ public class LevelFilter implements ToolProducer {
 			combineTwoGroupsSecond(continGrps, continGrps.size() - 2, continGrps.size() - 1);
 		}
 	}
+	
+	
 
 	private Set<Integer> getNearestMax(Set<Integer> st, Trace trace) {
 		
@@ -150,11 +150,42 @@ public class LevelFilter implements ToolProducer {
 		g1.addAll(g2);
 		if (g2.size() < GRP_SIZE) {
 			for (Trace t : g2) {
-				t.maxindex2 = getMaxAmpIndex(t, max - WND, max + WND);
+				t.maxindex2 = getMaxAmpIndex(t, max - WND-1, max + WND);
 				max = t.maxindex2;
 			}
 		}
 		continGrps.remove(j);
+	}
+	
+	public void smoothLevel() {
+		for(SgyFile sf : model.getFileManager().getFiles()) {
+			
+			int result[] = new int[sf.getTraces().size()];
+			for(int i = 0; i < sf.getTraces().size(); i++) {							
+				result[i] = avg(sf.getTraces(), i);				
+			}
+			
+			for(int i = 0; i < sf.getTraces().size(); i++) {
+				Trace tr = sf.getTraces().get(i);
+				tr.maxindex2 = result[i];				
+			}			
+		}
+	}
+
+	int R=8;
+	private int avg(List<Trace> traces, int i) {
+		
+		int from = i-R;
+		from = Math.max(0, from);
+		int to = i+R;
+		to = Math.min(to, traces.size()-1);
+		int sum = 0;
+		int cnt = 0;
+		for(int j=from; j<= to; j++) {
+			sum += traces.get(j).maxindex2;
+			cnt++;
+		}
+		return sum/cnt;
 	}
 
 	void combineTwoGroupsSecond(List<List<Trace>> continGrps, int i, int j) {
@@ -166,33 +197,13 @@ public class LevelFilter implements ToolProducer {
 		if (g1size < GRP_SIZE) {
 			for (int index = g1size - 1; index >= 0; index--) {
 				Trace t = g1.get(index);
-				t.maxindex2 = getMaxAmpIndex(t, max - 2, max + 2);
+				t.maxindex2 = getMaxAmpIndex(t, max - WND-1, max + WND);
 				max = t.maxindex2;
 			}
 		}
 		continGrps.remove(j);
 	}
 
-	public void removeConstantNoise(List<Trace> lst) {
-		float avg[] = new float[lst.get(100).getNormValues().length];
-
-		for (int index = 0; index < lst.size(); index++) {
-			Trace trace = lst.get(index);
-
-			arraySum(avg, trace.getNormValues());
-		}
-
-		arrayDiv(avg, lst.size());
-
-		for (int index = 0; index < lst.size(); index++) {
-			Trace trace = lst.get(index);
-
-			float normval[] = Arrays.copyOf(trace.getNormValues(), trace.getNormValues().length);
-			arraySub(normval, avg);
-
-			trace.setNormValues(normval);
-		}
-	}
 
 	protected void leveling(List<Trace> lst) {
 		for (int index = 0; index < lst.size(); index++) {
@@ -216,40 +227,19 @@ public class LevelFilter implements ToolProducer {
 			for (int i2 = index - 25; i2 < index + 25; i2++) {
 				if (i2 > 0 && i2 < lst.size()) {
 					Trace trace2 = lst.get(index);
-					arraySum(avg, trace2.getNormValues());
+					ArrayMath.arraySum(avg, trace2.getNormValues());
 					cnt++;
 				}
 			}
 
-			arrayDiv(avg, cnt);
+			ArrayMath.arrayDiv(avg, cnt);
 
 			trace.setOriginalValues(avg);
-
-			// System.arraycopy(values, trace.maxindex2, values, 0,
-			// values.length-trace.maxindex2);
 		}
 
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);
-			arraySub(trace.getNormValues(), trace.getOriginalValues());
-		}
-	}
-
-	private void arraySum(float avg[], float add[]) {
-		for (int i = 0; i < avg.length && i < add.length; i++) {
-			avg[i] += add[i];
-		}
-	}
-
-	private void arraySub(float avg[], float add[]) {
-		for (int i = 0; i < avg.length && i < add.length; i++) {
-			avg[i] -= add[i];
-		}
-	}
-
-	private void arrayDiv(float avg[], float divider) {
-		for (int i = 0; i < avg.length; i++) {
-			avg[i] /= divider;
+			ArrayMath.arraySub(trace.getNormValues(), trace.getOriginalValues());
 		}
 	}
 
@@ -311,7 +301,7 @@ public class LevelFilter implements ToolProducer {
 	public List<Node> getToolNodes() {
 		buttonNoise.setOnAction(e -> {
 
-			execute();
+			removeConstantNoise();
 		});
 		
 		buttonFindLevel.setOnAction(e -> {
@@ -319,13 +309,17 @@ public class LevelFilter implements ToolProducer {
 			findGroundLevel();
 		});
 
+		buttonSmoothLevel.setOnAction(e -> {
+
+			smoothLevel();
+		});
 
 		buttonSet.setOnAction(e -> {
 
 			leveling(model.getFileManager().getTraces());
 		});
 
-		return Arrays.asList(buttonNoise, buttonFindLevel, buttonSet);
+		return Arrays.asList(buttonNoise, buttonFindLevel, buttonSmoothLevel, buttonSet);
 	}
 
 }

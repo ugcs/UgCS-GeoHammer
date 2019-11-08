@@ -73,7 +73,7 @@ public class Loader {
 		
 		System.out.println("load() ");
 		try {
-			model.getFileManager().processFileList(files);
+			model.getFileManager().processList(files);
 		
 			initField();
 			System.out.println("===initField() " + model.getField().getPathCenter());
@@ -81,13 +81,10 @@ public class Loader {
 			e.printStackTrace();
 		}
 
-		//AppContext.levelFilter.execute();
-		//LevelFilter filt = new LevelFilter(); 		
-		//filt.execute(model);
 		
 		WhatChanged changed = new WhatChanged();
 		changed.setFileopened(true);
-		//listener.repaint();
+
 		changeListener.somethingChanged(changed );
 	}
 

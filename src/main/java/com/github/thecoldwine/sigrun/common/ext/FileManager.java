@@ -21,43 +21,56 @@ public class FileManager {
 	private List<SgyFile> files;
 
 	private List<Trace> traces = null;
+	
+	private File topFolder = null;
 
-	public void load(File folder) {
-
-		// load
-		processFolder(folder);
-
-
-		//
-
-	}
 	
 	public boolean isActive() {
 		return files != null && !files.isEmpty();
 	}
 
-	public void processFolder(File folder) {
-		traces = null;
-		processFileList(Arrays.asList(folder.listFiles(filter)));
 
-	}
-
-	public void processFileList(List<File> fileList) {
+	public void processList(List<File> fileList) {
 		traces = null;
 		files = new ArrayList<>();
+		topFolder = null;
+		
 		for (File fl : fileList) {
-
-			//String path = fl.getAbsolutePath();
-
-			try {
-				SgyFile sgyFile = new SgyFile();
-				sgyFile.open(fl);
-				files.add(sgyFile);
-
-			} catch (Exception e) {
-				e.printStackTrace();
+			if(fl.isDirectory()) {
+				processDirectory(fl);
+			}else {
+				processFile(fl);
 			}
-			System.out.println("files.size(): " + files.size() );
+			
+		}
+	}
+	
+	private void processDirectory(File fl) {
+		if(topFolder == null) {
+			topFolder = fl;
+		}
+		
+		processFileList(Arrays.asList(fl.listFiles(filter)));
+		
+	}
+
+	private void processFile(File fl) {
+		try {
+			SgyFile sgyFile = new SgyFile();
+			sgyFile.open(fl);
+			files.add(sgyFile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void processFileList(List<File> fileList) {
+		//traces = null;
+		//files = new ArrayList<>();
+		for (File fl : fileList) {
+			processFile(fl);
+			//System.out.println("files.size(): " + files.size() );
 		}
 		System.out.println("stop files.size(): " + files.size() );
 	}

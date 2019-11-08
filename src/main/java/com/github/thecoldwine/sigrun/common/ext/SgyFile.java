@@ -147,9 +147,9 @@ public class SgyFile {
 		return v2;
 	}
 
-	public void saveTraces(String fileName, List<Trace> traces) throws IOException {
+	public void saveTraces(File file, List<Trace> traces) throws IOException {
 		
-		FileOutputStream fos = new FileOutputStream(fileName);
+		FileOutputStream fos = new FileOutputStream(file);
 		FileChannel writechan = fos.getChannel();		
 		
 		writechan.write(ByteBuffer.wrap(txtHdrBlock.read().array()));
@@ -157,8 +157,8 @@ public class SgyFile {
 		
 		for(Trace trace : traces) {
 			write(writechan, trace.getHeaderBlock());
-			write(writechan, trace.getDataBlock());
-			
+			//write(writechan, trace.getDataBlock());
+			writechan.write(ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()));
 		}		
 		
 		writechan.close();
