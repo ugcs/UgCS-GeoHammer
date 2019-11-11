@@ -23,13 +23,13 @@ public class AmplitudeMatrix {
 
 	float[][] matrix;
 	float maxamp;
+	List<Trace> trace;
 	
 	public void init(List<Trace> trace) {
-		
+		this.trace = trace;
 		matrix = new float[trace.size()][];
 		for(int i=0; i< trace.size(); i++) {
 			matrix[i] = getAmpVector(trace.get(i).getNormValues());
-			
 		}		
 	}
 
@@ -85,13 +85,51 @@ public class AmplitudeMatrix {
 	MovingAvg startAvg = new MovingAvg();
 	MovingAvg finishAvg = new MovingAvg();
 	
-	void findLevel() {
+	int level[];
+	
+	public void findLevel() {
 		List<Grp> startList = getOrderedDescGrps();
+		List<List<Grp>> selected = new ArrayList<>();
 		
 		for(Grp start : startList) {
 			selected.add(findLevelStartingAt(start));
 		}
 		
+		List<Grp> selrow = findBestPath(selected);
+		
+		
+		this.selected.add(selrow);
+		
+		
+		level = new int[selrow.size()];
+		
+		for(int i=0; i< level.length; i++) {
+			 int r = calcAvgHeight(selrow, i);
+			 level[i] = r;
+			 trace.get(i).maxindex = r;
+			 trace.get(i).maxindex2 = r;
+		}
+	}
+
+	private int calcAvgHeight(List<Grp> selrow, int i) {
+		int R = 10;
+		int from = i-R;
+		from = Math.max(from, 0);
+		
+		int to = i+R;
+		to = Math.min(to, selrow.size()-1);
+
+		double sum = 0;
+		double del = 0;
+		for(int j=from; j<=to; j++) {
+			sum += selrow.get(j).start;
+			del += 1;
+		}
+		
+		return (int)Math.round(sum/del);
+	}
+
+	private List<Grp> findBestPath(List<List<Grp>> selected) {
 		List<Grp> selrow = null;
 		long selsum = 0;
 		for(List<Grp> row : selected) {
@@ -101,10 +139,7 @@ public class AmplitudeMatrix {
 				selsum = sum;
 			}			
 		}
-		
-		selected.clear();
-		selected.add(selrow);
-		
+		return selrow;
 	}
 	
 	private long getIndignation(List<Grp> row) {
@@ -302,6 +337,7 @@ public class AmplitudeMatrix {
 	    
 	    int grn = Color.GREEN.getIntArgbPre();
 	    int red = Color.RED.getIntArgbPre();
+	    int levelColor = Color.BLUE.getIntArgbPre();
 	    for(List<Grp> path : selected) {
 	    	int x =0;
 	    	for(Grp grp : path) {
@@ -317,6 +353,7 @@ public class AmplitudeMatrix {
 	    		//	buffer[x + y * width] = grn;
 	    		//}
 	    		
+	    		buffer[x + level[x] * width] = levelColor; 
 	    		
 	    		x++;
 	    	}	    	

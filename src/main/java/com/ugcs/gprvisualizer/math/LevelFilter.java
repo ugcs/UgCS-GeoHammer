@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
@@ -40,7 +41,10 @@ public class LevelFilter implements ToolProducer {
 		for (SgyFile sf : model.getFileManager().getFiles()) {
 			List<Trace> lst = sf.getTraces();
 	
-			findGroundLevel(lst);
+			//findGroundLevel(lst);
+			AmplitudeMatrix am = new AmplitudeMatrix();
+			am.init(lst);
+			am.findLevel();
 		}
 	}
 	
