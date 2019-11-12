@@ -26,8 +26,9 @@ public class Work {
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
-		//int width = model.getSettings().width;
-		//int height = model.getSettings().height;
+		if(width <= 0 || height <= 0) {
+			return null;
+		}
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();

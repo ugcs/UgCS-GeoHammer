@@ -20,13 +20,11 @@ import javafx.scene.input.TransferMode;
 public class Loader {
 
 	private Model model;
-	private RepaintListener listener;
 	private SmthChangeListener changeListener;
 	
-	public Loader(Model model, RepaintListener listener, SmthChangeListener changeListener) {
+	public Loader(Model model, SmthChangeListener changeListener) {
 		
 		this.model = model;
-		this.listener = listener;
 		this.changeListener = changeListener;
 		
 	}

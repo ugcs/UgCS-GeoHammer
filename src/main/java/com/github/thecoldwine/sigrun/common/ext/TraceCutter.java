@@ -39,30 +39,17 @@ public class TraceCutter implements Layer{
 	Model model;
 	RepaintListener listener;
 	Button buttonSet = new Button("Apply");
-	Button buttonMinus = new Button("Minus");
-	Button buttonPlus = new Button("Plus");
-	
-	Button buttonSave = new Button("Save");
-	Button buttonSaveReload = new Button("Save&Reload");
 	
 	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
 	ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
-	//private Loader loader;
 	
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
 		this.listener = listener;
-		//this.loader = loader;
-		
-		field = model.getField();
-		
-		
-		
+		this.field = model.getField();		
 	}
 	
-	
 	public void clear() {
-		
 		points = null;
 		active = null;
 	}
@@ -81,8 +68,6 @@ public class TraceCutter implements Layer{
 		if(points == null) {
 			return false;
 		}
-		
-		
 		
 		List<Point2D> border = getScreenPoligon();
 		for(int i=0; i<border.size(); i++) {
@@ -205,18 +190,16 @@ public class TraceCutter implements Layer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened()) {
-			buttonCutMode.setDisable(false);
-		}
+//		if(changed.isFileopened()) {
+//			buttonCutMode.setDisable(false);
+//		}
 	}
 
 	@Override
 	public List<Node> getToolNodes() {
 		
-		buttonCutMode.setDisable(true);
+		//buttonCutMode.setDisable(true);
 		buttonSet.setVisible(false);
-		buttonSave.setVisible(false);
-		buttonSaveReload.setVisible(false);
 		
 		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
@@ -224,13 +207,9 @@ public class TraceCutter implements Layer{
 		    	if(buttonCutMode.isSelected()) {
 		    		init();
 		    		buttonSet.setVisible(true);
-		    		buttonSave.setVisible(true);
-		    		buttonSaveReload.setVisible(true);
 		    	}else{
 		    		clear();
 		    		buttonSet.setVisible(false);
-		    		buttonSave.setVisible(false);
-		    		buttonSaveReload.setVisible(false);
 		    	}
 		    	listener.repaint();
 		    }
@@ -241,123 +220,11 @@ public class TraceCutter implements Layer{
 		    	apply(model.getFileManager().getTraces(), true, true);
 		    	listener.repaint();
 			});
-		buttonPlus.setOnAction(e -> {
-	    	apply(model.getFileManager().getTraces(), true, false);
-	    	listener.repaint();
-		});
-		buttonMinus.setOnAction(e -> {
-	    	apply(model.getFileManager().getTraces(), false, true);
-	    	listener.repaint();
-		});
-
 		
-		buttonSave.managedProperty().bind(buttonSave.visibleProperty());
-		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		    	buttonSave.setDisable(true);
-		    	
-		    	Cursor cursor = buttonSave.getCursor();
-		    	buttonSave.setCursor(Cursor.WAIT);
-		    	List<File> newfiles = save();
-		    	
-		    	buttonSave.setDisable(false);
-		    	buttonSave.setCursor(cursor);
-		    }
-		});
-		
-		buttonSaveReload.managedProperty().bind(buttonSaveReload.visibleProperty());
-		buttonSaveReload.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		    	buttonSaveReload.setDisable(true);
-		    	
-		    	Cursor cursor = buttonSaveReload.getCursor();
-		    	buttonSaveReload.setCursor(Cursor.WAIT);
-		    	List<File> newfiles = save();
-		    	AppContext.loader.load(newfiles);
-		    	
-		    	buttonSaveReload.setDisable(false);
-		    	buttonSaveReload.setCursor(cursor);
-		    }
-		});
 		
 		//, new Label("LABEL")
-		return Arrays.asList(buttonCutMode, /*buttonMinus, buttonPlus,*/ buttonSet,  buttonSave, buttonSaveReload);
+		return Arrays.asList(buttonCutMode, buttonSet);
 	}
 	
 
-	private List<File> save() {
-		List<File> newfiles = new ArrayList<>();
-		
-		
-		File folder = createFolder();
-		for(SgyFile file : model.getFileManager().getFiles()) {
-			int part = 1;
-			List<Trace> sublist = new ArrayList<>();
-			for(Trace trace : file.getTraces()) {
-				
-				if(trace.isActive()) {
-					sublist.add(trace);
-				}else {
-					if(!sublist.isEmpty()){					
-						newfiles.add(savePart(file, part++, sublist, folder));
-						sublist.clear();
-					}		
-				}
-			}
-			//for last
-			if(!sublist.isEmpty()){					
-				newfiles.add(savePart(file, part++, sublist, folder));
-				sublist.clear();
-			}		
-		}
-		
-		return newfiles;
-	}
-
-	private File createFolder() {
-		File someFile = model.getFileManager().getFiles().get(0).getFile();
-		File nfolder;
-		int cnt=0;
-		do {
-			cnt++;
-			String name = String.format("processed_%03d", cnt);
-			nfolder = new File(someFile.getParentFile(), name);
-		}while(nfolder.exists());
-		
-		nfolder.mkdir();
-		return nfolder;
-	}
-
-
-	private File savePart(SgyFile file, int part, List<Trace> sublist, File nfolder) {
-		List<ByteBufferProducer> blocks = getBlocks(sublist); 
-		File nfile = null;
-		try {
-			String name = file.getFile().getName();
-			int pos = name.lastIndexOf(".");
-			String onlyname = name.substring(0, pos);
-			nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
-			
-			
-			file.savePart(nfile.getAbsolutePath(), blocks);
-			
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return nfile;
-	}
-
-	private List<ByteBufferProducer> getBlocks(List<Trace> sublist) {
-		
-		List<ByteBufferProducer> blocks = new ArrayList<>();
-		for(Trace trace : sublist) {
-			blocks.add(trace.getHeaderBlock());
-			//blocks.add(trace.getDataBlock());
-			blocks.add(new ByteBufferHolder(trace));
-		}
-		
-		return blocks;
-	}
-	
 }

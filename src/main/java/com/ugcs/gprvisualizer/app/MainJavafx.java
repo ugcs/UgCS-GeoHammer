@@ -28,7 +28,7 @@ public class MainJavafx extends Application {
 
 		//scene1 = sceneAmplitudeMap.build();//new Scene(bPane, 1024, 768); 
 		
-		scene1 = layersWindowBuilder.build();
+		//scene1 = layersWindowBuilder.build();
 		
 		scene2 = new Scene(getScene2(), 1024, 768); 
 		
