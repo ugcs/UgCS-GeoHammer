@@ -2,6 +2,8 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -31,65 +33,32 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-public class LayersWindowBuilder extends Work implements SmthChangeListener{
+public class LayersWindowBuilder extends Work implements SmthChangeListener, ModeFactory {
 	
 	private ImageView imageView = new ImageView();
 	private BufferedImage img;
 	private Stage stage;
-	private BorderPane bPane;
-	//private Loader loader;
-	private Scene scene;
-	//private LevelFilter levelFilter;
-	
-	private VerticalCut verticalCut;
+	private int width;
+	private int height;
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
-		AppContext.levelFilter = new LevelFilter(model);
-		
-		AppContext.loader = new Loader(model, listener, this);
 		
 		getLayers().add(new SatelliteMap(model, listener));
 		getLayers().add(new RadarMap(model, listener));
 		getLayers().add(new GpsTrack(model, listener));		
 		getLayers().add(new TraceCutter(model, listener));
 
-		stage = new Stage();
-		stage.setTitle("layers");
-		stage.setScene(build());
-		
-		verticalCut = new VerticalCut(model);
-		
+		initImageView();
 	}
 	
 	public Stage getStage() {
 		return stage;
 	}
 		
-	public Scene build() {
-		
-		bPane = new BorderPane();		
-		
-		bPane.setTop(getToolBar());
-		
-		bPane.setCenter(imageView);
-		
-		
-		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-			//System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
-			System.out.println("Height: " + bPane.getHeight() + " Width: " + bPane.getWidth());
-			listener.repaint();
-		};
-	    bPane.widthProperty().addListener(stageSizeListener);
-	    bPane.heightProperty().addListener(stageSizeListener); 
-		
-		
-		
-		bPane.setOnDragOver(AppContext.loader.getDragHandler());		
-		bPane.setOnDragDropped(AppContext.loader.getDropHandler());
-		
-		bPane.setOnScroll(event -> {
+	private void initImageView() {
+		imageView.setOnScroll(event -> {
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
 			LatLon ll = model.getField().screenTolatLon(p);
 			
@@ -105,11 +74,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
         	sc.setZoom(true);
 			somethingChanged(sc);
 	    } );		
-		
-		
-		scene = new Scene(bPane, 1024, 768);
-		
-	
 	
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
@@ -123,22 +87,12 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 		    	imageView.startFullDrag();
 		    }
 		});		
-		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);		
-
-		//imageView.setOnMouseDragEntered(mouseMoveHandler);
-		
-		
-		return scene;
+		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
 	}
 	
 	protected void repaintEvent() {
-		if(bPane.getHeight() == 0) {
-			return;
-		}
 			
-		img = draw(
-				(int)bPane.getWidth(), 
-				(int)bPane.getHeight());
+		img = draw(width, height);
 		
 		updateWindow();
 	}
@@ -148,42 +102,13 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
+            	if(img == null) {
+            		return;
+            	}
 			    Image i = SwingFXUtils.toFXImage(img, null);
 			    imageView.setImage(i);
             }
           });
-	}
-
-
-	private Node getToolBar() {
-		ToolBar toolBar = new ToolBar();
-		//toolBar.setPrefWidth(400);
-		//toolBar.setPrefHeight(60);
-		
-
-		for(Layer layer : getLayers()) {
-			System.out.println(" ll ");
-			List<Node> l = layer.getToolNodes();
-			if(!l.isEmpty()) {
-				System.out.println(" ll2 ");
-				toolBar.getItems().addAll(l);
-			}
-		}
-		
-		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
-		
-		Button btnShowVerticalCut = new Button("Vertical ");
-		btnShowVerticalCut.setOnAction(e -> {
-			
-			verticalCut.init();
-			verticalCut.show();
-		});
-
-		
-		toolBar.getItems().add(btnShowVerticalCut);
-		
-		
-		return toolBar;
 	}
 
 	EventHandler mousePressHandler = new EventHandler<MouseEvent>() {
@@ -246,6 +171,39 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener{
     			imgCoord.getX() - imageView.getBoundsInLocal().getWidth()/2, 
     			imgCoord.getY() - imageView.getBoundsInLocal().getHeight()/2);
 		return p;
+	}
+
+	@Override
+	public Node getCenter() {
+		
+		return imageView;
+	}
+
+	@Override
+	public List<Node> getRight() {
+		
+		List<Node> lst = new ArrayList<>();
+		
+		for(Layer layer : getLayers()) {
+			System.out.println(" ll ");
+			List<Node> l = layer.getToolNodes();
+			if(!l.isEmpty()) {
+				
+				lst.addAll(l);
+			}
+		}
+		
+		lst.addAll(AppContext.levelFilter.getToolNodes());
+		
+		return lst;//Arrays.asList();
+	}
+
+	@Override
+	public void show(int width, int height) {
+		this.width = width; 
+		this.height = height;
+
+		repaintEvent();
 	}
 
 	

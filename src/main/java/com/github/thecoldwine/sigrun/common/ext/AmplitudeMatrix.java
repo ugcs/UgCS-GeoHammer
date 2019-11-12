@@ -24,8 +24,24 @@ public class AmplitudeMatrix {
 	float[][] matrix;
 	float maxamp;
 	List<Trace> trace;
+
+	List<Grp> avgrow = new ArrayList<>();
+	List<List<Grp>> colls = new ArrayList<>();
+	List<List<Grp>> selected = new ArrayList<>();
+	MovingAvg startAvg = new MovingAvg();
+	MovingAvg finishAvg = new MovingAvg();
+	int level[];
 	
 	public void init(List<Trace> trace) {
+		
+		avgrow = new ArrayList<>();
+		colls = new ArrayList<>();
+		selected = new ArrayList<>();
+		startAvg = new MovingAvg();
+		finishAvg = new MovingAvg();
+		level = null;
+		
+		
 		this.trace = trace;
 		matrix = new float[trace.size()][];
 		for(int i=0; i< trace.size(); i++) {
@@ -78,14 +94,6 @@ public class AmplitudeMatrix {
 		int finish;
 		float amp;
 	}
-	
-	List<Grp> avgrow = new ArrayList<>();
-	List<List<Grp>> colls = new ArrayList<>();
-	List<List<Grp>> selected = new ArrayList<>();
-	MovingAvg startAvg = new MovingAvg();
-	MovingAvg finishAvg = new MovingAvg();
-	
-	int level[];
 	
 	public void findLevel() {
 		List<Grp> startList = getOrderedDescGrps();
@@ -343,7 +351,7 @@ public class AmplitudeMatrix {
 	    	for(Grp grp : path) {
 
 	    		Grp ag = avgrow.get(x);
-	    		buffer[x + (ag.start-1) * width] = red;
+	    		buffer[x + (ag.start) * width] = red;
 	    		buffer[x + (ag.finish) * width] = red;
 	    		
 	    		
@@ -368,7 +376,8 @@ public class AmplitudeMatrix {
 		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed\\2019-07-24-10-43-52-gpr_8.sgy");
 		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
 		//File file = new File("d:\\georadarData\\Greenland\\2018-06-29-22-36-37-gpr-shift_processed");
-		File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
+		//File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
+		File file = new File("d:\\georadarData\\mines\\processed_003");
 		File[] lst = file.listFiles(FileManager.filter);
 		int cnt = 0;
 		for(File sfile : lst) {
@@ -406,5 +415,30 @@ public class AmplitudeMatrix {
 		
 		
 	}
+
 	
+	public BufferedImage createImg(File file, int prefix) {
+		
+		try {
+			System.out.println(" " + file.getName() + "  ->  " + prefix);
+			
+			SgyFile sgyFile = new SgyFile();
+			//sgyFile.open(new File("d:\\georadarData\\mines\\2019-08-29-12-48-48-gpr_0005.SGY"));
+			sgyFile.open(file);
+			
+			BackgroundRemovalFilter lf = new BackgroundRemovalFilter();
+			lf.removeConstantNoise(sgyFile.getTraces());
+			
+			AmplitudeMatrix m = new AmplitudeMatrix();
+			m.init(sgyFile.getTraces());
+			
+			m.findLevel();
+			
+			BufferedImage img = m.getImg();
+			return img;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}	
 }

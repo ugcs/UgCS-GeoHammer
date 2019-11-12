@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -28,7 +30,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class VerticalCut {
+public class VerticalCut implements ModeFactory {
 
 	private Model model;
 	private ImageView imageView = new ImageView();
@@ -40,9 +42,15 @@ public class VerticalCut {
 	private BaseSlider heightStartSlider; 
 	private BaseSlider selectedTraceSlider; 
 	private BaseSlider distBetweenTracesSlider;
+	private int width;
+	private int height;
 	
-	BorderPane bPane = new BorderPane();
+	//BorderPane bPane = new BorderPane();
 	VBox vbox = new VBox();
+	{
+		vbox.getChildren().add(imageView);
+	}
+	
 	private Stage verticalCutStage;
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
@@ -69,50 +77,47 @@ public class VerticalCut {
 	}
 		
 
-	public void init() {
+//	public void init() {
+//		
+//		verticalCutStage = new Stage();
+//		verticalCutStage.setTitle("vertical cut");
+//		verticalCutStage.setScene(build());
+//		
+//	}
+
+	public void show(int width, int height) {
+		this.width = width; 
+		this.height = height;
 		
-		verticalCutStage = new Stage();
-		verticalCutStage.setTitle("vertical cut");
-		verticalCutStage.setScene(build());
+		recalc();
+		//verticalCutStage.show();		
+		
 		
 	}
 
-	public void show() {
-		
-		verticalCutStage.show();
-		
-	}
-
-	public Scene build() {
-		
-		   
-		//bPane.setTop(); 
-		//bPane.setBottom(prepareStatus()); 
-		bPane.setRight(getToolPane());
-		
-		vbox.getChildren().add(imageView);
-		
-		bPane.setCenter(vbox);
-		
-		Scene scene = new Scene(bPane, 600, 700);
-		
-		
-		return scene;
-	}
+//	public Scene build() {
+//		
+//		   
+//		//bPane.setTop(); 
+//		//bPane.setBottom(prepareStatus()); 
+//		//bPane.setRight(getToolPane());
+//		
+//		vbox.getChildren().add(imageView);
+//		
+//		//bPane.setCenter(vbox);
+//		
+//		//Scene scene = new Scene(bPane, 600, 700);
+//		
+//		
+//		return scene;
+//	}
 	
 	private Node getToolPane() {
 		VBox vBox = new VBox(); 
 		vBox.setPadding(new Insets(3, 13, 3, 3));
 		
-		vBox.getChildren().add(widthZoomSlider.produce());
-		vBox.getChildren().add(heightZoomSlider.produce());
-		vBox.getChildren().add(heightStartSlider.produce());
-		vBox.getChildren().add(selectedTraceSlider.produce());
-		vBox.getChildren().add(distBetweenTracesSlider.produce());
-
+		vBox.getChildren().addAll(getRight());
 		
-		//widthZoomSlider.updateUI();
-		//vBox.getChildren().add(distSlider.produce());
 		return vBox;
 	}
 	
@@ -121,10 +126,6 @@ public class VerticalCut {
 		@Override
 		public void accept(RecalculationLevel obj) {
 
-//			if(model.getScans() == null) {
-//				return;
-//			}
-				
 			//img = render2_spektr();
 			img = render();
 			
@@ -140,10 +141,7 @@ public class VerticalCut {
 
 	protected BufferedImage render() {
 		
-		int width = (int)vbox.getWidth();
-		int height = (int)vbox.getHeight();//model.getSettings().maxsamples;
-				
-	    BufferedImage image = new BufferedImage(width-60, height-60, BufferedImage.TYPE_INT_RGB);
+	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	    
 	    Graphics2D g2 = (Graphics2D)image.getGraphics();
 	    
@@ -376,6 +374,25 @@ public class VerticalCut {
 			settings.heightStart = (int)slider.getValue();
 			return settings.heightStart;
 		}
+	}
+
+	@Override
+	public Node getCenter() {
+		
+		
+		return vbox;
+	}
+
+	@Override
+	public List<Node> getRight() {
+
+		return Arrays.asList(
+			widthZoomSlider.produce(),
+			heightZoomSlider.produce(),
+			heightStartSlider.produce(),
+			selectedTraceSlider.produce(),
+			distBetweenTracesSlider.produce());
+				
 	}
 	
 }
