@@ -12,6 +12,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -50,28 +51,38 @@ public class Loader {
     
     private EventHandler<DragEvent> dropHandler = new EventHandler<DragEvent>() {
 
+        
+    	
         @Override
         public void handle(DragEvent event) {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasFiles()) {
-            	
-            	load(db.getFiles());
-            	
-                success = true;
-            }
-            event.setDropCompleted(success);
-
+        	
+        	Dragboard db = event.getDragboard();
+        	if (!db.hasFiles()) {
+        		return;
+        	}
+        	
+        	final List<File> files = db.getFiles();
+        	
+        	ProgressTask loadTask = new ProgressTask() {
+				@Override
+				public void run(ProgressListener listener) {
+			        load(files, listener);
+				}        		
+        	};
+        	
+			new TaskRunner(null, loadTask).start();
+        	
+            event.setDropCompleted(true);
             event.consume();
         }
 
     };
     
-	public void load(List<File> files) {
+	public void load(List<File> files, ProgressListener listener) {
 		
-		System.out.println("load() ");
+		listener.progressMsg("load");
 		try {
-			model.getFileManager().processList(files);
+			model.getFileManager().processList(files, listener);
 		
 			initField();
 			System.out.println("===initField() " + model.getField().getPathCenter());
@@ -79,11 +90,16 @@ public class Loader {
 			e.printStackTrace();
 		}
 
-		
-		WhatChanged changed = new WhatChanged();
-		changed.setFileopened(true);
 
-		changeListener.somethingChanged(changed );
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				WhatChanged changed = new WhatChanged();
+				changed.setFileopened(true);
+				changeListener.somethingChanged(changed );
+			}
+		});
+		
 	}
 
 	private void initField() {

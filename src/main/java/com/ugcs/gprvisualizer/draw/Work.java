@@ -48,12 +48,6 @@ public class Work {
 
 	}
 
-	public void somethingChanged(WhatChanged changed) {
-		for (Layer l : getLayers()) {
-			l.somethingChanged(changed);
-		}
-	}
-
 	public List<Layer> getLayers() {
 		return layers;
 	}

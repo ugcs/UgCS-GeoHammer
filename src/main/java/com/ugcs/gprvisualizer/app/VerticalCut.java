@@ -247,11 +247,11 @@ public class VerticalCut implements ModeFactory {
 	    
 	    for(int x=0; x<width; x++){
     		int scanNum = model.getSettings().selectedScanIndex - width/2 + x;
-    		if(scanNum<0 || scanNum >= model.getScans().size()) {
-    			continue;
-    		}
+    		//if(scanNum<0 || scanNum >= model.getScans().size()) {
+    		//	continue;
+    		//}
 
-    		float[] values = model.getScans().get(scanNum).values;
+    		float[] values = model.getFileManager().getTraces().get(scanNum).getNormValues();
 	    	for(int y=0; y<values.length; y++){
 	    		
 	    		int val = (int)(values[y]/50);

@@ -3,34 +3,27 @@ package com.ugcs.gprvisualizer.app;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class LayersWindowBuilder extends Work implements SmthChangeListener, ModeFactory {
@@ -48,6 +41,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		getLayers().add(new SatelliteMap(model, listener));
 		getLayers().add(new RadarMap(model, listener));
 		getLayers().add(new GpsTrack(model, listener));		
+		getLayers().add(new FoundTracesLayer(model));
 		getLayers().add(new TraceCutter(model, listener));
 
 		initImageView();
@@ -91,7 +85,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	}
 	
 	protected void repaintEvent() {
-			
 		img = draw(width, height);
 		
 		updateWindow();
@@ -185,7 +178,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		List<Node> lst = new ArrayList<>();
 		
 		for(Layer layer : getLayers()) {
-			System.out.println(" ll ");
 			List<Node> l = layer.getToolNodes();
 			if(!l.isEmpty()) {
 				
@@ -193,9 +185,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 			}
 		}
 		
-		lst.addAll(AppContext.levelFilter.getToolNodes());
-		
-		return lst;//Arrays.asList();
+		return lst;
 	}
 
 	@Override
@@ -205,6 +195,19 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 
 		repaintEvent();
 	}
+
+	public void somethingChanged(WhatChanged changed) {
+		System.out.println("somethingChanged lwb");
+		for (Layer l : getLayers()) {
+			l.somethingChanged(changed);
+		}
+
+		if(changed.isJustdraw()) {
+			repaintEvent();
+		}
+		
+	}
+
 
 	
 }

@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.commons.logging.impl.AvalonLogger;
 
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.gpr.ScanBuilder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
@@ -30,25 +31,28 @@ public class FileManager {
 	}
 
 
-	public void processList(List<File> fileList) {
+	public void processList(List<File> fileList, ProgressListener listener) {
 		traces = null;
 		files = new ArrayList<>();
 		topFolder = null;
 		
 		for (File fl : fileList) {
 			if(fl.isDirectory()) {
-				processDirectory(fl);
+				processDirectory(fl, listener);
 			}else {
+				listener.progressMsg("load file " + fl.getAbsolutePath());
 				processFile(fl);
 			}
 			
 		}
 	}
 	
-	private void processDirectory(File fl) {
+	private void processDirectory(File fl, ProgressListener listener) {
 		if(topFolder == null) {
 			topFolder = fl;
 		}
+		
+		listener.progressMsg("load directory " + fl.getAbsolutePath());
 		
 		processFileList(Arrays.asList(fl.listFiles(filter)));
 		

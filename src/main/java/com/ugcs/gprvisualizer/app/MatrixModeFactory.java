@@ -26,27 +26,39 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.VBox;
 
-public class TestModeFactory implements ModeFactory, SmthChangeListener {
+public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 
 	private Model model;
 	private ImageView imageView = new ImageView();	
 	private int scale = 1;
 	private ListView<String> list = new ListView<String>();
 	private BufferedImage img;
-	private Button findGrnd = new Button("Find Fround");
-	private AmplitudeMatrix am = new AmplitudeMatrix();
+	private Button initBtn = new Button("Init");
+	private Button findGrnd = new Button("Find Ground");
 	
-	public TestModeFactory(Model model){
+	
+	private AmplitudeMatrix am = new AmplitudeMatrix();
+	private SmthChangeListener listener;
+	
+	public MatrixModeFactory(Model model, SmthChangeListener listener){
 		this.model = model;		
+		this.listener = listener;
 		
 		findGrnd.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-		    	
 		    	am.findLevel();
 		    	updateImage();
 		    }
 		});
-		    
+
+		initBtn.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		    	am.init(model.getFileManager().getTraces());
+		    	am.findLevel();
+		    	updateImage();
+		    }
+		});
+		
 	}
 	
 	@Override
@@ -80,25 +92,30 @@ public class TestModeFactory implements ModeFactory, SmthChangeListener {
 	@Override
 	public List<Node> getRight() {
 		
-		return Arrays.asList(findGrnd, list);
+		return Arrays.asList(initBtn, findGrnd, list);
 	}
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		if(changed.isFileopened()) {
 			
-			ObservableList<String> items = FXCollections.observableArrayList ();
-			for(SgyFile fl :  model.getFileManager().getFiles()) {
-				
-				items.add(fl.getFile().getName());
-			}			
-			    
-			list.setItems(items);
+			initList();
 			
+			am.init(model.getFileManager().getTraces());
 			updateImage();
 			
 		}
 		
+	}
+
+	private void initList() {
+		ObservableList<String> items = FXCollections.observableArrayList ();
+		for(SgyFile fl :  model.getFileManager().getFiles()) {
+			
+			items.add(fl.getFile().getName());
+		}			
+		    
+		list.setItems(items);
 	}
 
 	private void updateImage() {
@@ -107,14 +124,21 @@ public class TestModeFactory implements ModeFactory, SmthChangeListener {
 		img = am.getImg(); 
 		Image i = SwingFXUtils.toFXImage(img, null);
 		imageView.setImage(i);
+		
+		
+		WhatChanged changed = new WhatChanged();
+		changed.setJustdraw(true);
+		listener.somethingChanged(changed);
 	}
 
 	@Override
 	public void show(int width, int height) {
 
 		//am.init(model.getFileManager().getFiles().get(0).getTraces());
-		am.init(model.getFileManager().getTraces());
+		
 		updateImage();
+		
+		
 		
 	}
 

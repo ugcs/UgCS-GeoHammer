@@ -20,6 +20,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -36,6 +37,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -53,6 +55,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	// modes
 	private ToggleGroup group = new ToggleGroup();
 	private ToggleButton gpsMode = new ToggleButton("GPS", null);
+	private ToggleButton prismMode = new ToggleButton("Prism", null);
 	private ToggleButton cutMode = new ToggleButton("Waveform", null);
 	private ToggleButton matrixMode = new ToggleButton("Matrix", null);
 	Map<Node, ModeFactory> modeMap = new HashMap<>();
@@ -63,15 +66,19 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.levelFilter = new LevelFilter(model);
 		AppContext.loader = new Loader(model, this);
 		AppContext.saver = new Saver(model);
+		AppContext.pluginRunner = new PluginRunner(model);
 		
 
 		gpsMode.setToggleGroup(group);
+		prismMode.setToggleGroup(group);
 		cutMode.setToggleGroup(group);
 		matrixMode.setToggleGroup(group);
 
 		modeMap.put(cutMode, new VerticalCut(model));
 
-		TestModeFactory tmf = new TestModeFactory(model);
+		modeMap.put(prismMode, new PrismModeFactory(model, this));
+		
+		MatrixModeFactory tmf = new MatrixModeFactory(model, this);
 		modeMap.put(matrixMode, tmf);
 		AppContext.smthListener.add(tmf);
 
@@ -94,7 +101,10 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		
 	}
-
+	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb"
+	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar
+	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar -t 0.4
+	
 	public static void main(String args[]) {
 		launch(args);
 	}
@@ -136,8 +146,31 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private Node getToolBar() {
 
 		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
-		toolBar.getItems().addAll(gpsMode, cutMode, matrixMode);
-
+		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
+		
+		Region r = new Region();
+		r.setPrefWidth(10);
+		toolBar.getItems().add(r);
+		
+		toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode);
+		
+		Region r2 = new Region();
+		r2.setPrefWidth(10);
+		toolBar.getItems().add(r2);
+		
+		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
+		
+//		Button tstbtn = new Button("test dlg");
+		
+//		tstbtn.setOnAction(new EventHandler<ActionEvent>() {
+//		    @Override public void handle(ActionEvent e) {
+//		    	new TaskRunner(stage).start();
+//		    }
+//		});
+				
+		
+//		toolBar.getItems().add(tstbtn);
+		
 		return toolBar;
 	}
 
@@ -161,7 +194,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private void showCenter() {
 		int w = (int) (bPane.getWidth() - rightBox.getWidth());
 		int h = (int) (bPane.getHeight() - toolBar.getHeight());
-		System.out.println(" size " + w + " " + h);
+		
 		if(getModeFactory() != null) {
 			getModeFactory().show(w, h);
 		}
@@ -178,15 +211,21 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
+		for (SmthChangeListener lst : AppContext.smthListener) {
+
+			try {
+				lst.somethingChanged(changed);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+
 		if(changed.isFileopened()) {
-			System.out.println("opened");
+
 			gpsMode.setSelected(true);
 			setModeFactory(modeMap.get(gpsMode));			
 		}
 		
-		for (SmthChangeListener lst : AppContext.smthListener) {
-			lst.somethingChanged(changed);
-		}
 	}
 
 }

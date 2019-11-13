@@ -28,6 +28,7 @@ public class AmplitudeMatrix {
 	List<Grp> avgrow = new ArrayList<>();
 	List<List<Grp>> colls = new ArrayList<>();
 	List<List<Grp>> selected = new ArrayList<>();
+	List<List<Grp>> foundgroups = new ArrayList<>();
 	MovingAvg startAvg = new MovingAvg();
 	MovingAvg finishAvg = new MovingAvg();
 	int level[];
@@ -37,6 +38,7 @@ public class AmplitudeMatrix {
 		avgrow = new ArrayList<>();
 		colls = new ArrayList<>();
 		selected = new ArrayList<>();
+		foundgroups = new ArrayList<>();
 		startAvg = new MovingAvg();
 		finishAvg = new MovingAvg();
 		level = null;
@@ -95,6 +97,9 @@ public class AmplitudeMatrix {
 		float amp;
 	}
 	
+	/**
+	 * * * * * * * * * * * * * * * * * * *
+	 */
 	public void findLevel() {
 		List<Grp> startList = getOrderedDescGrps();
 		List<List<Grp>> selected = new ArrayList<>();
@@ -106,7 +111,7 @@ public class AmplitudeMatrix {
 		List<Grp> selrow = findBestPath(selected);
 		
 		
-		this.selected.add(selrow);
+		this.selected.addAll(selected);
 		
 		
 		level = new int[selrow.size()];
@@ -170,6 +175,7 @@ public class AmplitudeMatrix {
 		});
 		
 		
+		//return r.subList(0, r.size());
 		return r.subList(0, 4);
 	}
 
@@ -184,18 +190,23 @@ public class AmplitudeMatrix {
 		
 		int x=0;
 		for(List<Grp> col : colls) {
-			if(x==299) {
-				System.out.println("stop");
-			}
+//			if(x==299) {
+//				System.out.println("stop");
+//			}
 			
 			Grp avggrp = getAvgGrp();
 			avgrow.add(avggrp);//tmp
 			List<Grp> grpcandidats = find(avggrp, col);
+			if(grpcandidats.isEmpty()) {
+				
+				selected.add(selected.get(selected.size()-1));
+			}else {
 			
-			Grp grp = selectbest(grpcandidats, selected);
-			startAvg.add(grp.start);
-			finishAvg.add(grp.finish);
-			selected.add(grp);
+				Grp grp = selectbest(grpcandidats, selected);
+				startAvg.add(grp.start);
+				finishAvg.add(grp.finish);
+				selected.add(grp);
+			}
 			
 			x++;
 		}

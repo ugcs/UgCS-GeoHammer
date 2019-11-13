@@ -31,8 +31,6 @@ public class Field {
 		LatLon ll = screenTolatLon(p1);
 		Point2D p2 = latLonToScreen(ll);
 		
-		System.out.println(p1 + " -> " + ll + " -> " + p2);
-		
 	}
 	
 	protected void test() {

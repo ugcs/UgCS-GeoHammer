@@ -20,7 +20,6 @@ import javax.imageio.ImageIO;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.SceneAmplitudeMap;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Scan;
 import com.ugcs.gprvisualizer.gpr.Settings;
@@ -92,7 +91,8 @@ public class SatelliteMap implements Layer{
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-
+		System.out.println("somethingChanged Satellite");
+		
 		if(changed.isFileopened() || changed.isZoom()) {
 			
 			

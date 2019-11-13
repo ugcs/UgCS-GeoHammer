@@ -12,6 +12,7 @@ public class AppContext {
 	public static Loader loader;
 	public static Saver saver;
 	public static LevelFilter levelFilter;
+	public static PluginRunner pluginRunner;
 	
 	public static List<SmthChangeListener> smthListener = new ArrayList<>();
 	

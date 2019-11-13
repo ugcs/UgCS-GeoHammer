@@ -19,37 +19,46 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 
-public class Saver implements ToolProducer{
+public class Saver implements ToolProducer {
 
 	private Button buttonSave = new Button("Save");
 	private Button buttonSaveReload = new Button("Save&Reload");
 	private Model model;
-	
+
+	private ProgressTask saveTask = new ProgressTask() {
+		@Override
+		public void run(ProgressListener listener) {
+			listener.progressMsg("save now");
+			
+			List<File> newfiles = save();						
+		}
+	};
+
+	private ProgressTask saveReloadTask = new ProgressTask() {
+		@Override
+		public void run(ProgressListener listener) {
+			listener.progressMsg("save now");
+
+			List<File> newfiles = save();
+			
+			listener.progressMsg("load now");
+	    	AppContext.loader.load(newfiles, listener);
+		}
+	};
+
 	{
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-		    	buttonSave.setDisable(true);
+				new TaskRunner(null, saveTask).start();
 		    	
-		    	Cursor cursor = buttonSave.getCursor();
-		    	buttonSave.setCursor(Cursor.WAIT);
-		    	List<File> newfiles = save();
-		    	
-		    	buttonSave.setDisable(false);
-		    	buttonSave.setCursor(cursor);
 		    }
 		});
 		
 		buttonSaveReload.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-		    	buttonSaveReload.setDisable(true);
 		    	
-		    	Cursor cursor = buttonSaveReload.getCursor();
-		    	buttonSaveReload.setCursor(Cursor.WAIT);
-		    	List<File> newfiles = save();
-		    	AppContext.loader.load(newfiles);
+		    	new TaskRunner(null, saveReloadTask).start();
 		    	
-		    	buttonSaveReload.setDisable(false);
-		    	buttonSaveReload.setCursor(cursor);
 		    }
 		});
 	}

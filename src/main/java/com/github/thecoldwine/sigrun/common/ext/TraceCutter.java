@@ -30,7 +30,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
-public class TraceCutter implements Layer{
+public class TraceCutter implements Layer {
 
 	Field field;
 	List<LatLon> points;

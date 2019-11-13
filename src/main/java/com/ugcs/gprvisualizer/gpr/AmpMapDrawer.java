@@ -22,7 +22,7 @@ public class AmpMapDrawer {
 		this.model = model;
 
 		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
-		autoArrayBuilder = new AutomaticScaleBuilder(model);
+		//autoArrayBuilder = new AutomaticScaleBuilder(model);
 
 	}
 
@@ -127,37 +127,37 @@ public class AmpMapDrawer {
 
 		Integer x = null;
 		Integer y = null;
-		for (LocalScan scan : model.getLocalScans()) {
-
-			if (x != null) {
-
-				g2.drawLine(x, y, scan.getLocalX(), scan.getLocalY());
-			}
-
-			x = scan.getLocalX();
-			y = scan.getLocalY();
-		}
+//		for (LocalScan scan : model.getLocalScans()) {
+//
+//			if (x != null) {
+//
+//				g2.drawLine(x, y, scan.getLocalX(), scan.getLocalY());
+//			}
+//
+//			x = scan.getLocalX();
+//			y = scan.getLocalY();
+//		}
 	}
 
 	private DblArray calculateDblArray() {
 		
 		DblArray da = new DblArray(model.getSettings().getWidth(), model.getSettings().getHeight());
-		if(model.getLocalScans() == null) {
-			return da;
-		}
-		
-		int start = norm(model.getSettings().layer, 0, model.getSettings().maxsamples);
-		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getSettings().maxsamples);
-
-		for (LocalScan scan : model.getLocalScans()) {
-			int dx = scan.getLocalX();
-			int dy = scan.getLocalY();
-
-			double alpha = calcAlpha(scan.getScan().values, start, finish);
-
-			da.drawCircle(dx, dy, model.getSettings().radius, alpha);
-
-		}
+//		if(model.getLocalScans() == null) {
+//			return da;
+//		}
+//		
+//		int start = norm(model.getSettings().layer, 0, model.getSettings().maxsamples);
+//		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getSettings().maxsamples);
+//
+//		for (LocalScan scan : model.getLocalScans()) {
+//			int dx = scan.getLocalX();
+//			int dy = scan.getLocalY();
+//
+//			double alpha = calcAlpha(scan.getScan().values, start, finish);
+//
+//			da.drawCircle(dx, dy, model.getSettings().radius, alpha);
+//
+//		}
 		return da;
 	}
 
@@ -184,7 +184,7 @@ public class AmpMapDrawer {
 
 	public LocalScan getSelectedScan() {
 		if (model.getSettings().selectedScanIndex >= 0) {
-			return model.getLocalScans().get(model.getSettings().selectedScanIndex);
+			//return model.getLocalScans().get(model.getSettings().selectedScanIndex);
 		}
 		return null;
 	}

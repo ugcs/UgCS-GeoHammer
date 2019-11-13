@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.draw;
 
 public class WhatChanged {
 
+	private boolean justdraw;
 	private boolean mapscroll;
 	private boolean zoom;
 	private boolean adjusting;
@@ -37,6 +38,12 @@ public class WhatChanged {
 	}
 	public void setMapscroll(boolean mapscroll) {
 		this.mapscroll = mapscroll;
+	}
+	public boolean isJustdraw() {
+		return justdraw;
+	}
+	public void setJustdraw(boolean justdraw) {
+		this.justdraw = justdraw;
 	}
 	
 	

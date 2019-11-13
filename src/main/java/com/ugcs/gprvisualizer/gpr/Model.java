@@ -1,10 +1,12 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 
 public class Model {
@@ -13,8 +15,8 @@ public class Model {
 	private FileManager fileManager = new FileManager();
 	
 	private Settings settings = new Settings();
-	private List<Scan> scans;
-	private List<LocalScan> localScans;
+	
+	private List<Trace> foundTrace = new ArrayList<>();
 	
 	private Rectangle2D.Double bounds;
 	
@@ -24,22 +26,6 @@ public class Model {
 	
 	public void setSettings(Settings settings) {
 		this.settings = settings;
-	}
-	
-	public List<Scan> getScans() {
-		return scans;
-	}
-	
-	public void setScans(List<Scan> scans) {
-		this.scans = scans;
-	}
-
-	public List<LocalScan> getLocalScans() {
-		return localScans;
-	}
-	
-	public void setLocalScans(List<LocalScan> scans) {
-		this.localScans = scans;
 	}
 	
 	public void setBounds(Rectangle2D.Double bounds) {
@@ -56,5 +42,13 @@ public class Model {
 
 	public FileManager getFileManager() {
 		return fileManager;
+	}
+
+	public List<Trace> getFoundTrace() {
+		return foundTrace;
+	}
+
+	public void setFoundTrace(List<Trace> foundTrace) {
+		this.foundTrace = foundTrace;
 	}
 }
