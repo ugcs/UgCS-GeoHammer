@@ -20,19 +20,19 @@ import javafx.scene.Node;
 public class FoundTracesLayer implements Layer {
 
 	private Model model;
-	private Image img;// = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel.png"));
+	//private Image img;// = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel.png"));
 	private int R = 5;
 	private Color pointColor = Color.GREEN;
 	
 	public FoundTracesLayer(Model model) {
 		this.model = model;
 		
-		try {
-			img = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel-48.png"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			img = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel-48.png"));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 
 	@Override
@@ -49,6 +49,8 @@ public class FoundTracesLayer implements Layer {
 		for (Trace trace : model.getFoundTrace()) {
 
 			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+			
+			Image img = ResourceImageHolder.IMG_SHOVEL;
 			g2.drawImage(img, (int)p.getX() - img.getWidth(null)/2 , (int)p.getY() - img.getHeight(null), null);
 			g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
 		}

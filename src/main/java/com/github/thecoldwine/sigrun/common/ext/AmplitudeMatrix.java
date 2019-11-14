@@ -1,5 +1,6 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
+import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -13,7 +14,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.sun.prism.paint.Color;
+import com.sun.scenario.effect.impl.state.HVSeparableKernel;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.math.BackgroundRemovalFilter;
 import com.ugcs.gprvisualizer.math.LevelFilter;
@@ -31,6 +32,7 @@ public class AmplitudeMatrix {
 	List<List<Grp>> foundgroups = new ArrayList<>();
 	MovingAvg startAvg = new MovingAvg();
 	MovingAvg finishAvg = new MovingAvg();
+	List<List<Integer>> rows;
 	int level[];
 	
 	public void init(List<Trace> trace) {
@@ -108,12 +110,18 @@ public class AmplitudeMatrix {
 			selected.add(findLevelStartingAt(start));
 		}
 		
-		List<Grp> selrow = findBestPath(selected);
+		rows = getRows(selected);
+		
+		List<Integer> selrow = findBestPath(rows);
 		
 		
 		this.selected.addAll(selected);
 		
 		
+		prepareLevel(selrow);
+	}
+
+	private void prepareLevel(List<Integer> selrow) {
 		level = new int[selrow.size()];
 		
 		for(int i=0; i< level.length; i++) {
@@ -124,8 +132,26 @@ public class AmplitudeMatrix {
 		}
 	}
 
-	private int calcAvgHeight(List<Grp> selrow, int i) {
-		int R = 10;
+	private List<List<Integer>> getRows(List<List<Grp>> selected) {
+		List<List<Integer>> rows = new ArrayList<>();
+		for(List<Grp> row : selected) {
+			List<Integer> lstop = new ArrayList<>();
+			List<Integer> lsbot = new ArrayList<>();
+			List<Integer> lscen = new ArrayList<>();
+			for(Grp g : row ) {
+				lstop.add(g.start);
+				lscen.add(g.midind);
+				lsbot.add(g.finish-1);
+			}
+			rows.add(lstop);
+			//rows.add(lscen);
+			rows.add(lsbot);
+		}
+		return rows;
+	}
+
+	private int calcAvgHeight(List<Integer> selrow, int i) {
+		int R = 20;
 		int from = i-R;
 		from = Math.max(from, 0);
 		
@@ -135,18 +161,24 @@ public class AmplitudeMatrix {
 		double sum = 0;
 		double del = 0;
 		for(int j=from; j<=to; j++) {
-			sum += selrow.get(j).start;
-			del += 1;
+			
+			
+			double d = ((double)(R - Math.abs(j-i))) / ((double)R);
+			
+			sum += selrow.get(j) * d;
+			del += d;
 		}
 		
 		return (int)Math.round(sum/del);
 	}
 
-	private List<Grp> findBestPath(List<List<Grp>> selected) {
-		List<Grp> selrow = null;
+	private List<Integer> findBestPath(List<List<Integer>> selected) {
+		List<Integer> selrow = null;
 		long selsum = 0;
-		for(List<Grp> row : selected) {
+		for(List<Integer> row : selected) {
 			long sum = getIndignation(row);
+			System.out.println(String.format("indignation:  %.2f ", ((double)sum / row.size())));
+			
 			if(selrow == null || sum < selsum) {
 				selrow = row;
 				selsum = sum;
@@ -155,10 +187,10 @@ public class AmplitudeMatrix {
 		return selrow;
 	}
 	
-	private long getIndignation(List<Grp> row) {
+	private long getIndignation(List<Integer> row) {
 		long res = 0;
 		for(int i = 1; i< row.size(); i++) {
-			res += Math.abs(row.get(i-1).start-row.get(i).start);
+			res += Math.abs(row.get(i-1)-row.get(i));
 		}
 		return res;
 	}
@@ -335,64 +367,105 @@ public class AmplitudeMatrix {
 		return prevval < 0 && val >= 0;
 	}
 
+	int vertkf = 4;
+	int width;
+	int height;
 	public BufferedImage getImg() {
+		
 		int[] palette = new PaletteBuilder().build();
-		int width = matrix.length;
-		int height = matrix[0].length;
+		width = matrix.length;
+		height = matrix[0].length;
 		System.out.println("dimension " + width + " " + height );
-	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	    BufferedImage image = new BufferedImage(width, height*vertkf, BufferedImage.TYPE_INT_RGB);
 	    
 	    int[] buffer = ((DataBufferInt)image.getRaster().getDataBuffer()).getData() ;	    
 	    
 	    for(int x=0; x<width; x++){
 	    	for(int y=0; y<height; y++){
 	    	
-	    		int  s = (int)(matrix[x][y]/50);
+	    		int  s = (int)(matrix[x][y]/30);
 	    		s = Math.min(s, 2000);
-	    		buffer[x + y * width] = palette[s];
+	    		
+	    		for(int hy=0; hy<vertkf; hy++) {
+	    			buffer[getIndex(x, y, hy)] = palette[s];
+	    		}
 	    	
 	    	}
 	    }
 	    
-	    int grn = Color.GREEN.getIntArgbPre();
-	    int red = Color.RED.getIntArgbPre();
-	    int levelColor = Color.BLUE.getIntArgbPre();
-	    for(List<Grp> path : selected) {
-	    	int x =0;
-	    	for(Grp grp : path) {
-
-	    		Grp ag = avgrow.get(x);
-	    		buffer[x + (ag.start) * width] = red;
-	    		buffer[x + (ag.finish) * width] = red;
-	    		
-	    		
-	    		buffer[x + grp.start * width] = grn;
-	    		buffer[x + (grp.finish-1) * width] = grn;
-	    		//for(int y=grp.start; y< grp.midind; y++) {
-	    		//	buffer[x + y * width] = grn;
-	    		//}
-	    		
-	    		buffer[x + level[x] * width] = levelColor; 
-	    		
-	    		x++;
-	    	}	    	
+	    int grn = Color.GREEN.getRGB();
+	    int grn2 = (new Color(0, 200, 50)).getRGB();
+	    
+	    int red = Color.RED.getRGB();
+	    int levelColor = Color.BLUE.getRGB();
+	    
+	    if(rows != null) {
+		    for(List<Integer> row : rows) {
+		    	int x =0;
+		    	for(Integer col : row) {
+		    		buffer[getIndex(x, col, 2)] = grn;
+		    		x++;
+		    	}
+		    	
+		    }
 	    }
+    	
+	    if(level != null) {
+	    	for(int x=0; x <level.length; x++) {
+	    		buffer[getIndex(x, level[x], 1)] = red;    		
+	    		buffer[getIndex(x, level[x], 3)] = red;
+	    	}
+	    }
+	    
+	    
+	    
+//	    for(List<Grp> path : selected) {
+//	    	int x =0;
+//	    	for(Grp grp : path) {
+//
+//	    		Grp ag = avgrow.get(x);
+//	    		buffer[getIndex(x, ag.start, 0)] = red;
+//	    		try {
+//	    			buffer[getIndex(x, ag.finish, vertkf-1)] = red;
+//	    		}catch(Exception e) {
+//	    			System.out.println(x + " " + ag.finish + " " + (vertkf-1));
+//	    		}
+//	    		
+//	    		
+//	    		buffer[getIndex(x, grp.start, 0)] = grn;
+//	    		buffer[getIndex(x, grp.finish-1, vertkf-1)] = grn2;
+//	    		
+//	    		buffer[getIndex(x, level[x], vertkf/2)] = levelColor; 
+//	    		
+//	    		x++;
+//	    	}	    	
+//	    }
 	    
 	    return image;
 		
+	}
+
+	private int getIndex(int x, int y, int hy) {
+		return x + y * vertkf * width + hy * width;
 	}
 	
 	
 	public static void main(String [] args) throws Exception {
 		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed\\2019-07-24-10-43-52-gpr_8.sgy");
-		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
+		File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
 		//File file = new File("d:\\georadarData\\Greenland\\2018-06-29-22-36-37-gpr-shift_processed");
 		//File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
-		File file = new File("d:\\georadarData\\mines\\processed_003");
-		File[] lst = file.listFiles(FileManager.filter);
-		int cnt = 0;
-		for(File sfile : lst) {
-			execute(sfile, cnt++);
+		//File file = new File("d:\\georadarData\\mines\\processed_003");
+		//File file = new File("d:\\georadarData\\sandy soil 1Ghz\\2019-08-30-11-34-28-gpr_processed\\2019-08-30-11-34-28-gpr_5.sgy");
+		
+		if(file.isDirectory()) {
+			File[] lst = file.listFiles(FileManager.filter);
+			int cnt = 0;
+			for(File sfile : lst) {
+				execute(sfile, cnt++);
+			}
+		}else {
+			execute(file, 0);
 		}
 		//File sfile = new File("d:\\georadarData\\Greenland\\2018-06-29-22-08-59-gpr-shift.sgy");		
 		//execute(sfile, 0);

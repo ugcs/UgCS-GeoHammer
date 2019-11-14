@@ -236,37 +236,6 @@ public class VerticalCut implements ModeFactory {
 		return kfy;
 	}
 	
-	protected BufferedImage render2_spektr() {
-		
-		int width = 1024;
-		int height = 768;//model.getSettings().maxsamples;
-		
-	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-	    
-	    int[] buffer = ((DataBufferInt)image.getRaster().getDataBuffer()).getData() ;	    
-	    
-	    for(int x=0; x<width; x++){
-    		int scanNum = model.getSettings().selectedScanIndex - width/2 + x;
-    		//if(scanNum<0 || scanNum >= model.getScans().size()) {
-    		//	continue;
-    		//}
-
-    		float[] values = model.getFileManager().getTraces().get(scanNum).getNormValues();
-	    	for(int y=0; y<values.length; y++){
-	    		
-	    		int val = (int)(values[y]/50);
-	    		val = Math.max(0, val);
-	    		val = Math.min(palette.length-1, val);
-	    		buffer[x + y * width] = palette[val];
-	    	
-	    	}
-	    }
-
-	    
-	    
-	    return image;
-	}
-
 	public class WidthZoomSlider extends BaseSlider {
 		
 		public WidthZoomSlider(Settings settings, ChangeListener<Number> listenerExt) {

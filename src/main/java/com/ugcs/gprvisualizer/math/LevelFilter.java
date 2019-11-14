@@ -18,10 +18,10 @@ import javafx.scene.control.Button;
 
 public class LevelFilter implements ToolProducer {
 
-	Button buttonNoise = new Button("noise-");
-	Button buttonFindLevel = new Button("find level");
-	Button buttonSmoothLevel = new Button("smooth level");
-	Button buttonSet = new Button("leveling");
+	Button buttonNoise = new Button("Background removal");
+	Button buttonFindLevel = new Button("Find ground level");
+	Button buttonSmoothLevel = new Button("Smooth ground level");
+	Button buttonSet = new Button("Level by ground");
 
 	Model model;
 

@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.app;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -12,10 +13,17 @@ public class TaskRunner implements ProgressListener {
 	private Stage dialog = new Stage();
 	private ProgressTask task;
 	private Text text = new Text("This is a Dialog");
+	private VBox dialogVbox = new VBox(20);
+	
+	private Button closeButton = new Button("Close");
 	
 	public TaskRunner(Stage primaryStage, ProgressTask task) {
 		this.primaryStage = primaryStage;
 		this.task = task;
+		
+		closeButton.setOnAction(e -> {
+			closePopup();
+		});
 	}
 	
 	public void start() {
@@ -30,15 +38,19 @@ public class TaskRunner implements ProgressListener {
 					}
 				});
 				
-				
-				task.run(TaskRunner.this);
-				
-				Platform.runLater(new Runnable(){
-					@Override
-					public void run() {
-						closePopup();
-					}
-				});
+				try {
+					task.run(TaskRunner.this);
+
+					Platform.runLater(new Runnable(){
+						@Override
+						public void run() {
+							closePopup();
+						}
+					});
+				}catch(Exception e) {
+					e.printStackTrace();
+					progressMsg("Error: " + e.getMessage());
+				}
 				
 				
 			}
@@ -55,8 +67,9 @@ public class TaskRunner implements ProgressListener {
          dialog.initModality(Modality.APPLICATION_MODAL);
          dialog.initOwner(primaryStage);
          
-         VBox dialogVbox = new VBox(20);
-         dialogVbox.getChildren().add(text);
+         
+         dialogVbox.getChildren().addAll(text, closeButton);
+         
          Scene dialogScene = new Scene(dialogVbox, 300, 200);
          dialog.setScene(dialogScene);
          dialog.show();		

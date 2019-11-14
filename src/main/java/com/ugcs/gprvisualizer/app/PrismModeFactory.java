@@ -11,7 +11,11 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.ui.BaseSlider;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
@@ -31,15 +35,26 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 
 	private Model model;
 	private ImageView imageView = new ImageView();	
-	private int scale = 1;
+	private int scale = -1;
 	
 	private BufferedImage img;
 	private Button initBtn = new Button("Init");
 	private SmthChangeListener listener;
+	private ThresholdSlider thresholdSlider;
+	
+	
+	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {			
+			updateImage();
+		}
+	};
 	
 	public PrismModeFactory(Model model, SmthChangeListener listener){
 		this.model = model;		
 		this.listener = listener;
+		
+		thresholdSlider = new ThresholdSlider(model.getSettings(), sliderListener); 
 		
 		initBtn.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
@@ -54,6 +69,7 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 	public Node getCenter() {
 
 		imageView.setSmooth(false);
+		updateScale();
 		
 	    ScrollPane scrollPane = new ScrollPane();
 	    scrollPane.setFitToHeight(true);
@@ -61,32 +77,34 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 		scrollPane.setContent(imageView);
 		scrollPane.setPannable(true);
 		
-//		scrollPane.addEventFilter(ScrollEvent.ANY, event -> {
-//			//zoom
-//			scale =  scale + (event.getDeltaY() > 0 ? 1 : -1 ) ;
-//			double scc = Math.pow(2, scale);
-//			imageView.setFitWidth(img.getWidth() * scc);
-//			imageView.setFitHeight(img.getHeight() * scc);
-//			
-//			System.out.println(imageView.getBoundsInLocal().getWidth() + " " + imageView.getBoundsInLocal().getHeight() 
-//					+ "  " +
-//					imageView.getBoundsInParent().getWidth() + " " + imageView.getBoundsInParent().getHeight());
-//			
-//			event.consume();
-//	    } );		
+		scrollPane.addEventFilter(ScrollEvent.ANY, event -> {
+			//zoom
+
+			scale = scale + (event.getDeltaY() > 0 ? 1 : -1 ) ;
+			updateScale();
+			
+			
+			event.consume();
+	    } );		
 		
 		return scrollPane;
+	}
+
+	private void updateScale() {
+		double scc = Math.pow(2, scale);
+		imageView.setFitWidth(img.getWidth() * scc);
+		imageView.setFitHeight(img.getHeight() * scc);
 	}
 
 	@Override
 	public List<Node> getRight() {
 		
-		return Arrays.asList(initBtn);
+		return Arrays.asList(initBtn, thresholdSlider.produce());
 	}
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isFileopened()) {
+		if(changed.isFileopened() || changed.isTraces()) {
 			
 			updateImage();
 			
@@ -97,7 +115,7 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 	private void updateImage() {
 		
 		PrismImageProducer pip = new PrismImageProducer();
-		img = pip.getImg(model.getFileManager().getTraces()); 
+		img = pip.getImg(model, model.getFileManager().getTraces(), threshold); 
 		Image i = SwingFXUtils.toFXImage(img, null);
 		imageView.setImage(i);
 		
@@ -112,11 +130,34 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 
 		//am.init(model.getFileManager().getFiles().get(0).getTraces());
 		
+		
 		updateImage();
 		
 		
 		
 	}
 
+	public class ThresholdSlider extends BaseSlider {
+		
+		public ThresholdSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "threshold";
+			units = "amp";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(5000);
+			slider.setMin(100);
+			//slider.set
+			slider.setValue(threshold);
+		}
+		
+		public int updateModel() {
+			threshold = (int)slider.getValue();
+			return (int)threshold;
+		}
+	}
+	double threshold = 900;
 	
 }

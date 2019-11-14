@@ -63,11 +63,14 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	}
 
 	public MainSingleWindow() {
+		
+		//Map<String, String> env = System.getenv();
+		//System.out.println(env.get("ANT_HOME"));
+		
 		AppContext.levelFilter = new LevelFilter(model);
 		AppContext.loader = new Loader(model, this);
 		AppContext.saver = new Saver(model);
-		AppContext.pluginRunner = new PluginRunner(model);
-		
+		AppContext.pluginRunner = new PluginRunner(model);		
 
 		gpsMode.setToggleGroup(group);
 		prismMode.setToggleGroup(group);
@@ -76,7 +79,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		modeMap.put(cutMode, new VerticalCut(model));
 
-		modeMap.put(prismMode, new PrismModeFactory(model, this));
+		PrismModeFactory pmf = new PrismModeFactory(model, this);
+		modeMap.put(prismMode, pmf);
+		AppContext.smthListener.add(pmf);
 		
 		MatrixModeFactory tmf = new MatrixModeFactory(model, this);
 		modeMap.put(matrixMode, tmf);
@@ -86,6 +91,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		modeMap.put(gpsMode, layersWindowBuilder);
 		AppContext.smthListener.add(layersWindowBuilder);
 
+		
 		
 		group.selectedToggleProperty().addListener(new InvalidationListener() {
 

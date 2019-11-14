@@ -79,6 +79,12 @@ public class Loader {
     };
     
 	public void load(List<File> files, ProgressListener listener) {
+		/// clear
+		
+		model.getFoundIndexes().clear();
+		model.getFoundTrace().clear();
+		//model.getSettings().
+		///
 		
 		listener.progressMsg("load");
 		try {

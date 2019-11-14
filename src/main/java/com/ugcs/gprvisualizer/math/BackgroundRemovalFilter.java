@@ -7,7 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class BackgroundRemovalFilter {
 	public void removeConstantNoise(List<Trace> lst) {
-		float avg[] = new float[lst.get(100).getNormValues().length];
+		float avg[] = new float[lst.get(1).getNormValues().length];
 
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);

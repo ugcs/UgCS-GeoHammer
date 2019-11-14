@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -90,11 +91,16 @@ public class PluginRunner implements ToolProducer {
 				return;
 			}
 			
+			List<Integer> lst = new ArrayList<>();
 			String[] nums = trnums.split(";");
 			for(String n : nums) {
 				int trindex = Integer.valueOf(n);
+				
+				lst.add(trindex);
 				model.getFoundTrace().add( file.getTraces().get(trindex) );
 			}
+			
+			model.getFoundIndexes().put(file, lst);
 		}
 		
 	}
