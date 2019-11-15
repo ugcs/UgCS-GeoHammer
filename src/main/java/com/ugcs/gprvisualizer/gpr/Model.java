@@ -3,10 +3,13 @@ package com.ugcs.gprvisualizer.gpr;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -21,6 +24,8 @@ public class Model {
 	
 	private List<Trace> foundTrace = new ArrayList<>();
 	private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
+	private Set<FileChangeType> changes = new HashSet<>();
+	
 	
 	private Rectangle2D.Double bounds;
 	
@@ -58,5 +63,9 @@ public class Model {
 
 	public Map<SgyFile, List<Integer>> getFoundIndexes() {
 		return foundIndexes;
+	}
+
+	public Set<FileChangeType> getChanges() {
+		return changes;
 	}
 }

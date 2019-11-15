@@ -24,7 +24,7 @@ public class GainBottomSlider extends BaseSlider{
 	public void updateUI() {
 		slider.setDisable(settings.autogain);
 		slider.setMin(1);
-		slider.setMax(1000);
+		slider.setMax(2000);
 		slider.setValue(settings.bottomscale);
 	}
 

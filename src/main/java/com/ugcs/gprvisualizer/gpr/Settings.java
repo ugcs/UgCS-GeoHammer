@@ -8,7 +8,7 @@ public class Settings {
 	public Point2D middleLatLonDgr;
 	public Point2D middleLatLonRad;
 	
-	public int maxsamples = 0;
+	public int maxsamples = 400;
 	
 	public int width = 800;
 	public int height = 600;
@@ -24,7 +24,7 @@ public class Settings {
 	public boolean showpath = true;
 	public boolean autogain = false;
 	
-	public int threshold = 1000;
+	public int threshold = 0;
     
 	public int distBetweenTraces = 50;
 	public int selectedScanIndex = 200;

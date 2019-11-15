@@ -10,7 +10,7 @@ public class ThresholdSlider  extends BaseSlider {
 		super(settings, listenerExt);
 		name = "threshold";
 		units = "";
-		tickUnits = 1000;
+		tickUnits = 200;
 	}
 
 	public void updateUI() {

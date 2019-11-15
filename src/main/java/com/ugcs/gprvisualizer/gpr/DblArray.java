@@ -94,14 +94,16 @@ public class DblArray {
 	
 	public BufferedImage toImg(){
 		
-	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	    
 	    int[] buffer = ((DataBufferInt)image.getRaster().getDataBuffer()).getData() ;	    
 	    
 	    for(int x=0; x<width; x++){
 	    	for(int y=0; y<height; y++){
 	    	
-	    		buffer[x + y * width] = palette[(int)(array[x][y])];
+	    		if(array[x][y] > 4) {
+	    			buffer[x + y * width] = palette[(int)(array[x][y])];// | (255<<24);
+	    		}
 	    	
 	    	}
 	    }

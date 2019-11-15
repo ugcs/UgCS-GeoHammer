@@ -16,8 +16,9 @@ public class PaletteBuilder {
 			int r = ((int)((Math.cos(t*1.50)+1)/2 * 255.0 ) ) & 0xff;
 			int g = ((int)((Math.cos(t*1.23)+1)/2 * 255.0 ) ) & 0xff;
 			int b = ((int)((Math.cos(t*1.00)+1)/2 * 255.0 ) ) & 0xff;
+			int alpha = (int) (i<55.0 ? i/55.0 * 255.0 : 255.0);
 			
-			palette[i] = r + (g << 8) + (b << 16);
+			palette[i] = r + (g << 8) + (b << 16) + (alpha << 24);
 		}
 		
 		

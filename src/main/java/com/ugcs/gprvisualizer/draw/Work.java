@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.draw;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -29,9 +30,15 @@ public class Work {
 		if(width <= 0 || height <= 0) {
 			return null;
 		}
+		
+		
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
+		g2.setPaint ( Color.DARK_GRAY );
+		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );		
+		
+		
 		
 		g2.translate(width/2, height/2);
 		

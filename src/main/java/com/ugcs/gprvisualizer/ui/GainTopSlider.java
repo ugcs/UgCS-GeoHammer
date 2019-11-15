@@ -26,7 +26,7 @@ public class GainTopSlider extends BaseSlider{
 		
 		slider.setDisable(settings.autogain);
 		slider.setMin(1);
-		slider.setMax(1000);
+		slider.setMax(2000);
 		slider.setValue(settings.topscale);
 		
 	}

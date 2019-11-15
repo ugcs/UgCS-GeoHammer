@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,11 +14,30 @@ import java.util.concurrent.TimeUnit;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.sun.javafx.collections.SetAdapterChange;
+import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
+import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
+import com.ugcs.gprvisualizer.gpr.DblArray;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.ScaleArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.ui.AutoGainCheckbox;
+import com.ugcs.gprvisualizer.ui.BaseCheckBox;
+import com.ugcs.gprvisualizer.ui.BaseSlider;
+import com.ugcs.gprvisualizer.ui.DepthSlider;
+import com.ugcs.gprvisualizer.ui.DepthWindowSlider;
+import com.ugcs.gprvisualizer.ui.GainBottomSlider;
+import com.ugcs.gprvisualizer.ui.GainTopSlider;
+import com.ugcs.gprvisualizer.ui.LayerVisibilityCheckbox;
+import com.ugcs.gprvisualizer.ui.RadiusSlider;
+import com.ugcs.gprvisualizer.ui.ThresholdSlider;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
 
 public class RadarMap implements Layer{
 
@@ -28,18 +48,93 @@ public class RadarMap implements Layer{
 	
 	private int width = 800;
 	private int height = 800;
+	private boolean active = true;
+	
+	private BaseSlider depthSlider;
+	private BaseSlider depthWindowSlider;
+	private BaseSlider gainTopSlider;
+	private BaseSlider gainBottomSlider;
+	private BaseSlider thresholdSlider;
+	private BaseSlider radiusSlider;
+	private BaseCheckBox autoGainCheckbox;
+	private BaseCheckBox showLayerCheckbox;
+	
+	VBox vBox = new VBox();
+	//rightBox.setPadding(new Insets(3, 13, 3, 3));
+
+	
+	private double[][] scaleArray;
+	private ArrayBuilder scaleArrayBuilder;
+	private ArrayBuilder autoArrayBuilder;
 	
 	private final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<Runnable>());
 	
+	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+			
+			executor.submit(t);
+		}
+	};
+	
+	
+	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
+		@Override
+		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			
+			setActive(newValue);
+			vBox.setVisible(isActive());
+			
+			if(isActive()) {
+				executor.submit(t);
+			}else {
+				listener.repaint();
+			}
+		}
+	};
+	private ChangeListener<Boolean> autoGainListener = new ChangeListener<Boolean>() {
+		@Override
+		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			
+			gainBottomSlider.updateUI();
+			gainTopSlider.updateUI();
+			thresholdSlider.updateUI();
+			
+			//controller.render(RecalculationLevel.BUFFERED_IMAGE);
+			executor.submit(t);
+		}
+	};
+	
+	
 	public RadarMap(Model model, RepaintListener listener) {
 		this.listener = listener;
 		this.model = model;
+		
+		autoArrayBuilder = new AutomaticScaleBuilder(model);
+		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
+		Settings settings = model.getSettings();
+		
+		depthSlider = new DepthSlider(settings, sliderListener);
+		depthWindowSlider = new DepthWindowSlider(settings, sliderListener);
+		gainTopSlider = new GainTopSlider(settings, sliderListener);
+		gainBottomSlider = new GainBottomSlider(settings, sliderListener);
+		thresholdSlider = new ThresholdSlider(settings, sliderListener);
+		radiusSlider = new RadiusSlider(settings, sliderListener);
+		
+		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
+	
+		showLayerCheckbox = new LayerVisibilityCheckbox(showLayerListener);
 	}
 	
 	@Override
 	public void draw(Graphics2D g2) {
+		
+		if(!isActive()) {
+			return;
+		}
+		
 		BufferedImage _img = img;
 		
 		//System.out.println(" draw radar" + (_img != null ? "+" : "-"));
@@ -68,7 +163,7 @@ public class RadarMap implements Layer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting()) {
+		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll()) {
 			System.out.println(" radar start thread");
 			executor.submit(t);
 		}		
@@ -77,9 +172,53 @@ public class RadarMap implements Layer{
 	private BufferedImage createHiRes() {
 		
 		
-		return createLowRes();
-	}
+		DblArray da = new DblArray(width, height);
+		
+		scaleArray = getArrayBuilder().build();
+		
+		int start = norm(model.getSettings().layer, 0, model.getSettings().maxsamples);
+		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getSettings().maxsamples);
 
+		for (Trace trace : model.getFileManager().getTraces()) {
+
+			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+			
+			double alpha = calcAlpha(trace.getNormValues(), start, finish);
+
+			
+			da.drawCircle(
+				(int)p.getX() + width/2, 
+				(int)p.getY() + height/2, 
+				model.getSettings().radius, alpha);
+
+		}
+		
+		
+		return da.toImg();
+	}
+	
+	private double calcAlpha(float[] values, int start, int finish) {
+		double mx = 0;
+		double threshold = scaleArray[0][start];
+		double factor = scaleArray[1][start];
+
+		for (int i = start; i < finish; i++) {
+
+			mx = Math.max(mx, Math.abs(values[i]));
+		}
+
+		double val = Math.max(0, mx - threshold) * factor;
+
+		return Math.max(0, Math.min(val, 200));
+
+	}
+	
+
+	private int norm(int i, int min, int max) {
+
+		return Math.min(Math.max(i, min), max - 1);
+	}
+	
 	int r = 5;
 	private BufferedImage createLowRes() {
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -109,28 +248,23 @@ public class RadarMap implements Layer{
 		public void run() {
 			try {
 			
-				System.out.println(" thread 1");
-				img = createLowRes();
-				imgLatLon = model.getField().getSceneCenter();
+				//TODO: show lowres
+				//img = createLowRes();
+				//imgLatLon = model.getField().getSceneCenter();				
+				//listener.repaint();
 				
-				System.out.println(" thread 2");
-				
-				listener.repaint();
-				
-				System.out.println(" thread 3");
 				
 				if(executor.getQueue().size() > 0) {
 					return;
 				}
 				
-				System.out.println(" thread 4");
-				
+			
 				img = createHiRes();
 				imgLatLon = model.getField().getSceneCenter();
 				
 				listener.repaint();
 							
-				System.out.println(" thread 5");
+
 			}catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -160,8 +294,41 @@ public class RadarMap implements Layer{
 	
 	@Override
 	public List<Node> getToolNodes() {
+		vBox.getChildren().clear();
 		
-		return Collections.EMPTY_LIST;
+		vBox.getChildren().addAll(
+			Arrays.asList(
+				depthSlider.produce(),
+				depthWindowSlider.produce(),
+				autoGainCheckbox.produce(),
+				gainTopSlider.produce(),
+				gainBottomSlider.produce(),
+				thresholdSlider.produce(),
+				radiusSlider.produce()
+			));
+
+		
+		return Arrays.asList(
+			showLayerCheckbox.produce(),
+			vBox);	
+		
 	}
 
+	private ArrayBuilder getArrayBuilder() {
+		if (model.getSettings().autogain) {
+			return autoArrayBuilder;
+		} else {
+			return scaleArrayBuilder;
+		}
+
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+	
 }

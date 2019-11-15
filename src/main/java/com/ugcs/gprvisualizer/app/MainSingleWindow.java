@@ -166,17 +166,6 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
 		
-//		Button tstbtn = new Button("test dlg");
-		
-//		tstbtn.setOnAction(new EventHandler<ActionEvent>() {
-//		    @Override public void handle(ActionEvent e) {
-//		    	new TaskRunner(stage).start();
-//		    }
-//		});
-				
-		
-//		toolBar.getItems().add(tstbtn);
-		
 		return toolBar;
 	}
 

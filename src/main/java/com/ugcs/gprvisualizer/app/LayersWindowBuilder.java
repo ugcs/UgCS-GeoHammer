@@ -23,6 +23,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
@@ -52,6 +53,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	}
 		
 	private void initImageView() {
+		//ZOOM
 		imageView.setOnScroll(event -> {
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
 			LatLon ll = model.getField().screenTolatLon(p);
@@ -82,6 +84,18 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		    }
 		});		
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
+		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
+            @Override
+            public void handle(MouseDragEvent event) {
+            	System.out.println("drag release");
+            	
+            	WhatChanged wc = new WhatChanged();
+            	wc.setMapscroll(true);
+            	somethingChanged(wc);
+            	
+            	event.consume();
+            }
+		});		
 	}
 	
 	protected void repaintEvent() {
@@ -190,7 +204,11 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 
 	@Override
 	public void show(int width, int height) {
-		this.width = width; 
+		if(this.width != width || this.height != height) {
+			
+		}
+		
+		this.width = width;		
 		this.height = height;
 
 		repaintEvent();

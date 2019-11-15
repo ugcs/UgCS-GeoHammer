@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
+import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
@@ -15,6 +17,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 
 public class LevelFilter implements ToolProducer {
 
@@ -35,6 +38,7 @@ public class LevelFilter implements ToolProducer {
 			List<Trace> lst = sf.getTraces();
 			brf.removeConstantNoise(lst);
 		}
+		model.getChanges().add(FileChangeType.BACKGROUND_NOISE_REMOVED);
 	}
 
 	public void findGroundLevel() {
@@ -217,6 +221,8 @@ public class LevelFilter implements ToolProducer {
 
 			System.arraycopy(values, trace.maxindex2, values, 0, values.length - trace.maxindex2);
 		}
+		
+		model.getChanges().add(FileChangeType.LEVEL_TO_GROUND);
 	}
 
 	protected void groundremov(List<Trace> lst) {
@@ -306,11 +312,15 @@ public class LevelFilter implements ToolProducer {
 		buttonNoise.setOnAction(e -> {
 
 			removeConstantNoise();
+			
+			buttonNoise.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
 		});
 		
 		buttonFindLevel.setOnAction(e -> {
 
 			findGroundLevel();
+			
+			buttonFindLevel.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
 		});
 
 		buttonSmoothLevel.setOnAction(e -> {
@@ -321,9 +331,11 @@ public class LevelFilter implements ToolProducer {
 		buttonSet.setOnAction(e -> {
 
 			leveling(model.getFileManager().getTraces());
+			
+			buttonSet.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
 		});
 
-		return Arrays.asList(buttonNoise, buttonFindLevel, buttonSmoothLevel, buttonSet);
+		return Arrays.asList(buttonNoise, buttonFindLevel, /*buttonSmoothLevel, */ buttonSet);
 	}
 
 }
