@@ -53,7 +53,7 @@
                 </descriptorRefs>
 				<archive>
             		<manifest>
-              			<mainClass>com.ugcs.gprvisualizer.app.MainJavafx</mainClass>
+              			<mainClass>com.ugcs.gprvisualizer.app.MainSingleWindow</mainClass>
             		</manifest>
           		</archive>
             </configuration>
