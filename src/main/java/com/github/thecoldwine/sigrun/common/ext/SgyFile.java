@@ -44,9 +44,10 @@ public class SgyFile {
 	private Block txtHdrBlock;
 	private Block binHdrBlock;
 	private File file;
+	private int currentTraceIndex = 0;
 	
 	public void open(File file) throws IOException {
-		this.file = file;
+		this.file = file;		
 		
 		blockFile = BlockFile.open(file);
 		
@@ -111,6 +112,8 @@ public class SgyFile {
         	return null;
         }
         Trace trace = new Trace(traceHdrBlock, traceDataBlock, header, values, latLon);
+        trace.indexInFile = currentTraceIndex;
+        currentTraceIndex++;
         
         return trace;
 		

@@ -176,7 +176,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private Node getToolBar() {
 
 		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
-		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
+		
 		
 		Region r = new Region();
 		r.setPrefWidth(10);
@@ -189,6 +189,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		toolBar.getItems().add(r2);
 		
 		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
+		
+		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
 		
 		return toolBar;
 	}

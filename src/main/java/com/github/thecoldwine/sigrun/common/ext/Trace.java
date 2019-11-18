@@ -24,6 +24,10 @@ public class Trace {
     public int maxindex;
     public int maxindex2;
     
+    public int indexInFile;
+    public int indexInSet;
+    
+    
     public Set<Integer> max = new HashSet<>();
     
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {

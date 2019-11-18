@@ -8,13 +8,22 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.ugcs.gprvisualizer.app.PrismModeFactory.ThresholdSlider;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.RecalculationController;
+import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
+import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.ui.BaseSlider;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -32,6 +41,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 
 public class CleverImageView implements SmthChangeListener, ModeFactory {
+	public static final int TOP_MARGIN = 50;
+	
 	protected Model model;
 	
 	VerticalCutField field;
@@ -45,12 +56,21 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected int height;
 	protected double threshold = 900;
 	private Point dragPoint;
-	//private TraceSample click;
+	private ThresholdSlider thresholdSlider;
+	
+	
+	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {			
+			repaintEvent();
+		}
+	};
 	
 	
 	public CleverImageView(Model model) {
 		this.model = model;
 		field = new VerticalCutField(model);
+		thresholdSlider = new ThresholdSlider(model.getSettings(), sliderListener);
 		
 		initImageView();
 		
@@ -72,12 +92,12 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
-		if(width <= 0 || height <= 0) {
+		if(width <= 0 || height <= 0 || !model.getFileManager().isActive()) {
 			return null;
 		}		
 
-		int vscale = Math.max(1, (int)field.getVScale());
-		int hscale = Math.max(1, (int)field.getHScale());
+		VerticalCutField field = new VerticalCutField(this.field);
+		
 		
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		int[] buffer = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData() ;
@@ -90,33 +110,60 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		///
 		
+		drawPrism(width, height, field, buffer, TOP_MARGIN);
+		
+		//
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
-		int lastSample = field.getLastVisibleSample(height);
+		
+		
+		g2.setColor(Color.GREEN);
+		for(int i=startTrace+1; i<finishTrace; i++) {
+			Trace trace1 = model.getFileManager().getTraces().get(i-1);
+			Trace trace2 = model.getFileManager().getTraces().get(i);
+			
+			Point p1 = field.traceSampleToScreen(new TraceSample(i-1,  trace1.maxindex2));
+			Point p2 = field.traceSampleToScreen(new TraceSample(i,  trace2.maxindex2));
+			g2.drawLine(p1.x, p1.y + TOP_MARGIN, p2.x, p2.y + TOP_MARGIN);
+		}
+		
+		for(Trace trace : model.getFoundTrace()) {
+			Point p = field.traceSampleToScreen(new TraceSample(trace.indexInSet, 0));
+			
+			g2.drawImage(ResourceImageHolder.IMG_SHOVEL, p.x-ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2 , 0, null);
+		}
+		
+		///
+		return bi;
+	}
+
+	private void drawPrism(int width, int height, VerticalCutField field, int[] buffer, int vOffset) {
+		int startTrace = field.getFirstVisibleTrace(width);
+		int finishTrace = field.getLastVisibleTrace(width);		
+		int lastSample = field.getLastVisibleSample(height-vOffset);
+		int vscale = Math.max(1, (int)field.getVScale());
+		int hscale = Math.max(1, (int)field.getHScale());
 		
 		for(int i=startTrace; i<finishTrace; i++ ) {
 			
 				Trace trace = model.getFileManager().getTraces().get(i);
 				float[] values = trace.getNormValues();
 				for(int j = field.getStartSample(); j<Math.min(lastSample, values.length ); j++) {
+					
 					Point p = field.traceSampleToScreen(new TraceSample(i, j));
 					
 		    		int c = (int) (127.0 + Math.tanh(values[j]/threshold) * 127.0);
-		    		int color = ((255-c) << 16) + ((c) << 8) + c;
+		    		int color = ((c) << 16) + ((c) << 8) + c;
 		    		
 		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;
-		    		for(int xt =0; xt < hscale; xt ++) {
+		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {
-		    				buffer[width / 2 + xt + p.x + (p.y   + yt) * width ] = color;
+		    				buffer[width / 2 + xt + p.x + (vOffset + p.y + yt) * width ] = color;
 		    			}
 		    		}
 				}
 			
 		}
-		
-		
-		///
-		return bi;
 	}
 	
 
@@ -136,7 +183,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public List<Node> getRight() {
 		
-		return Arrays.asList(new Button("f"));
+		return Arrays.asList(new Button("f"), thresholdSlider.produce());
 	}
 
 	int z = 0;
@@ -204,8 +251,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	    		
 	    		
 	    		TraceSample sceneCenter = dragField.screenToTraceSample(p);
-	    		//dragPoint = point;
-	    		System.out.println("move");
+	    		
 	    		field.setSelectedTrace(sceneCenter.getTrace());
 	    		s1.setValue(sceneCenter.getTrace());
 	    		field.setStartSample(sceneCenter.getSample());
@@ -257,9 +303,12 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         }
 	};
 	
-
 	protected void repaintEvent() {
-		System.out.println("repaint");
+		controller.render(null);
+	}
+	
+	protected void repaint() {
+		//System.out.println("repaint");
 		img = draw(width, height);
 		
 		updateWindow();
@@ -285,6 +334,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			height = model.getSettings().center_box_height - 50;
 		}
 
+		repaintEvent();
 		updateScroll();
 	}
 
@@ -298,6 +348,40 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		s1.setVisibleAmount(am);
 		s1.setUnitIncrement(am/4);
 		s1.setBlockIncrement(am);
+	}
+	
+
+	private RecalculationController controller = new RecalculationController(new Consumer<RecalculationLevel>() {
+
+		@Override
+		public void accept(RecalculationLevel level) {
+
+			repaint();
+			
+		}
+		
+	});
+	
+	public class ThresholdSlider extends BaseSlider {
+		
+		public ThresholdSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "threshold";
+			units = "amp";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(5000);
+			slider.setMin(50);
+			//slider.set
+			slider.setValue(threshold);
+		}
+		
+		public int updateModel() {
+			threshold = (int)slider.getValue();
+			return (int)threshold;
+		}
 	}
 	
 	

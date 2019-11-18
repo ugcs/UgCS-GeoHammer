@@ -55,6 +55,8 @@ public class LevelFilter implements ToolProducer {
 			am.init(lst);
 			am.findLevel();
 		}
+		
+		AppContext.notifyAll(new WhatChanged(Change.traceValues));
 	}
 	
 	private void findGroundLevel(List<Trace> lst) {
@@ -217,17 +219,25 @@ public class LevelFilter implements ToolProducer {
 		continGrps.remove(j);
 	}
 
-
 	protected void leveling(List<Trace> lst) {
+		int minlev = model.getFileManager().getTraces().get(0).maxindex2;
+		for(Trace trace : model.getFileManager().getTraces()) {
+			minlev = Math.min(minlev, trace.maxindex2);
+		}
+		
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);
 
 			float values[] = trace.getNormValues();
 
-			System.arraycopy(values, trace.maxindex2, values, 0, values.length - trace.maxindex2);
+			System.arraycopy(values, trace.maxindex2-minlev, values, 0, values.length - (trace.maxindex2-minlev));
+			
+			trace.maxindex2 = 0;
 		}
 		
 		model.getChanges().add(FileChangeType.LEVEL_TO_GROUND);
+		
+		AppContext.notifyAll(new WhatChanged(Change.traceValues));
 	}
 
 	protected void groundremov(List<Trace> lst) {

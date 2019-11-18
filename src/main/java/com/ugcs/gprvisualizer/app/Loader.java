@@ -81,6 +81,7 @@ public class Loader {
 		
 		model.getFoundIndexes().clear();
 		model.getFoundTrace().clear();
+		model.getChanges().clear();
 		//model.getSettings().
 		///
 		
@@ -94,6 +95,10 @@ public class Loader {
 			e.printStackTrace();
 		}
 
+		
+		for(int i=0; i<model.getFileManager().getTraces().size(); i++ ) {
+			model.getFileManager().getTraces().get(i).indexInSet = i;
+		}
 
 		Platform.runLater(new Runnable(){
 			@Override
