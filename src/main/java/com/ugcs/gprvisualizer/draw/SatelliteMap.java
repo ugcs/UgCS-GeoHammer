@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -23,14 +24,18 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Scan;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.ui.BaseCheckBox;
+import com.ugcs.gprvisualizer.ui.LayerVisibilityCheckbox;
 
 import de.pentabyte.googlemaps.Location;
 import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 
-public class SatelliteMap implements Layer{
+public class SatelliteMap extends BaseLayer {
 
 	private RepaintListener listener;
 	private Model model;
@@ -39,7 +44,24 @@ public class SatelliteMap implements Layer{
 
 	private Random rand = new Random();
 	private Color color = new Color(rand.nextInt(16777215));
-
+	
+	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
+		@Override
+		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+			
+			setActive(newValue);
+			
+			
+			if(isActive()) {
+				loadMap();
+			}else {
+				listener.repaint();
+			}
+		}
+	};
+	
+	private BaseCheckBox showLayerCheckbox = new LayerVisibilityCheckbox("show satellite map", showLayerListener);
+	
 	private static String GOOGLE_API_KEY;
 	static {
 		InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
@@ -62,7 +84,7 @@ public class SatelliteMap implements Layer{
 	@Override
 	public void draw(Graphics2D g2) {
 		BufferedImage _img = img;
-		if(_img != null) {
+		if(_img != null && isActive()) {
 			
 			//System.out.println("imgLatLon  " + imgLatLon.toString());
 			//System.out.println("scnLatLon  " + model.getField().getSceneCenter().toString());
@@ -96,11 +118,17 @@ public class SatelliteMap implements Layer{
 		if(changed.isFileopened() || changed.isZoom()) {
 			
 			
-			Thread thread = new Calc();
-			thread.start();
+			loadMap();
+			
 			
 		}
 		
+	}
+
+	private void loadMap() {
+		if(isActive()) {
+			new Calc().start();
+		}
 	}
 	
 	protected void loadimg() {
@@ -201,7 +229,7 @@ public class SatelliteMap implements Layer{
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Collections.EMPTY_LIST;
+		return Arrays.asList(showLayerCheckbox.produce());
 	}
 	
 }

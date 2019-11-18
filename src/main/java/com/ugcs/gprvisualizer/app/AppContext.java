@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 public class AppContext {
@@ -15,5 +16,15 @@ public class AppContext {
 	public static PluginRunner pluginRunner;
 	
 	public static List<SmthChangeListener> smthListener = new ArrayList<>();
+	
+	public static void notifyAll(WhatChanged changed) {
+		for (SmthChangeListener lst : AppContext.smthListener) {
+			try {
+				lst.somethingChanged(changed);
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
 }

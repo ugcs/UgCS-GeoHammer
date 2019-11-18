@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
@@ -30,7 +32,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class VerticalCut implements ModeFactory {
+public class VerticalCut implements ModeFactory, SmthChangeListener {
 
 	private Model model;
 	private ImageView imageView = new ImageView();
@@ -70,47 +72,22 @@ public class VerticalCut implements ModeFactory {
 		selectedTraceSlider = new SelectedTraceSlider(model.getSettings(), sliderListener);
 		distBetweenTracesSlider = new DistBetweenTracesSlider(model.getSettings(), sliderListener);
 		
+		AppContext.smthListener.add(this);
 	}
 	
 	public void recalc() {
 		controller.render(null);
 	}
-		
 
-//	public void init() {
-//		
-//		verticalCutStage = new Stage();
-//		verticalCutStage.setTitle("vertical cut");
-//		verticalCutStage.setScene(build());
-//		
-//	}
-
-	public void show(int width, int height) {
-		this.width = width; 
-		this.height = height;
+	public void show() {
+		this.width = model.getSettings().center_box_width; 
+		this.height = model.getSettings().center_box_height;
 		
 		recalc();
 		//verticalCutStage.show();		
 		
 		
 	}
-
-//	public Scene build() {
-//		
-//		   
-//		//bPane.setTop(); 
-//		//bPane.setBottom(prepareStatus()); 
-//		//bPane.setRight(getToolPane());
-//		
-//		vbox.getChildren().add(imageView);
-//		
-//		//bPane.setCenter(vbox);
-//		
-//		//Scene scene = new Scene(bPane, 600, 700);
-//		
-//		
-//		return scene;
-//	}
 	
 	private Node getToolPane() {
 		VBox vBox = new VBox(); 
@@ -362,6 +339,15 @@ public class VerticalCut implements ModeFactory {
 			selectedTraceSlider.produce(),
 			distBetweenTracesSlider.produce());
 				
+	}
+
+	@Override
+	public void somethingChanged(WhatChanged changed) {
+		
+		if(changed.isTraceValues()) {
+			recalc();
+		}
+		
 	}
 	
 }

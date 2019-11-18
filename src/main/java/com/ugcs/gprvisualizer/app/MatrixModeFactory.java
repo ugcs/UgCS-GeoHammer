@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -38,11 +39,9 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 	
 	
 	private AmplitudeMatrix am = new AmplitudeMatrix();
-	private SmthChangeListener listener;
 	
-	public MatrixModeFactory(Model model, SmthChangeListener listener){
+	public MatrixModeFactory(Model model){
 		this.model = model;		
-		this.listener = listener;
 		
 		findGrnd.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
@@ -125,14 +124,11 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 		Image i = SwingFXUtils.toFXImage(img, null);
 		imageView.setImage(i);
 		
-		
-		WhatChanged changed = new WhatChanged();
-		changed.setJustdraw(true);
-		listener.somethingChanged(changed);
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
 	@Override
-	public void show(int width, int height) {
+	public void show() {
 
 		//am.init(model.getFileManager().getFiles().get(0).getTraces());
 		

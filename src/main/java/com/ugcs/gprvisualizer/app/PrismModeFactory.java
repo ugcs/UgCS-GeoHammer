@@ -8,6 +8,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.PrismImageProducer;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -39,7 +40,6 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 	
 	private BufferedImage img;
 	private Button initBtn = new Button("Init");
-	private SmthChangeListener listener;
 	private ThresholdSlider thresholdSlider;
 	
 	
@@ -50,9 +50,8 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 		}
 	};
 	
-	public PrismModeFactory(Model model, SmthChangeListener listener){
+	public PrismModeFactory(Model model){
 		this.model = model;		
-		this.listener = listener;
 		
 		thresholdSlider = new ThresholdSlider(model.getSettings(), sliderListener); 
 		
@@ -119,14 +118,11 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 		Image i = SwingFXUtils.toFXImage(img, null);
 		imageView.setImage(i);
 		
-		
-		WhatChanged changed = new WhatChanged();
-		changed.setJustdraw(true);
-		listener.somethingChanged(changed);
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
 	@Override
-	public void show(int width, int height) {
+	public void show() {
 
 		//am.init(model.getFileManager().getFiles().get(0).getTraces());
 		

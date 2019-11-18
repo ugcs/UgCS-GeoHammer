@@ -10,12 +10,14 @@ import java.util.Random;
 
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
@@ -40,6 +42,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class MainSingleWindow extends Application implements SmthChangeListener {
 
@@ -58,6 +61,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private ToggleButton prismMode = new ToggleButton("Prism", null);
 	private ToggleButton cutMode = new ToggleButton("Waveform", null);
 	private ToggleButton matrixMode = new ToggleButton("Matrix", null);
+	
+	private ToggleButton cleverMode = new ToggleButton("Clever", null);
+	
 	Map<Node, ModeFactory> modeMap = new HashMap<>();
 	{
 	}
@@ -68,7 +74,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		//System.out.println(env.get("ANT_HOME"));
 		
 		AppContext.levelFilter = new LevelFilter(model);
-		AppContext.loader = new Loader(model, this);
+		AppContext.loader = new Loader(model);
 		AppContext.saver = new Saver(model);
 		AppContext.pluginRunner = new PluginRunner(model);		
 
@@ -76,14 +82,15 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		prismMode.setToggleGroup(group);
 		cutMode.setToggleGroup(group);
 		matrixMode.setToggleGroup(group);
+		cleverMode.setToggleGroup(group);
 
 		modeMap.put(cutMode, new VerticalCut(model));
 
-		PrismModeFactory pmf = new PrismModeFactory(model, this);
+		PrismModeFactory pmf = new PrismModeFactory(model);
 		modeMap.put(prismMode, pmf);
 		AppContext.smthListener.add(pmf);
 		
-		MatrixModeFactory tmf = new MatrixModeFactory(model, this);
+		MatrixModeFactory tmf = new MatrixModeFactory(model);
 		modeMap.put(matrixMode, tmf);
 		AppContext.smthListener.add(tmf);
 
@@ -91,7 +98,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		modeMap.put(gpsMode, layersWindowBuilder);
 		AppContext.smthListener.add(layersWindowBuilder);
 
-		
+		modeMap.put(cleverMode, new CleverImageView(model));
 		
 		group.selectedToggleProperty().addListener(new InvalidationListener() {
 
@@ -105,7 +112,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 			}
 		});
 
-		
+		AppContext.smthListener.add(this);
 	}
 	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb"
 	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar
@@ -126,6 +133,17 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		stage.setScene(scene);
 		stage.show();
 
+		model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
+		model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
+		
+		
+		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+		    @Override
+		    public void handle(WindowEvent t) {
+		        Platform.exit();
+		        System.exit(0);
+		    }
+		});		
 	}
 
 	private Scene createScene() {
@@ -140,6 +158,12 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		//bPane.setCenter(centerBox);
 
 		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
+			
+			model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
+			model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
+
+			AppContext.notifyAll(new WhatChanged(Change.windowresized));
+			
 			showCenter();
 		};
 		bPane.widthProperty().addListener(stageSizeListener);
@@ -158,7 +182,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		r.setPrefWidth(10);
 		toolBar.getItems().add(r);
 		
-		toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode);
+		toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode, cleverMode);
 		
 		Region r2 = new Region();
 		r2.setPrefWidth(10);
@@ -187,11 +211,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	}
 
 	private void showCenter() {
-		int w = (int) (bPane.getWidth() - rightBox.getWidth());
-		int h = (int) (bPane.getHeight() - toolBar.getHeight());
-		
 		if(getModeFactory() != null) {
-			getModeFactory().show(w, h);
+			getModeFactory().show();
 		}
 	}
 
@@ -206,14 +227,6 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-		for (SmthChangeListener lst : AppContext.smthListener) {
-
-			try {
-				lst.somethingChanged(changed);
-			}catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
 
 		if(changed.isFileopened()) {
 

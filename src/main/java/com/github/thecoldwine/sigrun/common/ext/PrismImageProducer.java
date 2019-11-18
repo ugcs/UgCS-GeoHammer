@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class PrismImageProducer {

@@ -6,6 +6,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -21,13 +22,10 @@ import javafx.scene.input.TransferMode;
 public class Loader {
 
 	private Model model;
-	private SmthChangeListener changeListener;
 	
-	public Loader(Model model, SmthChangeListener changeListener) {
+	public Loader(Model model) {
 		
 		this.model = model;
-		this.changeListener = changeListener;
-		
 	}
 	
 	public EventHandler<DragEvent> getDragHandler(){
@@ -100,9 +98,7 @@ public class Loader {
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run() {
-				WhatChanged changed = new WhatChanged();
-				changed.setFileopened(true);
-				changeListener.somethingChanged(changed );
+				AppContext.notifyAll(new WhatChanged(Change.fileopened));
 			}
 		});
 		

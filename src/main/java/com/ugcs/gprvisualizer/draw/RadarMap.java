@@ -39,7 +39,7 @@ import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 
-public class RadarMap implements Layer{
+public class RadarMap extends BaseLayer{
 
 	private RepaintListener listener;
 	private Model model;
@@ -48,7 +48,7 @@ public class RadarMap implements Layer{
 	
 	private int width = 800;
 	private int height = 800;
-	private boolean active = true;
+	
 	
 	private BaseSlider depthSlider;
 	private BaseSlider depthWindowSlider;
@@ -125,7 +125,14 @@ public class RadarMap implements Layer{
 		
 		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
 	
-		showLayerCheckbox = new LayerVisibilityCheckbox(showLayerListener);
+		showLayerCheckbox = new LayerVisibilityCheckbox("show amplitude map", showLayerListener);
+		
+		String cssLayout = "-fx-border-color: gray;\n" +
+                "-fx-border-insets: 5;\n" +
+                "-fx-border-width: 2;\n" +
+                "-fx-border-style: solid;\n";
+ 
+		vBox.setStyle(cssLayout);		
 	}
 	
 	@Override
@@ -163,7 +170,12 @@ public class RadarMap implements Layer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll()) {
+		if(changed.isWindowresized()) {
+			width = model.getSettings().center_box_width;
+			height = model.getSettings().center_box_height;
+		}
+		
+		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
 			System.out.println(" radar start thread");
 			executor.submit(t);
 		}		
@@ -247,7 +259,9 @@ public class RadarMap implements Layer{
 	Thread t = new Thread() {
 		public void run() {
 			try {
-			
+				if(!model.getFileManager().isActive()) {
+					return;
+				}
 				//TODO: show lowres
 				//img = createLowRes();
 				//imgLatLon = model.getField().getSceneCenter();				
@@ -321,14 +335,6 @@ public class RadarMap implements Layer{
 			return scaleArrayBuilder;
 		}
 
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
 	}
 	
 }

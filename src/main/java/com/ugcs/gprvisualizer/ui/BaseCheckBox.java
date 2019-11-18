@@ -25,13 +25,13 @@ public abstract class BaseCheckBox {
 //		this.name = name;
 //	}
 	
-//	protected ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
-//        @Override
-//        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
-//        	boolean val = updateModel();
-//        	//label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
-//        } 
-//    };
+	protected ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
+        @Override
+        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
+        	boolean val = updateModel();
+        	//label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
+        } 
+    };
 	
 	public BaseCheckBox(ChangeListener<Boolean> listenerExt, String name) {
 		this.listenerExt = listenerExt;
@@ -46,7 +46,7 @@ public abstract class BaseCheckBox {
         
         updateUI();
         
-        //checkBox.selectedProperty().addListener(listener);
+        checkBox.selectedProperty().addListener(listener);
         checkBox.selectedProperty().addListener(listenerExt);
         //checkBox.setText(name);
         

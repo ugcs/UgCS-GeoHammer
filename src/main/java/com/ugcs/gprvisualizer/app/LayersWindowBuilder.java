@@ -8,6 +8,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
@@ -29,11 +30,6 @@ import javafx.stage.Stage;
 
 public class LayersWindowBuilder extends Work implements SmthChangeListener, ModeFactory {
 	
-	private ImageView imageView = new ImageView();
-	private BufferedImage img;
-	private Stage stage;
-	private int width;
-	private int height;
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
@@ -48,9 +44,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		initImageView();
 	}
 	
-	public Stage getStage() {
-		return stage;
-	}
 		
 	private void initImageView() {
 		//ZOOM
@@ -66,9 +59,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	    	LatLon sceneCenter = model.getField().screenTolatLon(pdist);			
 			model.getField().setSceneCenter(sceneCenter);
 	    	
-	    	WhatChanged sc = new WhatChanged();
-        	sc.setZoom(true);
-			somethingChanged(sc);
+			AppContext.notifyAll(new WhatChanged(Change.mapzoom));
 	    } );		
 	
 		imageView.setOnMousePressed(mousePressHandler);
@@ -89,97 +80,13 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
             public void handle(MouseDragEvent event) {
             	System.out.println("drag release");
             	
-            	WhatChanged wc = new WhatChanged();
-            	wc.setMapscroll(true);
-            	somethingChanged(wc);
+            	AppContext.notifyAll(new WhatChanged(Change.mapscroll));
             	
             	event.consume();
             }
 		});		
 	}
 	
-	protected void repaintEvent() {
-		img = draw(width, height);
-		
-		updateWindow();
-	}
-
-	
-	private void updateWindow() {
-		Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-            	if(img == null) {
-            		return;
-            	}
-			    Image i = SwingFXUtils.toFXImage(img, null);
-			    imageView.setImage(i);
-            }
-          });
-	}
-
-	EventHandler mousePressHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-        	Point2D p = getLocalCoords(event);
-        	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
-        		Layer layer = getLayers().get(i);
-        		
-        		if(layer.mousePressed(p)) {
-        			return;
-        		}        		
-        	}
-        }
-
-	};
-
-	EventHandler mouseReleaseHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {        	
-        	Point2D p = getLocalCoords(event);
-        	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
-        		Layer layer = getLayers().get(i);
-        		
-        		if(layer.mouseRelease(p)) {
-        			return;
-        		}        		
-        	}
-        	
-        }
-	};
-	
-	EventHandler mouseMoveHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-        	Point2D p = getLocalCoords(event);
-        	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
-        		Layer layer = getLayers().get(i);
-        		
-        		if(layer.mouseMove(p)) {
-        			return;
-        		}        		
-        	}        	
-        	
-        }
-	};
-
-	private Point2D getLocalCoords(MouseEvent event) {
-		
-		return getLocalCoords(event.getSceneX(), event.getSceneY());
-	
-	}
-	private Point2D getLocalCoords(double x, double y) {
-		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
-    	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
-    	Point2D p = new Point2D.Double(
-    			imgCoord.getX() - imageView.getBoundsInLocal().getWidth()/2, 
-    			imgCoord.getY() - imageView.getBoundsInLocal().getHeight()/2);
-		return p;
-	}
-
 	@Override
 	public Node getCenter() {
 		
@@ -202,30 +109,19 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		return lst;
 	}
 
-	@Override
-	public void show(int width, int height) {
-		if(this.width != width || this.height != height) {
-			
-		}
+	
+	protected void repaintEvent() {
+		img = draw(width, height);
 		
-		this.width = width;		
-		this.height = height;
+		updateWindow();
+	}
+
+	@Override
+	public void show() {
 
 		repaintEvent();
 	}
 
-	public void somethingChanged(WhatChanged changed) {
-		System.out.println("somethingChanged lwb");
-		for (Layer l : getLayers()) {
-			l.somethingChanged(changed);
-		}
-
-		if(changed.isJustdraw()) {
-			repaintEvent();
-		}
-		
-	}
-
-
+	
 	
 }

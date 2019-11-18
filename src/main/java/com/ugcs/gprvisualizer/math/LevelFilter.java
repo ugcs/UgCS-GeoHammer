@@ -12,7 +12,10 @@ import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
@@ -39,6 +42,8 @@ public class LevelFilter implements ToolProducer {
 			brf.removeConstantNoise(lst);
 		}
 		model.getChanges().add(FileChangeType.BACKGROUND_NOISE_REMOVED);
+		
+		AppContext.notifyAll(new WhatChanged(Change.traceValues));
 	}
 
 	public void findGroundLevel() {

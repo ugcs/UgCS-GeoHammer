@@ -6,7 +6,7 @@ import javafx.scene.Node;
 
 public interface ModeFactory {
 
-	void show(int width, int height);
+	void show();
 	Node getCenter();
 	List<Node> getRight();
 	

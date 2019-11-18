@@ -7,8 +7,8 @@ import javafx.geometry.Pos;
 
 public class LayerVisibilityCheckbox extends BaseCheckBox{
 
-	public LayerVisibilityCheckbox(ChangeListener<Boolean> listenerExt) {
-		super(listenerExt, "Show amplitudemap");
+	public LayerVisibilityCheckbox(String name, ChangeListener<Boolean> listenerExt) {
+		super(listenerExt, name);
 		
 		pos = Pos.CENTER_LEFT;
 	}

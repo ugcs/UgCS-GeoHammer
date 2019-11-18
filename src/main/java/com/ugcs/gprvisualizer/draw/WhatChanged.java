@@ -2,51 +2,34 @@ package com.ugcs.gprvisualizer.draw;
 
 public class WhatChanged {
 
-	private boolean justdraw;
-	private boolean mapscroll;
-	private boolean zoom;
-	private boolean adjusting;
-	private boolean traces;
-	private boolean fileopened;
+	private Change change;
+	
+	public WhatChanged(Change change) {
+		this.change = change;
+	}
 	
 	public boolean isZoom() {
-		return zoom;
-	}
-	public void setZoom(boolean zoom) {
-		this.zoom = zoom;
+		return change == Change.mapzoom;
 	}
 	public boolean isAdjusting() {
-		return adjusting;
-	}
-	public void setAdjusting(boolean adjusting) {
-		this.adjusting = adjusting;
+		return change == Change.adjusting;
 	}
 	public boolean isTraces() {
-		return traces;
-	}
-	public void setTraces(boolean traces) {
-		this.traces = traces;
+		return change == Change.traces;
 	}
 	public boolean isFileopened() {
-		return fileopened;
-	}
-	public void setFileopened(boolean fileopened) {
-		this.fileopened = fileopened;
+		return change == Change.fileopened;
 	}
 	public boolean isMapscroll() {
-		return mapscroll;
-	}
-	public void setMapscroll(boolean mapscroll) {
-		this.mapscroll = mapscroll;
+		return change == Change.mapscroll;
 	}
 	public boolean isJustdraw() {
-		return justdraw;
+		return change == Change.justdraw;
 	}
-	public void setJustdraw(boolean justdraw) {
-		this.justdraw = justdraw;
+	public boolean isWindowresized() {
+		return change == Change.windowresized;
 	}
-	
-	
-	
-	
+	public boolean isTraceValues() {
+		return change == Change.traceValues;
+	}
 }

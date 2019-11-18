@@ -8,6 +8,9 @@ public class Settings {
 	public Point2D middleLatLonDgr;
 	public Point2D middleLatLonRad;
 	
+	public int center_box_width; 
+	public int center_box_height;
+	
 	public int maxsamples = 400;
 	
 	public int width = 800;
@@ -26,8 +29,8 @@ public class Settings {
 	
 	public int threshold = 0;
     
-	public int distBetweenTraces = 50;
-	public int selectedScanIndex = 200;
+	public int distBetweenTraces = 10;
+	public int selectedScanIndex = 1;
 	public double kf;
 	public double stx;
 	public double sty;
