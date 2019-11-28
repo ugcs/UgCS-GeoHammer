@@ -4,26 +4,33 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
 public class BlockFile {
 	
+	private InputStream is;
 	private FileChannel chan;
 	private int position = 0;
 	
 	public static BlockFile open(File file) throws FileNotFoundException {
+
+		FileInputStream is = new FileInputStream(file);
+		return new BlockFile(is);
 		
-		FileChannel chan = new FileInputStream(file).getChannel();
-		
-		return new BlockFile(chan);
 	}
 	
-	private BlockFile(FileChannel chan) {
-		this.chan = chan;
+	private BlockFile(FileInputStream is) {
+		this.is = is; 
+		this.chan = is.getChannel();
 	}
+
+	public FileChannel getChannel() {
+		return chan;
+	}	
 	
 	public Block next(int length) {
-		Block block = new Block(chan, position, length);
+		Block block = new Block(position, length);
 		position = block.getFinishPos();
 		
 		return block;
@@ -35,6 +42,15 @@ public class BlockFile {
 		} catch (IOException e) {
 			return false;			
 		}
+	}
+
+	public void close() {
+		try {
+			chan.close();
+			is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
 	}
 	
 

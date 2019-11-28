@@ -26,6 +26,10 @@ public class LevelFilter implements ToolProducer {
 
 	Button buttonNoise = new Button("Background removal");
 	Button buttonFindLevel = new Button("Find ground level");
+	
+	Button buttonShiftAvg = new Button("ShiftAvg");
+	Button buttonShiftAvgRemoval = new Button("ShiftAvgRemoval");
+	
 	Button buttonSmoothLevel = new Button("Smooth ground level");
 	Button buttonSet = new Button("Level by ground");
 
@@ -324,6 +328,23 @@ public class LevelFilter implements ToolProducer {
 
 	@Override
 	public List<Node> getToolNodes() {
+		buttonShiftAvg.setOnAction(e -> {
+
+			AvgShiftFilter f = new AvgShiftFilter(model);
+			f.execute();			
+			
+			buttonShiftAvg.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
+		});
+
+		buttonShiftAvgRemoval.setOnAction(e -> {
+
+			AvgShiftFilter f = new AvgShiftFilter(model);
+			f.execute2();			
+			
+			buttonShiftAvgRemoval.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
+		});
+
+		
 		buttonNoise.setOnAction(e -> {
 
 			removeConstantNoise();
@@ -350,7 +371,7 @@ public class LevelFilter implements ToolProducer {
 			buttonSet.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
 		});
 
-		return Arrays.asList(buttonNoise, buttonFindLevel, /*buttonSmoothLevel, */ buttonSet);
+		return Arrays.asList(buttonNoise, buttonFindLevel, buttonShiftAvg, buttonShiftAvgRemoval, buttonSet);
 	}
 
 }

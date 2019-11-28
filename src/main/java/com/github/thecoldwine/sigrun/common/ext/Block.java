@@ -9,28 +9,27 @@ import com.github.thecoldwine.sigrun.common.TextHeader;
 
 public class Block implements ByteBufferProducer {
 
-	private FileChannel chan;
+	//private FileChannel chan;
 	private int start;
 	private int length;
 
 	
-	public Block(FileChannel chan, int start, int length) {
-		this.chan = chan;
+	public Block(int start, int length) {
+		
 		this.start = start;
 		this.length = length;
 	}
 	
-	public Block(Block prev, int length) {
-		this.chan = prev.chan;
+	public Block(Block prev, int length) {		
 		this.start = prev.getFinishPos();
 		this.length = length;
 	}
 	
-	public ByteBuffer read() throws IOException {
+	public ByteBuffer read(BlockFile blockFile) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(length);
 		
-		chan.position(start);
-	    if (chan.read(buf) != length) {
+		blockFile.getChannel().position(start);
+	    if (blockFile.getChannel().read(buf) != length) {
 	    	throw new IOException();
 	    }
 	    

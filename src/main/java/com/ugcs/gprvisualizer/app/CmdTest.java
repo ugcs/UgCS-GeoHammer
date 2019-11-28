@@ -7,6 +7,9 @@ public class CmdTest {
 
 	public static void main(String argv[]) {
 		try {
+			
+			System.out.println(System.getenv().get("SGYPROC"));
+			
 			String line;
 			//Process p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tree.com /A");
 			

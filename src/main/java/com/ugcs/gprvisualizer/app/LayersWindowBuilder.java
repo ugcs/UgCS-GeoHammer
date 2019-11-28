@@ -37,7 +37,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		
 		getLayers().add(new SatelliteMap(model, listener));
 		getLayers().add(new RadarMap(model, listener));
-		getLayers().add(new GpsTrack(model, listener));		
+		getLayers().add(new GpsTrack(model, listener));
 		getLayers().add(new FoundTracesLayer(model));
 		getLayers().add(new TraceCutter(model, listener));
 
@@ -119,6 +119,14 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	@Override
 	public void show() {
 
+		repaintEvent();
+	}
+
+
+	public void setSize(int width, int height) {
+		this.width = width; 
+		this.height = height;
+		
 		repaintEvent();
 	}
 

@@ -117,6 +117,9 @@ public class VerticalCut implements ModeFactory, SmthChangeListener {
 	});
 
 	protected BufferedImage render() {
+		if(width == 0 || height == 0) {
+			return null;
+		}
 		
 	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	    

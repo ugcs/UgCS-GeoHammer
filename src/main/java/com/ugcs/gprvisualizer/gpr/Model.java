@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.thecoldwine.sigrun.common.ext.AuxElement;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
@@ -26,6 +27,7 @@ public class Model {
 	private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
 	private Set<FileChangeType> changes = new HashSet<>();
 	
+	private List<AuxElement> auxElements = new ArrayList<>();
 	
 	private Rectangle2D.Double bounds;
 	
@@ -67,5 +69,13 @@ public class Model {
 
 	public Set<FileChangeType> getChanges() {
 		return changes;
+	}
+
+	public List<AuxElement> getAuxElements() {
+		return auxElements;
+	}
+
+	public void setAuxElements(List<AuxElement> auxElements) {
+		this.auxElements = auxElements;
 	}
 }

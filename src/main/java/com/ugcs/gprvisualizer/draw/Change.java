@@ -9,6 +9,7 @@ public enum Change {
 	mapscroll,
 	mapzoom,
 	adjusting,
-	fileopened;
+	fileopened,
+	auxOnMapSelected;
 	
 }

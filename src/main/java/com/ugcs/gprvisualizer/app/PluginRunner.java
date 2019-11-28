@@ -39,12 +39,16 @@ public class PluginRunner implements ToolProducer {
 
 		private void processSgyFile(ProgressListener listener, SgyFile sgf) {
 			try {
+				
+				String sgyprocPath = System.getenv().get("SGYPROC");
+				System.out.println(sgyprocPath);
+				
 				String line;
 				String filePath = sgf.getFile().getAbsolutePath();
-				String cmd = "python \"d:/install/sgy_processing/main.py\" "
+				String cmd = "python \"" + sgyprocPath + "/main.py\" "
 						+ "\""+ filePath +"\" "
-						+ "--model \"d:\\install\\sgy_processing\\model.pb\" --no_progressbar";
-				
+						+ "--model \"" + sgyprocPath + "\\model.pb\" --no_progressbar";
+				System.out.println(cmd);
 				Process p = Runtime.getRuntime().exec(cmd);
 				BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				while ((line = input.readLine()) != null) {

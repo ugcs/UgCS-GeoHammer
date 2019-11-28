@@ -177,7 +177,7 @@ public class AmplitudeMatrix {
 		long selsum = 0;
 		for(List<Integer> row : selected) {
 			long sum = getIndignation(row);
-			System.out.println(String.format("indignation:  %.2f ", ((double)sum / row.size())));
+			//System.out.println(String.format("indignation:  %.2f ", ((double)sum / row.size())));
 			
 			if(selrow == null || sum < selsum) {
 				selrow = row;

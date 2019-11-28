@@ -6,14 +6,18 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class VerticalCutField {
 
+	
+	private int topMargin = 0;
 	private Model model;
 	private int selectedTrace=0;
 	private int startSample=0;
 	private double vScale=1;
 	private double hScale=2;
 
-	public VerticalCutField(Model model) {
+	public VerticalCutField(Model model, int topMargin) {
 		this.model  = model;
+		
+		this.topMargin = topMargin;
 	}
 
 	public VerticalCutField(VerticalCutField copy){
@@ -22,18 +26,13 @@ public class VerticalCutField {
 		this.startSample = copy.startSample;
 		this.vScale = copy.vScale;
 		this.hScale = copy.hScale;
-		
+		this.topMargin = copy.topMargin;
 	}
 	
 	public TraceSample screenToTraceSample(Point point) {
 	
-		
 		int trace = getSelectedTrace() + (int)(point.getX()/getHScale()); 
-		int sample = getStartSample() + (int)(point.getY()/getVScale());
-		
-		//if(trace < 0 || trace >= model.getFileManager().getTraces().size()) {
-		//	return null;
-		//}
+		int sample = getStartSample() + (int)((point.getY() - topMargin)/getVScale());
 		
 		return new TraceSample(trace, sample);
 	}
@@ -41,7 +40,14 @@ public class VerticalCutField {
 	public Point traceSampleToScreen(TraceSample ts) {
 		
 		double x = (ts.getTrace()-getSelectedTrace()) * getHScale(); 
-		double y = (ts.getSample()-getStartSample()) * getVScale();
+		double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin;
+		return new Point((int)x, (int)y);
+	}
+
+	public Point traceSampleToScreenCenter(TraceSample ts) {
+		
+		double x = (ts.getTrace()-getSelectedTrace()) * getHScale() + getHScale()/2; 
+		double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin + getVScale()/2;
 		return new Point((int)x, (int)y);
 	}
 	

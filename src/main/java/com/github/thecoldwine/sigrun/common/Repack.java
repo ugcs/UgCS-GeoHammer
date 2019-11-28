@@ -1,5 +1,6 @@
 package com.github.thecoldwine.sigrun.common;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Block;
+import com.github.thecoldwine.sigrun.common.ext.BlockFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
@@ -47,12 +49,13 @@ public class Repack {
 		//								normvalues, lat, lon
 		//										scr x, scr y
 		
-		FileChannel chan = new FileInputStream("d:\\georadarData\\Greenland\\2018-07-04-15-27-03-gpr-shift.sgy").getChannel();
+		BlockFile bf = BlockFile.open(new File("d:\\georadarData\\Greenland\\2018-07-04-15-27-03-gpr-shift.sgy"));
+		//FileChannel chan = new FileInputStream().getChannel();
 		
-		Block txtHdrBlock = new Block(chan, 0, TextHeader.TEXT_HEADER_SIZE);
+		Block txtHdrBlock = new Block(0, TextHeader.TEXT_HEADER_SIZE);
 		Block binHdrBlock = new Block(txtHdrBlock, BinaryHeader.BIN_HEADER_LENGTH);
 		
-		BinaryHeader binaryHeader = binaryHeaderReader.read(binHdrBlock.read().array());
+		BinaryHeader binaryHeader = binaryHeaderReader.read(binHdrBlock.read(bf).array());
 		
 		Block lastBlock = binHdrBlock; 
 		
@@ -63,7 +66,7 @@ public class Repack {
 		try {
 			do {
 				Block traceHdrBlock = new Block(lastBlock, TraceHeader.TRACE_HEADER_LENGTH);
-		        TraceHeader header = traceHeaderReader.read(traceHdrBlock.read().array());
+		        TraceHeader header = traceHeaderReader.read(traceHdrBlock.read(bf).array());
 		        int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
 				
 		        Block traceDataBlock = new Block(traceHdrBlock, dataLength);
@@ -77,19 +80,19 @@ public class Repack {
 		}catch(IOException e) {
 			System.out.println("exception finish");
 		}
-		System.out.println("finish " + new String(txtHdrBlock.read().array()));
+		System.out.println("finish " + new String(txtHdrBlock.read(bf).array()));
         
 		
 		
 		FileOutputStream fos = new FileOutputStream("d:\\georadarData\\created.sgy");
 		FileChannel writechan = fos.getChannel();
 		
-		writechan.write(ByteBuffer.wrap(txtHdrBlock.read().array()));
-		writechan.write(ByteBuffer.wrap(binHdrBlock.read().array()));
+		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(bf).array()));
+		writechan.write(ByteBuffer.wrap(binHdrBlock.read(bf).array()));
 		
 		for(int i = 540; i<blocks.size()-550; i++) {
 			Block block = blocks.get(i);
-			writechan.write(ByteBuffer.wrap(block.read().array()));
+			writechan.write(ByteBuffer.wrap(block.read(bf).array()));
 			//System.out.println("write " + bb.array().length + "   " + i);
 			
 		}

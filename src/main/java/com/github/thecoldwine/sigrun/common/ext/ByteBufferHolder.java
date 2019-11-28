@@ -13,7 +13,7 @@ public class ByteBufferHolder implements ByteBufferProducer {
 	}
 	
 	@Override
-	public ByteBuffer read() throws IOException {
+	public ByteBuffer read(BlockFile blockFile) throws IOException {
 
 		return valuesToByteBuffer(trace.getNormValues());
 	}

@@ -124,7 +124,8 @@ public class Saver implements ToolProducer {
 			String name = file.getFile().getName();
 			int pos = name.lastIndexOf(".");
 			String onlyname = name.substring(0, pos);
-			nfile = new File(nfolder, onlyname + "_" + part + name.substring(pos));
+			String spart = String.format("%03d", part);
+			nfile = new File(nfolder, onlyname + "_" + spart + name.substring(pos));
 			
 			
 			file.savePart(nfile.getAbsolutePath(), blocks);

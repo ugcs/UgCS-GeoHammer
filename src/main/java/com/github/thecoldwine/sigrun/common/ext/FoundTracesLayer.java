@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -54,6 +56,11 @@ public class FoundTracesLayer implements Layer {
 			g2.drawImage(img, (int)p.getX() - img.getWidth(null)/2 , (int)p.getY() - img.getHeight(null), null);
 			g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
 		}
+		
+		for (AuxElement au : model.getAuxElements()) {
+			
+			au.drawOnMap(g2, model.getField());
+		}
 
 	}
 
@@ -70,6 +77,17 @@ public class FoundTracesLayer implements Layer {
 	@Override
 	public boolean mousePressed(Point2D point) {
 
+		for(AuxElement au : model.getAuxElements()) {
+			
+			
+//			if() {
+//				
+//				
+//				AppContext.notifyAll(new WhatChanged(Change.auxOnMapSelected));
+//				return true;
+//			}			
+		}
+		
 		return false;
 	}
 

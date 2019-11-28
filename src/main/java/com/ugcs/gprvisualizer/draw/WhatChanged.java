@@ -32,4 +32,7 @@ public class WhatChanged {
 	public boolean isTraceValues() {
 		return change == Change.traceValues;
 	}
+	public boolean isAuxOnMapSelected() {
+		return change == Change.auxOnMapSelected;
+	}
 }

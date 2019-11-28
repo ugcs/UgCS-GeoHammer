@@ -151,10 +151,10 @@ public class Work {
 	}
 
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isWindowresized()) {
-			width = model.getSettings().center_box_width;
-			height = model.getSettings().center_box_height;
-		}
+		//if(changed.isWindowresized()) {
+		//	width = model.getSettings().center_box_width;
+		//	height = model.getSettings().center_box_height;
+		//}
 
 		
 		System.out.println("somethingChanged lwb");

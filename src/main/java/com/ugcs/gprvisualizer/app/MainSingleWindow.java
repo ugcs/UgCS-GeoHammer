@@ -31,6 +31,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
@@ -39,13 +40,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class MainSingleWindow extends Application implements SmthChangeListener {
 
+	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
 	private BorderPane bPane;
@@ -56,18 +60,22 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private ToolBar toolBar = new ToolBar();
 
 	// modes
-	private ToggleGroup group = new ToggleGroup();
-	private ToggleButton gpsMode = new ToggleButton("GPS", null);
-	private ToggleButton prismMode = new ToggleButton("Prism", null);
-	private ToggleButton cutMode = new ToggleButton("Waveform", null);
-	private ToggleButton matrixMode = new ToggleButton("Matrix", null);
+//	private ToggleGroup group = new ToggleGroup();
+//	private ToggleButton gpsMode = new ToggleButton("GPS", null);
+//	private ToggleButton prismMode = new ToggleButton("Prism", null);
+//	private ToggleButton cutMode = new ToggleButton("Waveform", null);
+//	private ToggleButton matrixMode = new ToggleButton("Matrix", null);
+//	
+//	private ToggleButton cleverMode = new ToggleButton("Clever", null);
 	
-	private ToggleButton cleverMode = new ToggleButton("Clever", null);
+	SplitPane sp;
 	
-	Map<Node, ModeFactory> modeMap = new HashMap<>();
+	//Map<Node, ModeFactory> modeMap = new HashMap<>();
 	{
 	}
-
+	LayersWindowBuilder layersWindowBuilder;
+	CleverImageView cleverImageView;
+	
 	public MainSingleWindow() {
 		
 		//Map<String, String> env = System.getenv();
@@ -78,41 +86,47 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.saver = new Saver(model);
 		AppContext.pluginRunner = new PluginRunner(model);		
 
-		gpsMode.setToggleGroup(group);
-		prismMode.setToggleGroup(group);
-		cutMode.setToggleGroup(group);
-		matrixMode.setToggleGroup(group);
-		cleverMode.setToggleGroup(group);
+		
+		
+//		gpsMode.setToggleGroup(group);
+//		prismMode.setToggleGroup(group);
+//		cutMode.setToggleGroup(group);
+//		matrixMode.setToggleGroup(group);
+//		cleverMode.setToggleGroup(group);
 
-		modeMap.put(cutMode, new VerticalCut(model));
+		//modeMap.put(cutMode, new VerticalCut(model));
 
 		PrismModeFactory pmf = new PrismModeFactory(model);
-		modeMap.put(prismMode, pmf);
+		//modeMap.put(prismMode, pmf);
 		AppContext.smthListener.add(pmf);
 		
 		MatrixModeFactory tmf = new MatrixModeFactory(model);
-		modeMap.put(matrixMode, tmf);
+		//modeMap.put(matrixMode, tmf);
 		AppContext.smthListener.add(tmf);
 
-		LayersWindowBuilder layersWindowBuilder = new LayersWindowBuilder(model);
-		modeMap.put(gpsMode, layersWindowBuilder);
+		layersWindowBuilder = new LayersWindowBuilder(model);
+		//modeMap.put(gpsMode, layersWindowBuilder);
 		AppContext.smthListener.add(layersWindowBuilder);
 
-		modeMap.put(cleverMode, new CleverImageView(model));
+		//modeMap.put(cleverMode, new CleverImageView(model));
+		cleverImageView = new CleverImageView(model);
 		
-		group.selectedToggleProperty().addListener(new InvalidationListener() {
-
-			@Override
-			public void invalidated(Observable o) {
-				if (group.getSelectedToggle() == null) {
-
-				} else {
-					setModeFactory(modeMap.get(group.getSelectedToggle()));
-				}
-			}
-		});
+//		group.selectedToggleProperty().addListener(new InvalidationListener() {
+//
+//			@Override
+//			public void invalidated(Observable o) {
+//				if (group.getSelectedToggle() == null) {
+//
+//				} else {
+//					setModeFactory(modeMap.get(group.getSelectedToggle()));
+//				}
+//			}
+//		});
 
 		AppContext.smthListener.add(this);
+		
+		
+		
 	}
 	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb"
 	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar
@@ -154,22 +168,60 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		bPane.setOnDragDropped(AppContext.loader.getDropHandler());
 
 		bPane.setTop(getToolBar());
-		bPane.setRight(getRightPane());
+		//bPane.setRight(getRightPane());
 		//bPane.setCenter(centerBox);
 
 		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
 			
-			model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
+			//System.out.println("rightBox.getWidth() " + rightBox.getWidth());
+			model.getSettings().center_box_width = (int) (bPane.getWidth() - RIGHT_BOX_WIDTH); 
 			model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
 
-			AppContext.notifyAll(new WhatChanged(Change.windowresized));
+			//AppContext.notifyAll(new WhatChanged(Change.windowresized));
 			
-			showCenter();
+			//showCenter();
 		};
 		bPane.widthProperty().addListener(stageSizeListener);
 		bPane.heightProperty().addListener(stageSizeListener);
 
+		
+		
+		sp = new SplitPane();
+		sp.setDividerPositions(0.4f, 0.4f, 0.2f);
+		Pane sp1 = new Pane();
+		
+		ChangeListener<Number> sp1SizeListener = (observable, oldValue, newValue) -> {
+			layersWindowBuilder.setSize((int) (sp1.getWidth()), (int) (sp1.getHeight()));
+		};
+		
+		
+		Node n1 = layersWindowBuilder.getCenter();
+		sp1.getChildren().add(n1);
+		sp1.widthProperty().addListener(sp1SizeListener);
+		sp1.heightProperty().addListener(sp1SizeListener);
+		sp.getItems().add(sp1);
+		
+		Pane sp2 = new Pane();
+		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
+			cleverImageView.setSize((int) (sp2.getWidth()), (int) (sp2.getHeight()));
+		};
+		sp2.widthProperty().addListener(sp2SizeListener);
+		sp2.heightProperty().addListener(sp2SizeListener);
+		sp2.getChildren().add(cleverImageView.getCenter());
+		sp.getItems().add(sp2);
+		
+		sp.getItems().add(getRightPane());
+		
+		bPane.setCenter(sp);
+		
+		rightBox.getChildren().clear();
+		rightBox.getChildren().addAll(layersWindowBuilder.getRight());
+		rightBox.getChildren().addAll(cleverImageView.getRight());
+		
 		scene = new Scene(bPane, 1024, 768);
+		
+		
+		
 		return scene;
 	}
 
@@ -182,7 +234,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		r.setPrefWidth(10);
 		toolBar.getItems().add(r);
 		
-		toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode, cleverMode);
+		//toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode, cleverMode);
 		
 		Region r2 = new Region();
 		r2.setPrefWidth(10);
@@ -202,12 +254,10 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	public void setModeFactory(ModeFactory modeFactory) {
 		this.modeFactory = modeFactory;
 
-		bPane.setCenter(getModeFactory().getCenter());
+		
 		//centerBox.getChildren().clear();
 		//centerBox.getChildren().add(getModeFactory().getCenter());
 
-		rightBox.getChildren().clear();
-		rightBox.getChildren().addAll(getModeFactory().getRight());
 
 		showCenter();
 	}
@@ -221,8 +271,10 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private Node getRightPane() {
 		rightBox = new VBox();
 		rightBox.setPadding(new Insets(3, 13, 3, 3));
-		rightBox.setPrefWidth(300);
-		rightBox.setMinWidth(300);
+		rightBox.setPrefWidth(RIGHT_BOX_WIDTH);
+		rightBox.setMinWidth(RIGHT_BOX_WIDTH);
+		rightBox.setMaxWidth(RIGHT_BOX_WIDTH);
+		
 		return rightBox;
 	}
 
@@ -232,8 +284,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		if(changed.isFileopened()) {
 
-			gpsMode.setSelected(true);
-			setModeFactory(modeMap.get(gpsMode));			
+			//gpsMode.setSelected(true);
+			//setModeFactory(modeMap.get(gpsMode));			
 		}
 		
 	}

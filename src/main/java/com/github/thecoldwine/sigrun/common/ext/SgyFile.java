@@ -40,7 +40,7 @@ public class SgyFile {
     private BinaryHeader binaryHeader; 
     private List<Trace> traces; 
     
-    private BlockFile blockFile;	
+    //private BlockFile blockFile;	
 	private Block txtHdrBlock;
 	private Block binHdrBlock;
 	private File file;
@@ -49,25 +49,27 @@ public class SgyFile {
 	public void open(File file) throws IOException {
 		this.file = file;		
 		
-		blockFile = BlockFile.open(file);
+		BlockFile blockFile = BlockFile.open(file);
 		
 		txtHdrBlock = blockFile.next(TextHeader.TEXT_HEADER_SIZE);
 		binHdrBlock = blockFile.next(BinaryHeader.BIN_HEADER_LENGTH);
 		
-		binaryHeader = binaryHeaderReader.read(binHdrBlock.read().array());
+		binaryHeader = binaryHeaderReader.read(binHdrBlock.read(blockFile).array());
 		
 		
-		setTraces(loadTraces());
+		setTraces(loadTraces(blockFile));
+		
+		blockFile.close();
 	}
 	
-	private List<Trace> loadTraces(){
+	private List<Trace> loadTraces(BlockFile blockFile){
 		List<Trace> traces = new ArrayList<>();
 		
 		try {
 			Trace tracePrev = null;
 			while(blockFile.hasNext()) {
 				
-				Trace trace = next();
+				Trace trace = next(blockFile);
 				
 				if(tracePrev != null) {
 					trace.setPrevDist(CoordinatesMath.measure(
@@ -94,17 +96,17 @@ public class SgyFile {
 		return traces;
 	}
 	
-	public Trace next() throws IOException {
+	public Trace next(BlockFile blockFile) throws IOException {
 		
 		Block traceHdrBlock = blockFile.next(TraceHeader.TRACE_HEADER_LENGTH);
-        TraceHeader header = traceHeaderReader.read(traceHdrBlock.read().array());
+        TraceHeader header = traceHeaderReader.read(traceHdrBlock.read(blockFile).array());
         int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
 		
         Block traceDataBlock = blockFile.next(dataLength);
         
         
         SeismicValuesConverter converter = ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-        final float[] values = converter.convert(traceDataBlock.read().array());
+        final float[] values = converter.convert(traceDataBlock.read(blockFile).array());
         
         
         LatLon latLon = getLatLon(header);
@@ -152,14 +154,17 @@ public class SgyFile {
 
 	public void saveTraces(File file, List<Trace> traces) throws IOException {
 		
+		
+		
 		FileOutputStream fos = new FileOutputStream(file);
 		FileChannel writechan = fos.getChannel();		
 		
-		writechan.write(ByteBuffer.wrap(txtHdrBlock.read().array()));
-		writechan.write(ByteBuffer.wrap(binHdrBlock.read().array()));		
+		BlockFile blockFile = BlockFile.open(file);
+		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
+		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
 		
 		for(Trace trace : traces) {
-			write(writechan, trace.getHeaderBlock());
+			write(blockFile, writechan, trace.getHeaderBlock());
 			//write(writechan, trace.getDataBlock());
 			writechan.write(ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()));
 		}		
@@ -169,20 +174,22 @@ public class SgyFile {
 		
 	}
 	
-	protected void write(FileChannel writechan, Block block) throws IOException {
-		writechan.write(ByteBuffer.wrap(block.read().array()));
+	protected void write(BlockFile blockFile, FileChannel writechan, Block block) throws IOException {
+		writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
 	}
 	
 	public void savePart(String fileName, List<ByteBufferProducer> blocks) throws IOException {
 		
+		BlockFile blockFile = BlockFile.open(file);
+		
 		FileOutputStream fos = new FileOutputStream(fileName);
 		FileChannel writechan = fos.getChannel();		
 		
-		writechan.write(ByteBuffer.wrap(txtHdrBlock.read().array()));
-		writechan.write(ByteBuffer.wrap(binHdrBlock.read().array()));		
+		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
+		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
 
 		for(ByteBufferProducer block : blocks) {
-			writechan.write(ByteBuffer.wrap(block.read().array()));
+			writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
 		}		
 		
 		writechan.close();

@@ -5,6 +5,8 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.impl.AvalonLogger;
 
@@ -36,7 +38,9 @@ public class FileManager {
 		files = new ArrayList<>();
 		topFolder = null;
 		
-		for (File fl : fileList) {
+		Set<File> sf = new TreeSet<File>(fileList);
+		
+		for (File fl : sf) {
 			if(fl.isDirectory()) {
 				processDirectory(fl, listener);
 			}else {
