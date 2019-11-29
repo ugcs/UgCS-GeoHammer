@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -94,11 +96,23 @@ public class Loader {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
-
 		
+		//
+		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+			try {
+				new MarkupFile().load(sgyFile, model);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+
+		//set index of traces
 		for(int i=0; i<model.getFileManager().getTraces().size(); i++ ) {
 			model.getFileManager().getTraces().get(i).indexInSet = i;
 		}
+		
+		model.updateAuxElements();
 
 		Platform.runLater(new Runnable(){
 			@Override

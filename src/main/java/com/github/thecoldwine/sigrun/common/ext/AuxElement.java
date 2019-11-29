@@ -10,18 +10,14 @@ import java.util.List;
 public class AuxElement {
 
 	Trace traceStart;
-	Trace traceFinish;
+	//Trace traceFinish;
 	Integer sampleStart;
-	Integer sampleFinish;
+	//Integer sampleFinish;
 	
 	boolean selected;	
 	
 	
 	private static final int r = 5;		
-	
-	class DragAnchor{
-		
-	}
 	
 	public AuxElement(Trace traceStart, Integer sampleStart) {
 		this.traceStart = traceStart;
@@ -47,10 +43,6 @@ public class AuxElement {
 		g2.fillOval((int)scr.getX()-r, (int)scr.getY()-r, r*2, r*2);
 		
 	}
-	
-	public List<DragAnchor> getDragAnchors(){
-		return Arrays.asList();
-	}
 
 	public Trace getTraceStart() {
 		return traceStart;
@@ -60,9 +52,9 @@ public class AuxElement {
 		traceStart = t;
 	}
 	
-	public Trace getTraceFinish() {
-		return traceFinish;
-	}
+//	public Trace getTraceFinish() {
+//		return traceFinish;
+//	}
 	
 	public Integer getSampleStart() {
 		return sampleStart;
@@ -72,8 +64,8 @@ public class AuxElement {
 		sampleStart = s;
 	}
 	
-	public Integer getSampleFinish() {
-		return sampleFinish;
-	}
+//	public Integer getSampleFinish() {
+//		return sampleFinish;
+//	}
 	
 }

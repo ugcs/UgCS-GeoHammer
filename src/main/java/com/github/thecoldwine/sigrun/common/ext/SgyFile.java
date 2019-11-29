@@ -23,6 +23,7 @@ import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
@@ -45,6 +46,8 @@ public class SgyFile {
 	private Block binHdrBlock;
 	private File file;
 	private int currentTraceIndex = 0;
+	
+	private List<BaseObject> auxElements = new ArrayList<>();
 	
 	public void open(File file) throws IOException {
 		this.file = file;		
@@ -207,6 +210,14 @@ public class SgyFile {
 
 	public File getFile() {
 		return file;
+	}
+
+	public List<BaseObject> getAuxElements() {
+		return auxElements;
+	}
+
+	public void setAuxElements(List<BaseObject> auxElements) {
+		this.auxElements = auxElements;
 	}
 	
 }

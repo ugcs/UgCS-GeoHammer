@@ -74,11 +74,8 @@ public class FileManager {
 	}
 
 	private void processFileList(List<File> fileList) {
-		//traces = null;
-		//files = new ArrayList<>();
 		for (File fl : fileList) {
-			processFile(fl);
-			//System.out.println("files.size(): " + files.size() );
+			processFile(fl);			
 		}
 		System.out.println("stop files.size(): " + files.size() );
 	}

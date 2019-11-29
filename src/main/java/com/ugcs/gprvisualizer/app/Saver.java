@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.ByteBufferHolder;
 import com.github.thecoldwine.sigrun.common.ext.ByteBufferProducer;
+import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
@@ -129,7 +130,7 @@ public class Saver implements ToolProducer {
 			
 			
 			file.savePart(nfile.getAbsolutePath(), blocks);
-			
+			new MarkupFile().save(file, nfile);
 			
 		} catch (IOException e) {
 			e.printStackTrace();

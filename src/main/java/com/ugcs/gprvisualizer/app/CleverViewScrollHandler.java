@@ -18,43 +18,48 @@ public class CleverViewScrollHandler implements MouseHandler {
 	
 	public CleverViewScrollHandler(CleverImageView cleverView) {
 		this.cleverView = cleverView;
-		field = cleverView.field;
+		field = cleverView.getField();
 	}
 	
-	public void mousePressHandle(Point localPoint) {        	
+	TraceSample oldCenter;
+	public boolean mousePressHandle(Point localPoint) {        	
         	
-        	dragField = new VerticalCutField(field);
-    		dragPoint = localPoint;    		
-    		    		
-    		cleverView.repaintEvent();
+    	dragField = new VerticalCutField(field);
+		dragPoint = localPoint;    		
+		oldCenter = dragField.screenToTraceSample(dragPoint);
+		cleverView.repaintEvent();
 
+    	return true;
 	};
 
-	public void mouseReleaseHandle(Point localPoint) {
-		dragPoint = null;	
+	public boolean mouseReleaseHandle(Point localPoint) {
+		dragPoint = null;
+		
+		return false;
 	}
 	
-	public void mouseMoveHandle(Point point){
+	public boolean mouseMoveHandle(Point point){
 			
 		if(dragPoint == null) {
 			
-			return;
+			return false;
 		}
 		
 		try {
-    		Point p = new Point(
-    			dragPoint.x - point.x, 
-    			dragPoint.y - point.y);
+    		TraceSample newCenter = dragField.screenToTraceSample(point);
     		
-    		TraceSample sceneCenter = dragField.screenToTraceSample(p);
+    		int t = dragField.getSelectedTrace() + oldCenter.getTrace() - newCenter.getTrace();
+    		field.setSelectedTrace(t);
+    		cleverView.s1.setValue(t);
     		
-    		field.setSelectedTrace(sceneCenter.getTrace());
-    		cleverView.s1.setValue(sceneCenter.getTrace());
-    		field.setStartSample(sceneCenter.getSample());
+    		field.setStartSample(dragField.getStartSample() + oldCenter.getSample() - newCenter.getSample());
+
     		
     		cleverView.repaintEvent();
 		} catch(Exception e) {
 			e.printStackTrace();
-		}        	
+		}
+		
+		return true;
 	}	
 }

@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,11 +15,18 @@ import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 
 public class Model {
 
+	public static final int TOP_MARGIN = 50;
+	
 	private Field field = new Field();
+	private VerticalCutField vField = new VerticalCutField(this, TOP_MARGIN);
+	
 	private FileManager fileManager = new FileManager();
 	
 	private Settings settings = new Settings();
@@ -27,7 +35,8 @@ public class Model {
 	private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
 	private Set<FileChangeType> changes = new HashSet<>();
 	
-	private List<AuxElement> auxElements = new ArrayList<>();
+	private List<BaseObject> auxElements = new ArrayList<>();
+	private List<BaseObject> controls = null;
 	
 	private Rectangle2D.Double bounds;
 	
@@ -71,11 +80,38 @@ public class Model {
 		return changes;
 	}
 
-	public List<AuxElement> getAuxElements() {
+	public List<BaseObject> getAuxElements() {
 		return auxElements;
 	}
 
-	public void setAuxElements(List<AuxElement> auxElements) {
-		this.auxElements = auxElements;
+	public List<BaseObject> getControls() {
+		return controls;
+	}
+
+	public void setControls(List<BaseObject> controls) {
+		this.controls = controls;
+	}
+	
+	public void updateAuxElements() {
+		auxElements.clear();
+		for(SgyFile sf : getFileManager().getFiles()) {
+			auxElements.addAll(sf.getAuxElements());
+		}
+	}
+	
+	public SgyFile getSgyFileByTrace(int i) {
+		
+		for(SgyFile fl : getFileManager().getFiles()) {
+			if(i <= fl.getTraces().get(fl.getTraces().size()-1).indexInSet) {
+				
+				return fl;
+			}		
+		}
+		
+		return null;
+	}
+
+	public VerticalCutField getVField() {
+		return vField;
 	}
 }

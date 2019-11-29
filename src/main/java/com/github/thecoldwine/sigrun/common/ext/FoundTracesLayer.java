@@ -57,10 +57,10 @@ public class FoundTracesLayer implements Layer {
 			g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
 		}
 		
-		for (AuxElement au : model.getAuxElements()) {
-			
-			au.drawOnMap(g2, model.getField());
-		}
+//		for (AuxElement au : model.getAuxElements()) {
+//			
+//			au.drawOnMap(g2, model.getField());
+//		}
 
 	}
 
@@ -77,7 +77,7 @@ public class FoundTracesLayer implements Layer {
 	@Override
 	public boolean mousePressed(Point2D point) {
 
-		for(AuxElement au : model.getAuxElements()) {
+//		for(AuxElement au : model.getAuxElements()) {
 			
 			
 //			if() {
@@ -86,7 +86,7 @@ public class FoundTracesLayer implements Layer {
 //				AppContext.notifyAll(new WhatChanged(Change.auxOnMapSelected));
 //				return true;
 //			}			
-		}
+//		}
 		
 		return false;
 	}

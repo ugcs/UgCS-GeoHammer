@@ -39,7 +39,7 @@ public class PrismDrawer implements VCutDrawer {
 					
 					Point p = field.traceSampleToScreen(new TraceSample(i, j));
 					
-		    		int c = (int) (127.0 + Math.tanh(values[j]/threshold) * 127.0);
+		    		int c = (int) (127.0 - Math.tanh(values[j]/threshold) * 127.0);
 		    		int color = ((c) << 16) + ((c) << 8) + c;
 		    		
 		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;

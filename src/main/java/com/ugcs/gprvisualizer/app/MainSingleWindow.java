@@ -187,7 +187,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		
 		sp = new SplitPane();
-		sp.setDividerPositions(0.4f, 0.4f, 0.2f);
+		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
 		Pane sp1 = new Pane();
 		
 		ChangeListener<Number> sp1SizeListener = (observable, oldValue, newValue) -> {
@@ -218,7 +218,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		rightBox.getChildren().addAll(layersWindowBuilder.getRight());
 		rightBox.getChildren().addAll(cleverImageView.getRight());
 		
-		scene = new Scene(bPane, 1024, 768);
+		scene = new Scene(bPane, 1280, 768);
 		
 		
 		

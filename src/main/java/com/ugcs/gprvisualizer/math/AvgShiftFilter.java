@@ -33,6 +33,9 @@ public class AvgShiftFilter {
 	}
 	
 	public void execute2(List<Trace> traces) {
+		sumvalues = new float[FINISH];
+		cnt = 1;
+		
 		execute(traces);
 		
 		float avgvalues[] = getAvg();
@@ -54,7 +57,9 @@ public class AvgShiftFilter {
 	
 	public void execute() {
 		
-		execute(model.getFileManager().getFiles().get(0).getTraces());
+		for(SgyFile sf : model.getFileManager().getFiles()) {
+			execute(sf.getTraces());			
+		}		
 	}
 	
 	public void execute(List<Trace> traces) {

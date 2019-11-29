@@ -1,92 +1,138 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.AuxElement;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.Model;
 
 public class AuxElementEditHandler implements MouseHandler {
 
+	private Model model;
 	private CleverImageView cleverView;
+	
 	private AuxElement selectedAuxElement;
 	private VerticalCutField field;
 	private boolean moved = false;
+	
+	//private List<BaseObject> controls = null;
+	private BaseObject selected;
+	private MouseHandler mouseInput;
+	
 
 	public AuxElementEditHandler(CleverImageView cleverView) {
 		this.cleverView = cleverView;
-		field = cleverView.field;
+		this.model = this.cleverView.model;
+		field = cleverView.getField();
 	}
 
 	@Override
-	public void mousePressHandle(Point localPoint) {
+	public boolean mousePressHandle(Point localPoint) {
+		
+		boolean processed = false;
+		if(model.getControls() != null) {
+			processed = processPress(model.getControls(), localPoint);
+		}
+		
+		if(!processed && selected != null) {
+			processed = selected.mousePressHandle(localPoint);
+			if(processed) {
+				mouseInput = selected;
+			}
+		}
+		
+		if(!processed) {
+			processed = processPress1(cleverView.model.getAuxElements(), localPoint);
+		}
+		
+		if(!processed) {
+			//deselect
+			mouseInput = null;
+			selected = null;
+			model.setControls(null);
+		}
+		
 		moved = false;
 
-		selectedAuxElement = findElement(localPoint);
-
-		if (selectedAuxElement != null) {
-
-		} else {
-			TraceSample ts = field.screenToTraceSample(localPoint);
-			if (ts.getTrace() >= 0 && ts.getTrace() < cleverView.model.getFileManager().getTraces().size()) {
-				selectedAuxElement = new AuxElement(cleverView.model.getFileManager().getTraces().get(ts.getTrace()),
-						ts.getSample());
-				cleverView.model.getAuxElements().add(selectedAuxElement);
-
-				moved = true;
-			}
+		if(processed) {
+			cleverView.repaintEvent();
 		}
-		cleverView.repaintEvent();
 
+		return processed;
 	}
 
-	@Override
-	public void mouseReleaseHandle(Point localPoint) {
-
-		if (selectedAuxElement != null && !moved) {
-			cleverView.model.getAuxElements().remove(selectedAuxElement);
-		}
-		selectedAuxElement = null;
-	}
-
-	@Override
-	public void mouseMoveHandle(Point localPoint) {
-
-		if (selectedAuxElement != null) {
-			moved = true;
-			TraceSample ts = field.screenToTraceSample(localPoint);
-			if (ts.getTrace() >= 0 && ts.getTrace() < cleverView.model.getFileManager().getTraces().size()) {
-				selectedAuxElement.setTraceStart(cleverView.model.getFileManager().getTraces().get(ts.getTrace()));
-				selectedAuxElement.setSampleStart(ts.getSample());
-
-				cleverView.repaintEvent();
+	private boolean processPress(List<BaseObject> controls2, Point localPoint) {
+		for(BaseObject o : controls2) {
+			if(o.isPointInside(localPoint)) {
 				
-				AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			}
-
-		}
-	}
-
-	protected AuxElement findElement(Point localPoint) {
-		Point p1 = ((Point) localPoint.clone());
-		p1.translate(-5, -5);
-
-		Point p2 = ((Point) localPoint.clone());
-		p2.translate(5, 5);
-
-		TraceSample ts1 = field.screenToTraceSample(p1);
-		TraceSample ts2 = field.screenToTraceSample(p2);
-
-		for (AuxElement au : cleverView.model.getAuxElements()) {
-			if (au.getTraceStart().indexInSet >= ts1.getTrace() && au.getTraceStart().indexInSet <= ts2.getTrace()) {
-
-				return au;
+				o.mousePressHandle(localPoint);
+				mouseInput = o;
+				
+				return true;
 			}
 		}
-
-		return null;
+		
+		return false;
 	}
+
+	private boolean processPress1(List<BaseObject> controls2, Point localPoint) {
+		for(BaseObject o : controls2) {
+			if(o.isPointInside(localPoint)) {
+				
+				selected  = o;
+				model.setControls(null);
+				List<BaseObject> c = selected.getControls();
+				if(c != null) {
+					model.setControls(c);
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	/**
+				
+
+	 */
+
+	@Override
+	public boolean mouseReleaseHandle(Point localPoint) {
+
+		if(mouseInput != null) {			
+			mouseInput.mouseReleaseHandle(localPoint);
+			mouseInput = null;
+			
+			cleverView.repaintEvent();
+			return true;
+		}
+		
+		
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoveHandle(Point localPoint) {
+
+		if(mouseInput != null) {			
+			mouseInput.mouseMoveHandle(localPoint);
+			
+			cleverView.repaintEvent();
+			
+			return true;
+		}
+		
+		
+		
+		return false;
+	}
+
 
 }
