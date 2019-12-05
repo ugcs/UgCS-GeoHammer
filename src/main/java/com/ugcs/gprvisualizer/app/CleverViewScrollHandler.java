@@ -22,7 +22,7 @@ public class CleverViewScrollHandler implements MouseHandler {
 	}
 	
 	TraceSample oldCenter;
-	public boolean mousePressHandle(Point localPoint) {        	
+	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {        	
         	
     	dragField = new VerticalCutField(field);
 		dragPoint = localPoint;    		
@@ -32,13 +32,13 @@ public class CleverViewScrollHandler implements MouseHandler {
     	return true;
 	};
 
-	public boolean mouseReleaseHandle(Point localPoint) {
+	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
 		dragPoint = null;
 		
 		return false;
 	}
 	
-	public boolean mouseMoveHandle(Point point){
+	public boolean mouseMoveHandle(Point point, VerticalCutField vField){
 			
 		if(dragPoint == null) {
 			

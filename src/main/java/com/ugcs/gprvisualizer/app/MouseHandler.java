@@ -2,12 +2,12 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Point;
 
-import javafx.scene.input.MouseDragEvent;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 
 public interface MouseHandler {
-	boolean mousePressHandle(Point localPoint);
-	boolean mouseReleaseHandle(Point localPoint);
-	boolean mouseMoveHandle(Point point);
+	boolean mousePressHandle(Point localPoint, VerticalCutField vField);
+	boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField);
+	boolean mouseMoveHandle(Point point, VerticalCutField vField);
 
 
 }

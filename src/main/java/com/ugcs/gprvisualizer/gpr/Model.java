@@ -31,14 +31,16 @@ public class Model {
 	
 	private Settings settings = new Settings();
 	
-	private List<Trace> foundTrace = new ArrayList<>();
-	private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
+	//private List<Trace> foundTrace = new ArrayList<>();
+	//private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
 	private Set<FileChangeType> changes = new HashSet<>();
 	
 	private List<BaseObject> auxElements = new ArrayList<>();
 	private List<BaseObject> controls = null;
 	
 	private Rectangle2D.Double bounds;
+	private int maxHeightInSamples = 0;
+	
 	
 	public Settings getSettings() {
 		return settings;
@@ -64,17 +66,17 @@ public class Model {
 		return fileManager;
 	}
 
-	public List<Trace> getFoundTrace() {
-		return foundTrace;
-	}
-
-	public void setFoundTrace(List<Trace> foundTrace) {
-		this.foundTrace = foundTrace;
-	}
-
-	public Map<SgyFile, List<Integer>> getFoundIndexes() {
-		return foundIndexes;
-	}
+//	public List<Trace> getFoundTrace() {
+//		return foundTrace;
+//	}
+//
+//	public void setFoundTrace(List<Trace> foundTrace) {
+//		this.foundTrace = foundTrace;
+//	}
+//
+//	public Map<SgyFile, List<Integer>> getFoundIndexes() {
+//		return foundIndexes;
+//	}
 
 	public Set<FileChangeType> getChanges() {
 		return changes;
@@ -113,5 +115,13 @@ public class Model {
 
 	public VerticalCutField getVField() {
 		return vField;
+	}
+
+	public int getMaxHeightInSamples() {
+		return maxHeightInSamples;
+	}
+
+	public void setMaxHeightInSamples(int maxHeightInSamples) {
+		this.maxHeightInSamples = maxHeightInSamples;
 	}
 }

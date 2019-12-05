@@ -1,5 +1,6 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
+import java.awt.Dimension;
 import java.awt.Point;
 
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -13,6 +14,8 @@ public class VerticalCutField {
 	private int startSample=0;
 	private double vScale=1;
 	private double hScale=2;
+	
+	private Dimension viewDimension = new Dimension();
 
 	public VerticalCutField(Model model, int topMargin) {
 		this.model  = model;
@@ -28,6 +31,22 @@ public class VerticalCutField {
 		this.hScale = copy.hScale;
 		this.topMargin = copy.topMargin;
 	}
+
+	public void clear() {
+		vScale=1;
+		hScale=2;
+		startSample = 0;
+		selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
+
+	}
+	
+	public TraceSample screenToTraceSample(Point point, VerticalCutPart vcp) {
+		int trace = vcp.globalToLocal(getSelectedTrace() + (int)(point.getX()/getHScale())); 
+		int sample = getStartSample() + (int)((point.getY() - topMargin)/getVScale());
+		
+		return new TraceSample(trace, sample);
+		
+	}
 	
 	public TraceSample screenToTraceSample(Point point) {
 	
@@ -37,18 +56,25 @@ public class VerticalCutField {
 		return new TraceSample(trace, sample);
 	}
 	
+	public int traceToScreen(int trace) {
+		return (int)((trace-getSelectedTrace()) * getHScale());
+	}
+
+	public int sampleToScreen(int sample) {
+		return (int)((sample-getStartSample()) * getVScale() + topMargin);
+	}
+	
 	public Point traceSampleToScreen(TraceSample ts) {
-		
-		double x = (ts.getTrace()-getSelectedTrace()) * getHScale(); 
-		double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin;
-		return new Point((int)x, (int)y);
+		return new Point(traceToScreen(ts.getTrace()), sampleToScreen(ts.getSample()));
 	}
 
 	public Point traceSampleToScreenCenter(TraceSample ts) {
 		
 		double x = (ts.getTrace()-getSelectedTrace()) * getHScale() + getHScale()/2; 
 		double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin + getVScale()/2;
-		return new Point((int)x, (int)y);
+		return new Point(
+			traceToScreen(ts.getTrace()) + (int)(getHScale()/2), 
+			sampleToScreen(ts.getSample()) + (int)(getVScale()/2));
 	}
 	
 	public int getVisibleNumberOfTrace(int width) {
@@ -91,7 +117,10 @@ public class VerticalCutField {
 	}
 
 	public void setSelectedTrace(int selectedTrace) {
-		this.selectedTrace = Math.max(0, selectedTrace);
+		this.selectedTrace =
+			Math.min(
+				Math.max(0, selectedTrace),
+				model.getFileManager().getTraces().size());
 	}
 
 	public int getStartSample() {
@@ -99,6 +128,11 @@ public class VerticalCutField {
 	}
 
 	public void setStartSample(int startSample) {
+		
+		if(getScreenImageSize().height < getViewDimension().height){
+			startSample = 0;
+		}		
+		
 		this.startSample = Math.max(0, startSample);
 	}
 
@@ -118,4 +152,18 @@ public class VerticalCutField {
 		this.hScale = hScale;
 	}
 
+	public Dimension getScreenImageSize() {
+		
+		return new Dimension(
+				(int)(model.getFileManager().getTraces().size() * getHScale()), 
+				(int)(model.getMaxHeightInSamples() * getVScale()));
+	}
+
+	public Dimension getViewDimension() {
+		return viewDimension;
+	}
+
+	public void setViewDimension(Dimension viewDimension) {
+		this.viewDimension = viewDimension;
+	}
 }

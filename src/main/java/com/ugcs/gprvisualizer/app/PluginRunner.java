@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -29,7 +30,7 @@ public class PluginRunner implements ToolProducer {
 		public void run(ProgressListener listener) {
 			listener.progressMsg("searching start now");
 			
-			model.getFoundTrace().clear();
+			//model.getFoundTrace().clear();
 			for(SgyFile sgf : model.getFileManager().getFiles()) {
 				processSgyFile(listener, sgf);
 				
@@ -88,23 +89,26 @@ public class PluginRunner implements ToolProducer {
 		return Arrays.asList(buttonRun);
 	}
 
-	private void process(SgyFile file, String line) {//1680;2388;3284;3844
+	private void process(SgyFile sgyFile, String line) {//1680;2388;3284;3844
 		if(line.startsWith(FOUND_ANOMALIES)) {
 			String trnums = line.substring(FOUND_ANOMALIES.length());
 			if(trnums.contains("no objects")) {
 				return;
 			}
 			
-			List<Integer> lst = new ArrayList<>();
+			//List<Integer> lst = new ArrayList<>();
 			String[] nums = trnums.split(";");
 			for(String n : nums) {
 				int trindex = Integer.valueOf(n);
 				
-				lst.add(trindex);
-				model.getFoundTrace().add( file.getTraces().get(trindex) );
+				//lst.add(trindex);
+				//model.getFoundTrace().add( file.getTraces().get(trindex) );
+				sgyFile.getAuxElements().add( 
+					new FoundPlace(sgyFile.getTraces().get(trindex), sgyFile.getOffset()));
 			}
 			
-			model.getFoundIndexes().put(file, lst);
+			model.updateAuxElements();
+			//model.getFoundIndexes().put(file, lst);
 		}
 		
 	}

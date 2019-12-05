@@ -3,7 +3,10 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.Image;
 import java.awt.Point;
 
+import org.apache.commons.lang3.mutable.MutableInt;
+
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
 public class ToggleButton extends DragAnchor {
 
@@ -11,11 +14,12 @@ public class ToggleButton extends DragAnchor {
 	Image unselectedImg;
 	boolean selected = false;
 	
-	public ToggleButton(VerticalCutField vField, int trace, int sample, 
+	public ToggleButton(MutableInt trace, MutableInt sample, 
 			Image selectedImg, 
 			Image unselectedImg,
-			AlignRect alignRect) {
-		super(vField, trace, sample, unselectedImg, alignRect);
+			AlignRect alignRect,
+			VerticalCutPart offset) {
+		super(trace, sample, unselectedImg, alignRect, offset);
 		
 		this.selectedImg = selectedImg;
 		this.unselectedImg = unselectedImg;		
@@ -31,9 +35,9 @@ public class ToggleButton extends DragAnchor {
 	
 
 	@Override
-	public boolean mousePressHandle(Point localPoint) {
+	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
 		
-		if(isPointInside(localPoint)) {
+		if(isPointInside(localPoint, vField)) {
 			
 			selected = !selected;
 			
@@ -44,7 +48,7 @@ public class ToggleButton extends DragAnchor {
 	}
 	
 	@Override
-	public boolean mouseMoveHandle(Point point) {
+	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
 		
 		return false;
 	}

@@ -81,8 +81,9 @@ public class Loader {
 	public void load(List<File> files, ProgressListener listener) {
 		/// clear
 		
-		model.getFoundIndexes().clear();
-		model.getFoundTrace().clear();
+		model.getAuxElements().clear();
+		//model.getFoundIndexes().clear();
+		//model.getFoundTrace().clear();
 		model.getChanges().clear();
 		//model.getSettings().
 		///
@@ -97,8 +98,24 @@ public class Loader {
 			e.printStackTrace();
 		}
 		
+		
+		//set index of traces
+		int maxHeight = 0;
+		for(int i=0; i<model.getFileManager().getTraces().size(); i++ ) {
+			Trace tr = model.getFileManager().getTraces().get(i);
+			tr.indexInSet = i;
+			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
+		}
+		model.setMaxHeightInSamples(maxHeight);
+		
 		//
+		int startTraceNum = 0;
 		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+			
+			sgyFile.getOffset().setStartTrace(startTraceNum);
+			startTraceNum += sgyFile.getTraces().size();
+			sgyFile.getOffset().setFinishTrace(startTraceNum);
+			sgyFile.getOffset().setMaxSamples(maxHeight);
 			try {
 				new MarkupFile().load(sgyFile, model);
 			} catch (Exception e) {
@@ -107,12 +124,10 @@ public class Loader {
 		}
 		
 
-		//set index of traces
-		for(int i=0; i<model.getFileManager().getTraces().size(); i++ ) {
-			model.getFileManager().getTraces().get(i).indexInSet = i;
-		}
 		
 		model.updateAuxElements();
+		
+		model.getVField().clear();
 
 		Platform.runLater(new Runnable(){
 			@Override

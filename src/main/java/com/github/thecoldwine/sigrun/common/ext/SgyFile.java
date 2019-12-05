@@ -41,7 +41,8 @@ public class SgyFile {
     private BinaryHeader binaryHeader; 
     private List<Trace> traces; 
     
-    //private BlockFile blockFile;	
+    private VerticalCutPart offset = new VerticalCutPart();
+    
 	private Block txtHdrBlock;
 	private Block binHdrBlock;
 	private File file;
@@ -218,6 +219,14 @@ public class SgyFile {
 
 	public void setAuxElements(List<BaseObject> auxElements) {
 		this.auxElements = auxElements;
+	}
+
+	public VerticalCutPart getOffset() {
+		return offset;
+	}
+
+	public void setOffset(VerticalCutPart offset) {
+		this.offset = offset;
 	}
 	
 }

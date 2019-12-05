@@ -12,6 +12,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -48,15 +49,20 @@ public class FoundTracesLayer implements Layer {
 
 		g2.setColor(pointColor);
 		
-		for (Trace trace : model.getFoundTrace()) {
-
-			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+		for (BaseObject bo : model.getAuxElements()) {
 			
-			Image img = ResourceImageHolder.IMG_SHOVEL;
-			g2.drawImage(img, (int)p.getX() - img.getWidth(null)/2 , (int)p.getY() - img.getHeight(null), null);
-			g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
+			bo.drawOnMap(g2, model.getField());
 		}
 		
+//		for (Trace trace : model.getFoundTrace()) {
+//
+//			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+//			
+//			Image img = ResourceImageHolder.IMG_SHOVEL;
+//			g2.drawImage(img, (int)p.getX() - img.getWidth(null)/2 , (int)p.getY() - img.getHeight(null), null);
+//			g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
+//		}
+//		
 //		for (AuxElement au : model.getAuxElements()) {
 //			
 //			au.drawOnMap(g2, model.getField());

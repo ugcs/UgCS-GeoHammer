@@ -42,19 +42,19 @@ public class PrismImageProducer {
 		    	x++;
 		    }
 		    
-		    List<Integer> lst = model.getFoundIndexes().get(sgyFile);
-		    if(lst != null) {
-			    Graphics2D g2 = (Graphics2D)image.getGraphics();
-			    g2.setColor(Color.GREEN);
-			    
-			    Image img = ResourceImageHolder.IMG_SHOVEL;
-		    	for(Integer i : lst) {		    		
-					
-					g2.drawImage(img, fileStartX + i - img.getWidth(null)/2 , height/2 - img.getHeight(null), null);
-		    		
-		    		//g2.fillOval(fileStartX + i, height -30, 17, 17);	    		
-		    	}
-		    }
+//		    List<Integer> lst = model.getFoundIndexes().get(sgyFile);
+//		    if(lst != null) {
+//			    Graphics2D g2 = (Graphics2D)image.getGraphics();
+//			    g2.setColor(Color.GREEN);
+//			    
+//			    Image img = ResourceImageHolder.IMG_SHOVEL;
+//		    	for(Integer i : lst) {		    		
+//					
+//					g2.drawImage(img, fileStartX + i - img.getWidth(null)/2 , height/2 - img.getHeight(null), null);
+//		    		
+//		    		//g2.fillOval(fileStartX + i, height -30, 17, 17);	    		
+//		    	}
+//		    }
 	    }	    
 	    
 	    

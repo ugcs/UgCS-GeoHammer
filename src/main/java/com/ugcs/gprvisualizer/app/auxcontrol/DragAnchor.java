@@ -8,21 +8,24 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONObject;
 
+import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 
 public class DragAnchor implements BaseObject, MouseHandler{
 
-	private static final int R = 5;
+	//private static final int R = 5;
 	
-	private VerticalCutField vField;	
-	private int trace;
-	private int sample;
+	private MutableInt trace = new MutableInt();
+	private MutableInt sample = new MutableInt();
 	private AlignRect alignRect;
+	private VerticalCutPart offset;
 	
 	private Image img;
 	
@@ -31,14 +34,14 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	private boolean visible = true;
 	
 	
-	public DragAnchor(
-			VerticalCutField vField,	
-			int trace,
-			int sample,
+	public DragAnchor(				
+			MutableInt trace,
+			MutableInt sample,
 			Image img,
-			AlignRect alignRect) {
+			AlignRect alignRect,
+			VerticalCutPart offset) {
 		
-		this.vField = vField;	
+		this.offset = offset;
 		this.trace = trace;
 		this.sample = sample;
 		this.setImg(img);
@@ -55,17 +58,17 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 	
 	@Override
-	public void drawOnMap(Graphics2D g2) {
-		
+	public void drawOnMap(Graphics2D g2, Field hField) {
+		//is not visible on the map view
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2) {
+	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
 		if(!isVisible()) {
 			return;
 		}
 		
-		Rectangle rect = getRect();
+		Rectangle rect = getRect(vField);
 		if(getImg() == null) {
 			g2.setColor(Color.MAGENTA);
 			g2.fillOval(rect.x, rect.y, rect.width, rect.height);
@@ -74,29 +77,29 @@ public class DragAnchor implements BaseObject, MouseHandler{
 		}		
 	}
 
-	protected Rectangle getRect() {
-		TraceSample ts = new TraceSample(getTrace(), getSample());
+	public Rectangle getRect(VerticalCutField vField) {
+		TraceSample ts = new TraceSample(offset.localToGlobal(this.getTrace()), getSample());
 		Point scr = vField.traceSampleToScreen(ts);		
 		Rectangle rect = alignRect.getRect(scr, dim); //new Rectangle(scr.x-R, scr.y-R, R*2, R*2);
 		return rect;
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint) {
+	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
 		if(!isVisible()) {
 			return false;
 		}
 		
 		
-		Rectangle rect = getRect();
+		Rectangle rect = getRect(vField);
 		
 		return rect.contains(localPoint);
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint) {
+	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
 		
-		if(isPointInside(localPoint)) {
+		if(isPointInside(localPoint, vField)) {
 			signal(null);
 			return true;
 		}
@@ -104,7 +107,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint) {
+	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
 
 		
 		
@@ -112,12 +115,12 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point) {
+	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
 		if(!isVisible()) {
 			return false;
 		}
 
-		TraceSample ts = vField.screenToTraceSample(point);
+		TraceSample ts = vField.screenToTraceSample(point, offset);
 		setTrace(ts.getTrace());
 		setSample(ts.getSample());
 		
@@ -126,19 +129,19 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 	
 	public int getTrace() {
-		return trace;
+		return trace.getValue();
 	}
 
 	public void setTrace(int t) {
-		trace = t;
+		trace.setValue(t);
 	}
 	
 	public int getSample() {
-		return sample;
+		return sample.getValue();
 	}
 
 	public void setSample(int s) {
-		sample = s;
+		sample.setValue(s);
 	}
 
 	public List<BaseObject> getControls(){
