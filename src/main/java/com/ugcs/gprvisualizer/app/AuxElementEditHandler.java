@@ -18,6 +18,7 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
@@ -94,8 +95,9 @@ public class AuxElementEditHandler implements MouseHandler {
 		delBtn.setOnAction(e -> {		
 			
 			if(selected != null) {
-				System.out.println("removeselected ");
-				cleverView.model.getAuxElements().remove(selected);
+				for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+					sgyFile.getAuxElements().remove(selected);
+				}				
 				
 				mouseInput = null;
 				selected = null;
@@ -105,6 +107,8 @@ public class AuxElementEditHandler implements MouseHandler {
 			model.updateAuxElements();
 			
 			cleverView.repaintEvent();
+			
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		});
 		
 		addBtn.setOnAction(e -> {				
@@ -174,7 +178,7 @@ public class AuxElementEditHandler implements MouseHandler {
 
 	private boolean processPress1(List<BaseObject> controls2, Point localPoint, VerticalCutField vField) {
 		for(BaseObject o : controls2) {
-			if(o.isPointInside(localPoint, vField)) {
+			if(o.mousePressHandle(localPoint, vField)) {
 				
 				selected  = o;
 				model.setControls(null);
@@ -218,9 +222,43 @@ public class AuxElementEditHandler implements MouseHandler {
 			cleverView.repaintEvent();
 			
 			return true;
+		}else{
+			if(aboveControl(localPoint, vField)) {
+				cleverView.imageView.setCursor(Cursor.MOVE);
+			}else if(aboveElement(localPoint, vField)) {
+				cleverView.imageView.setCursor(Cursor.HAND);
+			}else{
+				cleverView.imageView.setCursor(Cursor.DEFAULT);
+			}			
+		}		
+		
+		
+		return false;
+	}
+
+	private boolean aboveControl(Point localPoint, VerticalCutField vField) {
+		if(model.getControls() == null) {
+			return false;
 		}
 		
+		for(BaseObject bo : model.getControls()) {
+			if(bo.isPointInside(localPoint, vField)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean aboveElement(Point localPoint, VerticalCutField vField) {
+		if(model.getAuxElements() == null) {
+			return false;
+		}
 		
+		for(BaseObject bo : model.getAuxElements()) {
+			if(bo.isPointInside(localPoint, vField)) {
+				return true;
+			}
+		}
 		
 		return false;
 	}

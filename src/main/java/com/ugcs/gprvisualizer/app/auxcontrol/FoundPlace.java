@@ -16,7 +16,10 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.MouseHandler;
+import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class FoundPlace implements BaseObject, MouseHandler {
@@ -45,7 +48,12 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		
 		if(isPointInside(localPoint, vField)) {
 			
-			//select
+				
+			//AppContext.model.getVField().setSelectedTrace(trace.indexInSet);
+			
+			AppContext.model.getField().setSceneCenter(trace.getLatLon());
+			
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			
 			return true;
 		}
@@ -64,14 +72,19 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	
 
 	@Override
 	public void drawOnMap(Graphics2D g2, Field hField) {
 		
-		Point2D p = hField.latLonToScreen(trace.getLatLon());
+		//Point2D p = hField.latLonToScreen(trace.getLatLon());
 		
-		Image img = ResourceImageHolder.IMG_SHOVEL;
-		g2.drawImage(img, (int)p.getX() - img.getWidth(null)/2 , (int)p.getY() - img.getHeight(null), null);
+		Rectangle rect = getRect(hField);
+		
+		g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
+		//Image img = ResourceImageHolder.IMG_SHOVEL;
+		//g2.drawImage(img, (int)p.getX() - R_HOR , (int)p.getY() - 2*R_VER, null);
 		//g2.fillOval((int)p.getX()-R, (int)p.getY()-R/2, R*2, R);
 	
 		
@@ -92,6 +105,12 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		return rect;
 	}
 	
+	public Rectangle getRect(Field hField) {
+		
+		Point2D p = hField.latLonToScreen(trace.getLatLon());
+		Rectangle rect = new Rectangle((int)p.getX()-R_HOR, (int)p.getY()-R_VER*2, R_HOR*2, R_VER*2);
+		return rect;
+	}
 
 	@Override
 	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
@@ -116,6 +135,22 @@ public class FoundPlace implements BaseObject, MouseHandler {
 	@Override
 	public void saveTo(JSONObject json) {
 		json.put("trace", trace.indexInFile);		
+	}
+
+	@Override
+	public boolean mousePressHandle(Point2D point, Field field) {
+		
+		Rectangle r = getRect(field);
+		if(r.contains(point)) {
+			
+			AppContext.model.getVField().setSelectedTrace(trace.indexInSet);
+		
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			
+			return true;
+		}
+		
+		return false;
 	}
 
 }

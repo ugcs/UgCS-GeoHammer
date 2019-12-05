@@ -260,7 +260,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	    } );
 		
 		imageView.setOnMousePressed(mousePressHandler);
-		imageView.setOnMouseReleased(mouseReleaseHandler);		
+		imageView.setOnMouseReleased(mouseReleaseHandler);
+		imageView.setOnMouseMoved(mouseMoveHandler);
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
@@ -415,7 +416,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 
 		public void updateUI() {
 			slider.setMax(15000);
-			slider.setMin(50);
+			slider.setMin(10);
 			//slider.set
 			slider.setValue(contrast);
 		}

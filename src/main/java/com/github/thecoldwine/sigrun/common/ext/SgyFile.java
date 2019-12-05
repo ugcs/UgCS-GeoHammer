@@ -199,6 +199,7 @@ public class SgyFile {
 		writechan.close();
 		fos.close();		
 		
+		blockFile.close();
 	}
 
 	public List<Trace> getTraces() {

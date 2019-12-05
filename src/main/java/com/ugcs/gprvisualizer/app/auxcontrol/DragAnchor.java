@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -168,6 +169,12 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	public void saveTo(JSONObject json) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean mousePressHandle(Point2D point, Field field) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 }

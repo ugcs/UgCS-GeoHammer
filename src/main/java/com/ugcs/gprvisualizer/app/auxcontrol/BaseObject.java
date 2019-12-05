@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.util.List;
 
 import org.json.simple.JSONObject;
@@ -27,5 +28,6 @@ public interface BaseObject extends MouseHandler {
 	
 	void saveTo(JSONObject json);
 	
+	boolean mousePressHandle(Point2D point, Field field);
 	 
 }

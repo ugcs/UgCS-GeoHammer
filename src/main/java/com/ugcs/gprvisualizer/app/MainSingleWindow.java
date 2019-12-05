@@ -81,6 +81,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		//Map<String, String> env = System.getenv();
 		//System.out.println(env.get("ANT_HOME"));
 		
+		AppContext.model = model;
 		AppContext.levelFilter = new LevelFilter(model);
 		AppContext.loader = new Loader(model);
 		AppContext.saver = new Saver(model);

@@ -83,16 +83,14 @@ public class FoundTracesLayer implements Layer {
 	@Override
 	public boolean mousePressed(Point2D point) {
 
-//		for(AuxElement au : model.getAuxElements()) {
+		for(BaseObject bo : model.getAuxElements()) {
 			
 			
-//			if() {
-//				
-//				
-//				AppContext.notifyAll(new WhatChanged(Change.auxOnMapSelected));
-//				return true;
-//			}			
-//		}
+			if(bo.mousePressHandle(point, model.getField())) {
+				
+				return true;
+			}			
+		}
 		
 		return false;
 	}

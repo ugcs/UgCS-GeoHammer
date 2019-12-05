@@ -5,11 +5,13 @@ import java.util.List;
 
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 public class AppContext {
 
 	
+	public static Model model;
 	public static Loader loader;
 	public static Saver saver;
 	public static LevelFilter levelFilter;
