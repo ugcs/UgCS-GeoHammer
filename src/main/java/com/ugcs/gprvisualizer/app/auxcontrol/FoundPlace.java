@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
@@ -26,21 +27,26 @@ public class FoundPlace implements BaseObject, MouseHandler {
 
 	//private int trace;
 	private Trace trace;
+	private Trace trace2;
 	private VerticalCutPart offset;
 	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
 	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
 		
 	public static FoundPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
-		int traceNum = (int)(long)(Long)json.get("trace");
-		
+		int traceNum = (int)(long)(Long)json.get("trace");		
 		Trace trace = sgyFile.getTraces().get(traceNum);
-		return new FoundPlace(trace, sgyFile.getOffset());
+		
+		int traceNum2 = json.get("trace2") != null ? (int)(long)(Long)json.get("trace2") : traceNum;		
+		Trace trace2 = sgyFile.getTraces().get(traceNum2);
+		
+		return new FoundPlace(trace, trace2, sgyFile.getOffset());
 	}
 	
-	public FoundPlace(Trace trace, VerticalCutPart offset) {
+	public FoundPlace(Trace trace, Trace trace2, VerticalCutPart offset) {
 		this.offset = offset;
 			
 		this.trace = trace;
+		this.trace2 = trace2;
 	}
 
 	@Override
@@ -94,6 +100,12 @@ public class FoundPlace implements BaseObject, MouseHandler {
 	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
 		
 		Rectangle rect = getRect(vField);
+		
+		int x1 = vField.traceToScreen(offset.localToGlobal(trace.indexInFile));
+		int x2 = vField.traceToScreen(offset.localToGlobal(trace2.indexInFile));
+		
+		g2.setColor(Color.CYAN);
+		g2.drawLine(x1, R_VER*2, x2, R_VER*2);
 		
 		g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
 	}

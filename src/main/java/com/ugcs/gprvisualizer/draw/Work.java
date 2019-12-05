@@ -157,7 +157,7 @@ public class Work {
 		//}
 
 		
-		System.out.println("somethingChanged lwb");
+		
 		for (Layer l : getLayers()) {
 			l.somethingChanged(changed);
 		}

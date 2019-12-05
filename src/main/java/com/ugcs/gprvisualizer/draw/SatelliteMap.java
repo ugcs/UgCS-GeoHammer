@@ -113,7 +113,7 @@ public class SatelliteMap extends BaseLayer {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		System.out.println("somethingChanged Satellite");
+		
 		
 		if(changed.isFileopened() || changed.isZoom()) {
 			

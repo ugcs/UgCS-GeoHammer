@@ -151,7 +151,7 @@ public class AuxElementEditHandler implements MouseHandler {
 			
 			Trace tr = model.getFileManager().getTraces().get(field.getSelectedTrace());
 			
-			FoundPlace rect = new FoundPlace(tr, sf.getOffset());
+			FoundPlace rect = new FoundPlace(tr,tr, sf.getOffset());
 				
 			if(sf != null) {
 				sf.getAuxElements().add(rect);

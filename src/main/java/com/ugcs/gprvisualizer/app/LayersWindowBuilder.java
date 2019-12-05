@@ -78,7 +78,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
             @Override
             public void handle(MouseDragEvent event) {
-            	System.out.println("drag release");
+            	
             	
             	AppContext.notifyAll(new WhatChanged(Change.mapscroll));
             	
