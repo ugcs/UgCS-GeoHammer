@@ -22,6 +22,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 public class AuxElementEditHandler implements MouseHandler {
 
@@ -86,9 +87,10 @@ public class AuxElementEditHandler implements MouseHandler {
 	}
 	
 	public Node getRight() {
-		HBox box = new HBox( addBtn, addSurfaceBtn, addFoundBtn, delBtn, clearBtn);
 		
-		return box;
+		return new VBox(
+				new HBox( addBtn, addSurfaceBtn, addFoundBtn),
+				new HBox( delBtn, clearBtn));
 	}
 	
 	protected void initButtons(){
