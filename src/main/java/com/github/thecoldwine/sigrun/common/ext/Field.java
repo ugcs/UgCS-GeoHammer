@@ -11,7 +11,17 @@ public class Field {
 	private LatLon sceneCenter;
 	private int zoom;
 
+	public Field() {
+		
+	}
 	
+	public Field(Field field) {
+		this.pathCenter = field.pathCenter;
+		this.sceneCenter = field.sceneCenter;
+		this.zoom = field.zoom;
+	}
+
+
 	public static void main(String[] args) {
 		
 		

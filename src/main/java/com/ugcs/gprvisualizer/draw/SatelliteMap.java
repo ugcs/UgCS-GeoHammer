@@ -41,6 +41,7 @@ public class SatelliteMap extends BaseLayer {
 	private Model model;
 	private BufferedImage img;
 	private LatLon imgLatLon;
+	private int imgZoom;
 
 	private Random rand = new Random();
 	private Color color = new Color(rand.nextInt(16777215));
@@ -65,14 +66,11 @@ public class SatelliteMap extends BaseLayer {
 	private static String GOOGLE_API_KEY;
 	static {
 		InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
-		//StringWriter writer = new StringWriter();
-		//IOUtils.copy(inputStream, writer, "UTF-8");
-		//GOOGLE_API_KEY = writer.toString();
 		java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
 		GOOGLE_API_KEY = s.hasNext() ? s.next() : "";		
 	}
 	
-	private Point2D dragPoint = null;
+	
 	
 	private LatLon click;
 	
@@ -86,14 +84,15 @@ public class SatelliteMap extends BaseLayer {
 		BufferedImage _img = img;
 		if(_img != null && isActive()) {
 			
-			//System.out.println("imgLatLon  " + imgLatLon.toString());
-			//System.out.println("scnLatLon  " + model.getField().getSceneCenter().toString());
-			
 			Point2D offst = model.getField().latLonToScreen(imgLatLon);
 			
+			double scale = Math.pow(2, model.getField().getZoom() - imgZoom);
+			
 			g2.drawImage(_img, 
-				(int)offst.getX() -_img.getWidth()/2, 
-				(int)offst.getY() -_img.getHeight()/2, 
+				(int)(offst.getX() -_img.getWidth()/2*scale), 
+				(int)(offst.getY() -_img.getHeight()/2*scale),
+				(int)(_img.getWidth()*scale),
+				(int)(_img.getHeight()*scale),
 				null);
 		}		
 		
@@ -141,10 +140,9 @@ public class SatelliteMap extends BaseLayer {
 		map.setMaptype(Maptype.hybrid);
 		
 		LatLon midlPoint = model.getField().getSceneCenter();
-		map.setLocation(new Location(midlPoint.getLatDgr(), midlPoint.getLonDgr()), model.getField().getZoom()); //40.714, -73.998 
-		
+		int imgZoom = model.getField().getZoom();
+		map.setLocation(new Location(midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); //40.714, -73.998 
 		map.setMaptype(Maptype.hybrid);
-		
 		
 		try {
 			
@@ -171,6 +169,7 @@ public class SatelliteMap extends BaseLayer {
 		
 		this.img = img;
 		this.imgLatLon = midlPoint;
+		this.imgZoom = imgZoom;
 		
 	}
 	
@@ -184,13 +183,14 @@ public class SatelliteMap extends BaseLayer {
 		}
 	}
 
+	Field dragField = null;
+	
 	@Override
 	public boolean mousePressed(Point2D point) {
 		
-		dragPoint = point;
+		dragField = new Field(model.getField());
 		
-		
-		click = model.getField().screenTolatLon(dragPoint);
+		click = model.getField().screenTolatLon(point);
 		
 		System.out.println("sat map mousePressed " + click.toString());
 		listener.repaint();
@@ -201,25 +201,23 @@ public class SatelliteMap extends BaseLayer {
 	@Override
 	public boolean mouseRelease(Point2D point) {
 		
-		dragPoint = null;
-		
+		dragField = null;
+		click = null;
 		return true;
 	}
 
 	@Override
 	public boolean mouseMove(Point2D point) {
 		
-		if(dragPoint == null) {
+		if(dragField == null) {
 			return false;
 		}
 
-		Point2D p = new Point2D.Double(
-			dragPoint.getX() - point.getX(), 
-			dragPoint.getY() - point.getY());
-		LatLon sceneCenter = model.getField().screenTolatLon(p);
-		dragPoint = point;
+		LatLon newCenter = dragField.screenTolatLon(point);		
+		double lat = dragField.getSceneCenter().getLatDgr() + click.getLatDgr() - newCenter.getLatDgr();
+		double lon = dragField.getSceneCenter().getLonDgr() + click.getLonDgr() - newCenter.getLonDgr();
 		
-		model.getField().setSceneCenter(sceneCenter);
+		model.getField().setSceneCenter(new LatLon(lat, lon));
 		
 		listener.repaint();
 		

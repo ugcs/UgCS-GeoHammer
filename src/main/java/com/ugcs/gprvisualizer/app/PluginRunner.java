@@ -146,15 +146,12 @@ public class PluginRunner implements ToolProducer {
 	private void processV2(List<SgyFile> sgyFileList, String line) throws Exception {
 		if (line.startsWith("{")) {
 
-			System.out.println("line.startsWith {");
-
 			JSONParser jsonParser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) jsonParser.parse(line);
-
 			int pos = (int) (long) (Long) jsonObject.get("file_number");
 
 			SgyFile sgyFile = sgyFileList.get(pos - 1);
-			System.out.println(sgyFile.getFile().getName());
+			//System.out.println(sgyFile.getFile().getName());
 			
 			loadAnomalies(sgyFile, jsonObject);
 		}

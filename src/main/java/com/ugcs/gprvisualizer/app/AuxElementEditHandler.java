@@ -40,7 +40,7 @@ public class AuxElementEditHandler implements MouseHandler {
 	private Button addSurfaceBtn = new Button("add surface");
 	private Button addFoundBtn = new Button("add found");
 	private Button delBtn = new Button("delete");
-	
+	private Button clearBtn = new Button("clear");
 
 	public AuxElementEditHandler(CleverImageView cleverView) {
 		this.cleverView = cleverView;
@@ -86,12 +86,32 @@ public class AuxElementEditHandler implements MouseHandler {
 	}
 	
 	public Node getRight() {
-		HBox box = new HBox( addBtn, addSurfaceBtn, addFoundBtn, delBtn);
+		HBox box = new HBox( addBtn, addSurfaceBtn, addFoundBtn, delBtn, clearBtn);
 		
 		return box;
 	}
 	
 	protected void initButtons(){
+		
+		clearBtn.setOnAction(e -> {		
+			
+		
+			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+				sgyFile.getAuxElements().clear();
+			}				
+				
+			mouseInput = null;
+			selected = null;
+			model.setControls(null);
+
+			
+			model.updateAuxElements();
+			
+			cleverView.repaintEvent();
+			
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		});
+		
 		delBtn.setOnAction(e -> {		
 			
 			if(selected != null) {
