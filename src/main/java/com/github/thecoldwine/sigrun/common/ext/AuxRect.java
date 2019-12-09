@@ -290,12 +290,12 @@ public class AuxRect implements BaseObject {
 		};
 	}
 
-	private void updateMaskImg() {
+	public void updateMaskImg() {
 		
 		int width = getTraceFinishLocal() - getTraceStartLocal();
 		int height = getSampleHeight();
 		
-		if(img == null || width != img.getWidth() || height != img.getHeight()) {
+		//if(img == null || width != img.getWidth() || height != img.getHeight()) {
 		
 			img = new BufferedImage(Math.max(1, width), Math.max(1, height), BufferedImage.TYPE_4BYTE_ABGR);
 			
@@ -309,7 +309,7 @@ public class AuxRect implements BaseObject {
 				g2.drawLine(x, img.getHeight(), x, botCut[x]);
 				
 			}
-		}
+		//}
 	}
 
 	private void clearCut() {
@@ -494,5 +494,14 @@ public class AuxRect implements BaseObject {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	public void setTopCut(int[] topCut) {
+		this.topCut = topCut;
+	}
 	
+	public void setBotCut(int[] botCut) {
+		this.botCut = botCut;
+	}
+
+
 }

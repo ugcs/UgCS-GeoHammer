@@ -150,20 +150,16 @@ public class AuxElementEditHandler implements MouseHandler {
 		addSurfaceBtn.setOnAction(e -> {				
 			
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-			
-			Trace tr1 = sf.getTraces().get(0);
-			Trace tr2 = sf.getTraces().get(sf.getTraces().size()-1);
-			
-			AuxRect rect = new AuxRect(
-				tr1.indexInSet, tr2.indexInSet,
-				20, 80, sf.getOffset());
-				rect.setType(AreaType.Surface);
-
-				
-			if(sf != null) {
-				sf.getAuxElements().add(rect);
-				model.updateAuxElements();
+			if(sf == null) {
+				return;
 			}
+				
+			AuxRect rect = createSurfaceRect(sf);
+				
+			
+			sf.getAuxElements().add(rect);
+			model.updateAuxElements();
+			
 			cleverView.repaintEvent();
 		});
 		
@@ -173,7 +169,7 @@ public class AuxElementEditHandler implements MouseHandler {
 			
 			Trace tr = model.getFileManager().getTraces().get(field.getSelectedTrace());
 			
-			FoundPlace rect = new FoundPlace(tr,tr, sf.getOffset());
+			FoundPlace rect = new FoundPlace(tr,tr,tr, sf.getOffset());
 				
 			if(sf != null) {
 				sf.getAuxElements().add(rect);
@@ -182,6 +178,48 @@ public class AuxElementEditHandler implements MouseHandler {
 			cleverView.repaintEvent();
 		});
 		
+	}
+
+	private AuxRect createSurfaceRect(SgyFile sf) {
+		Trace tr1 = sf.getTraces().get(0);
+		Trace tr2 = sf.getTraces().get(sf.getTraces().size()-1);
+
+		int minGrnd = tr1.maxindex2;
+		int maxGrnd = tr1.maxindex2;
+		for(Trace trace : sf.getTraces()){
+			minGrnd = Math.min(minGrnd, trace.maxindex2);
+			maxGrnd = Math.max(maxGrnd, trace.maxindex2);
+		}
+		int topMarg = 10;
+		int botMarg = 15;
+
+		int topStart = minGrnd-topMarg;
+		int botFinish = maxGrnd+botMarg;
+		
+		AuxRect rect = new AuxRect(
+			tr1.indexInSet, tr2.indexInSet,
+			topStart, botFinish, 
+			sf.getOffset());
+		
+		rect.setType(AreaType.Surface);
+
+		int width = tr2.indexInSet - tr1.indexInSet +1;
+		System.out.println("width " + width);
+		int[] topCut = new int[width];
+		int[] botCut = new int[width];
+		
+		for(int i=0; i<width; i++) {
+			Trace t = sf.getTraces().get(i);
+			topCut[i] = Math.max(0, t.maxindex2-topMarg-topStart);
+			botCut[i] = Math.min(botFinish-topStart, t.maxindex2+botMarg-topStart);
+			
+			System.out.println(" " + topCut[i] + " " + botCut[i] );
+		}
+		
+		rect.setTopCut(topCut);
+		rect.setBotCut(botCut);
+		rect.updateMaskImg();
+		return rect;
 	}
 
 	private boolean processPress(List<BaseObject> controls2, Point localPoint, VerticalCutField vField) {

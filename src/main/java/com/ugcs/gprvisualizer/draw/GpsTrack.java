@@ -42,7 +42,7 @@ public class GpsTrack implements Layer{
 		double sumdist = 0;
 		double threshold =
 				model.getField().getSceneCenter().getDistance(
-				model.getField().screenTolatLon(new Point2D.Double(0, 3)));// meter
+				model.getField().screenTolatLon(new Point2D.Double(0, 5)));// meter
 		
 		for (Trace trace : model.getFileManager().getTraces()) {
 

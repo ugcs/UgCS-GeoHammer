@@ -141,11 +141,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 //		drawFoundPoints(field, g2);
 		
 		for(BaseObject bo : model.getAuxElements()) {
-			bo.drawOnCut(g2, getField());
+			bo.drawOnCut(g2, field);
 		}
 		if(model.getControls() != null) {
 			for(BaseObject bo : model.getControls()) {
-				bo.drawOnCut(g2, getField());
+				bo.drawOnCut(g2, field);
 			}
 		}
 		

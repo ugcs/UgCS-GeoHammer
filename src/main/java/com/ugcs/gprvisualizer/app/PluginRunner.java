@@ -28,7 +28,7 @@ public class PluginRunner implements ToolProducer {
 
 	private static final String FOUND_ANOMALIES = "Found anomalies: ";
 
-	private Button buttonRun = new Button("Find");
+	private Button buttonRun = new Button("Find anomalies");
 
 	private Model model;
 
@@ -162,7 +162,6 @@ public class PluginRunner implements ToolProducer {
 		JSONArray objects = (JSONArray) jsonObject.get("anomalies");
 		for (Object t : objects) {
 
-			System.out.println("t");
 
 			JSONArray ar = (JSONArray) t;
 
@@ -170,7 +169,11 @@ public class PluginRunner implements ToolProducer {
 			int t2 = (int) (long) (Long) ar.get(1);
 
 			sgyFile.getAuxElements()
-					.add(new FoundPlace(sgyFile.getTraces().get(t1), sgyFile.getTraces().get(t2), sgyFile.getOffset()));
+					.add(new FoundPlace(
+							sgyFile.getTraces().get(t1), 
+							sgyFile.getTraces().get(t2), 
+							sgyFile.getTraces().get((t1+t2)/2),
+							sgyFile.getOffset()));
 		}
 
 		model.updateAuxElements();
