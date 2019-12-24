@@ -60,8 +60,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected int width;
 	protected int height;
 	protected double contrast = 900;
+	protected double aspect = 200;
 	
 	private ThresholdSlider contrastSlider;
+	private AspectSlider aspectSlider;
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	
 	
@@ -74,13 +76,21 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			repaintEvent();
 		}
 	};
+	private ChangeListener<Number> aspectSliderListener = new ChangeListener<Number>() {
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+			updateAspect();
+			updateScroll();
+			repaintEvent();
+		}
+	};
 	
 	
 	public CleverImageView(Model model) {
 		this.model = model;
 		
 		contrastSlider = new ThresholdSlider(model.getSettings(), sliderListener);
-		
+		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
 		initImageView();
 		
 		s1.setOrientation(Orientation.HORIZONTAL);
@@ -227,7 +237,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public List<Node> getRight() {
 		
-		return Arrays.asList(contrastSlider.produce() , auxEditHandler.getRight());
+		return Arrays.asList(contrastSlider.produce() , auxEditHandler.getRight(), aspectSlider.produce());
 	}
 
 	int z = 0;
@@ -240,8 +250,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			
 			z = z + (event.getDeltaY() > 0 ? 1 : -1 );
 			double s = Math.pow(1.2, z);
-			getField().setHScale(s*2);
+			
 			getField().setVScale(s);
+			
+			updateAspect();
+			
 			
 			Point t2 = getLocalCoords(event.getSceneX(), event.getSceneY());
 			TraceSample ts2 = getField().screenToTraceSample(t2);
@@ -265,6 +278,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
+	}
+
+	private void updateAspect() {
+		double as = aspect/100.0;			
+		getField().setHScale(getField().getVScale()*as);
 	}
 	
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
@@ -427,6 +445,28 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
+	public class AspectSlider extends BaseSlider {
+		
+		public AspectSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "Aspect";
+			units = "";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(400);
+			slider.setMin(12);
+			//slider.set
+			slider.setValue(aspect);
+		}
+		
+		public int updateModel() {
+			aspect = (int)slider.getValue();
+			return (int)aspect;
+		}
+	}
+	
 	public void setSize(int width, int height) {
 		
 		this.width = width;

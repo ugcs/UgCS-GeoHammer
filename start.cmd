@@ -1,1 +1,1 @@
-java -Xmx1g -cp gprviewer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainSingleWindow
+java -Xmx2g -cp gprviewer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainSingleWindow
