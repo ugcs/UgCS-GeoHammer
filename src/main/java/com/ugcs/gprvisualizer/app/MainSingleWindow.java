@@ -101,9 +101,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		//modeMap.put(prismMode, pmf);
 		AppContext.smthListener.add(pmf);
 		
-		MatrixModeFactory tmf = new MatrixModeFactory(model);
+	//	MatrixModeFactory tmf = new MatrixModeFactory(model);
 		//modeMap.put(matrixMode, tmf);
-		AppContext.smthListener.add(tmf);
+	//	AppContext.smthListener.add(tmf);
 
 		layersWindowBuilder = new LayersWindowBuilder(model);
 		//modeMap.put(gpsMode, layersWindowBuilder);

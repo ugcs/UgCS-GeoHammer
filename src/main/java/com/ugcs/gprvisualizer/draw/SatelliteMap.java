@@ -192,7 +192,7 @@ public class SatelliteMap extends BaseLayer {
 		
 		click = model.getField().screenTolatLon(point);
 		
-		System.out.println("sat map mousePressed " + click.toString());
+		//System.out.println("sat map mousePressed " + click.toString());
 		listener.repaint();
 		
 		return true;

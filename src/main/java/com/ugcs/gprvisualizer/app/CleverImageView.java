@@ -50,7 +50,7 @@ import javafx.scene.layout.VBox;
 
 public class CleverImageView implements SmthChangeListener, ModeFactory {
 	
-	
+	PrismDrawer prismDrawer;	
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
@@ -88,6 +88,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	
 	public CleverImageView(Model model) {
 		this.model = model;
+		
+		prismDrawer = new PrismDrawer(model, 0);
 		
 		contrastSlider = new ThresholdSlider(model.getSettings(), sliderListener);
 		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
@@ -137,7 +139,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		int finishTrace = field.getLastVisibleTrace(width);		
 		
 		
-		new PrismDrawer(model, 0).draw(width, height, field, g2, buffer, contrast);
+		prismDrawer.draw(width, height, field, g2, buffer, contrast);
 		
 		//drawPrism(width, height, field, buffer, TOP_MARGIN, startTrace, finishTrace);
 		

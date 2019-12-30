@@ -12,6 +12,7 @@ public class PrismDrawer implements VCutDrawer {
 
 	private Model model;
 	private int vOffset;
+	Tanh tanh = new Tanh();
 	
 	public PrismDrawer(Model model, int vOffset) {
 		this.model = model;
@@ -23,6 +24,8 @@ public class PrismDrawer implements VCutDrawer {
 			Graphics2D g2,
 			int[] buffer,			
 			double threshold) {
+		
+		tanh.setThreshold((float)threshold);
 		
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
@@ -52,9 +55,11 @@ public class PrismDrawer implements VCutDrawer {
 						continue;
 					}
 					
-		    		int c = (int) (127.0 - Math.tanh(values[j]/threshold) * 127.0);
-		    		int color = ((c) << 16) + ((c) << 8) + c;
+		    		//int c = (int) (127.0 - Math.tanh(values[j]/threshold) * 127.0);
+		    		//int color = ((c) << 16) + ((c) << 8) + c;
 		    		
+					int color = tanh.trans(values[j]);
+					
 		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;
 		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {
