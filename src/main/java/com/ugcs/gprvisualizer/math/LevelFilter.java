@@ -43,7 +43,10 @@ public class LevelFilter implements ToolProducer {
 		BackgroundRemovalFilter brf = new BackgroundRemovalFilter();
 		for (SgyFile sf : model.getFileManager().getFiles()) {
 			List<Trace> lst = sf.getTraces();
-			brf.removeConstantNoise(lst);
+			
+			if(lst.size() > 1) {
+				brf.removeConstantNoise(lst);
+			}
 		}
 		model.getChanges().add(FileChangeType.BACKGROUND_NOISE_REMOVED);
 		

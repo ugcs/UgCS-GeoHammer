@@ -175,8 +175,7 @@ public class SatelliteMap extends BaseLayer {
 	
 	class Calc extends Thread {
 		public void run() {
-			System.out.println("satel run");
-			
+		
 			loadimg();
 			
 			listener.repaint();

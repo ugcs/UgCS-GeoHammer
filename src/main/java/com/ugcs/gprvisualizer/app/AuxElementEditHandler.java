@@ -14,6 +14,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -37,7 +38,9 @@ public class AuxElementEditHandler implements MouseHandler {
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
-	private Button addBtn = new Button("add hyperbola");
+	private Button addBtn = new Button("add rect");
+	private Button addHypBtn = new Button("add hyp");
+	
 	private Button addSurfaceBtn = new Button("add surface");
 	private Button addFoundBtn = new Button("add found");
 	private Button delBtn = new Button("delete");
@@ -89,7 +92,7 @@ public class AuxElementEditHandler implements MouseHandler {
 	public Node getRight() {
 		
 		return new VBox(
-				new HBox( addBtn, addSurfaceBtn, addFoundBtn),
+				new HBox( addBtn, addHypBtn, addSurfaceBtn, addFoundBtn),
 				new HBox( delBtn, clearBtn));
 	}
 	
@@ -147,6 +150,22 @@ public class AuxElementEditHandler implements MouseHandler {
 				cleverView.repaintEvent();
 			}
 		);
+		
+		addHypBtn.setOnAction(e -> {				
+			
+			
+			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
+			
+			if(sf != null) {
+				Hyperbola rect = new Hyperbola(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
+				
+				sf.getAuxElements().add(rect);
+				model.updateAuxElements();
+			}
+			cleverView.repaintEvent();
+		}
+	);
+		
 		addSurfaceBtn.setOnAction(e -> {				
 			
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());

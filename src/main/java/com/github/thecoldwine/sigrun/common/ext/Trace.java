@@ -12,7 +12,7 @@ public class Trace {
     private final Block headerBlock;
     private final Block dataBlock;
     
-    private final TraceHeader header;
+    private final TraceHeader header = null;
     private float[] originalvalues;
     private float[] normvalues;
     
@@ -33,7 +33,7 @@ public class Trace {
     public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
     	
-        this.header = header;
+        //this.header = header;
         this.headerBlock = headerBlock; 
         this.dataBlock = dataBlock;
         this.originalvalues = originalvalues;

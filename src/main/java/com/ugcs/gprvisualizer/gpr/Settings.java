@@ -18,7 +18,8 @@ public class Settings {
 	public int radius = 15;
 	public int hpage = 7;
 	public int layer = 20; 
-    
+	public int hyperkfc = 100; 
+	
 	public int topscale = 200;
 	public int bottomscale = 250;
 	public int cutscale = 100;

@@ -176,7 +176,7 @@ public class RadarMap extends BaseLayer{
 		}
 		
 		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
-			System.out.println(" radar start thread");
+			//System.out.println(" radar start thread");
 			executor.submit(t);
 		}		
 	}

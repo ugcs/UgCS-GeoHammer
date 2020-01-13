@@ -15,6 +15,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.AlignRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.DragAnchor;
@@ -39,10 +40,11 @@ public class AuxRect implements BaseObject {
 	MutableInt traceFinish = new MutableInt();
 	MutableInt sampleStart = new MutableInt();
 	MutableInt sampleFinish = new MutableInt();
+	MutableInt kfc = new  MutableInt();
 	VerticalCutPart offset;
 	
 	BufferedImage img;
-
+	//DragAnchor kfcanc;
 	DragAnchor top;
 	DragAnchor bottom;
 	DragAnchor left;
@@ -187,7 +189,7 @@ public class AuxRect implements BaseObject {
 		selectType = new ToggleButton(traceStart, sampleStart, 
 				ResourceImageHolder.IMG_CHOOSE,
 				ResourceImageHolder.IMG_CHOOSE,
-				new AlignRect(-1, -1), offset) {
+				new AlignRect(-1, -1), offset, false) {
 
 			public void signal(Object obj) {
 		        ChoiceDialog<AreaType> dialog = new ChoiceDialog<AreaType>(getType(), AreaType.values()); 
@@ -207,7 +209,7 @@ public class AuxRect implements BaseObject {
 		lock = new ToggleButton(traceFinish, sampleStart, 
 				ResourceImageHolder.IMG_LOCK,
 				ResourceImageHolder.IMG_UNLOCK,
-				new AlignRect(-1, -1), offset) {
+				new AlignRect(-1, -1), offset, locked) {
 
 			public void signal(Object obj) {
 				locked = (Boolean)obj;
@@ -226,6 +228,18 @@ public class AuxRect implements BaseObject {
 			}
 			
 		};
+		
+
+		
+//		kfcanc = new DragAnchor(new MutableInt(), kfc, ResourceImageHolder.IMG_CHOOSE, AlignRect.CENTER, offset) {
+//			public void signal(Object obj) {
+//				//sampleStart = top.getSample();
+//			}
+//			
+//			public int getTrace() {
+//				return (left.getTrace() + right.getTrace()) / 2;
+//			}
+//		};
 		
 		top = new DragAnchor(new MutableInt(), sampleStart, ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
@@ -288,6 +302,8 @@ public class AuxRect implements BaseObject {
 				return (top.getSample() + bottom.getSample()) / 2;
 			}
 		};
+		
+		lock.signal(locked);
 	}
 
 	public void updateMaskImg() {
@@ -465,6 +481,32 @@ public class AuxRect implements BaseObject {
 		
 		g2.setColor(Color.WHITE);
 		g2.drawString(getType().getName(), rect.x, rect.y-5);
+		
+		//hyperbola
+		
+		drawHyperbola(g2, vField);
+		
+	}
+
+	private void drawHyperbola(Graphics2D g2, VerticalCutField vField) {
+		g2.setColor(Color.YELLOW);
+		double kf = AppContext.model.getSettings().hyperkfc / 100.0;
+		int tr = (getTraceFinishGlobal() + getTraceStartGlobal())/2;
+		double y = getSampleStart();
+		Point prev = null;
+		for(int i=getTraceStartGlobal(); i<= getTraceFinishGlobal(); i++) {
+			
+			double x=(i-tr) * kf;
+			double c = Math.sqrt(x*x+y*y);
+			
+			Point lt = vField.traceSampleToScreen(new TraceSample(i, (int)c));
+			if(prev != null) {
+				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
+				g2.drawLine(prev.x, prev.y+10, lt.x, lt.y+10);
+			}
+			
+			prev = lt;
+		}
 	}
 
 	@Override

@@ -46,6 +46,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class CleverImageView implements SmthChangeListener, ModeFactory {
@@ -57,15 +58,18 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected ScrollBar s1 = new ScrollBar();
 	
 	protected BufferedImage img;
+	Image i ;
 	protected int width;
 	protected int height;
 	protected double contrast = 900;
-	protected double aspect = 200;
+	protected double aspect = 50;
 	
 	private ThresholdSlider contrastSlider;
 	private AspectSlider aspectSlider;
+	private HyperbolaSlider hyperbolaSlider;
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
-	
+	private Button zoomInBtn = new Button("+");
+	private Button zoomOutBtn = new Button("-");
 	
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
@@ -93,6 +97,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		contrastSlider = new ThresholdSlider(model.getSettings(), sliderListener);
 		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
+		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		initImageView();
 		
 		s1.setOrientation(Orientation.HORIZONTAL);
@@ -113,6 +118,15 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
 		
+		
+		zoomInBtn.setOnAction(e -> {
+			zoom(1, width/2, height/2);
+
+		});
+		zoomOutBtn.setOnAction(e -> {
+			zoom(-1, width/2, height/2);
+		});
+		
 		AppContext.smthListener.add(this);
 	}
 	
@@ -123,8 +137,12 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 
 		VerticalCutField field = new VerticalCutField(getField());
 		
-		
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		BufferedImage bi ;
+		if(img != null && img.getWidth() == width && img.getHeight() == height) {
+			bi = img;
+		}else {
+			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		}
 		int[] buffer = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData() ;
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
@@ -239,39 +257,26 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public List<Node> getRight() {
 		
-		return Arrays.asList(contrastSlider.produce() , auxEditHandler.getRight(), aspectSlider.produce());
+		return Arrays.asList(
+				new HBox( zoomInBtn, zoomOutBtn),
+				contrastSlider.produce() , auxEditHandler.getRight(), 
+				aspectSlider.produce(), hyperbolaSlider.produce());
 	}
 
 	int z = 0;
 	protected void initImageView() {
 		imageView.setOnScroll(event -> {
 	    	//model.getField().setZoom( .getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
+			int ch = (event.getDeltaY() > 0 ? 1 : -1 );
 			
-			Point t = getLocalCoords(event.getSceneX(), event.getSceneY());
-			TraceSample ts = getField().screenToTraceSample(t);
+			double ex = event.getSceneX();
+			double ey = event.getSceneY();
 			
-			z = z + (event.getDeltaY() > 0 ? 1 : -1 );
-			double s = Math.pow(1.2, z);
-			
-			getField().setVScale(s);
-			
-			updateAspect();
-			
-			
-			Point t2 = getLocalCoords(event.getSceneX(), event.getSceneY());
-			TraceSample ts2 = getField().screenToTraceSample(t2);
-			
-			getField().setSelectedTrace(getField().getSelectedTrace() - (ts2.getTrace() - ts.getTrace()));
-			
-			
-			int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
-			getField().setStartSample(starts);
+			zoom(ch, ex, ey);
 				
 			
 			
 			
-			repaintEvent();
-			updateScroll();
 	    } );
 		
 		imageView.setOnMousePressed(mousePressHandler);
@@ -280,6 +285,33 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
+	}
+
+	private void zoom(int ch, double ex, double ey) {
+		Point t = getLocalCoords(ex, ey);
+		
+		TraceSample ts = getField().screenToTraceSample(t);
+		
+		z = z + ch;
+		double s = Math.pow(1.2, z);
+		
+		getField().setVScale(s);
+		
+		updateAspect();
+		
+		
+		Point t2 = getLocalCoords(ex, ey);
+		TraceSample ts2 = getField().screenToTraceSample(t2);
+		
+		getField().setSelectedTrace(getField().getSelectedTrace() - (ts2.getTrace() - ts.getTrace()));
+		
+		
+		int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
+		getField().setStartSample(starts);
+		
+		repaintEvent();
+		updateScroll();
+		
 	}
 
 	private void updateAspect() {
@@ -371,7 +403,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected void repaint() {
 		//System.out.println("repaint");
 		img = draw(width, height);
-		
+		if(img != null) {
+			i = SwingFXUtils.toFXImage(img, null);
+		}
 		updateWindow();
 	}
 	
@@ -379,10 +413,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
-            	if(img == null) {
+            	if(i == null) {
             		return;
             	}
-			    Image i = SwingFXUtils.toFXImage(img, null);
+			    
 			    imageView.setImage(i);
             }
           });
@@ -466,6 +500,27 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		public int updateModel() {
 			aspect = (int)slider.getValue();
 			return (int)aspect;
+		}
+	}
+	public class HyperbolaSlider extends BaseSlider {
+		
+		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "Hyperbola";
+			units = "";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(200);
+			slider.setMin(2);
+			//slider.set
+			slider.setValue(settings.hyperkfc);
+		}
+		
+		public int updateModel() {
+			settings.hyperkfc = (int)slider.getValue();
+			return (int)settings.hyperkfc;
 		}
 	}
 	

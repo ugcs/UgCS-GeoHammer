@@ -24,7 +24,15 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	//private static final int R = 5;
 	
 	private MutableInt trace = new MutableInt();
+	public MutableInt getTraceMtl() {
+		return trace;
+	}
+	
 	private MutableInt sample = new MutableInt();
+	public MutableInt getSampleMtl() {
+		return sample;
+	}
+	
 	private AlignRect alignRect;
 	private VerticalCutPart offset;
 	
@@ -36,15 +44,15 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	
 	
 	public DragAnchor(				
-			MutableInt trace,
-			MutableInt sample,
+			//MutableInt trace,
+			//MutableInt sample,
 			Image img,
 			AlignRect alignRect,
 			VerticalCutPart offset) {
 		
 		this.offset = offset;
-		this.trace = trace;
-		this.sample = sample;
+		//this.trace = trace;
+		//this.sample = sample;
 		this.setImg(img);
 		this.alignRect = alignRect;
 		
