@@ -33,8 +33,8 @@ public class VerticalCutField {
 	}
 
 	public void clear() {
-		vScale=1;
-		hScale=2;
+		//vScale=1;
+		//hScale=2;
 		startSample = 0;
 		selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
 

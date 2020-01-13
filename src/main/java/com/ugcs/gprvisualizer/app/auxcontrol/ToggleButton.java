@@ -14,13 +14,13 @@ public class ToggleButton extends DragAnchor {
 	Image unselectedImg;
 	boolean selected = false;
 	
-	public ToggleButton(MutableInt trace, MutableInt sample, 
+	public ToggleButton( 
 			Image selectedImg, 
 			Image unselectedImg,
 			AlignRect alignRect,
 			VerticalCutPart offset,
 			boolean selected) {
-		super(trace, sample, selected ? selectedImg : unselectedImg, alignRect, offset);
+		super(selected ? selectedImg : unselectedImg, alignRect, offset);
 		
 		this.selectedImg = selectedImg;
 		this.unselectedImg = unselectedImg;

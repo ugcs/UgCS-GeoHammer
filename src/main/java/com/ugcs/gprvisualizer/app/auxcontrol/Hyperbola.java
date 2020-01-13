@@ -40,90 +40,92 @@ public class Hyperbola implements BaseObject {
 	//MutableInt sampleFinish = new MutableInt();
 
 	private VerticalCutPart offset;
-	DragAnchor pinnacle;
+	DragAnchor pinacle;
 	DragAnchor left;
 	DragAnchor right;
 	DragAnchor thick;
 	DragAnchor hyperkfc;
 	
 	public Hyperbola(int trace, int sample, VerticalCutPart offset) {
+		this.offset = offset;
+		initDragAnchors();
 		
 		//offset.globalToLocal(traceStart)
-		tracePinacle.setValue(offset.globalToLocal(trace));
-		traceStart.setValue(offset.globalToLocal(trace - leftWidth));
-		traceFinish.setValue(offset.globalToLocal(trace + rightWidth));
-		sampleThick.setValue(sample + thickness);
-		samplePinacle.setValue(sample);
-		hyperkfcVal.setValue(sample + hyperkfcInt);
+		pinacle.setTrace(offset.globalToLocal(trace));
+		pinacle.setSample(sample);
 		
-		this.offset = offset;
-		
-		initDragAnchors();
+		left.setTrace(offset.globalToLocal(trace - leftWidth));
+		right.setTrace(offset.globalToLocal(trace + rightWidth));
+		thick.setSample(sample + thickness);
+		hyperkfc.setSample(sample + hyperkfcInt);
 	}
 	
 	public Hyperbola(JSONObject json, VerticalCutPart offset) {
 		this.offset = offset;
 		
-		tracePinacle.setValue((int)(long)(Long)json.get("tracePinacle"));
-		samplePinacle.setValue((int)(long)(Long)json.get("samplePinacle"));
+		initDragAnchors();
+		
+		pinacle.setTrace((int)(long)(Long)json.get("tracePinacle"));
+		pinacle.setSample((int)(long)(Long)json.get("samplePinacle"));
 		thickness = ((int)(long)(Long)json.get("thickness"));
 		leftWidth = ((int)(long)(Long)json.get("leftWidth"));
 		rightWidth = ((int)(long)(Long)json.get("rightWidth"));
+		hyperkfcInt = ((int)(long)(Long)json.get("hyperkfc"));
 		
 		//
-		traceStart.setValue(offset.globalToLocal(tracePinacle.intValue() - leftWidth));
-		traceFinish.setValue(offset.globalToLocal(tracePinacle.intValue() + rightWidth));
-		sampleThick.setValue(samplePinacle.intValue() + thickness);
+		left.setTrace(pinacle.getTrace() - leftWidth);
+		right.setTrace(pinacle.getTrace() + rightWidth);
+		thick.setSample(pinacle.getSample() + thickness);
+		hyperkfc.setSample(pinacle.getSample() + hyperkfcInt);
 		
-		initDragAnchors();
 	}
 
 	private void initDragAnchors() {
 		
-		hyperkfc = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		hyperkfc = new DragAnchor(ResourceImageHolder.IMG_WIDTH, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				hyperkfcInt = hyperkfcVal.intValue() - samplePinacle.intValue();
+				hyperkfcInt = hyperkfc.getSample() - pinacle.getSample();
 			}
 			
 			public int getTrace() {
-				return tracePinacle.intValue()+rightWidth;
+				return pinacle.getTrace() + rightWidth;
 			}
 		};
 		
-		pinnacle = new DragAnchor(tracePinacle, samplePinacle, ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		pinacle = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				traceStart.setValue(tracePinacle.intValue() - leftWidth);
-				traceFinish.setValue(tracePinacle.intValue() + rightWidth);
-				sampleThick.setValue(samplePinacle.intValue() + thickness);
-				hyperkfcVal.setValue(samplePinacle.intValue() + hyperkfcInt);
+				left.setTrace(pinacle.getTrace() - leftWidth);
+				right.setTrace(pinacle.getTrace() + rightWidth);
+				thick.setSample(pinacle.getSample() + thickness);
+				hyperkfc.setSample(pinacle.getSample() + hyperkfcInt);
 			}
 		};
 		
-		left = new DragAnchor(traceStart, new MutableInt(), ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		left = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				leftWidth = tracePinacle.intValue()-traceStart.intValue();				
+				leftWidth = pinacle.getTrace() - left.getTrace();				
 			}
 			
 			public int getSample() {
-				return samplePinacle.intValue();
+				return pinacle.getSample();
 			}
 		};
-		right = new DragAnchor(traceFinish, new MutableInt(), ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		right = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				rightWidth = traceFinish.intValue() - tracePinacle.intValue();
+				rightWidth = right.getTrace() - pinacle.getTrace();
 			}
 			
 			public int getSample() {
-				return samplePinacle.intValue();
+				return pinacle.getSample();
 			}
 		};
-		thick = new DragAnchor(new MutableInt(), sampleThick, ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		thick = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				thickness = sampleThick.intValue() - samplePinacle.intValue();
+				thickness = thick.getSample() - pinacle.getSample();
 			}
 			
 			public int getTrace() {
-				return tracePinacle.intValue();
+				return pinacle.getTrace();
 			}
 		};
 
@@ -160,8 +162,8 @@ public class Hyperbola implements BaseObject {
 
 	@Override
 	public Rectangle getRect(VerticalCutField vField) {
-		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), samplePinacle.intValue()-10));
-		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), samplePinacle.intValue()+10));
+		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), pinacle.getSample()-10));
+		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), pinacle.getSample()+thickness));
 		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 	}
 
@@ -175,19 +177,20 @@ public class Hyperbola implements BaseObject {
 	public List<BaseObject> getControls() {
 
 			return
-				Arrays.asList(pinnacle, left, right, thick, hyperkfc); 
+				Arrays.asList(pinacle, left, right, thick, hyperkfc); 
 
 	}
 
 	@Override
 	public void saveTo(JSONObject json) {
-		json.put("tracePinacle", tracePinacle);
-		json.put("samplePinacle", samplePinacle);
+		json.put("tracePinacle", pinacle.getTrace());
+		json.put("samplePinacle", pinacle.getSample());
 		json.put("leftWidth", leftWidth);
 		json.put("rightWidth", rightWidth);
 		json.put("thickness", thickness);
+		json.put("hyperkfc", hyperkfcInt);
 		
-		int y = samplePinacle.intValue();
+		int y = pinacle.getSample();
 		
 		int[] topCut = getCutArray(y, y);
 		
@@ -208,7 +211,8 @@ public class Hyperbola implements BaseObject {
 
 	private int[] getCutArray(int y, int top) {
 		int[] topCut = new int[leftWidth+rightWidth];		
-		double kf = AppContext.model.getSettings().hyperkfc / 100.0;
+		//double kf = AppContext.model.getSettings().hyperkfc / 100.0;
+		double kf = hyperkfcInt / 100.0;
 		for(int i=0; i<topCut.length; i++) {
 			double x=(i-leftWidth) * kf;
 			double c = Math.sqrt(x*x+y*y);
@@ -241,7 +245,7 @@ public class Hyperbola implements BaseObject {
 		//double kf = AppContext.model.getSettings().hyperkfc / 100.0;
 		double kf = hyperkfcInt / 100.0;
 		int tr = getTracePinacleGlobal();//tracePinacle.intValue();
-		double y = samplePinacle.intValue();
+		double y = pinacle.getSample();
 		drawHyperbolaLine(g2, vField, kf, tr, y);
 		drawHyperbolaLine(g2, vField, kf, tr, y+thickness);
 	}
@@ -268,16 +272,14 @@ public class Hyperbola implements BaseObject {
 	}
 
 	public int getTracePinacleGlobal() {
-		return offset.localToGlobal(this.tracePinacle.getValue());
+		return offset.localToGlobal(pinacle.getTrace());
 	}
 	
 	public int getTraceStartGlobal() {
-		return offset.localToGlobal(this.traceStart.getValue());
+		return offset.localToGlobal(left.getTrace());
 	}
 	
 	public int getTraceFinishGlobal() {
-		return offset.localToGlobal(this.traceFinish.getValue());
+		return offset.localToGlobal(right.getTrace());
 	}
-	
-	
 }

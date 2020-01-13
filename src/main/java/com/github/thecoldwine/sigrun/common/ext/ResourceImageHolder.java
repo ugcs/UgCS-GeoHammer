@@ -10,6 +10,7 @@ public class ResourceImageHolder {
 	public static Image IMG_SHOVEL;
 	public static Image IMG_HOR_SLIDER;
 	public static Image IMG_VER_SLIDER;
+	public static Image IMG_WIDTH;
 	
 	public static Image IMG_LOCK;
 	public static Image IMG_UNLOCK;
@@ -21,6 +22,7 @@ public class ResourceImageHolder {
 	
 	static {
 		try {
+			IMG_WIDTH = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("width16.png"));
 			IMG_SHOVEL = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("shovel-48.png"));
 			IMG_HOR_SLIDER = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("horSlid16.png"));
 			IMG_VER_SLIDER = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("vertSlid16.png"));

@@ -36,10 +36,10 @@ public class AuxRect implements BaseObject {
 	
 	//VerticalCutField vField;
 	
-	MutableInt traceStart = new MutableInt();
-	MutableInt traceFinish = new MutableInt();
-	MutableInt sampleStart = new MutableInt();
-	MutableInt sampleFinish = new MutableInt();
+//	MutableInt traceStart = new MutableInt();
+//	MutableInt traceFinish = new MutableInt();
+//	MutableInt sampleStart = new MutableInt();
+//	MutableInt sampleFinish = new MutableInt();
 	MutableInt kfc = new  MutableInt();
 	VerticalCutPart offset;
 	
@@ -61,10 +61,10 @@ public class AuxRect implements BaseObject {
 	private AreaType type = AreaType.Hyperbola;
 	
 	public void saveTo(JSONObject json) {
-		json.put("traceStart", traceStart);
-		json.put("traceFinish", traceFinish);
-		json.put("sampleStart", sampleStart);
-		json.put("sampleFinish", sampleFinish);
+		json.put("traceStart", left.getTrace());
+		json.put("traceFinish", right.getTrace());
+		json.put("sampleStart", top.getSample());
+		json.put("sampleFinish", bottom.getSample());
 		json.put("type", getType().toString());
 		json.put("locked", locked);
 		
@@ -83,45 +83,45 @@ public class AuxRect implements BaseObject {
 	}
 
 	public void setSampleStart(int sampleStart) {
-		this.sampleStart.setValue(sampleStart);
+		top.setSample(sampleStart);
 		//this.sampleStart = sampleStart;
 	}
 
 	public void setSampleFinish(int sampleFinish) {
-		this.sampleFinish.setValue(sampleFinish);
+		bottom.setSample(sampleFinish);
 		//this.sampleFinish = sampleFinish;
 	}
 	public int getSampleStart() {
-		return this.sampleStart.getValue();
+		return top.getSample();
 
 	}
 
 	public int getSampleFinish() {
-		return this.sampleFinish.getValue();
+		return bottom.getSample();
 	}
 	
 	public void setTraceStart(int traceStart) {
-		this.traceStart.setValue(traceStart);
+		left.setTrace(traceStart);
 	}
 
 	public int getTraceStartLocal() {
-		return this.traceStart.getValue();
+		return left.getTrace();
 	}
 
 	public int getTraceStartGlobal() {
-		return offset.localToGlobal(this.traceStart.getValue());
+		return offset.localToGlobal(left.getTrace());
 	}
 
 	public void setTraceFinish(int traceStart) {
-		this.traceFinish.setValue(traceStart);
+		right.setTrace(traceStart);
 	}
 
 	public int getTraceFinishLocal() {
-		return this.traceFinish.getValue();
+		return right.getTrace();
 	}
 	
 	public int getTraceFinishGlobal() {
-		return offset.localToGlobal(this.traceFinish.getValue());
+		return offset.localToGlobal(right.getTrace());
 	}
 	
 	public AuxRect(
@@ -132,13 +132,14 @@ public class AuxRect implements BaseObject {
 			VerticalCutPart offset) {
 		//this.vField = vField;
 		this.offset = offset;
+		initDragAnchors();
 		
 		setTraceStart(offset.globalToLocal(traceStart));
 		setTraceFinish(offset.globalToLocal(traceFinish));
 		setSampleStart(sampleStart);
 		setSampleFinish(sampleFinish);
 		
-		initDragAnchors();	
+			
 		clearCut();
 		updateMaskImg();
 	}
@@ -156,6 +157,7 @@ public class AuxRect implements BaseObject {
 	
 	public AuxRect(JSONObject json, VerticalCutPart offset) {	
 		this.offset = offset;
+		initDragAnchors();
 		
 		setTraceStart((int)(long)(Long)json.get("traceStart"));
 		setTraceFinish((int)(long)(Long)json.get("traceFinish"));
@@ -179,14 +181,14 @@ public class AuxRect implements BaseObject {
 			botCut[i] = (int)(long)(Long)ar.get(i);
 		}
 		
-		initDragAnchors();
+		
 		updateMaskImg();
 		
 	}
 	
 
 	private void initDragAnchors() {
-		selectType = new ToggleButton(traceStart, sampleStart, 
+		selectType = new ToggleButton( 
 				ResourceImageHolder.IMG_CHOOSE,
 				ResourceImageHolder.IMG_CHOOSE,
 				new AlignRect(-1, -1), offset, false) {
@@ -206,7 +208,7 @@ public class AuxRect implements BaseObject {
 			}
 		};
 		
-		lock = new ToggleButton(traceFinish, sampleStart, 
+		lock = new ToggleButton( 
 				ResourceImageHolder.IMG_LOCK,
 				ResourceImageHolder.IMG_UNLOCK,
 				new AlignRect(-1, -1), offset, locked) {
@@ -241,14 +243,14 @@ public class AuxRect implements BaseObject {
 //			}
 //		};
 		
-		top = new DragAnchor(new MutableInt(), sampleStart, ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		top = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				//sampleStart = top.getSample();
 				
 				
 				
-				sampleStart.setValue(
-						NumberUtils.norm(sampleStart.getValue(), 0, sampleFinish.getValue()-2));
+				top.setSample(
+						NumberUtils.norm(top.getSample(), 0, bottom.getSample()-2));
 						
 						//Math.min(sampleStart.getValue(), sampleFinish.getValue()-2));
 				
@@ -261,11 +263,11 @@ public class AuxRect implements BaseObject {
 			}
 		};
 		
-		bottom = new DragAnchor(new MutableInt(), sampleFinish, ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		bottom = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				//sampleFinish = bottom.getSample();
-				sampleFinish.setValue( 
-					NumberUtils.norm(sampleFinish.getValue(), sampleStart.getValue()+2, offset.getMaxSamples()));
+				bottom.setSample( 
+					NumberUtils.norm(bottom.getSample(), top.getSample()+2, offset.getMaxSamples()));
 				
 				clearCut();
 				updateMaskImg();
@@ -274,11 +276,11 @@ public class AuxRect implements BaseObject {
 				return (left.getTrace() + right.getTrace()) / 2;
 			}
 		};
-		left = new DragAnchor(traceStart, new MutableInt(), ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		left = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				//traceStart = left.getTrace();
-				traceStart.setValue( 
-						NumberUtils.norm(traceStart.getValue(), 0, traceFinish.getValue()-2));
+				left.setTrace( 
+						NumberUtils.norm(left.getTrace(), 0, right.getTrace()-2));
 				
 				clearCut();
 				updateMaskImg();
@@ -288,11 +290,11 @@ public class AuxRect implements BaseObject {
 			}
 		};
 		
-		right = new DragAnchor(traceFinish, new MutableInt(), ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		right = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				//traceFinish = right.getTrace();
-				traceFinish.setValue( 
-						NumberUtils.norm(traceFinish.getValue(), traceStart.getValue()+2, offset.getTraces()));
+				right.setTrace( 
+						NumberUtils.norm(right.getTrace(), left.getTrace()+2, offset.getTraces()));
 						//Math.max(traceFinish.getValue(), ));
 				
 				clearCut();
@@ -482,31 +484,7 @@ public class AuxRect implements BaseObject {
 		g2.setColor(Color.WHITE);
 		g2.drawString(getType().getName(), rect.x, rect.y-5);
 		
-		//hyperbola
 		
-		drawHyperbola(g2, vField);
-		
-	}
-
-	private void drawHyperbola(Graphics2D g2, VerticalCutField vField) {
-		g2.setColor(Color.YELLOW);
-		double kf = AppContext.model.getSettings().hyperkfc / 100.0;
-		int tr = (getTraceFinishGlobal() + getTraceStartGlobal())/2;
-		double y = getSampleStart();
-		Point prev = null;
-		for(int i=getTraceStartGlobal(); i<= getTraceFinishGlobal(); i++) {
-			
-			double x=(i-tr) * kf;
-			double c = Math.sqrt(x*x+y*y);
-			
-			Point lt = vField.traceSampleToScreen(new TraceSample(i, (int)c));
-			if(prev != null) {
-				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
-				g2.drawLine(prev.x, prev.y+10, lt.x, lt.y+10);
-			}
-			
-			prev = lt;
-		}
 	}
 
 	@Override
