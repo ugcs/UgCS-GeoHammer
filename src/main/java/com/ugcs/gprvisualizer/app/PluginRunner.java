@@ -12,6 +12,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.github.thecoldwine.sigrun.common.ext.AuxRect;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -160,20 +161,22 @@ public class PluginRunner implements ToolProducer {
 
 	private void loadAnomalies(SgyFile sgyFile, JSONObject jsonObject) {
 		JSONArray objects = (JSONArray) jsonObject.get("anomalies");
-		for (Object t : objects) {
+		for(Object t : objects) {
 
+			JSONObject json = (JSONObject) t;
 
-			JSONArray ar = (JSONArray) t;
-
-			int t1 = (int) (long) (Long) ar.get(0);
-			int t2 = (int) (long) (Long) ar.get(1);
-
-			sgyFile.getAuxElements()
-					.add(new FoundPlace(
-							sgyFile.getTraces().get(t1), 
-							sgyFile.getTraces().get(t2), 
-							sgyFile.getTraces().get((t1+t2)/2),
-							sgyFile.getOffset()));
+			sgyFile.getAuxElements().add(
+				new AuxRect(json, sgyFile.getOffset()));
+			
+//			int t1 = (int) (long) (Long) ar.get(0);
+//			int t2 = (int) (long) (Long) ar.get(1);
+//
+//			sgyFile.getAuxElements()
+//					.add(new FoundPlace(
+//							sgyFile.getTraces().get(t1), 
+//							sgyFile.getTraces().get(t2), 
+//							sgyFile.getTraces().get((t1+t2)/2),
+//							sgyFile.getOffset()));
 		}
 
 		model.updateAuxElements();

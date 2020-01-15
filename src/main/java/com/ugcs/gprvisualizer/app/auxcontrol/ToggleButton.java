@@ -12,7 +12,7 @@ public class ToggleButton extends DragAnchor {
 
 	Image selectedImg;
 	Image unselectedImg;
-	boolean selected = false;
+	private boolean selected = false;
 	
 	public ToggleButton( 
 			Image selectedImg, 
@@ -24,12 +24,12 @@ public class ToggleButton extends DragAnchor {
 		
 		this.selectedImg = selectedImg;
 		this.unselectedImg = unselectedImg;
-		this.selected = selected;		
+		this.setSelected(selected);		
 		
 	}
 	
 	protected Image getImg() {
-		if(selected) {
+		if(isSelected()) {
 			return selectedImg;
 		}else {
 			return unselectedImg;
@@ -42,9 +42,9 @@ public class ToggleButton extends DragAnchor {
 		
 		if(isPointInside(localPoint, vField)) {
 			
-			selected = !selected;
+			setSelected(!isSelected());
 			
-			signal(selected);
+			signal(isSelected());
 			return true;
 		}
 		return false;
@@ -54,5 +54,13 @@ public class ToggleButton extends DragAnchor {
 	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
 		
 		return false;
+	}
+
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
 	}
 }

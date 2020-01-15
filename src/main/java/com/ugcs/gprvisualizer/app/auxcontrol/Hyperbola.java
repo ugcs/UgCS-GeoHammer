@@ -8,49 +8,33 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.math.NumberUtils;
 
 public class Hyperbola implements BaseObject {
 
-	
-	//MutableInt tracePinacle = new MutableInt();
-	//MutableInt samplePinacle = new MutableInt();
-	//MutableInt sampleThick = new MutableInt();
-	//MutableInt hyperkfcVal = new MutableInt();
-	
-	int leftWidth = 30;
-	int rightWidth = 30;
-	int thickness = 30;
-	int hyperkfcInt = 60;
-	
-	//MutableInt traceStart = new MutableInt();
-	//MutableInt traceFinish = new MutableInt();
-	//MutableInt sampleStart = new MutableInt();
-	//MutableInt sampleFinish = new MutableInt();
+	private int leftWidth = 100;
+	private int rightWidth = 100;
+	private int thickness = 30;
+	private int hyperkfcInt = 60;
 
 	private VerticalCutPart offset;
-	DragAnchor pinacle;
-	DragAnchor left;
-	DragAnchor right;
-	DragAnchor thick;
-	DragAnchor hyperkfc;
+	private DragAnchor pinacle;
+	private DragAnchor left;
+	private DragAnchor right;
+	private DragAnchor thick;
+	private DragAnchor hyperkfc;
 	
 	public Hyperbola(int trace, int sample, VerticalCutPart offset) {
 		this.offset = offset;
 		initDragAnchors();
 		
-		//offset.globalToLocal(traceStart)
 		pinacle.setTrace(offset.globalToLocal(trace));
 		pinacle.setSample(sample);
 		
@@ -94,6 +78,8 @@ public class Hyperbola implements BaseObject {
 		
 		pinacle = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
+				
+				
 				left.setTrace(pinacle.getTrace() - leftWidth);
 				right.setTrace(pinacle.getTrace() + rightWidth);
 				thick.setSample(pinacle.getSample() + thickness);

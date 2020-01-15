@@ -165,20 +165,32 @@ public class AuxRect implements BaseObject {
 		setSampleFinish((int)(long)(Long)json.get("sampleFinish"));
 		
 		setType(AreaType.valueOf((String)json.get("type")));
-		locked = (Boolean)json.get("locked");
+		if(json.containsKey("locked")) {
+			locked = (Boolean)json.get("locked");
+			updateAnchorVisibility();
+			lock.setSelected(locked);
+		}
 		
-		JSONArray ar = (JSONArray)json.get("topCut");
-
-		topCut = new int[ar.size()];
-		for(int i=0; i<ar.size(); i++) {
-			
-			topCut[i] = (int)(long)(Long)ar.get(i);
+		if(json.containsKey("topCut")) {
+			JSONArray ar = (JSONArray)json.get("topCut");
+	
+			topCut = new int[ar.size()];
+			for(int i=0; i<ar.size(); i++) {
+				
+				topCut[i] = (int)(long)(Long)ar.get(i);
+			}
 		}
 
-		ar = (JSONArray)json.get("botCut");
-		botCut = new int[ar.size()];
-		for(int i=0; i<ar.size(); i++) {
-			botCut[i] = (int)(long)(Long)ar.get(i);
+		if(json.containsKey("botCut")) {
+			JSONArray ar = (JSONArray)json.get("botCut");
+			botCut = new int[ar.size()];
+			for(int i=0; i<ar.size(); i++) {
+				botCut[i] = (int)(long)(Long)ar.get(i);
+			}
+		}
+		
+		if(botCut == null || topCut == null) {
+			clearCut();
 		}
 		
 		
@@ -216,15 +228,12 @@ public class AuxRect implements BaseObject {
 			public void signal(Object obj) {
 				locked = (Boolean)obj;
 				
-				left.setVisible(!locked); 
-				top.setVisible(!locked);
-				right.setVisible(!locked);
-				bottom.setVisible(!locked);
+				updateAnchorVisibility();
 				
-			}			
-//			public int getTrace() {
-//				return (right.getTrace()) ;
-//			}
+			}
+			public int getTrace() {
+				return (right.getTrace());
+			}
 			public int getSample() {
 				return (top.getSample()) ;
 			}
@@ -523,5 +532,11 @@ public class AuxRect implements BaseObject {
 		this.botCut = botCut;
 	}
 
+	private void updateAnchorVisibility() {
+		left.setVisible(!locked); 
+		top.setVisible(!locked);
+		right.setVisible(!locked);
+		bottom.setVisible(!locked);
+	}			
 
 }
