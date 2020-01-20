@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -146,12 +147,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		int[] buffer = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData() ;
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
-		g2.setPaint ( Color.DARK_GRAY );
-		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
+		
+		clearBitmap(bi, g2);
 		
 		g2.translate(width/2, 0);
-		
-		///
 
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
@@ -159,17 +158,44 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		prismDrawer.draw(width, height, field, g2, buffer, contrast);
 		
-		//drawPrism(width, height, field, buffer, TOP_MARGIN, startTrace, finishTrace);
-		
-		//
-		
-		
-		drawLevel(field, g2, startTrace, finishTrace);
+		drawGroundLevel(field, g2, startTrace, finishTrace);
 		
 		drawFileNames(height, field, g2);
+
 		
-//		drawFoundPoints(field, g2);
+		drawAmplitudeMapLevels(field, g2);
 		
+		
+		drawAuxElements(field, g2);
+		
+		///
+		return bi;
+	}
+
+	final static float dash1[] = {5.0f};
+	final static BasicStroke dashed =
+	        new BasicStroke(1.0f,
+	                        BasicStroke.CAP_BUTT,
+	                        BasicStroke.JOIN_MITER,
+	                        10.0f, dash1, 0.0f);
+	
+	private void drawAmplitudeMapLevels(VerticalCutField field, Graphics2D g2) {
+		if(model.getSettings().isRadarMapVisible) {
+		
+			g2.setColor(Color.MAGENTA);
+			g2.setStroke(dashed);
+			
+			
+			int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
+			g2.drawLine(-width/2, y, width/2, y);
+
+			int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
+			g2.drawLine(-width/2, y2, width/2, y2);
+
+		}		
+	}
+	
+	private void drawAuxElements(VerticalCutField field, Graphics2D g2) {
 		for(BaseObject bo : model.getAuxElements()) {
 			bo.drawOnCut(g2, field);
 		}
@@ -178,9 +204,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 				bo.drawOnCut(g2, field);
 			}
 		}
-		
-		///
-		return bi;
+	}
+
+	private void clearBitmap(BufferedImage bi, Graphics2D g2) {
+		g2.setPaint ( Color.DARK_GRAY );
+		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
 	}
 
 //	private void drawFoundPoints(VerticalCutField field, Graphics2D g2) {
@@ -191,7 +219,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 //		}
 //	}
 
-	private void drawLevel(VerticalCutField field, Graphics2D g2, int startTrace, int finishTrace) {
+	private void drawGroundLevel(VerticalCutField field, Graphics2D g2, int startTrace, int finishTrace) {
 		g2.setColor(Color.GREEN);
 		for(int i=startTrace+1; i<finishTrace; i++) {
 			Trace trace1 = model.getFileManager().getTraces().get(i-1);

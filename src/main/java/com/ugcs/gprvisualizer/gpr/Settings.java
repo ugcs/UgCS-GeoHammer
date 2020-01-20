@@ -8,6 +8,8 @@ public class Settings {
 	public Point2D middleLatLonDgr;
 	public Point2D middleLatLonRad;
 	
+	public boolean isRadarMapVisible = true;
+	
 	public int center_box_width; 
 	public int center_box_height;
 	

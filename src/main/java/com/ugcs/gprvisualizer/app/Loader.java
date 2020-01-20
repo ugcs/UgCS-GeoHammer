@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.io.File;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -50,9 +51,6 @@ public class Loader {
     };
     
     private EventHandler<DragEvent> dropHandler = new EventHandler<DragEvent>() {
-
-        
-    	
         @Override
         public void handle(DragEvent event) {
         	
@@ -66,7 +64,21 @@ public class Loader {
         	ProgressTask loadTask = new ProgressTask() {
 				@Override
 				public void run(ProgressListener listener) {
-			        load(files, listener);
+					
+					if(files.size() == 1 && files.get(0).getName().endsWith(".constPoints")) {
+						
+						ConstPointsFile cpf = new ConstPointsFile();
+						cpf.load(files.get(0));
+						
+						for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+							cpf.calcVerticalCutNearestPoints(sgyFile);
+						}
+						
+						model.updateAuxElements();
+						
+					}else {
+						load(files, listener);
+					}
 				}        		
         	};
         	
@@ -82,11 +94,7 @@ public class Loader {
 		/// clear
 		
 		model.getAuxElements().clear();
-		//model.getFoundIndexes().clear();
-		//model.getFoundTrace().clear();
 		model.getChanges().clear();
-		//model.getSettings().
-		///
 		
 		listener.progressMsg("load");
 		try {
@@ -123,7 +131,10 @@ public class Loader {
 			}
 		}
 		
-
+		//load const points
+		
+		
+		//
 		
 		model.updateAuxElements();
 		

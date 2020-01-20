@@ -15,6 +15,7 @@ import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.sun.javafx.collections.SetAdapterChange;
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.DblArray;
@@ -76,8 +77,18 @@ public class RadarMap extends BaseLayer{
 		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 			
 			executor.submit(t);
+			
+			AppContext.notifyAll(new WhatChanged(Change.adjusting));
 		}
 	};
+	
+	public boolean isActive() {
+		return model.getSettings().isRadarMapVisible;
+	}
+
+	public void setActive(boolean active) {
+		model.getSettings().isRadarMapVisible = active;
+	}
 	
 	
 	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
