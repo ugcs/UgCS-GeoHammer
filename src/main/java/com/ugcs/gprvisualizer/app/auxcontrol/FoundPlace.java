@@ -25,32 +25,30 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class FoundPlace implements BaseObject, MouseHandler {
 
-	//private int trace;
-	private Trace trace;
-	private Trace trace2;
-	private Trace traceMidl;
+	private int traceInFile;
+	//private Trace trace;
+	//private Trace trace2;
+	//private Trace traceMidl;
 	private VerticalCutPart offset;
 	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
 	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
 		
 	public static FoundPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
 		int traceNum = (int)(long)(Long)json.get("trace");		
-		Trace trace = sgyFile.getTraces().get(traceNum);
+		//Trace trace = sgyFile.getTraces().get(traceNum);
 		
-		int traceNum2 = json.get("trace2") != null ? (int)(long)(Long)json.get("trace2") : traceNum;		
-		Trace trace2 = sgyFile.getTraces().get(traceNum2);
+		//int traceNum2 = json.get("trace2") != null ? (int)(long)(Long)json.get("trace2") : traceNum;		
+		//Trace trace2 = sgyFile.getTraces().get(traceNum2);
 		
-		Trace traceMidl = sgyFile.getTraces().get((traceNum + traceNum2)/2);
+		//Trace traceMidl = sgyFile.getTraces().get((traceNum + traceNum2)/2);
 		
-		return new FoundPlace(trace, trace2, traceMidl, sgyFile.getOffset());
+		return new FoundPlace(traceNum, sgyFile.getOffset());
 	}
 	
-	public FoundPlace(Trace trace, Trace trace2, Trace traceMidl, VerticalCutPart offset) {
+	public FoundPlace(int trace, VerticalCutPart offset) {
 		this.offset = offset;
 			
-		this.trace = trace;
-		this.trace2 = trace2;
-		this.traceMidl = traceMidl;
+		this.traceInFile = trace;
 	}
 
 	@Override
@@ -59,9 +57,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		if(isPointInside(localPoint, vField)) {
 			
 				
-			//AppContext.model.getVField().setSelectedTrace(trace.indexInSet);
-			
-			AppContext.model.getField().setSceneCenter(traceMidl.getLatLon());
+			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			
@@ -79,8 +75,14 @@ public class FoundPlace implements BaseObject, MouseHandler {
 
 	@Override
 	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		TraceSample ts = vField.screenToTraceSample(point, offset);
+		
+		traceInFile = Math.min( offset.getTraces()-1, Math.max(0, ts.getTrace()));
+		
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		
+		return true;
 	}
 	
 	
@@ -103,13 +105,12 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		
 		Rectangle rect = getRect(vField);
 		
-		int x1 = vField.traceToScreen(offset.localToGlobal(trace.indexInFile));
-		int x2 = vField.traceToScreen(offset.localToGlobal(trace2.indexInFile));
+		int x1 = vField.traceToScreen(offset.localToGlobal(traceInFile));
 		
-		g2.setColor(Color.CYAN);
-		g2.drawLine(x1, R_VER*2-3, x2, R_VER*2-3);
-		g2.drawLine(x1, R_VER*2-0, x1, R_VER*2-10);
-		g2.drawLine(x2, R_VER*2-0, x2, R_VER*2-10);
+//		g2.setColor(Color.CYAN);
+//		g2.drawLine(x1, R_VER*2-3, x2, R_VER*2-3);
+//		g2.drawLine(x1, R_VER*2-0, x1, R_VER*2-10);
+//		g2.drawLine(x2, R_VER*2-0, x2, R_VER*2-10);
 		
 		g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
 	}
@@ -121,7 +122,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		//int x1 = vField.traceToScreen(offset.localToGlobal(trace.indexInFile));
 		//int x2 = vField.traceToScreen(offset.localToGlobal(trace2.indexInFile));
 		//int x = (x1+x2)/2;
-		int x = vField.traceToScreen(offset.localToGlobal(traceMidl.indexInFile));
+		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
 				
 		Rectangle rect = new Rectangle(x-R_HOR, 0, R_HOR*2, R_VER*2);
 		return rect;
@@ -130,14 +131,20 @@ public class FoundPlace implements BaseObject, MouseHandler {
 	public Rectangle getRect(Field hField) {
 		
 		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
-		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());
-		
+		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());		
 		//Point2D p = new Point2D.Double((p1.getX()+p2.getX())/2, (p1.getY()+p2.getY())/2);
-		Point2D p =  hField.latLonToScreen(traceMidl.getLatLon());
 		
+		
+		
+		Trace tr = getTrace();		
+		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
 		
 		Rectangle rect = new Rectangle((int)p.getX()-R_HOR, (int)p.getY()-R_VER*2, R_HOR*2, R_VER*2);
 		return rect;
+	}
+
+	private Trace getTrace() {
+		return AppContext.model.getFileManager().getTraces().get(offset.localToGlobal(traceInFile));
 	}
 
 	@Override
@@ -162,8 +169,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 
 	@Override
 	public void saveTo(JSONObject json) {
-		json.put("trace", trace.indexInFile);		
-		json.put("trace2", trace2.indexInFile);
+		json.put("trace", traceInFile);		
 	}
 
 	@Override
@@ -172,7 +178,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		Rectangle r = getRect(field);
 		if(r.contains(point)) {
 			
-			AppContext.model.getVField().setSelectedTrace(traceMidl.indexInSet);
+			AppContext.model.getVField().setSelectedTrace(offset.localToGlobal(traceInFile));
 		
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			

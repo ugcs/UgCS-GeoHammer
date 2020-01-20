@@ -1,4 +1,4 @@
-package com.github.thecoldwine.sigrun.common.ext;
+package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -15,11 +15,13 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.github.thecoldwine.sigrun.common.ext.AreaType;
+import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.auxcontrol.AlignRect;
-import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.app.auxcontrol.DragAnchor;
-import com.ugcs.gprvisualizer.app.auxcontrol.ToggleButton;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 import javafx.scene.control.ChoiceDialog;

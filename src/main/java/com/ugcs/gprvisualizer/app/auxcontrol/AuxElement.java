@@ -1,4 +1,4 @@
-package com.github.thecoldwine.sigrun.common.ext;
+package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -6,6 +6,11 @@ import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.List;
+
+import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 
 public class AuxElement {
 

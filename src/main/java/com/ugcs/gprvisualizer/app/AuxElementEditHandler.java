@@ -4,14 +4,15 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
-import com.github.thecoldwine.sigrun.common.ext.AuxElement;
-import com.github.thecoldwine.sigrun.common.ext.AuxRect;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
@@ -21,7 +22,10 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -42,7 +46,7 @@ public class AuxElementEditHandler implements MouseHandler {
 	private Button addHypBtn = new Button("add hyp");
 	
 	private Button addSurfaceBtn = new Button("add surface");
-	private Button addFoundBtn = new Button("add found");
+	private Button addFoundBtn = new Button("add mark");
 	private Button delBtn = new Button("delete");
 	private Button clearBtn = new Button("clear");
 
@@ -100,21 +104,16 @@ public class AuxElementEditHandler implements MouseHandler {
 		
 		clearBtn.setOnAction(e -> {		
 			
-		
-			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-				sgyFile.getAuxElements().clear();
-			}				
-				
-			mouseInput = null;
-			selected = null;
-			model.setControls(null);
-
-			
-			model.updateAuxElements();
-			
-			cleverView.repaintEvent();
-			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("warning");
+			String s = "Confirm to clear makup";
+			alert.setContentText(s);
+			 
+			Optional<ButtonType> result = alert.showAndWait();
+			 
+			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {		
+				clearAuxElements();
+			}
 		});
 		
 		delBtn.setOnAction(e -> {		
@@ -186,9 +185,9 @@ public class AuxElementEditHandler implements MouseHandler {
 			
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 			
-			Trace tr = model.getFileManager().getTraces().get(field.getSelectedTrace());
+			//Trace tr = model.getFileManager().getTraces().get(field.getSelectedTrace());
 			
-			FoundPlace rect = new FoundPlace(tr,tr,tr, sf.getOffset());
+			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(field.getSelectedTrace()), sf.getOffset());
 				
 			if(sf != null) {
 				sf.getAuxElements().add(rect);
@@ -197,6 +196,23 @@ public class AuxElementEditHandler implements MouseHandler {
 			cleverView.repaintEvent();
 		});
 		
+	}
+
+	private void clearAuxElements() {
+		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+			sgyFile.getAuxElements().clear();
+		}				
+			
+		mouseInput = null;
+		selected = null;
+		model.setControls(null);
+
+		
+		model.updateAuxElements();
+		
+		cleverView.repaintEvent();
+		
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
 	private AuxRect createSurfaceRect(SgyFile sf) {

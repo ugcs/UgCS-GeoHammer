@@ -13,14 +13,14 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
-import com.github.thecoldwine.sigrun.common.ext.AuxElement;
-import com.github.thecoldwine.sigrun.common.ext.AuxRect;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.app.PrismModeFactory.ThresholdSlider;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;

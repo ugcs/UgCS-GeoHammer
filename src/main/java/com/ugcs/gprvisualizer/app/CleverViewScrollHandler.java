@@ -2,9 +2,9 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Point;
 
-import com.github.thecoldwine.sigrun.common.ext.AuxElement;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseDragEvent;
