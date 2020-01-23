@@ -5,25 +5,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 
-import com.github.thecoldwine.sigrun.common.ext.AreaType;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
-import com.ugcs.gprvisualizer.app.PrismModeFactory.ThresholdSlider;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -31,6 +23,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
 
 import javafx.application.Platform;
@@ -41,6 +34,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
@@ -63,17 +57,22 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected int width;
 	protected int height;
 	protected double contrast = 900;
-	protected double aspect = 50;
+	protected double aspect = -50;
 	
 	private ThresholdSlider contrastSlider;
 	private AspectSlider aspectSlider;
 	private HyperbolaSlider hyperbolaSlider;
+	private HyperGoodSizeSlider hyperGoodSizeSlider;
+	
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	private Button zoomInBtn = new Button("+");
 	private Button zoomOutBtn = new Button("-");
 	
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
+	
+	HyperFinder hyperFinder = new HyperFinder(); 
+	
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -99,6 +98,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		contrastSlider = new ThresholdSlider(model.getSettings(), sliderListener);
 		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
+		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
 		initImageView();
 		
 		s1.setOrientation(Orientation.HORIZONTAL);
@@ -135,6 +135,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		if(width <= 0 || height <= 0 || !model.getFileManager().isActive()) {
 			return null;
 		}		
+		
+		List<Trace> traces = model.getFileManager().getTraces();
 
 		VerticalCutField field = new VerticalCutField(getField());
 		
@@ -158,7 +160,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		prismDrawer.draw(width, height, field, g2, buffer, contrast);
 		
-		drawGroundLevel(field, g2, startTrace, finishTrace);
+		drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
 		
 		drawFileNames(height, field, g2);
 
@@ -167,6 +169,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		
 		drawAuxElements(field, g2);
+		
+		hyperFinder.drawHyperbolaLine(g2, field);
 		
 		///
 		return bi;
@@ -219,11 +223,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 //		}
 //	}
 
-	private void drawGroundLevel(VerticalCutField field, Graphics2D g2, int startTrace, int finishTrace) {
+	private void drawGroundLevel(VerticalCutField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
 		g2.setColor(Color.GREEN);
 		for(int i=startTrace+1; i<finishTrace; i++) {
-			Trace trace1 = model.getFileManager().getTraces().get(i-1);
-			Trace trace2 = model.getFileManager().getTraces().get(i);
+			Trace trace1 = traces.get(i-1);
+			Trace trace2 = traces.get(i);
 			
 			Point p1 = field.traceSampleToScreenCenter(new TraceSample(i-1,  trace1.maxindex2));
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  trace2.maxindex2));
@@ -285,10 +289,27 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public List<Node> getRight() {
 		
+		ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
+	        @Override
+	        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
+	        	//boolean val = updateModel();
+	        	//label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
+	        	model.getSettings().hyperliveview = newValue;
+	        } 
+	    };
+		
+		CheckBox checkBox = new CheckBox("Hyperbola live view");
+		checkBox.selectedProperty().addListener(listener);
+		
+		
 		return Arrays.asList(
 				new HBox( zoomInBtn, zoomOutBtn),
 				contrastSlider.produce() , auxEditHandler.getRight(), 
-				aspectSlider.produce(), hyperbolaSlider.produce());
+				aspectSlider.produce(), 
+				hyperbolaSlider.produce(),
+				hyperGoodSizeSlider.produce(),
+				checkBox
+				);
 	}
 
 	int z = 0;
@@ -343,7 +364,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	}
 
 	private void updateAspect() {
-		double as = aspect/100.0;			
+		double as = Math.pow(1.14, aspect/4.0);			
 		getField().setHScale(getField().getVScale()*as);
 	}
 	
@@ -374,12 +395,20 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		@Override
         public void handle(MouseEvent event) {
 			
-        	Point p = getLocalCoords(event);
-        	if(!auxEditHandler.mouseMoveHandle(p, getField())) {
-        		scrollHandler.mouseMoveHandle(p, getField());
-        	}
 			
-			//getMouseHandler().mouseMoveHandle(getLocalCoords(event));
+        	Point p = getLocalCoords(event);
+        	
+        	if(model.getSettings().hyperliveview) {
+        		TraceSample ts = getField().screenToTraceSample(p);
+        		hyperFinder.setPoint(ts);        	
+        		repaintEvent();
+        	}else {
+        		if(!auxEditHandler.mouseMoveHandle(p, getField())) {
+        	        scrollHandler.mouseMoveHandle(p, getField());
+        		}
+			
+        		//getMouseHandler().mouseMoveHandle(getLocalCoords(event));
+        	}
         	
         }
 	};
@@ -519,9 +548,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 
 		public void updateUI() {
-			slider.setMax(400);
-			slider.setMin(12);
-			//slider.set
+			slider.setMax(100);
+			slider.setMin(-100);
 			slider.setValue(aspect);
 		}
 		
@@ -540,7 +568,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 
 		public void updateUI() {
-			slider.setMax(200);
+			slider.setMax(400);
 			slider.setMin(2);
 			//slider.set
 			slider.setValue(settings.hyperkfc);
@@ -549,6 +577,28 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		public int updateModel() {
 			settings.hyperkfc = (int)slider.getValue();
 			return (int)settings.hyperkfc;
+		}
+	}
+
+	public class HyperGoodSizeSlider extends BaseSlider {
+		
+		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "Hyper size";
+			units = "";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(350);
+			slider.setMin(40);
+			//slider.set
+			slider.setValue(settings.hypergoodsize);
+		}
+		
+		public int updateModel() {
+			settings.hypergoodsize = (int)slider.getValue();
+			return (int)settings.hypergoodsize;
 		}
 	}
 	

@@ -69,6 +69,7 @@ public class Hyperbola implements BaseObject {
 		hyperkfc = new DragAnchor(ResourceImageHolder.IMG_WIDTH, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				hyperkfcInt = hyperkfc.getSample() - pinacle.getSample();
+				System.out.println(" hyperkfcInt " + hyperkfcInt);
 			}
 			
 			public int getTrace() {

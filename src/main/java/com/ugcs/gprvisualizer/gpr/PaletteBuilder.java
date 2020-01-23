@@ -2,8 +2,17 @@ package com.ugcs.gprvisualizer.gpr;
 
 public class PaletteBuilder {
 
-	
+	double delit =25.0;
+	int start = 0;
+	public PaletteBuilder() {
+		
+	}
 
+	public PaletteBuilder(double delit, int start) {
+		this.delit = delit;
+		
+		this.start = start;
+	}
 	
 	public int[] build() {
 		
@@ -11,7 +20,7 @@ public class PaletteBuilder {
 		
 		for(int i=0; i< palette.length; i++){
 			
-			double t= ((double)i) / 25;
+			double t= ((double)i+start) / delit;
 			
 			int r = ((int)((Math.cos(t*1.50)+1)/2 * 255.0 ) ) & 0xff;
 			int g = ((int)((Math.cos(t*1.23)+1)/2 * 255.0 ) ) & 0xff;

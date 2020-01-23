@@ -10,10 +10,13 @@ import java.util.Random;
 
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.AvgShiftFilter;
+import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Application;
@@ -244,6 +247,23 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
 		
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
+		
+		
+		///
+		
+		Button buttonHyperFinder = new Button("Hyper math finder");
+		toolBar.getItems().add(buttonHyperFinder);
+		buttonHyperFinder.setOnAction(e -> {
+			
+			
+			HyperFinder hf = new HyperFinder();
+			hf.process(model);
+			
+			
+		});
+		
+		
+		///
 		
 		return toolBar;
 	}

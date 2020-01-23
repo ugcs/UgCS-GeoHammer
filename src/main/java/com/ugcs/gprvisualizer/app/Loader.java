@@ -92,6 +92,7 @@ public class Loader {
     
 	public void load(List<File> files, ProgressListener listener) {
 		/// clear
+		System.out.println("start load");
 		
 		model.getAuxElements().clear();
 		model.getChanges().clear();
@@ -100,6 +101,8 @@ public class Loader {
 		try {
 			model.getFileManager().processList(files, listener);
 		
+			System.out.println("getFileManager().processList");
+			
 			initField();
 			System.out.println("===initField() " + model.getField().getPathCenter());
 		}catch(Exception e) {

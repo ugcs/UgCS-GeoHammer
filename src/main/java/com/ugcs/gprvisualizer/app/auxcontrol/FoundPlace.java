@@ -182,6 +182,8 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			
+			System.out.println(" found place trace " + traceInFile );
+			
 			return true;
 		}
 		

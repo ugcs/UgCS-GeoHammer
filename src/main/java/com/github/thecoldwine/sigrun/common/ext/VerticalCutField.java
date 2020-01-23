@@ -33,6 +33,7 @@ public class VerticalCutField {
 	}
 
 	public void clear() {
+		System.out.println("VerticalCutField clear");
 		//vScale=1;
 		//hScale=2;
 		startSample = 0;

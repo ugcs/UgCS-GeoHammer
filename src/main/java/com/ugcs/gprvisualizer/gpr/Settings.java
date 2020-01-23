@@ -18,9 +18,12 @@ public class Settings {
 	public int width = 800;
 	public int height = 600;
 	public int radius = 15;
-	public int hpage = 7;
-	public int layer = 20; 
-	public int hyperkfc = 100; 
+	public int hpage = 47;
+	public int layer = 40; 
+	
+	public boolean hyperliveview = false;
+	public int hyperkfc = 27; 
+	public int hypergoodsize = 150;
 	
 	public int topscale = 200;
 	public int bottomscale = 250;

@@ -27,6 +27,7 @@ public class Trace {
     public int indexInFile;
     public int indexInSet;
     
+    public int[] good;
     
     public Set<Integer> max = new HashSet<>();
     

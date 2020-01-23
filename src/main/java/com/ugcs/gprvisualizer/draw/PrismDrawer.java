@@ -1,18 +1,30 @@
 package com.ugcs.gprvisualizer.draw;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Stroke;
+import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 
 public class PrismDrawer implements VCutDrawer {
 
 	private Model model;
 	private int vOffset;
 	Tanh tanh = new Tanh();
+	
+	private static int goodcolor[] = new int[100];
+	static {
+		for(int i=0; i< goodcolor.length; i++) {
+			goodcolor[i] = (((i%5)*30+50)<<16) + (((7-i%7)*20+100) <<8 ) + 177;
+		}
+	}
 	
 	public PrismDrawer(Model model, int vOffset) {
 		this.model = model;
@@ -25,14 +37,18 @@ public class PrismDrawer implements VCutDrawer {
 			int[] buffer,			
 			double threshold) {
 		
+		if(!model.getFileManager().isActive()) {
+			return;
+		}
+		
+		List<Trace> traces = model.getFileManager().getTraces();
+		
 		tanh.setThreshold((float)threshold);
 		
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
 		
 		int lastSample = field.getLastVisibleSample(height-vOffset);
-		//int vscale = Math.max(1, (int)field.getVScale());
-		//int hscale = Math.max(1, (int)field.getHScale());
 		
 		for(int i=startTrace; i<finishTrace; i++ ) {
 
@@ -43,7 +59,7 @@ public class PrismDrawer implements VCutDrawer {
 					continue;
 				}
 				
-				Trace trace = model.getFileManager().getTraces().get(i);
+				Trace trace = traces.get(i);
 				float[] values = trace.getNormValues();
 				for(int j = field.getStartSample(); j<Math.min(lastSample, values.length ); j++) {
 					
@@ -55,15 +71,16 @@ public class PrismDrawer implements VCutDrawer {
 						continue;
 					}
 					
-		    		//int c = (int) (127.0 - Math.tanh(values[j]/threshold) * 127.0);
-		    		//int color = ((c) << 16) + ((c) << 8) + c;
-		    		
 					int color = tanh.trans(values[j]);
 					
-		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;
 		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {
 		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + yt) * width ] = color;
+		    			}
+		    			
+		    			//hyperbola
+		    			if(trace.good != null && trace.good[j] >= 1) {
+		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + 0) * width ] = goodcolor[trace.good[j]];
 		    			}
 		    		}
 				}
