@@ -19,10 +19,13 @@ public class PrismDrawer implements VCutDrawer {
 	private int vOffset;
 	Tanh tanh = new Tanh();
 	
-	private static int goodcolor[] = new int[100];
+	
+	int goodcolor1 = (255<<16) + (70 << 8 ) + 177;
+	int goodcolor2 = (70<<16) + (255 << 8 ) + 177;
+	private static int goodcolors[] = new int[100];
 	static {
-		for(int i=0; i< goodcolor.length; i++) {
-			goodcolor[i] = (((i%5)*30+50)<<16) + (((7-i%7)*20+100) <<8 ) + 177;
+		for(int i=0; i< goodcolors.length; i++) {
+			goodcolors[i] = (((i%5)*30+50)<<16) + (((7-i%7)*20+100) <<8 ) + 177;
 		}
 	}
 	
@@ -79,8 +82,10 @@ public class PrismDrawer implements VCutDrawer {
 		    			}
 		    			
 		    			//hyperbola
-		    			if(trace.good != null && trace.good[j] >= 1) {
-		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + 0) * width ] = goodcolor[trace.good[j]];
+		    			if(trace.good != null && trace.good[j] != 0) {
+		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + 0) * width ] = 
+		    					trace.good[j] > 0 ? goodcolor1 : goodcolor2;
+		    					//[trace.good[j]];
 		    			}
 		    		}
 				}

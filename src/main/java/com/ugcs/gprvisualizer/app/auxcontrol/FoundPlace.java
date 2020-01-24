@@ -18,13 +18,16 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.CleverImageView;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class FoundPlace implements BaseObject, MouseHandler {
 
+	private Color flagColor = Color.getHSBColor((float)Math.random(), 1, 1f); 
 	private int traceInFile;
 	//private Trace trace;
 	//private Trace trace2;
@@ -33,6 +36,10 @@ public class FoundPlace implements BaseObject, MouseHandler {
 	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
 	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
 		
+	static int R_HOR_M = ShapeHolder.flag.getBounds().width/2;
+	static int R_VER_M = ShapeHolder.flag.getBounds().height/2;
+	
+	
 	public static FoundPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
 		int traceNum = (int)(long)(Long)json.get("trace");		
 		//Trace trace = sgyFile.getTraces().get(traceNum);
@@ -97,7 +104,14 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		
 		Rectangle rect = getRect(hField);
 		
-		g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
+		//g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
+		
+		
+		g2.setColor(flagColor);
+		
+		g2.translate(rect.x , rect.y+rect.height);
+		g2.fill(ShapeHolder.flag);
+		g2.translate(-rect.x , -(rect.y+rect.height));
 	}
 
 	@Override
@@ -105,14 +119,21 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		
 		Rectangle rect = getRect(vField);
 		
-		int x1 = vField.traceToScreen(offset.localToGlobal(traceInFile));
+		//int x1 = vField.traceToScreen(offset.localToGlobal(traceInFile));
 		
 //		g2.setColor(Color.CYAN);
 //		g2.drawLine(x1, R_VER*2-3, x2, R_VER*2-3);
 //		g2.drawLine(x1, R_VER*2-0, x1, R_VER*2-10);
 //		g2.drawLine(x2, R_VER*2-0, x2, R_VER*2-10);
 		
-		g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
+		//g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
+		
+		g2.setColor(flagColor);
+		
+		g2.translate(rect.x , rect.y+rect.height);
+		g2.fill(ShapeHolder.flag);
+		g2.translate(-rect.x , -(rect.y+rect.height));
+		
 	}
 	
 	public Rectangle getRect(VerticalCutField vField) {
@@ -124,7 +145,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		//int x = (x1+x2)/2;
 		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
 				
-		Rectangle rect = new Rectangle(x-R_HOR, 0, R_HOR*2, R_VER*2);
+		Rectangle rect = new Rectangle(x, Model.TOP_MARGIN-R_VER_M*2, R_HOR_M*2, R_VER_M*2);
 		return rect;
 	}
 	
@@ -139,7 +160,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		Trace tr = getTrace();		
 		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
 		
-		Rectangle rect = new Rectangle((int)p.getX()-R_HOR, (int)p.getY()-R_VER*2, R_HOR*2, R_VER*2);
+		Rectangle rect = new Rectangle((int)p.getX(), (int)p.getY()-R_VER_M*2, R_HOR_M*2, R_VER_M*2);
 		return rect;
 	}
 

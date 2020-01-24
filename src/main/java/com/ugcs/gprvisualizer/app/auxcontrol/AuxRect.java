@@ -429,7 +429,7 @@ public class AuxRect implements BaseObject {
 		y = Math.max(Math.min(y, height), 0);
 		
 		if(x>=0 && x < topCut.length) {
-			if(lastX == -1 || Math.abs(lastX-x) > 5) {
+			if(lastX == -1 || Math.abs(lastX-x) > 12) {
 				lastX = x;
 			}
 			

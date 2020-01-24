@@ -8,12 +8,19 @@ import com.ugcs.gprvisualizer.gpr.Model;
 public class VerticalCutField {
 
 	
+	public static final double ZOOM_A = 1.2;
+	public static final double ASPECT_A = 1.14;
+	
 	private int topMargin = 0;
 	private Model model;
 	private int selectedTrace=0;
 	private int startSample=0;
-	private double vScale=1;
-	private double hScale=2;
+	//private double vScale=1;
+	private int zoom = 1;
+	
+	private double aspect = -15;
+	
+	//private double hScale=2;
 	
 	private Dimension viewDimension = new Dimension();
 
@@ -27,8 +34,8 @@ public class VerticalCutField {
 		this.model  = copy.model;
 		this.selectedTrace = copy.selectedTrace;
 		this.startSample = copy.startSample;
-		this.vScale = copy.vScale;
-		this.hScale = copy.hScale;
+		this.zoom = copy.zoom;
+		this.aspect = copy.aspect;
 		this.topMargin = copy.topMargin;
 	}
 
@@ -109,9 +116,9 @@ public class VerticalCutField {
 		return screenToTraceSample(new Point( 0, height)).getSample();
 	}
 	
-	public int getHWnd() {
-		return (int)hScale;
-	}
+//	public int getHWnd() {
+//		return (int)hScale;
+//	}
 
 	public int getSelectedTrace() {
 		return selectedTrace;
@@ -138,20 +145,27 @@ public class VerticalCutField {
 	}
 
 	public double getVScale() {
-		return vScale;
+		
+		double s = Math.pow(ZOOM_A, getZoom());
+		
+		return s;
 	}
 
-	public void setVScale(double vscale) {
-		this.vScale = vscale;
-	}
+//	public void setVScale(double vscale) {
+//		this.vScale = vscale;
+//	}
 
 	public double getHScale() {
-		return hScale;
+		return getVScale()*getAspectReal();
 	}
 
-	public void setHScale(double hScale) {
-		this.hScale = hScale;
+	private double getAspectReal() {
+		return Math.pow(ASPECT_A, getAspect());
 	}
+
+//	public void setHScale(double hScale) {
+//		this.hScale = hScale;
+//	}
 
 	public Dimension getScreenImageSize() {
 		
@@ -166,5 +180,21 @@ public class VerticalCutField {
 
 	public void setViewDimension(Dimension viewDimension) {
 		this.viewDimension = viewDimension;
+	}
+
+	public double getAspect() {
+		return aspect;
+	}
+
+	public void setAspect(double aspect) {
+		this.aspect = aspect;
+	}
+
+	public int getZoom() {
+		return zoom;
+	}
+
+	public void setZoom(int zoom) {
+		this.zoom = zoom;
 	}
 }

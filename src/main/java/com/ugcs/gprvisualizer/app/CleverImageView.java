@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ import javafx.scene.layout.VBox;
 
 public class CleverImageView implements SmthChangeListener, ModeFactory {
 	
+	//public static final int TOP_AREA_HEIGHT = 30;
 	PrismDrawer prismDrawer;	
 	protected Model model;
 	protected ImageView imageView = new ImageView();
@@ -56,8 +58,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	Image i ;
 	protected int width;
 	protected int height;
-	protected double contrast = 900;
-	protected double aspect = -50;
+	protected double contrast = 900;	
 	
 	private ThresholdSlider contrastSlider;
 	private AspectSlider aspectSlider;
@@ -83,7 +84,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	private ChangeListener<Number> aspectSliderListener = new ChangeListener<Number>() {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-			updateAspect();
+			//updateAspect();
 			updateScroll();
 			repaintEvent();
 		}
@@ -128,6 +129,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			zoom(-1, width/2, height/2);
 		});
 		
+		//updateAspect();
+		
 		AppContext.smthListener.add(this);
 	}
 	
@@ -149,6 +152,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		int[] buffer = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData() ;
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
+		
+		RenderingHints rh = new RenderingHints(
+	             RenderingHints.KEY_TEXT_ANTIALIASING,
+	             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+	    g2.setRenderingHints(rh);		
 		
 		clearBitmap(bi, g2);
 		
@@ -342,11 +350,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		TraceSample ts = getField().screenToTraceSample(t);
 		
 		z = z + ch;
-		double s = Math.pow(1.2, z);
 		
-		getField().setVScale(s);
+		getField().setZoom(getField().getZoom()+ch);
 		
-		updateAspect();
+		//updateAspect();
 		
 		
 		Point t2 = getLocalCoords(ex, ey);
@@ -358,15 +365,17 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
 		getField().setStartSample(starts);
 		
-		repaintEvent();
+		
 		updateScroll();
+		repaintEvent();
+		//updateScroll();
 		
 	}
 
-	private void updateAspect() {
-		double as = Math.pow(1.14, aspect/4.0);			
-		getField().setHScale(getField().getVScale()*as);
-	}
+//	private void updateAspect() {
+//		double as = Math.pow(1.14, aspect/4.0);			
+//		getField().setHScale(getField().getVScale()*as);
+//	}
 	
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
 	    @Override
@@ -482,6 +491,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
+//		if() {
+//			updateAspect();
+//		}
+		
 		if(changed.isAuxOnMapSelected()) {
 			//field.setSelectedTrace(selectedTrace);
 		}
@@ -502,6 +515,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		s1.setVisibleAmount(am);
 		s1.setUnitIncrement(am/4);
 		s1.setBlockIncrement(am);
+		
+		
+		
+		s1.setValue(getField().getSelectedTrace());
+
 	}
 	
 
@@ -544,18 +562,18 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			super(settings, listenerExt);
 			name = "Aspect";
 			units = "";
-			tickUnits = 200;
+			tickUnits = 10;
 		}
 
 		public void updateUI() {
-			slider.setMax(100);
-			slider.setMin(-100);
-			slider.setValue(aspect);
+			slider.setMax(30);
+			slider.setMin(-30);
+			slider.setValue(getField().getAspect());
 		}
 		
 		public int updateModel() {
-			aspect = (int)slider.getValue();
-			return (int)aspect;
+			getField().setAspect((int)slider.getValue());
+			return (int)getField().getAspect();
 		}
 	}
 	public class HyperbolaSlider extends BaseSlider {
@@ -605,7 +623,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	public void setSize(int width, int height) {
 		
 		this.width = width;
-		this.height = height-30;
+		this.height = height-Model.TOP_MARGIN;
 		getField().setViewDimension(new Dimension(this.width, this.height));
 		
 		repaintEvent();

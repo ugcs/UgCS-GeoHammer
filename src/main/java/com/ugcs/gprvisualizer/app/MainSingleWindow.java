@@ -89,7 +89,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.loader = new Loader(model);
 		AppContext.saver = new Saver(model);
 		AppContext.pluginRunner = new PluginRunner(model);		
-
+		AppContext.navigator = new Navigator(model);
 		
 		
 //		gpsMode.setToggleGroup(group);
@@ -234,19 +234,19 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
 		
 		
-		Region r = new Region();
-		r.setPrefWidth(10);
-		toolBar.getItems().add(r);
+		toolBar.getItems().add(getSpacer());
 		
 		//toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode, cleverMode);
 		
-		Region r2 = new Region();
-		r2.setPrefWidth(10);
-		toolBar.getItems().add(r2);
+		toolBar.getItems().add(getSpacer());
 		
 		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
+
 		
+		toolBar.getItems().add(getSpacer());
+
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
+		
 		
 		
 		///
@@ -262,10 +262,17 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 			
 		});
 		
-		
+		toolBar.getItems().add(getSpacer());
+		toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
 		///
 		
 		return toolBar;
+	}
+
+	private Region getSpacer() {
+		Region r3 = new Region();
+		r3.setPrefWidth(10);
+		return r3;
 	}
 
 	public ModeFactory getModeFactory() {

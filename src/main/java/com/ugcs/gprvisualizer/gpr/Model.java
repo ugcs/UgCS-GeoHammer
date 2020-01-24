@@ -113,6 +113,20 @@ public class Model {
 		return null;
 	}
 
+	public int getSgyFileIndexByTrace(int i) {
+		
+		for(int index=0; index<getFileManager().getFiles().size(); index++) {
+			SgyFile fl =  getFileManager().getFiles().get(index);
+			
+			if(i <= fl.getTraces().get(fl.getTraces().size()-1).indexInSet) {
+				
+				return index;
+			}		
+		}
+		
+		return 0;
+	}
+	
 	public VerticalCutField getVField() {
 		return vField;
 	}

@@ -49,7 +49,7 @@ public class AuxElementEditHandler implements MouseHandler {
 	private Button addFoundBtn = new Button("add mark");
 	private Button delBtn = new Button("delete");
 	private Button clearBtn = new Button("clear");
-
+	
 	public AuxElementEditHandler(CleverImageView cleverView) {
 		this.cleverView = cleverView;
 		this.model = this.cleverView.model;
