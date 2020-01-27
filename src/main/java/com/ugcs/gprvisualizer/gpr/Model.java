@@ -24,6 +24,8 @@ public class Model {
 
 	public static final int TOP_MARGIN = 50;
 	
+	private boolean loading = false; 
+	
 	private Field field = new Field();
 	private VerticalCutField vField = new VerticalCutField(this, TOP_MARGIN);
 	
@@ -137,5 +139,13 @@ public class Model {
 
 	public void setMaxHeightInSamples(int maxHeightInSamples) {
 		this.maxHeightInSamples = maxHeightInSamples;
+	}
+
+	public boolean isLoading() {
+		return loading;
+	}
+
+	public void setLoading(boolean loading) {
+		this.loading = loading;
 	}
 }

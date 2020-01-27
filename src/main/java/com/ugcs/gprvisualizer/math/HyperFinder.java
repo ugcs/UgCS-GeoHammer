@@ -18,7 +18,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class HyperFinder {
 	
-	private static final int R = 160;
+	//private static final int R = 160;
 	
 	TraceSample ts;
 	
@@ -43,12 +43,13 @@ public class HyperFinder {
 	Color minusBest = new Color(100, 100, 255);
 	Color minusGood = new Color(70, 70, 180); 
 	Color minusBad = new Color(0, 0, 111);
+	Model model;
 	
-	public HyperFinder() {
-		
+	public HyperFinder(Model model) {
+		this.model = model;
 	}
 	
-	public void process(Model model) {
+	public void process() {
 		//clear
 		for(Trace t: model.getFileManager().getTraces()) {
 			t.maxindex2 = 0;
@@ -284,7 +285,8 @@ public class HyperFinder {
 		int i=1;
 		double bad = 0;
 		int index = 0;
-		while(i<R && bad < 3 ) {
+		int hypergoodsize = model.getSettings().hypergoodsize;
+		while(i<hypergoodsize && bad < 3 ) {
 			index = tr + side * i;
 			if(index<0 || index>= traces.size() ) {
 				break;

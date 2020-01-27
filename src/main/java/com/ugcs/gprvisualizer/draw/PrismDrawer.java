@@ -40,7 +40,7 @@ public class PrismDrawer implements VCutDrawer {
 			int[] buffer,			
 			double threshold) {
 		
-		if(!model.getFileManager().isActive()) {
+		if(model.isLoading() || !model.getFileManager().isActive()) {
 			return;
 		}
 		

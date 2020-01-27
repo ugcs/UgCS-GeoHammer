@@ -77,7 +77,12 @@ public class Loader {
 						model.updateAuxElements();
 						
 					}else {
-						load(files, listener);
+						try {
+							model.setLoading(true);
+							load(files, listener);
+						}finally {
+							model.setLoading(false);
+						}
 					}
 				}        		
         	};
@@ -101,7 +106,7 @@ public class Loader {
 		try {
 			model.getFileManager().processList(files, listener);
 		
-			System.out.println("getFileManager().processList");
+			System.out.println("getFileManager().processList " + model.getFileManager().getFiles().size());
 			
 			initField();
 			System.out.println("===initField() " + model.getField().getPathCenter());

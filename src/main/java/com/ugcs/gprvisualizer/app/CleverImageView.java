@@ -72,7 +72,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
 	
-	HyperFinder hyperFinder = new HyperFinder(); 
+	private HyperFinder hyperFinder; 
 	
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
@@ -93,6 +93,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	
 	public CleverImageView(Model model) {
 		this.model = model;
+		
+		hyperFinder = new HyperFinder(model);
 		
 		prismDrawer = new PrismDrawer(model, 0);
 		
@@ -463,7 +465,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	};
 	
 	protected void repaintEvent() {
-		controller.render(null);
+		if(!model.isLoading()) {
+			controller.render(null);
+		}
 	}
 	
 	protected void repaint() {

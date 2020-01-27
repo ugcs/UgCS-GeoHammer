@@ -256,8 +256,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		buttonHyperFinder.setOnAction(e -> {
 			
 			
-			HyperFinder hf = new HyperFinder();
-			hf.process(model);
+			HyperFinder hf = new HyperFinder(model);
+			hf.process();
 			
 			
 		});
