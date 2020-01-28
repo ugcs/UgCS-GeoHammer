@@ -81,9 +81,6 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	
 	public MainSingleWindow() {
 		
-		//Map<String, String> env = System.getenv();
-		//System.out.println(env.get("ANT_HOME"));
-		
 		AppContext.model = model;
 		AppContext.levelFilter = new LevelFilter(model);
 		AppContext.loader = new Loader(model);
@@ -91,50 +88,13 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.pluginRunner = new PluginRunner(model);		
 		AppContext.navigator = new Navigator(model);
 		
-		
-//		gpsMode.setToggleGroup(group);
-//		prismMode.setToggleGroup(group);
-//		cutMode.setToggleGroup(group);
-//		matrixMode.setToggleGroup(group);
-//		cleverMode.setToggleGroup(group);
-
-		//modeMap.put(cutMode, new VerticalCut(model));
-
-//		PrismModeFactory pmf = new PrismModeFactory(model);
-		//modeMap.put(prismMode, pmf);
-//		AppContext.smthListener.add(pmf);
-		
-	//	MatrixModeFactory tmf = new MatrixModeFactory(model);
-		//modeMap.put(matrixMode, tmf);
-	//	AppContext.smthListener.add(tmf);
-
 		layersWindowBuilder = new LayersWindowBuilder(model);
-		//modeMap.put(gpsMode, layersWindowBuilder);
 		AppContext.smthListener.add(layersWindowBuilder);
 
-		//modeMap.put(cleverMode, new CleverImageView(model));
 		cleverImageView = new CleverImageView(model);
 		
-//		group.selectedToggleProperty().addListener(new InvalidationListener() {
-//
-//			@Override
-//			public void invalidated(Observable o) {
-//				if (group.getSelectedToggle() == null) {
-//
-//				} else {
-//					setModeFactory(modeMap.get(group.getSelectedToggle()));
-//				}
-//			}
-//		});
-
 		AppContext.smthListener.add(this);
-		
-		
-		
 	}
-	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb"
-	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar
-	//python "d:/install/sgy_processing/main.py" "d:\georadarData\mines\2019-08-29-12-48-48-gpr_0005.SGY" --model "d:\install\sgy_processing\model.pb" --no_progressbar -t 0.4
 	
 	public static void main(String args[]) {
 		launch(args);
@@ -145,6 +105,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		this.stage = stage;
 
+		stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
+		
 		scene = createScene();
 
 		stage.setTitle("UgCS GPR data visualizer");
@@ -172,24 +134,14 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		bPane.setOnDragDropped(AppContext.loader.getDropHandler());
 
 		bPane.setTop(getToolBar());
-		//bPane.setRight(getRightPane());
-		//bPane.setCenter(centerBox);
 
 		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-			
-			//System.out.println("rightBox.getWidth() " + rightBox.getWidth());
 			model.getSettings().center_box_width = (int) (bPane.getWidth() - RIGHT_BOX_WIDTH); 
 			model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
-
-			//AppContext.notifyAll(new WhatChanged(Change.windowresized));
-			
-			//showCenter();
 		};
 		bPane.widthProperty().addListener(stageSizeListener);
 		bPane.heightProperty().addListener(stageSizeListener);
 
-		
-		
 		sp = new SplitPane();
 		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
 		Pane sp1 = new Pane();
@@ -236,30 +188,20 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		toolBar.getItems().add(getSpacer());
 		
-		//toolBar.getItems().addAll(gpsMode, prismMode, cutMode, matrixMode, cleverMode);
-		
 		toolBar.getItems().add(getSpacer());
 		
 		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
-
 		
 		toolBar.getItems().add(getSpacer());
 
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
 		
-		
-		
-		///
-		
+		///		
 		Button buttonHyperFinder = new Button("Hyper math finder");
 		toolBar.getItems().add(buttonHyperFinder);
 		buttonHyperFinder.setOnAction(e -> {
-			
-			
 			HyperFinder hf = new HyperFinder(model);
 			hf.process();
-			
-			
 		});
 		
 		toolBar.getItems().add(getSpacer());

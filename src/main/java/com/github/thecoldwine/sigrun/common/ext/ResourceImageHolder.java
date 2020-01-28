@@ -17,11 +17,16 @@ public class ResourceImageHolder {
 	
 	public static Image IMG_CHOOSE;
 	
+	public static javafx.scene.image.Image IMG_LOGO24;
+	
 	public static javafx.scene.image.Image FXIMG_DONE;
 
 	
 	static {
 		try {
+			
+			IMG_LOGO24 = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream("logo24.png"));
+			
 			IMG_WIDTH = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("width16.png"));
 			IMG_SHOVEL = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("shovel-48.png"));
 			IMG_HOR_SLIDER = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("horSlid16.png"));

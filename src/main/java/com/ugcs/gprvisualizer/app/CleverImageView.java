@@ -33,6 +33,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -68,6 +69,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	private Button zoomInBtn = new Button("+");
 	private Button zoomOutBtn = new Button("-");
+	
+	
+	private MouseHandler selectedMouseHandler;   
 	
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
@@ -384,6 +388,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	    public void handle(MouseEvent mouseEvent) {
 	    	
 	    	imageView.startFullDrag();
+	    	
+	    	imageView.setCursor(Cursor.CLOSED_HAND);
 	    }
 	};
 	
@@ -391,11 +397,23 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         @Override
         public void handle(MouseDragEvent event) {
         	
+        	
+        	
         	Point p = getLocalCoords(event);
-        	if(!auxEditHandler.mouseReleaseHandle(p, getField())) {
-        		scrollHandler.mouseReleaseHandle(p, getField());
+        	
+        	if(selectedMouseHandler != null) {
+        		
+        		
+        		
+        		selectedMouseHandler.mouseReleaseHandle(p, getField());
+        		selectedMouseHandler = null;
         	}
+//        	if(!auxEditHandler.mouseReleaseHandle(p, getField())) {
+//        		scrollHandler.mouseReleaseHandle(p, getField());
+//        	}
         	//getMouseHandler().mouseReleaseHandle();
+        	
+        	imageView.setCursor(Cursor.DEFAULT);
         	
         	event.consume();
         }
@@ -414,8 +432,14 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         		hyperFinder.setPoint(ts);        	
         		repaintEvent();
         	}else {
-        		if(!auxEditHandler.mouseMoveHandle(p, getField())) {
-        	        scrollHandler.mouseMoveHandle(p, getField());
+        		
+        		if(selectedMouseHandler != null) {
+
+        			selectedMouseHandler.mouseMoveHandle(p, getField());
+        		}else{
+	        		if(!auxEditHandler.mouseMoveHandle(p, getField())) {
+	        	        //scrollHandler.mouseMoveHandle(p, getField());
+	        		}
         		}
 			
         		//getMouseHandler().mouseMoveHandle(getLocalCoords(event));
@@ -443,10 +467,15 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         public void handle(MouseEvent event) {
         	
         	Point p = getLocalCoords(event);
-        	if(!auxEditHandler.mousePressHandle(p, getField())) {
-        		scrollHandler.mousePressHandle(p, getField());
+        	if(auxEditHandler.mousePressHandle(p, getField())) {
+        		selectedMouseHandler = auxEditHandler; 
+        	}else if(scrollHandler.mousePressHandle(p, getField())) {
+        		selectedMouseHandler = scrollHandler;        		
+        	}else {
+        		selectedMouseHandler = null;
         	}
         	
+        	imageView.setCursor(Cursor.CLOSED_HAND);
         	//getMouseHandler().mousePressHandle(getLocalCoords(event));
         }
 	};
@@ -457,10 +486,12 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         	
         	//getMouseHandler().mouseReleaseHandle(getLocalCoords(event));
         	Point p = getLocalCoords(event);
-        	if(!auxEditHandler.mouseReleaseHandle(p, getField())) {
-        		scrollHandler.mouseReleaseHandle(p, getField());
-        	}
         	
+        	if(selectedMouseHandler != null) {
+        		selectedMouseHandler.mouseReleaseHandle(p, getField());
+        		
+        		selectedMouseHandler = null;
+        	}        	
         }
 	};
 	
@@ -471,7 +502,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	}
 	
 	protected void repaint() {
-		//System.out.println("repaint");
+
 		img = draw(width, height);
 		if(img != null) {
 			i = SwingFXUtils.toFXImage(img, null);

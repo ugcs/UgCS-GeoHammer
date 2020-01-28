@@ -7,6 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 
 import javafx.event.EventHandler;
+import javafx.scene.Cursor;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 
@@ -29,11 +30,19 @@ public class CleverViewScrollHandler implements MouseHandler {
 		oldCenter = dragField.screenToTraceSample(dragPoint);
 		cleverView.repaintEvent();
 
+		
+		
+		
     	return true;
 	};
 
 	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
 		dragPoint = null;
+		
+		System.out.println("mouseReleaseHandle");
+
+		
+
 		
 		return false;
 	}

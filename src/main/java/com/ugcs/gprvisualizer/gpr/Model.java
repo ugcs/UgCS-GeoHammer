@@ -139,6 +139,7 @@ public class Model {
 
 	public void setMaxHeightInSamples(int maxHeightInSamples) {
 		this.maxHeightInSamples = maxHeightInSamples;
+		getSettings().maxsamples = maxHeightInSamples;
 	}
 
 	public boolean isLoading() {

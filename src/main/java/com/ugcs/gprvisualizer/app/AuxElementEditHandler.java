@@ -300,6 +300,8 @@ public class AuxElementEditHandler implements MouseHandler {
 			mouseInput.mouseReleaseHandle(localPoint, vField);
 			mouseInput = null;
 			
+			cleverView.imageView.setCursor(Cursor.DEFAULT);
+			
 			cleverView.repaintEvent();
 			return true;
 		}

@@ -213,9 +213,13 @@ public class HyperFinder {
 	private double processTrace(List<Trace> traces, int tr, int[][] good, double hyperkf) {
 		System.out.println(tr);
 		int goodSmpCnt = 0;
-		
+		int maxSmp =
+				Math.min(
+						AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
+						traces.get(tr).getNormValues().length-1
+				);
 		for(int smp = AppContext.model.getSettings().layer;				
-			smp< (AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage) ; smp++) {
+			smp< maxSmp ; smp++) {
 			
 			processHyper(traces, tr, smp, hyperkf, good);
 			//	good[tr][smp] = 1;
@@ -261,7 +265,7 @@ public class HyperFinder {
 		
 		double y = smp;
 		int sum = 0;		
-		for(int smpcheck=smp+1; smpcheck < sizesmp-1; smpcheck++) {
+		for(int smpcheck=smp; smpcheck < sizesmp; smpcheck++) {
 			
 			double c = smpcheck;
 			double x = Math.sqrt(c*c - y*y);

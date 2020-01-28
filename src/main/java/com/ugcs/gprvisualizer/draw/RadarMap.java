@@ -199,8 +199,9 @@ public class RadarMap extends BaseLayer{
 		
 		scaleArray = getArrayBuilder().build();
 		
-		int start = norm(model.getSettings().layer, 0, model.getSettings().maxsamples);
-		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getSettings().maxsamples);
+		 
+		int start = norm(model.getSettings().layer, 0, model.getMaxHeightInSamples());
+		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
 
 		for (Trace trace : model.getFileManager().getTraces()) {
 
