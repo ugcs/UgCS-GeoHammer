@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>gprviewer</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.2</version>
+    <version>0.9.3</version>
     <name>UgCS GPR data visualizer</name>
     <url>https://github.com/ugsc/gprvisualizer</url>
     <description>UgCS GPR data viewer</description>
