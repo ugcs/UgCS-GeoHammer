@@ -14,6 +14,7 @@ import java.util.List;
 import com.sun.javafx.cursor.CursorType;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Loader;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -38,10 +39,15 @@ public class TraceCutter implements Layer {
 	Integer active = null;
 	Model model;
 	RepaintListener listener;
-	Button buttonSet = new Button("Apply");
 	
-	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("filter.png"));
-	ToggleButton buttonCutMode = new ToggleButton("Cut", new ImageView(imageFilter));
+	Button buttonSet = new Button("cut", ResourceImageHolder.getImageView("scisors3-20.png"));
+	
+	Button buttonClear = new Button("clear", ResourceImageHolder.getImageView("clear20.png"));
+	
+	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("select_rect20.png"));
+	ToggleButton buttonCutMode = new ToggleButton("select", new ImageView(imageFilter));
+	
+	
 	
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
@@ -69,7 +75,7 @@ public class TraceCutter implements Layer {
 			return false;
 		}
 		
-		List<Point2D> border = getScreenPoligon();
+		List<Point2D> border = getScreenPoligon(field);
 		for(int i=0; i<border.size(); i++) {
 			Point2D p = border.get(i);
 			if(point.distance(p) < RADIUS) {
@@ -115,7 +121,7 @@ public class TraceCutter implements Layer {
 			return ;
 		}
 		
-		List<Point2D> border = getScreenPoligon();
+		List<Point2D> border = getScreenPoligon(field);
 		
 		for(int i=0; i<border.size(); i++) {
 			
@@ -138,30 +144,39 @@ public class TraceCutter implements Layer {
 		}		
 	}
 	
-	public void apply(List<Trace> traces, boolean plus, boolean minus) {
+	public void apply(List<Trace> traces) {
 		
-		List<Point2D> border = getScreenPoligon();
+		Field fld = new Field(field);
+		fld.setZoom(22);
+		
+		List<Point2D> border = getScreenPoligon(fld);
 		
 		for(Trace trace : traces) {
 			
-			Point2D p = field.latLonToScreen(trace.getLatLon());
+			Point2D p = fld.latLonToScreen(trace.getLatLon());
 			
 			
 			boolean ins = inside(p, border);
 			
-			if(ins && !trace.isActive() && plus ||
-			  !ins &&  trace.isActive() && minus){
-				  trace.setActive(ins);
-			}
+			trace.setActive(ins);
+
 		}	
 		
 	}
 
-	private List<Point2D> getScreenPoligon() {
+	public void clear(List<Trace> traces) {
+		
+		for(Trace trace : traces) {
+			trace.setActive(true);
+		}	
+		
+	}
+
+	private List<Point2D> getScreenPoligon(Field fld) {
 
 		List<Point2D> border = new ArrayList<>();
 		for(LatLon ll : points) {
-			border.add(field.latLonToScreen(ll));
+			border.add(fld.latLonToScreen(ll));
 		}
 		return border;
 	}
@@ -173,8 +188,12 @@ public class TraceCutter implements Layer {
 			Point2D pt1 = border.get(i);
 			Point2D pt2 = border.get((i+1) % border.size());
 		
-			if ((pt1.getY() > p.getY()) != (pt2.getY() > p.getY()) &&
-		           (p.getX() < (pt2.getX() - pt1.getX()) * (p.getY() - pt1.getY()) / (pt2.getY()-pt1.getY()) + pt1.getX())) {
+			if ((pt1.getY() > p.getY()) != (pt2.getY() > p.getY()) 
+					&&
+					(p.getX() < 
+						(pt2.getX() - pt1.getX()) * 
+						(p.getY() - pt1.getY()) / 
+						(pt2.getY()-pt1.getY()) + pt1.getX())) {
 		         result = !result;
 		    }		
 		}
@@ -197,34 +216,57 @@ public class TraceCutter implements Layer {
 
 	@Override
 	public List<Node> getToolNodes() {
+		return Arrays.asList();
+	}
+	
+	public List<Node> getToolNodes2() {
 		
 		//buttonCutMode.setDisable(true);
-		buttonSet.setVisible(false);
+		buttonSet.setDisable(true);
 		
 		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
-		    	if(buttonCutMode.isSelected()) {
-		    		init();
-		    		buttonSet.setVisible(true);
-		    	}else{
-		    		clear();
-		    		buttonSet.setVisible(false);
-		    	}
-		    	listener.repaint();
+		    	updateBtns();
+		    	
 		    }
+
 		});
 
 		
 		buttonSet.setOnAction(e -> {
-		    	apply(model.getFileManager().getTraces(), true, true);
-		    	listener.repaint();
+		    	apply(model.getFileManager().getTraces());
+		    	
+		    	buttonCutMode.setSelected(false);
+		    	updateBtns();
+		    	
+		    	AppContext.notifyAll(new WhatChanged(Change.adjusting));
 			});
 		
 		
+		buttonClear.setOnAction(e -> {
+	    	clear(model.getFileManager().getTraces());
+
+	    	buttonCutMode.setSelected(false);
+	    	updateBtns();
+
+	    	AppContext.notifyAll(new WhatChanged(Change.adjusting));
+	    	
+		});
+		
 		//, new Label("LABEL")
-		return Arrays.asList(buttonCutMode, buttonSet);
+		return Arrays.asList(buttonCutMode, buttonSet, buttonClear);
 	}
 	
+	private void updateBtns() {
+		if(buttonCutMode.isSelected()) {
+    		init();
+    		buttonSet.setDisable(false);
+    	}else{
+    		clear();
+    		buttonSet.setDisable(true);
+    	}
+    	listener.repaint();
+	}
 
 }

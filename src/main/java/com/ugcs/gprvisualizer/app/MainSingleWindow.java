@@ -33,6 +33,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
@@ -43,12 +44,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+
 
 public class MainSingleWindow extends Application implements SmthChangeListener {
 
@@ -87,6 +92,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.saver = new Saver(model);
 		AppContext.pluginRunner = new PluginRunner(model);		
 		AppContext.navigator = new Navigator(model);
+		
+		AppContext.statusBar = new StatusBar(model);
 		
 		layersWindowBuilder = new LayersWindowBuilder(model);
 		AppContext.smthListener.add(layersWindowBuilder);
@@ -144,18 +151,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		sp = new SplitPane();
 		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
-		Pane sp1 = new Pane();
-		
-		ChangeListener<Number> sp1SizeListener = (observable, oldValue, newValue) -> {
-			layersWindowBuilder.setSize((int) (sp1.getWidth()), (int) (sp1.getHeight()));
-		};
-		
-		
-		Node n1 = layersWindowBuilder.getCenter();
-		sp1.getChildren().add(n1);
-		sp1.widthProperty().addListener(sp1SizeListener);
-		sp1.heightProperty().addListener(sp1SizeListener);
-		sp.getItems().add(sp1);
+		sp.getItems().add(layersWindowBuilder.getCenter());
 		
 		Pane sp2 = new Pane();
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
@@ -174,12 +170,20 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		rightBox.getChildren().addAll(layersWindowBuilder.getRight());
 		rightBox.getChildren().addAll(cleverImageView.getRight());
 		
+		/////////
+		
+		////
+		bPane.setBottom(AppContext.statusBar);
+		
+		
+		
 		scene = new Scene(bPane, 1280, 768);
 		
 		
 		
 		return scene;
 	}
+
 
 	private Node getToolBar() {
 

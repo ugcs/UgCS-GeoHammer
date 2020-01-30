@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Scan;
 import com.ugcs.gprvisualizer.gpr.Settings;
@@ -187,9 +188,15 @@ public class SatelliteMap extends BaseLayer {
 	@Override
 	public boolean mousePressed(Point2D point) {
 		
+		if(!model.getFileManager().isActive()) {
+			return false;
+		}
+		
 		dragField = new Field(model.getField());
 		
 		click = model.getField().screenTolatLon(point);
+		
+		AppContext.statusBar.showGPSPoint(click);
 		
 		//System.out.println("sat map mousePressed " + click.toString());
 		listener.repaint();

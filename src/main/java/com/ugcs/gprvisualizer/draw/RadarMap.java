@@ -205,6 +205,10 @@ public class RadarMap extends BaseLayer{
 
 		for (Trace trace : model.getFileManager().getTraces()) {
 
+			if(!trace.isActive()) {
+				continue;
+			}
+			
 			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
 			
 			double alpha = calcAlpha(trace.getNormValues(), start, finish);

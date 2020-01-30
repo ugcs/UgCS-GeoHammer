@@ -39,11 +39,6 @@ public class CleverViewScrollHandler implements MouseHandler {
 	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
 		dragPoint = null;
 		
-		System.out.println("mouseReleaseHandle");
-
-		
-
-		
 		return false;
 	}
 	

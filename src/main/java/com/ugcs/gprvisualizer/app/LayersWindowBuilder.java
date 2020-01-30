@@ -19,17 +19,24 @@ import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class LayersWindowBuilder extends Work implements SmthChangeListener, ModeFactory {
 	
+	TraceCutter traceCutter;
+	ToolBar toolBar = new ToolBar();
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
@@ -39,11 +46,21 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		getLayers().add(new RadarMap(model, listener));
 		getLayers().add(new GpsTrack(model, listener));
 		getLayers().add(new FoundTracesLayer(model));
-		getLayers().add(new TraceCutter(model, listener));
+		
+		traceCutter = new TraceCutter(model, listener);
+		getLayers().add(traceCutter);
 
 		initImageView();
 	}
 	
+	public void somethingChanged(WhatChanged changed) {
+		super.somethingChanged(changed);
+		
+		if(changed.isFileopened()) {
+			toolBar.setDisable(false);
+		}
+		
+	}
 		
 	private void initImageView() {
 		//ZOOM
@@ -90,7 +107,32 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	@Override
 	public Node getCenter() {
 		
-		return imageView;
+		VBox vBox = new VBox();
+		
+		
+		toolBar.setDisable(true);
+		toolBar.getItems().addAll(traceCutter.getToolNodes2());
+		
+		vBox.getChildren().add(toolBar);
+		
+		Pane sp1 = new Pane();
+		
+		ChangeListener<Number> sp1SizeListener = (observable, oldValue, newValue) -> {
+			this.setSize((int) (sp1.getWidth()), (int) (sp1.getHeight()));
+		};
+		
+		
+		Node n1 = imageView;
+		sp1.getChildren().add(n1);
+		sp1.getChildren().add(toolBar);
+		
+		sp1.widthProperty().addListener(sp1SizeListener);
+		sp1.heightProperty().addListener(sp1SizeListener);
+		
+		//vBox.getChildren().add(sp1);
+		
+		
+		return sp1;
 	}
 
 	@Override

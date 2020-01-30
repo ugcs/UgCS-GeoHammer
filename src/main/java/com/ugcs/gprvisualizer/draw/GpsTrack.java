@@ -36,7 +36,7 @@ public class GpsTrack implements Layer{
 	}
 
 	private void drawGPSPath(Graphics2D g2) {
-		g2.setStroke(new BasicStroke(1.1f));		
+		g2.setStroke(new BasicStroke(1.0f));		
 		Point2D pPrev = null;
 		
 		double sumdist = 0;
@@ -44,33 +44,72 @@ public class GpsTrack implements Layer{
 				model.getField().getSceneCenter().getDistance(
 				model.getField().screenTolatLon(new Point2D.Double(0, 5)));// meter
 		
-		for (Trace trace : model.getFileManager().getTraces()) {
+		//
+		g2.setColor(Color.RED);
+		List<Trace> traces = model.getFileManager().getTraces();
 
-			sumdist += trace.getPrevDist();
-			if(sumdist < threshold && !trace.isEnd()) {				
-				continue;
+		for (int tr=0; tr< traces.size(); tr++) {
+			Trace trace =  traces.get(tr);
+			
+			if(pPrev == null) {
+				if(trace.isActive()) {
+					pPrev = model.getField().latLonToScreen(trace.getLatLon());
+					sumdist = 0;
+				}
+			}else{//prev point exists
+				if(trace.isActive()) {
+					sumdist += trace.getPrevDist();
+					
+					if(sumdist >= threshold && !trace.isEnd()) {
+						
+						Point2D pNext = model.getField().latLonToScreen(trace.getLatLon());
+								
+						g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)pNext.getX(), (int)pNext.getY());
+						
+						pPrev = pNext;
+						sumdist = 0;
+					}
+				}else{//finish
+					
+					Trace trace2 =  traces.get(tr-1);
+					
+					Point2D pNext = model.getField().latLonToScreen(trace2.getLatLon());
+					
+					g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)pNext.getX(), (int)pNext.getY());
+					
+					pPrev = null;					
+				}
 			}
-			sumdist = 0;
-				
-			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
-			if(trace.isActive()) {
-				if (pPrev != null) {			
-					g2.setColor(Color.RED);
-					g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)p.getX(), (int)p.getY());
-				}
-				
-				if(trace.isEnd()) {
-					pPrev = null;
-				}else {
-					pPrev = p;
-				}
-			}else{
-				//dot
-				g2.setColor(Color.GRAY);
-				g2.drawLine((int)p.getX(), (int)p.getY(), (int)p.getX(), (int)p.getY());
-				pPrev = null;
-			}			
+			
 		}
+		//
+//		for (Trace trace : model.getFileManager().getTraces()) {
+//
+//			sumdist += trace.getPrevDist();
+//			if(sumdist < threshold && !trace.isEnd()) {				
+//				continue;
+//			}
+//			sumdist = 0;
+//				
+//			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+//			if(trace.isActive()) {
+//				if (pPrev != null) {			
+//					g2.setColor(Color.RED);
+//					g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)p.getX(), (int)p.getY());
+//				}
+//				
+//				if(trace.isEnd()) {
+//					pPrev = null;
+//				}else {
+//					pPrev = p;
+//				}
+//			}else{
+//				//dot
+//				g2.setColor(Color.GRAY);
+//				g2.drawLine((int)p.getX(), (int)p.getY(), (int)p.getX(), (int)p.getY());
+//				pPrev = null;
+//			}			
+//		}
 	}
 	
 	@Override

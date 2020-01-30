@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import javafx.scene.image.ImageView;
+
 public class ResourceImageHolder {
 
 	public static Image IMG_SHOVEL;
@@ -21,6 +23,9 @@ public class ResourceImageHolder {
 	
 	public static javafx.scene.image.Image FXIMG_DONE;
 
+	public static ImageView getImageView(String name) {
+		return new ImageView(new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream(name)));
+	}
 	
 	static {
 		try {

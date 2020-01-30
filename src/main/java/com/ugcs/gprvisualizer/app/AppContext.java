@@ -17,6 +17,7 @@ public class AppContext {
 	public static LevelFilter levelFilter;
 	public static PluginRunner pluginRunner;
 	public static Navigator navigator;
+	public static StatusBar statusBar;
 	
 	public static List<SmthChangeListener> smthListener = new ArrayList<>();
 	
