@@ -24,7 +24,13 @@ public class ResourceImageHolder {
 	public static javafx.scene.image.Image FXIMG_DONE;
 
 	public static ImageView getImageView(String name) {
-		return new ImageView(new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream(name)));
+		
+		
+		javafx.scene.image.Image img = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream(name));
+		ImageView iv = new ImageView();
+		iv.setImage(img);
+		
+		return iv;
 	}
 	
 	static {

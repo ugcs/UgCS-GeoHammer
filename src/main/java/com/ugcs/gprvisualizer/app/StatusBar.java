@@ -17,6 +17,7 @@ public class StatusBar extends GridPane {
 	private TextField textField = new TextField();
 	{
 		textField.setEditable(false);
+		textField.setStyle("-fx-focus-color: transparent;");
 	}
 	
 	public StatusBar(Model model) {
@@ -43,6 +44,10 @@ public class StatusBar extends GridPane {
 		this.add(textField, 1, 0);
 		this.add(new Label(""), 2, 0);
 		
+	}
+	
+	public void showProgressText(String txt) {
+		textField.setText(txt);	
 	}
 	
 	public void showGPSPoint(LatLon click) {

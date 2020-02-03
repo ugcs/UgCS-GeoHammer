@@ -12,6 +12,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.sun.javafx.collections.SetAdapterChange;
@@ -35,8 +36,11 @@ import com.ugcs.gprvisualizer.ui.ThresholdSlider;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 
@@ -58,7 +62,30 @@ public class RadarMap extends BaseLayer{
 	private BaseSlider thresholdSlider;
 	private BaseSlider radiusSlider;
 	private BaseCheckBox autoGainCheckbox;
-	private BaseCheckBox showLayerCheckbox;
+
+	
+	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
+		
+		@Override
+		public void handle(ActionEvent event) {
+
+			setActive(showMapButton.isSelected());
+			vBox.setVisible(isActive());
+			
+			if(isActive()) {
+				executor.submit(t);
+			}else {
+				listener.repaint();
+			}
+			
+		}
+	};
+	
+	private ToggleButton showMapButton = new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
+	{
+		showMapButton.setSelected(true);
+		showMapButton.setOnAction(showMapListener);
+	}
 	
 	VBox vBox = new VBox();
 	//rightBox.setPadding(new Insets(3, 13, 3, 3));
@@ -91,20 +118,20 @@ public class RadarMap extends BaseLayer{
 	}
 	
 	
-	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
-		@Override
-		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-			
-			setActive(newValue);
-			vBox.setVisible(isActive());
-			
-			if(isActive()) {
-				executor.submit(t);
-			}else {
-				listener.repaint();
-			}
-		}
-	};
+//	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
+//		@Override
+//		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+//			
+//			setActive(newValue);
+//			vBox.setVisible(isActive());
+//			
+//			if(isActive()) {
+//				executor.submit(t);
+//			}else {
+//				listener.repaint();
+//			}
+//		}
+//	};
 	private ChangeListener<Boolean> autoGainListener = new ChangeListener<Boolean>() {
 		@Override
 		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -136,7 +163,15 @@ public class RadarMap extends BaseLayer{
 		
 		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
 	
-		showLayerCheckbox = new LayerVisibilityCheckbox("show amplitude map", showLayerListener);
+		
+		
+//		new EventHandler<ActionEvent>() {
+//		    @Override public void handle(ActionEvent e) {
+//		        
+//		    	updateBtns();
+//		    }
+//		});
+
 		
 		String cssLayout = "-fx-border-color: gray;\n" +
                 "-fx-border-insets: 5;\n" +
@@ -321,9 +356,8 @@ public class RadarMap extends BaseLayer{
 		return false;
 	}
 	
-	
-	@Override
-	public List<Node> getToolNodes() {
+	public List<Node> getControlNodes() {
+		
 		vBox.getChildren().clear();
 		
 		vBox.getChildren().addAll(
@@ -337,10 +371,15 @@ public class RadarMap extends BaseLayer{
 				radiusSlider.produce()
 			));
 
+		return Arrays.asList(vBox);
+	}
+	
+	@Override
+	public List<Node> getToolNodes() {
+
 		
 		return Arrays.asList(
-			showLayerCheckbox.produce(),
-			vBox);	
+			showMapButton);	
 		
 	}
 

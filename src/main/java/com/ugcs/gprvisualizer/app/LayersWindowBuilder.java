@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
@@ -38,12 +39,15 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	TraceCutter traceCutter;
 	ToolBar toolBar = new ToolBar();
 	
+	RadarMap radarMap;
+	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
+		radarMap = new RadarMap(model, listener);
 		
 		getLayers().add(new SatelliteMap(model, listener));
-		getLayers().add(new RadarMap(model, listener));
+		getLayers().add(radarMap);
 		getLayers().add(new GpsTrack(model, listener));
 		getLayers().add(new FoundTracesLayer(model));
 		
@@ -107,13 +111,15 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	@Override
 	public Node getCenter() {
 		
-		VBox vBox = new VBox();
+		//VBox vBox = new VBox();
 		
 		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
 		
-		vBox.getChildren().add(toolBar);
+		toolBar.getItems().addAll(getToolNodes());
+		
+		//vBox.getChildren().add(toolBar);
 		
 		Pane sp1 = new Pane();
 		
@@ -137,6 +143,10 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 
 	@Override
 	public List<Node> getRight() {
+		return radarMap.getControlNodes();//Arrays.asList();
+	}
+		
+	public List<Node> getToolNodes() {
 		
 		List<Node> lst = new ArrayList<>();
 		

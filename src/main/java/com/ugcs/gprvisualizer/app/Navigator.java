@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -17,9 +18,10 @@ public class Navigator implements ToolProducer {
 
 	private Model model;
 	
-	private Button backBtn = new Button("<");
-	private Button fitBtn = new Button("[]");
-	private Button nextBtn = new Button(">");
+	private Button backBtn = new Button("", ResourceImageHolder.getImageView("arrow_left_20.png"));
+	private Button fitBtn = new Button("", ResourceImageHolder.getImageView("fit_20.png"));		
+	private Button nextBtn = new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
+	
 	
 	public Navigator(Model model) {
 		this.model = model;

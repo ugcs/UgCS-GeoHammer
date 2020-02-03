@@ -5,21 +5,44 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Scan;
 import com.ugcs.gprvisualizer.gpr.Settings;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseEvent;
 
-public class GpsTrack implements Layer{
+public class GpsTrack extends BaseLayer{
 
 	private RepaintListener listener;
 	private Model model;
+	
+	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			setActive(showLayerCheckbox.isSelected());
+			
+			listener.repaint();				
+		}
+	};
+	
+	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("path_20.png"));
+	{
+		showLayerCheckbox.setSelected(true);
+		showLayerCheckbox.setOnAction(showMapListener);
+	}
+	
+	
 	
 	public GpsTrack(Model model, RepaintListener listener) {
 		this.listener = listener;
@@ -36,6 +59,10 @@ public class GpsTrack implements Layer{
 	}
 
 	private void drawGPSPath(Graphics2D g2) {
+		if(!isActive()) {
+			return;
+		}
+		
 		g2.setStroke(new BasicStroke(1.0f));		
 		Point2D pPrev = null;
 		
@@ -147,7 +174,7 @@ public class GpsTrack implements Layer{
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Collections.EMPTY_LIST;
+		return Arrays.asList(showLayerCheckbox);
 	}
 	
 }

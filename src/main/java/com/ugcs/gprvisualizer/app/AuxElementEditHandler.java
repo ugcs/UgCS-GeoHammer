@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
@@ -27,6 +28,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class AuxElementEditHandler implements MouseHandler {
@@ -42,13 +44,18 @@ public class AuxElementEditHandler implements MouseHandler {
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
-	private Button addBtn = new Button("add rect");
-	private Button addHypBtn = new Button("add hyp");
+//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addHyp.png")));
+//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addRect.png")));
+//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addFlag.png")));
+//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addSurf.png")));
 	
-	private Button addSurfaceBtn = new Button("add surface");
-	private Button addFoundBtn = new Button("add mark");
-	private Button delBtn = new Button("delete");
-	private Button clearBtn = new Button("clear");
+	private Button addBtn = new Button("", ResourceImageHolder.getImageView("addRect.png"));
+	private Button addHypBtn = new Button("", ResourceImageHolder.getImageView("addHyp.png"));	
+	private Button addSurfaceBtn = new Button("", ResourceImageHolder.getImageView("addSurf.png"));
+	private Button addFoundBtn = new Button("", ResourceImageHolder.getImageView("addFlag.png"));
+	
+	private Button delBtn = new Button("", ResourceImageHolder.getImageView("delete-20.png"));
+	private Button clearBtn = new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
 	
 	public AuxElementEditHandler(CleverImageView cleverView) {
 		this.cleverView = cleverView;
@@ -93,11 +100,22 @@ public class AuxElementEditHandler implements MouseHandler {
 		return processed;
 	}
 	
+	public List<Node> getRightPanelTools() {
+		return Arrays.asList(addBtn, addHypBtn, addSurfaceBtn, addFoundBtn, getSpacer(), delBtn, clearBtn);	
+	}
+	
+	private Region getSpacer() {
+		Region r3 = new Region();
+		r3.setPrefWidth(7);
+		return r3;
+	}
+	
 	public Node getRight() {
 		
-		return new VBox(
-				new HBox( addBtn, addHypBtn, addSurfaceBtn, addFoundBtn),
-				new HBox( delBtn, clearBtn));
+		return new VBox();
+		//new VBox(
+			//	new HBox( addBtn, addHypBtn, addSurfaceBtn, addFoundBtn),
+				//new HBox( delBtn, clearBtn));
 	}
 	
 	protected void initButtons(){

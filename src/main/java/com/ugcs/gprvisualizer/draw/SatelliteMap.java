@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -33,7 +34,10 @@ import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseEvent;
 
 public class SatelliteMap extends BaseLayer {
@@ -47,22 +51,24 @@ public class SatelliteMap extends BaseLayer {
 	private Random rand = new Random();
 	private Color color = new Color(rand.nextInt(16777215));
 	
-	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
+	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
-		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-			
-			setActive(newValue);
-			
-			
+		public void handle(ActionEvent event) {
+			setActive(showLayerCheckbox.isSelected());
 			if(isActive()) {
 				loadMap();
 			}else {
 				listener.repaint();
 			}
+				
 		}
 	};
 	
-	private BaseCheckBox showLayerCheckbox = new LayerVisibilityCheckbox("show satellite map", showLayerListener);
+	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
+	{
+		showLayerCheckbox.setSelected(true);
+		showLayerCheckbox.setOnAction(showMapListener);
+	}
 	
 	private static String GOOGLE_API_KEY;
 	static {
@@ -233,7 +239,7 @@ public class SatelliteMap extends BaseLayer {
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Arrays.asList(showLayerCheckbox.produce());
+		return Arrays.asList(showLayerCheckbox);
 	}
 	
 }

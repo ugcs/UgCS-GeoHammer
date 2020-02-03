@@ -1,55 +1,24 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.AvgShiftFilter;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -67,20 +36,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private Model model = new Model();
 	private ToolBar toolBar = new ToolBar();
 
-	// modes
-//	private ToggleGroup group = new ToggleGroup();
-//	private ToggleButton gpsMode = new ToggleButton("GPS", null);
-//	private ToggleButton prismMode = new ToggleButton("Prism", null);
-//	private ToggleButton cutMode = new ToggleButton("Waveform", null);
-//	private ToggleButton matrixMode = new ToggleButton("Matrix", null);
-//	
-//	private ToggleButton cleverMode = new ToggleButton("Clever", null);
 	
 	SplitPane sp;
 	
-	//Map<Node, ModeFactory> modeMap = new HashMap<>();
-	{
-	}
 	LayersWindowBuilder layersWindowBuilder;
 	CleverImageView cleverImageView;
 	
@@ -116,7 +74,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		scene = createScene();
 
-		stage.setTitle("UgCS GPR data visualizer");
+		stage.setTitle("UgCS GPR GeoHammer v.0.9.3");
 		stage.setScene(scene);
 		stage.show();
 
@@ -151,16 +109,11 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 		sp = new SplitPane();
 		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
+		
+		
 		sp.getItems().add(layersWindowBuilder.getCenter());
 		
-		Pane sp2 = new Pane();
-		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			cleverImageView.setSize((int) (sp2.getWidth()), (int) (sp2.getHeight()));
-		};
-		sp2.widthProperty().addListener(sp2SizeListener);
-		sp2.heightProperty().addListener(sp2SizeListener);
-		sp2.getChildren().add(cleverImageView.getCenter());
-		sp.getItems().add(sp2);
+		sp.getItems().add(cleverImageView.getCenter());
 		
 		sp.getItems().add(getRightPane());
 		
@@ -208,8 +161,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 			hf.process();
 		});
 		
-		toolBar.getItems().add(getSpacer());
-		toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
+		//toolBar.getItems().add(getSpacer());
+		//toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
 		///
 		
 		return toolBar;

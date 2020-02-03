@@ -30,6 +30,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 
 public class TraceCutter implements Layer {
 
@@ -255,6 +256,9 @@ public class TraceCutter implements Layer {
 		});
 		
 		//, new Label("LABEL")
+		
+		
+		
 		return Arrays.asList(buttonCutMode, buttonSet, buttonClear);
 	}
 	
@@ -269,4 +273,10 @@ public class TraceCutter implements Layer {
     	listener.repaint();
 	}
 
+	private Region getSpacer() {
+		Region r3 = new Region();
+		r3.setPrefWidth(7);
+		return r3;
+	}
+	
 }

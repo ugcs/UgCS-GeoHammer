@@ -88,6 +88,7 @@ public class Loader {
         	};
         	
 			new TaskRunner(null, loadTask).start();
+        	System.out.println("start completed");
         	
             event.setDropCompleted(true);
             event.consume();

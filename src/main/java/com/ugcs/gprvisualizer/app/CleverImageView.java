@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
@@ -31,6 +32,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
@@ -38,12 +40,17 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class CleverImageView implements SmthChangeListener, ModeFactory {
@@ -67,8 +74,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
 	
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
-	private Button zoomInBtn = new Button("+");
-	private Button zoomOutBtn = new Button("-");
+	ToolBar toolBar = new ToolBar();
+	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png" ));//"zoom-in_20.png"
+	private Button zoomOutBtn = new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
 	
 	
 	private MouseHandler selectedMouseHandler;   
@@ -109,7 +117,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		initImageView();
 		
 		s1.setOrientation(Orientation.HORIZONTAL);
-		
+		s1.setVisible(false);
 		s1.valueProperty().addListener(new ChangeListener<Number>() {
             public void changed(ObservableValue<? extends Number> ov,
                     Number old_val, Number new_val) {
@@ -120,11 +128,39 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         });
 		
 
-		
-		vbox.getChildren().addAll(imageView, s1);
-		
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
+		
+		
+		
+		toolBar.setDisable(true);
+		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
+		toolBar.getItems().add(getSpacer());
+		
+		toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
+		
+		toolBar.getItems().add(getSpacer());
+		toolBar.getItems().add(zoomInBtn);
+		toolBar.getItems().add(zoomOutBtn);
+		toolBar.getItems().add(getSpacer());
+		
+		toolBar.getItems().add(hyperLiveViewBtn);
+		///
+		
+//		Spinner<Integer> spinner = new Spinner<Integer>();
+//		 
+//        final int initialValue = 3;
+// 
+//        // Value factory.
+//        SpinnerValueFactory<Integer> valueFactory = //
+//                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, initialValue);
+// 
+//        spinner.setValueFactory(valueFactory);	
+//        toolBar.getItems().add(spinner);
+		///
+		
+		vbox.getChildren().addAll(toolBar, imageView, s1);
+		
 		
 		
 		zoomInBtn.setOnAction(e -> {
@@ -184,7 +220,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		drawAuxElements(field, g2);
 		
-		hyperFinder.drawHyperbolaLine(g2, field);
+		if(model.getSettings().hyperliveview) {
+			hyperFinder.drawHyperbolaLine(g2, field);
+		}
 		
 		///
 		return bi;
@@ -228,14 +266,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		g2.setPaint ( Color.DARK_GRAY );
 		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
 	}
-
-//	private void drawFoundPoints(VerticalCutField field, Graphics2D g2) {
-//		for(Trace trace : model.getFoundTrace()) {
-//			Point p = field.traceSampleToScreen(new TraceSample(trace.indexInSet, 0));
-//			
-//			g2.drawImage(ResourceImageHolder.IMG_SHOVEL, p.x-ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2 , 0, null);
-//		}
-//	}
 
 	private void drawGroundLevel(VerticalCutField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
 		g2.setColor(Color.GREEN);
@@ -297,33 +327,57 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public Node getCenter() {
 		
-		return vbox;
+		Pane sp2 = new Pane();
+		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
+			this.setSize((int) (sp2.getWidth()), (int) (sp2.getHeight()));
+		};
+		sp2.widthProperty().addListener(sp2SizeListener);
+		sp2.heightProperty().addListener(sp2SizeListener);
+		
+		sp2.getChildren().add(vbox);
+		
+		//sp2.getChildren().add(toolBar);
+		
+		return sp2;
 	}
 
+	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			model.getSettings().hyperliveview = hyperLiveViewBtn.isSelected();
+			repaintEvent();
+		}
+	};
+	
+	private ToggleButton hyperLiveViewBtn = new ToggleButton("", ResourceImageHolder.getImageView("hypLive.png"));
+	{
+		hyperLiveViewBtn.setOnAction(showMapListener);
+	}
+
+
+	
 	@Override
 	public List<Node> getRight() {
 		
-		ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
-	        @Override
-	        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
-	        	//boolean val = updateModel();
-	        	//label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
-	        	model.getSettings().hyperliveview = newValue;
-	        } 
-	    };
-		
-		CheckBox checkBox = new CheckBox("Hyperbola live view");
-		checkBox.selectedProperty().addListener(listener);
+//		ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
+//	        @Override
+//	        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
+//	        	model.getSettings().hyperliveview = newValue;
+//	        } 
+//	    };
+//		
+//		CheckBox checkBox = new CheckBox("Hyperbola live view");
+//		checkBox.selectedProperty().addListener(listener);
 		
 		
 		return Arrays.asList(
 				new HBox( zoomInBtn, zoomOutBtn),
-				contrastSlider.produce() , auxEditHandler.getRight(), 
+				contrastSlider.produce() , 
+				//auxEditHandler.getRight(), 
 				aspectSlider.produce(), 
 				hyperbolaSlider.produce(),
-				hyperGoodSizeSlider.produce(),
-				checkBox
-				);
+				hyperGoodSizeSlider.produce()
+			);
 	}
 
 	int z = 0;
@@ -530,6 +584,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 //			updateAspect();
 //		}
 		
+		if(changed.isFileopened()) {
+			s1.setVisible(true);
+			toolBar.setDisable(false);
+		}
+		
 		if(changed.isAuxOnMapSelected()) {
 			//field.setSelectedTrace(selectedTrace);
 		}
@@ -680,5 +739,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected VerticalCutField getField() {
 		return model.getVField();
 	}
-	
+
+	private Region getSpacer() {
+		Region r3 = new Region();
+		r3.setPrefWidth(7);
+		return r3;
+	}
+
 }
