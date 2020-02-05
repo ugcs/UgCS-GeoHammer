@@ -19,13 +19,17 @@ import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 public class Saver implements ToolProducer {
 
 	private Button buttonSave = new Button("Save");
-	private Button buttonSaveReload = new Button("Save To New Place");
+	private Button buttonSaveTo = new Button("Save to");
 	private Model model;
-
+	private Stage stage;
+	private File folder;
+	
 	private ProgressTask saveTask = new ProgressTask() {
 		@Override
 		public void run(ProgressListener listener) {
@@ -42,7 +46,7 @@ public class Saver implements ToolProducer {
 		public void run(ProgressListener listener) {
 			listener.progressMsg("save now");
 
-			List<File> newfiles = saveAs();
+			List<File> newfiles = saveAs(folder);
 			
 			listener.progressMsg("load now");
 	    	AppContext.loader.load(newfiles, listener);
@@ -57,23 +61,34 @@ public class Saver implements ToolProducer {
 		    }
 		});
 		
-		buttonSaveReload.setOnAction(new EventHandler<ActionEvent>() {
+		buttonSaveTo.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		    	
-		    	new TaskRunner(null, saveAsTask).start();
+		    	DirectoryChooser dir_chooser = new DirectoryChooser(); 
+		    	if(!model.getFileManager().getFiles().isEmpty()) {
+		    		dir_chooser.setInitialDirectory(model.getFileManager().getFiles().get(0).getFile().getParentFile());
+		    	}
+		    	folder = dir_chooser.showDialog(stage); 
+		    	  
+                if(folder != null) { 
+                	new TaskRunner(null, saveAsTask).start();
+                } 		    	
+		    	
+		    	
 		    	
 		    }
 		});
 	}
 	
-	public Saver(Model model) {
+	public Saver(Model model, Stage stage) {
 		this.model = model;
+		this.stage = stage;
 	}
 	
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Arrays.asList(buttonSave, buttonSaveReload);
+		return Arrays.asList(buttonSave, buttonSaveTo);
 	}
 
 	
@@ -88,10 +103,10 @@ public class Saver implements ToolProducer {
 		return newfiles;
 	}
 	
-	private List<File> saveAs() {
+	private List<File> saveAs(File folder) {
 		List<File> newfiles = new ArrayList<>();
 		
-		File folder = createFolder();
+		//File folder = createFolder();
 		for(SgyFile file : model.getFileManager().getFiles()) {
 			newfiles.add(save(file, folder));
 		}

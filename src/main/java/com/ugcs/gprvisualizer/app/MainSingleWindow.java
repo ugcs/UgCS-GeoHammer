@@ -47,7 +47,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		AppContext.model = model;
 		AppContext.levelFilter = new LevelFilter(model);
 		AppContext.loader = new Loader(model);
-		AppContext.saver = new Saver(model);
+		
 		AppContext.pluginRunner = new PluginRunner(model);		
 		AppContext.navigator = new Navigator(model);
 		
@@ -69,6 +69,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	public void start(Stage stage) throws Exception {
 
 		this.stage = stage;
+		
+		AppContext.saver = new Saver(model, stage);
 
 		stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
 		
