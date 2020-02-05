@@ -160,11 +160,24 @@ public class TraceCutter implements Layer {
 		model.getFileManager().setFiles(slicedSgyFiles);
 		model.init();
 		
-	
-				
-
+		//model.initField();
+		model.getVField().clear();
 	}
 
+	public void undo() {
+
+		if(model.getUndoFiles() != null) {
+			model.getFileManager().setFiles(model.getUndoFiles());
+			model.setUndoFiles(null);
+			model.init();
+			
+			//model.initField();
+			model.getVField().clear();
+		}
+		
+	}
+
+	
 	public boolean isTraceInsideSelection(Field fld, List<Point2D> border, Trace trace) {
 		Point2D p = fld.latLonToScreen(trace.getLatLon());
 		boolean ins = inside(p, border);
@@ -246,17 +259,6 @@ public class TraceCutter implements Layer {
 		return sublist.size() > 20;
 	}
 	
-
-	public void undo() {
-
-		if(model.getUndoFiles() != null) {
-			model.getFileManager().setFiles(model.getUndoFiles());
-			model.setUndoFiles(null);
-			model.init();
-		}
-		
-	}
-
 	private List<Point2D> getScreenPoligon(Field fld) {
 
 		List<Point2D> border = new ArrayList<>();
@@ -326,6 +328,7 @@ public class TraceCutter implements Layer {
 
 	    	
 	    	AppContext.notifyAll(new WhatChanged(Change.mapzoom));
+	    	
 		});
 		
 		

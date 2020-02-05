@@ -201,7 +201,7 @@ public class Model {
 	}
 
 	public void init() {
-		this.initField();
+		
 		
 		this.updateMaxHeightInSamples();
 		
@@ -209,7 +209,8 @@ public class Model {
 		
 		this.updateAuxElements();
 		
-		this.getVField().clear();
+		//this.initField();
+		//this.getVField().clear();
 	}
 
 	public List<SgyFile> getUndoFiles() {

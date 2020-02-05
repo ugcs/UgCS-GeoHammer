@@ -43,6 +43,8 @@ public class VerticalCutField {
 		System.out.println("VerticalCutField clear");
 		//vScale=1;
 		//hScale=2;
+		zoom = 1;
+		aspect = -15;		
 		startSample = 0;
 		selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
 

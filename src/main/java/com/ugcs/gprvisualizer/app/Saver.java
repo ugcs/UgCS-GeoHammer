@@ -11,7 +11,9 @@ import com.github.thecoldwine.sigrun.common.ext.ByteBufferProducer;
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -38,6 +40,8 @@ public class Saver implements ToolProducer {
 			
 			listener.progressMsg("load now");
 	    	AppContext.loader.load(newfiles, listener);
+	    	
+	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
 		}
 	};
 
@@ -50,6 +54,8 @@ public class Saver implements ToolProducer {
 			
 			listener.progressMsg("load now");
 	    	AppContext.loader.load(newfiles, listener);
+	    	
+	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
 		}
 	};
 

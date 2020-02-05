@@ -81,6 +81,12 @@ public class Loader {
 							try {
 								model.setLoading(true);
 								load(files, listener);
+								
+								//when open file by dnd (not after save)
+								model.initField();
+								model.getVField().clear();
+								
+								AppContext.notifyAll(new WhatChanged(Change.fileopened));
 							}finally {
 								model.setLoading(false);
 							}
@@ -117,7 +123,7 @@ public class Loader {
 			e.printStackTrace();
 		}
 		
-		AppContext.notifyAll(new WhatChanged(Change.fileopened));
+		
 		
 	}
 
