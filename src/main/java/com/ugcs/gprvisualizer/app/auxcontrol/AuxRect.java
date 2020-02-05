@@ -27,26 +27,13 @@ import com.ugcs.gprvisualizer.math.NumberUtils;
 import javafx.scene.control.ChoiceDialog;
 
 public class AuxRect implements BaseObject {
-
-//	public static final String TYPES[] = { 
-//			"hyperbola", 
-//			"air", 
-//			"ground",  
-//            "ground line"}; 
 	
 	public static final Color maskColor = new Color(50, 0, 255, 70);
 	
-	//VerticalCutField vField;
-	
-//	MutableInt traceStart = new MutableInt();
-//	MutableInt traceFinish = new MutableInt();
-//	MutableInt sampleStart = new MutableInt();
-//	MutableInt sampleFinish = new MutableInt();
 	MutableInt kfc = new  MutableInt();
 	VerticalCutPart offset;
 	
 	BufferedImage img;
-	//DragAnchor kfcanc;
 	DragAnchor top;
 	DragAnchor bottom;
 	DragAnchor left;
@@ -241,18 +228,6 @@ public class AuxRect implements BaseObject {
 			}
 			
 		};
-		
-
-		
-//		kfcanc = new DragAnchor(new MutableInt(), kfc, ResourceImageHolder.IMG_CHOOSE, AlignRect.CENTER, offset) {
-//			public void signal(Object obj) {
-//				//sampleStart = top.getSample();
-//			}
-//			
-//			public int getTrace() {
-//				return (left.getTrace() + right.getTrace()) / 2;
-//			}
-//		};
 		
 		top = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
@@ -541,4 +516,21 @@ public class AuxRect implements BaseObject {
 		bottom.setVisible(!locked);
 	}			
 
+	@Override
+	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
+		AuxRect result = new AuxRect(getTraceStartLocal()-traceoffset, getTraceFinishLocal()-traceoffset, getSampleStart(), getSampleFinish(), verticalCutPart); 
+		
+		result.topCut = Arrays.copyOf(topCut, topCut.length); 
+		result.botCut = Arrays.copyOf(botCut, botCut.length);
+		result.updateMaskImg();
+		
+		return result;
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		
+		return getTraceStartLocal() >= begin && getTraceFinishLocal() <= end;
+	}
+	
 }

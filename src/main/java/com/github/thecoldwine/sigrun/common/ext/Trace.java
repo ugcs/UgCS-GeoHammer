@@ -9,15 +9,14 @@ import com.github.thecoldwine.sigrun.common.TraceHeader;
 
 public class Trace {
     
-    private final Block headerBlock;
-    private final Block dataBlock;
+	private final byte[] binHeader;
+    private final TraceHeader header;
     
-    private final TraceHeader header = null;
     private float[] originalvalues;
     private float[] normvalues;
     
     private LatLon latLon;
-    private boolean active = true;
+    //private boolean active = true;
     private boolean end = false;
     private double prevDist = 100000;
     
@@ -31,12 +30,11 @@ public class Trace {
     
     public Set<Integer> max = new HashSet<>();
     
-    public Trace(Block headerBlock, Block dataBlock, TraceHeader header, float[] originalvalues, LatLon latLon) {
+    public Trace(byte[] binHeader, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
     	
-        //this.header = header;
-        this.headerBlock = headerBlock; 
-        this.dataBlock = dataBlock;
+        this.header = header;
+        this.binHeader = binHeader; 
         this.originalvalues = originalvalues;
         this.latLon = latLon;
     }
@@ -65,22 +63,6 @@ public class Trace {
     	normvalues = vals;
     }
 
-    public Block getHeaderBlock() {
-		return headerBlock;
-	}
-
-	public Block getDataBlock() {
-		return dataBlock;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
 	public boolean isEnd() {
 		return end;
 	}
@@ -97,6 +79,8 @@ public class Trace {
 		this.prevDist = prevDist;
 	}
     
-	
+	public byte[] getBinHeader() {
+		return binHeader;
+	}
 	
 }

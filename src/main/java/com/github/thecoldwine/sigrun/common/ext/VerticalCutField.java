@@ -128,7 +128,7 @@ public class VerticalCutField {
 		this.selectedTrace =
 			Math.min(
 				Math.max(0, selectedTrace),
-				model.getFileManager().getTraces().size());
+				model.getFileManager().getTraces().size()-1);
 	}
 
 	public int getStartSample() {

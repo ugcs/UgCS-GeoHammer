@@ -103,11 +103,11 @@ public class PrismModeFactory implements ModeFactory, SmthChangeListener {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isFileopened() || changed.isTraces()) {
-			
-			updateImage();
-			
-		}
+//		if(changed.isFileopened() || changed.isTraces()) {
+//			
+//			updateImage();
+//			
+//		}
 		
 	}
 

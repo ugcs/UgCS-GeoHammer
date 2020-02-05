@@ -17,6 +17,7 @@ import com.github.thecoldwine.sigrun.common.ConverterFactory;
 import com.github.thecoldwine.sigrun.common.SeismicTrace;
 import com.github.thecoldwine.sigrun.common.TextHeader;
 import com.github.thecoldwine.sigrun.common.TraceHeader;
+import com.github.thecoldwine.sigrun.common.ext.BinFile.BinTrace;
 import com.github.thecoldwine.sigrun.converters.SeismicValuesConverter;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
@@ -28,71 +29,70 @@ import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 public class SgyFile {
+	
 
 	private static final Charset charset = Charset.forName("UTF8");
     private static final BinaryHeaderFormat binaryHeaderFormat = SgyLoader.makeBinHeaderFormat();
     private static final TraceHeaderFormat traceHeaderFormat = SgyLoader.makeTraceHeaderFormat();
 
-    private static final TextHeaderReader textHeaderReader = new TextHeaderReader(charset);
-    private static final BinaryHeaderReader binaryHeaderReader = new BinaryHeaderReader(binaryHeaderFormat);
-    private static final TraceHeaderReader traceHeaderReader = new TraceHeaderReader(traceHeaderFormat);
+    public static final TextHeaderReader textHeaderReader = new TextHeaderReader(charset);
+    public static final BinaryHeaderReader binaryHeaderReader = new BinaryHeaderReader(binaryHeaderFormat);
+    public static final TraceHeaderReader traceHeaderReader = new TraceHeaderReader(traceHeaderFormat);
 	
+    //unchanged blocks from original file
+	private byte[] txtHdr;
+	private byte[] binHdr;
 	
     private BinaryHeader binaryHeader; 
     private List<Trace> traces; 
     
     private VerticalCutPart offset = new VerticalCutPart();
     
-	private Block txtHdrBlock;
-	private Block binHdrBlock;
 	private File file;
 	private int currentTraceIndex = 0;
 	
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
-	public void open(File file) throws IOException {
+	public void open(File file) throws Exception {
 		this.file = file;		
 		
-		BlockFile blockFile = BlockFile.open(file);
+		BinFile binFile = BinFile.load(file); 
 		
-		txtHdrBlock = blockFile.next(TextHeader.TEXT_HEADER_SIZE);
-		binHdrBlock = blockFile.next(BinaryHeader.BIN_HEADER_LENGTH);
+		txtHdr = binFile.getTxtHdr();
+		binHdr = binFile.getBinHdr();
 		
-		binaryHeader = binaryHeaderReader.read(binHdrBlock.read(blockFile).array());
+		binaryHeader = binaryHeaderReader.read(binFile.getBinHdr());
 		
 		
-		setTraces(loadTraces(blockFile));
+		setTraces(loadTraces(binFile));		
 		
-		blockFile.close();
 	}
 	
-	private List<Trace> loadTraces(BlockFile blockFile){
+	private List<Trace> loadTraces(BinFile binFile) throws Exception {
 		List<Trace> traces = new ArrayList<>();
 		
-		try {
-			Trace tracePrev = null;
-			while(blockFile.hasNext()) {
-				
-				Trace trace = next(blockFile);
-				
-				if(tracePrev != null) {
-					trace.setPrevDist(CoordinatesMath.measure(
-						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
-						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr()));
-				}
-				tracePrev = trace;
-				
-				if(trace != null) {
-					traces.add(trace);
-				}
-				
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+
+		Trace tracePrev = null;
+		//while(blockFile.hasNext()) {
+		for(BinTrace binTrace : binFile.getTraces()) {
 			
-			System.out.println("traces.size(): " + traces.size() );
+			Trace trace = next(binTrace);
+			
+			if(tracePrev != null && trace != null) {
+				trace.setPrevDist(CoordinatesMath.measure(
+					tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+					trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr()));
+			}
+			tracePrev = trace;
+			
+			if(trace != null) {
+				traces.add(trace);
+			}
+			
+			
 		}
 		
+		//end mark
 		if(!traces.isEmpty()) {
 			traces.get(traces.size()-1).setEnd(true);
 		}
@@ -100,24 +100,20 @@ public class SgyFile {
 		return traces;
 	}
 	
-	public Trace next(BlockFile blockFile) throws IOException {
+	public Trace next(BinTrace binTrace) throws IOException {
 		
-		Block traceHdrBlock = blockFile.next(TraceHeader.TRACE_HEADER_LENGTH);
-        TraceHeader header = traceHeaderReader.read(traceHdrBlock.read(blockFile).array());
-        int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
-		
-        Block traceDataBlock = blockFile.next(dataLength);
-        
+		byte[] headerBin = binTrace.header;		
+        TraceHeader header = traceHeaderReader.read(headerBin);
         
         SeismicValuesConverter converter = ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-        final float[] values = converter.convert(traceDataBlock.read(blockFile).array());
         
+        final float[] values = converter.convert(binTrace.data);        
         
         LatLon latLon = getLatLon(header);
         if(latLon == null) {
         	return null;
         }
-        Trace trace = new Trace(traceHdrBlock, traceDataBlock, header, values, latLon);
+        Trace trace = new Trace(headerBin, header, values, latLon);
         trace.indexInFile = currentTraceIndex;
         currentTraceIndex++;
         
@@ -156,62 +152,63 @@ public class SgyFile {
 		return v2;
 	}
 
-	public void saveTraces(File file, List<Trace> traces) throws IOException {
+	public void save(File file) throws Exception {
 		
+		BinFile binFile = new BinFile();
 		
-		
-		FileOutputStream fos = new FileOutputStream(file);
-		FileChannel writechan = fos.getChannel();		
-		
-		BlockFile blockFile = BlockFile.open(file);
-		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
-		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
+		binFile.setTxtHdr(txtHdr);
+		binFile.setBinHdr(binHdr);
 		
 		for(Trace trace : traces) {
-			write(blockFile, writechan, trace.getHeaderBlock());
-			//write(writechan, trace.getDataBlock());
-			writechan.write(ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()));
+			BinTrace binTrace = new BinTrace();
+			
+			binTrace.header = trace.getBinHeader();
+			binTrace.data = ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()).array();
+			
+			binFile.getTraces().add(binTrace);
 		}		
 		
-		writechan.close();
-		fos.close();		
-		
+		binFile.save(file);
 	}
 	
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) throws IOException {
 		writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
 	}
 	
-	public void savePart(String fileName, List<ByteBufferProducer> blocks) throws IOException {
-		
-		BlockFile blockFile = BlockFile.open(file);
-		
-		FileOutputStream fos = new FileOutputStream(fileName);
-		FileChannel writechan = fos.getChannel();		
-		
-		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
-		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
-
-		for(ByteBufferProducer block : blocks) {
-			writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
-		}		
-		
-		writechan.close();
-		fos.close();		
-		
-		blockFile.close();
-	}
+//	public void savePart(String fileName, List<ByteBufferProducer> blocks) throws IOException {
+//		
+//		BlockFile blockFile = BlockFile.open(file);
+//		
+//		FileOutputStream fos = new FileOutputStream(fileName);
+//		FileChannel writechan = fos.getChannel();		
+//		
+//		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
+//		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
+//
+//		for(ByteBufferProducer block : blocks) {
+//			writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
+//		}		
+//		
+//		writechan.close();
+//		fos.close();		
+//		
+//		blockFile.close();
+//	}
 
 	public List<Trace> getTraces() {
 		return traces;
 	}
 
-	private void setTraces(List<Trace> traces) {
+	public void setTraces(List<Trace> traces) {
 		this.traces = traces;
 	}
 
 	public File getFile() {
 		return file;
+	}
+
+	public void setFile(File file) {
+		this.file = file;
 	}
 
 	public List<BaseObject> getAuxElements() {
@@ -226,8 +223,19 @@ public class SgyFile {
 		return offset;
 	}
 
-	public void setOffset(VerticalCutPart offset) {
-		this.offset = offset;
+	public byte[] getTxtHdr() {
+		return txtHdr;
 	}
-	
+
+	public void setTxtHdr(byte[] d) {
+		txtHdr = d;
+	}
+
+	public byte[] getBinHdr() {
+		return binHdr;		
+	}
+
+	public void setBinHdr(byte[] d) {
+		binHdr = d;		
+	}
 }

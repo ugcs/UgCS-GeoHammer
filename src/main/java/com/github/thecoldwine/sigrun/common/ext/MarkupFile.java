@@ -27,7 +27,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 public class MarkupFile {
 
 	
-	public void load(SgyFile sgyFile, Model model) throws Exception {
+	public void load(SgyFile sgyFile) throws Exception {
 		
 		File file = sgyFile.getFile();
 		File mkupfile = getMarkupFileBySgy(file);
@@ -56,7 +56,7 @@ public class MarkupFile {
 				
 			}else if(clazz.equals(FoundPlace.class.getSimpleName())){
 				
-				obj = FoundPlace.loadFromJson(ob, model, sgyFile); 
+				obj = FoundPlace.loadFromJson(ob, sgyFile); 
 			}
 			
 			if(obj != null) {

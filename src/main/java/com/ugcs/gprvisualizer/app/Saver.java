@@ -37,12 +37,12 @@ public class Saver implements ToolProducer {
 		}
 	};
 
-	private ProgressTask saveReloadTask = new ProgressTask() {
+	private ProgressTask saveAsTask = new ProgressTask() {
 		@Override
 		public void run(ProgressListener listener) {
 			listener.progressMsg("save now");
 
-			List<File> newfiles = savePartsToNewPlace();
+			List<File> newfiles = saveAs();
 			
 			listener.progressMsg("load now");
 	    	AppContext.loader.load(newfiles, listener);
@@ -60,7 +60,7 @@ public class Saver implements ToolProducer {
 		buttonSaveReload.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		    	
-		    	new TaskRunner(null, saveReloadTask).start();
+		    	new TaskRunner(null, saveAsTask).start();
 		    	
 		    }
 		});
@@ -88,34 +88,40 @@ public class Saver implements ToolProducer {
 		return newfiles;
 	}
 	
-	private List<File> savePartsToNewPlace() {
+	private List<File> saveAs() {
 		List<File> newfiles = new ArrayList<>();
-		
 		
 		File folder = createFolder();
 		for(SgyFile file : model.getFileManager().getFiles()) {
-			int part = 1;
-			List<Trace> sublist = new ArrayList<>();
-			for(Trace trace : file.getTraces()) {
-				
-				if(trace.isActive()) {
-					sublist.add(trace);
-				}else {
-					if(!sublist.isEmpty()){					
-						newfiles.add(savePart(file, part++, sublist, folder));
-						sublist.clear();
-					}		
-				}
-			}
-			//for last
-			if(!sublist.isEmpty()){					
-				newfiles.add(savePart(file, part++, sublist, folder));
-				sublist.clear();
-			}		
+			newfiles.add(save(file, folder));
 		}
 		
 		return newfiles;
 	}
+
+//	private List<List<Trace>> splitFile(SgyFile file) {
+//		List<List<Trace>> splitList = new ArrayList<>();
+//		List<Trace> sublist = new ArrayList<>();
+//		for(Trace trace : file.getTraces()) {
+//			
+//			
+//			
+//			if(trace.isActive()) {
+//				sublist.add(trace);
+//			}else {
+//				if(!sublist.isEmpty()){
+//					splitList.add(sublist);
+//					sublist = new ArrayList<>();
+//											
+//				}		
+//			}
+//		}
+//		//for last
+//		if(!sublist.isEmpty()){					
+//			splitList.add(sublist);
+//		}
+//		return splitList;
+//	}
 
 	private File createFolder() {
 		File someFile = model.getFileManager().getFiles().get(0).getFile();
@@ -131,69 +137,48 @@ public class Saver implements ToolProducer {
 		return nfolder;
 	}
 
-	private File save(SgyFile sgyFile) {
-		List<ByteBufferProducer> blocks = getBlocks(sgyFile.getTraces()); 
-		File oldFile = null;
-		
+	private File save(SgyFile sgyFile, File folder) {
+
+		File newFile = null;
 		
 		try {
+			File oldFile = oldFile = sgyFile.getFile();
+			
+			newFile = new File(folder, oldFile.getName());
+			
+			
+			sgyFile.save(newFile);
+			new MarkupFile().save(sgyFile, newFile);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			newFile = null;
+		}
+		return newFile;
+	}
+	
+	private File save(SgyFile sgyFile) {
 
-			//nfile = new File(nfolder, onlyname + "_" + spart + name.substring(pos));
+		File oldFile = null;
+		
+		try {
 			oldFile = sgyFile.getFile();
 			File nfolder = oldFile.getParentFile();
 			
 			File tmp = File.createTempFile("tmp", "sgy", nfolder);
 			
-			sgyFile.savePart(tmp.getAbsolutePath(), blocks);
+			sgyFile.save(tmp);
 			
 			boolean t = oldFile.delete();
-			System.out.println(" deleted " + t);
 			
 			boolean r = tmp.renameTo(oldFile);
-			System.out.println(" renamed " + r);
 			
 			new MarkupFile().save(sgyFile, oldFile);
 			
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			oldFile = null;
 		}
 		return oldFile;
 	}
-	
-
-	private File savePart(SgyFile file, int part, List<Trace> sublist, File nfolder) {
-		List<ByteBufferProducer> blocks = getBlocks(sublist); 
-		File nfile = null;
-		try {
-			String name = file.getFile().getName();
-			int pos = name.lastIndexOf(".");
-			String onlyname = name.substring(0, pos);
-			String spart = String.format("%03d", part);
-			nfile = new File(nfolder, onlyname + "_" + spart + name.substring(pos));
-			
-			
-			file.savePart(nfile.getAbsolutePath(), blocks);
-			new MarkupFile().save(file, nfile);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return nfile;
-	}
-
-	private List<ByteBufferProducer> getBlocks(List<Trace> sublist) {
-		
-		List<ByteBufferProducer> blocks = new ArrayList<>();
-		for(Trace trace : sublist) {
-			blocks.add(trace.getHeaderBlock());
-			//blocks.add(trace.getDataBlock());
-			blocks.add(new ByteBufferHolder(trace));
-		}
-		
-		return blocks;
-	}
-	
-	
-	
 }

@@ -14,6 +14,8 @@ import java.util.List;
 import com.sun.javafx.cursor.CursorType;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Loader;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
@@ -34,20 +36,16 @@ import javafx.scene.layout.Region;
 
 public class TraceCutter implements Layer {
 
-	Field field;
-	List<LatLon> points;
-	final int RADIUS = 5;
-	Integer active = null;
-	Model model;
-	RepaintListener listener;
+	private Field field;
+	private List<LatLon> points;
+	private final int RADIUS = 5;
+	private Integer active = null;
+	private Model model;
+	private RepaintListener listener;
 	
-	Button buttonSet = new Button("cut", ResourceImageHolder.getImageView("scisors3-20.png"));
-	
-	Button buttonClear = new Button("clear", ResourceImageHolder.getImageView("clear20.png"));
-	
-	Image imageFilter = new Image(getClass().getClassLoader().getResourceAsStream("select_rect20.png"));
-	ToggleButton buttonCutMode = new ToggleButton("select", new ImageView(imageFilter));
-	
+	private ToggleButton buttonCutMode = new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
+	private Button buttonSet = new Button("Cut", ResourceImageHolder.getImageView("scisors3-20.png"));	
+	private Button buttonUndo = new Button("Undo Cut", ResourceImageHolder.getImageView("clear20.png"));
 	
 	
 	public TraceCutter(Model model, RepaintListener listener) {
@@ -64,10 +62,10 @@ public class TraceCutter implements Layer {
 	public void init() {
 		
 		points = new ArrayList<>();
-		points.add(field.screenTolatLon(new Point(200, 200)));
-		points.add(field.screenTolatLon(new Point(200,-200)));
-		points.add(field.screenTolatLon(new Point(-200,-200)));
-		points.add(field.screenTolatLon(new Point(-200, 200)));
+		points.add(field.screenTolatLon(new Point(100, 100)));
+		points.add(field.screenTolatLon(new Point(100,-100)));
+		points.add(field.screenTolatLon(new Point(-100,-100)));
+		points.add(field.screenTolatLon(new Point(-100, 100)));
 		
 	}
 	
@@ -145,31 +143,117 @@ public class TraceCutter implements Layer {
 		}		
 	}
 	
-	public void apply(List<Trace> traces) {
-		
+	public void apply() {
 		Field fld = new Field(field);
 		fld.setZoom(22);
-		
 		List<Point2D> border = getScreenPoligon(fld);
 		
-		for(Trace trace : traces) {
-			
-			Point2D p = fld.latLonToScreen(trace.getLatLon());
-			
-			
-			boolean ins = inside(p, border);
-			
-			trace.setActive(ins);
-
-		}	
+		////
+		List<SgyFile> slicedSgyFiles = new ArrayList<>();
+		for(SgyFile file : model.getFileManager().getFiles()) {
+			slicedSgyFiles.addAll(splitFile(file, fld, border));
+		}
 		
+		//
+		model.setUndoFiles(model.getFileManager().getFiles());
+		
+		model.getFileManager().setFiles(slicedSgyFiles);
+		model.init();
+		
+	
+				
+
 	}
 
-	public void clear(List<Trace> traces) {
+	public boolean isTraceInsideSelection(Field fld, List<Point2D> border, Trace trace) {
+		Point2D p = fld.latLonToScreen(trace.getLatLon());
+		boolean ins = inside(p, border);
+		return ins;
+	}
+	
+	private SgyFile generateSgyFileFrom(SgyFile file, List<Trace> traces, int part) {
 		
-		for(Trace trace : traces) {
-			trace.setActive(true);
-		}	
+		SgyFile sgyFile = new SgyFile();
+		
+		sgyFile.setTraces(traces);
+		sgyFile.setFile(getPartFile(file, part, file.getFile().getParentFile()));
+		
+		sgyFile.setBinHdr(file.getBinHdr());
+		sgyFile.setTxtHdr(file.getTxtHdr());
+		
+		int begin = traces.get(0).indexInFile;
+		int end = traces.get(traces.size()-1).indexInFile;
+		sgyFile.setAuxElements(filterAuxObjects(file, sgyFile, begin, end));
+		
+		return sgyFile;
+	}
+
+	private File getPartFile(SgyFile file, int part, File nfolder) {
+		File nfile;
+		String name = file.getFile().getName();
+		int pos = name.lastIndexOf(".");
+		String onlyname = name.substring(0, pos);
+		String spart = String.format("%03d", part);
+		nfile = new File(nfolder, onlyname + "_" + spart + name.substring(pos));
+		return nfile;
+	}
+
+	
+	private List<SgyFile> splitFile(SgyFile file, Field field, List<Point2D> border) {
+		
+		
+		List<SgyFile> splitList = new ArrayList<>();
+		List<Trace> sublist = new ArrayList<>();
+		
+		int part=1; 
+		
+		for(Trace trace : file.getTraces()) {
+			boolean inside = isTraceInsideSelection(field, border, trace);
+			
+			if(inside) {
+				sublist.add(trace);
+			}else{
+				if(!sublist.isEmpty()){
+				//end of active block of traces
+					
+					if(isGoodForFile(sublist)){ //filter too small files
+						SgyFile subfile = generateSgyFileFrom(file, sublist, part++);
+						splitList.add(subfile);
+					}
+					sublist = new ArrayList<>();
+				}
+			}
+		}
+		//for last
+		if(isGoodForFile(sublist)){					
+			SgyFile subfile = generateSgyFileFrom(file, sublist, part++);
+			splitList.add(subfile);
+		}
+		return splitList;
+	}
+
+	public List<BaseObject> filterAuxObjects(SgyFile file, SgyFile sgyFile, int begin, int end) {
+		List<BaseObject> auxObjects = new ArrayList<>();				
+		for(BaseObject au : file.getAuxElements()) {
+			if(au.isFit(begin, end)) {
+				auxObjects.add(au.copy(begin, sgyFile.getOffset()));
+			}
+		}
+		return auxObjects;
+	}
+
+	public boolean isGoodForFile(List<Trace> sublist) {
+		return sublist.size() > 20;
+	}
+	
+
+	public void undo() {
+
+		if(model.getUndoFiles() != null) {
+			model.getFileManager().setFiles(model.getUndoFiles());
+			model.setUndoFiles(null);
+			model.init();
+		}
 		
 	}
 
@@ -210,9 +294,10 @@ public class TraceCutter implements Layer {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-//		if(changed.isFileopened()) {
-//			buttonCutMode.setDisable(false);
-//		}
+		if(changed.isFileopened()) {
+			model.setUndoFiles(null);
+			initButtons();
+		}
 	}
 
 	@Override
@@ -222,47 +307,49 @@ public class TraceCutter implements Layer {
 	
 	public List<Node> getToolNodes2() {
 		
-		//buttonCutMode.setDisable(true);
-		buttonSet.setDisable(true);
+		initButtons();
 		
 		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        
-		    	updateBtns();
+		    	updateCutMode();
 		    	
 		    }
-
 		});
-
 		
 		buttonSet.setOnAction(e -> {
-		    	apply(model.getFileManager().getTraces());
-		    	
-		    	buttonCutMode.setSelected(false);
-		    	updateBtns();
-		    	
-		    	AppContext.notifyAll(new WhatChanged(Change.adjusting));
-			});
+	    	apply();
+	    	
+	    	buttonCutMode.setSelected(false);
+	    	updateCutMode();
+	    	buttonUndo.setDisable(false);
+
+	    	
+	    	AppContext.notifyAll(new WhatChanged(Change.mapzoom));
+		});
 		
 		
-		buttonClear.setOnAction(e -> {
-	    	clear(model.getFileManager().getTraces());
+		buttonUndo.setOnAction(e -> {
+	    	undo();
 
 	    	buttonCutMode.setSelected(false);
-	    	updateBtns();
+	    	updateCutMode();
+	    	buttonUndo.setDisable(true);
 
-	    	AppContext.notifyAll(new WhatChanged(Change.adjusting));
+	    	AppContext.notifyAll(new WhatChanged(Change.mapzoom));
 	    	
 		});
 		
-		//, new Label("LABEL")
-		
-		
-		
-		return Arrays.asList(buttonCutMode, buttonSet, buttonClear);
+		return Arrays.asList(buttonCutMode, buttonSet, buttonUndo);
+	}
+
+	public void initButtons() {
+		buttonCutMode.setSelected(false);
+		buttonSet.setDisable(true);
+		buttonUndo.setDisable(model.getUndoFiles() == null);
 	}
 	
-	private void updateBtns() {
+	private void updateCutMode() {
 		if(buttonCutMode.isSelected()) {
     		init();
     		buttonSet.setDisable(false);
@@ -270,6 +357,9 @@ public class TraceCutter implements Layer {
     		clear();
     		buttonSet.setDisable(true);
     	}
+		
+		
+		
     	listener.repaint();
 	}
 

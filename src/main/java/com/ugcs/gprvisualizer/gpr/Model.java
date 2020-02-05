@@ -12,6 +12,7 @@ import java.util.Set;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
@@ -19,6 +20,7 @@ import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.LocalScan;
+import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 public class Model {
 
@@ -30,6 +32,8 @@ public class Model {
 	private VerticalCutField vField = new VerticalCutField(this, TOP_MARGIN);
 	
 	private FileManager fileManager = new FileManager();
+	private List<SgyFile> undoFiles = null;
+	
 	
 	private Settings settings = new Settings();
 	
@@ -137,8 +141,16 @@ public class Model {
 		return maxHeightInSamples;
 	}
 
-	public void setMaxHeightInSamples(int maxHeightInSamples) {
-		this.maxHeightInSamples = maxHeightInSamples;
+	public void updateMaxHeightInSamples() {
+		
+		//set index of traces
+		int maxHeight = 0;
+		for(int i=0; i< this.getFileManager().getTraces().size(); i++ ) {
+			Trace tr = this.getFileManager().getTraces().get(i);
+			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
+		}
+		
+		this.maxHeightInSamples = maxHeight;
 		getSettings().maxsamples = maxHeightInSamples;
 	}
 
@@ -149,4 +161,63 @@ public class Model {
 	public void setLoading(boolean loading) {
 		this.loading = loading;
 	}
+	
+	public void updateSgyFileOffsets() {
+		int startTraceNum = 0;
+		for(SgyFile sgyFile : this.getFileManager().getFiles()) {
+			
+			sgyFile.getOffset().setStartTrace(startTraceNum);
+			startTraceNum += sgyFile.getTraces().size();
+			sgyFile.getOffset().setFinishTrace(startTraceNum);
+			sgyFile.getOffset().setMaxSamples(maxHeightInSamples);
+			//try {
+			//	new MarkupFile().load(sgyFile, model);
+			//} catch (Exception e) {
+			//	e.printStackTrace();
+			//}
+		}
+	}
+
+	public void initField() {
+		// center
+		MinMaxAvg lonMid = new MinMaxAvg();
+		MinMaxAvg latMid = new MinMaxAvg();
+		for (Trace trace : this.getFileManager().getTraces()) {
+			if(trace == null || trace.getLatLon() == null) {
+				System.out.println("null");
+				continue;
+			}
+			
+			latMid.put(trace.getLatLon().getLatDgr());
+			lonMid.put(trace.getLatLon().getLonDgr());
+		}
+		
+		  
+		this.getField().setPathCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
+
+		this.getField().setSceneCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
+		
+		this.getField().setZoom(18);
+	}
+
+	public void init() {
+		this.initField();
+		
+		this.updateMaxHeightInSamples();
+		
+		this.updateSgyFileOffsets();
+		
+		this.updateAuxElements();
+		
+		this.getVField().clear();
+	}
+
+	public List<SgyFile> getUndoFiles() {
+		return undoFiles;
+	}
+
+	public void setUndoFiles(List<SgyFile> undoFiles) {
+		this.undoFiles = undoFiles;
+	}
+	
 }

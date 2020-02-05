@@ -240,22 +240,15 @@ public class RadarMap extends BaseLayer{
 
 		for (Trace trace : model.getFileManager().getTraces()) {
 
-			if(!trace.isActive()) {
-				continue;
-			}
-			
 			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
 			
 			double alpha = calcAlpha(trace.getNormValues(), start, finish);
-
 			
 			da.drawCircle(
 				(int)p.getX() + width/2, 
 				(int)p.getY() + height/2, 
 				model.getSettings().radius, alpha);
-
 		}
-		
 		
 		return da.toImg();
 	}

@@ -26,6 +26,7 @@ public class Block implements ByteBufferProducer {
 	}
 	
 	public ByteBuffer read(BlockFile blockFile) throws IOException {
+		
 		ByteBuffer buf = ByteBuffer.allocate(length);
 		
 		blockFile.getChannel().position(start);

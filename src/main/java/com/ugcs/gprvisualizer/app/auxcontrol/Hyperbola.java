@@ -17,6 +17,8 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
+import sun.security.action.GetLongAction;
+
 public class Hyperbola implements BaseObject {
 
 	private int leftWidth = 100;
@@ -31,6 +33,10 @@ public class Hyperbola implements BaseObject {
 	private DragAnchor thick;
 	private DragAnchor hyperkfc;
 	
+	private Hyperbola(){
+		
+	}
+	
 	public Hyperbola(int trace, int sample, VerticalCutPart offset) {
 		this.offset = offset;
 		initDragAnchors();
@@ -42,6 +48,10 @@ public class Hyperbola implements BaseObject {
 		right.setTrace(offset.globalToLocal(trace + rightWidth));
 		thick.setSample(sample + thickness);
 		hyperkfc.setSample(sample + hyperkfcInt);
+	}
+	
+	public int getLeftWidth() {
+		return pinacle.getTrace() - left.getTrace();
 	}
 	
 	public Hyperbola(JSONObject json, VerticalCutPart offset) {
@@ -57,11 +67,15 @@ public class Hyperbola implements BaseObject {
 		hyperkfcInt = ((int)(long)(Long)json.get("hyperkfc"));
 		
 		//
+		updateContols();
+		
+	}
+
+	public void updateContols() {
 		left.setTrace(pinacle.getTrace() - leftWidth);
 		right.setTrace(pinacle.getTrace() + rightWidth);
 		thick.setSample(pinacle.getSample() + thickness);
 		hyperkfc.setSample(pinacle.getSample() + hyperkfcInt);
-		
 	}
 
 	private void initDragAnchors() {
@@ -81,10 +95,7 @@ public class Hyperbola implements BaseObject {
 			public void signal(Object obj) {
 				
 				
-				left.setTrace(pinacle.getTrace() - leftWidth);
-				right.setTrace(pinacle.getTrace() + rightWidth);
-				thick.setSample(pinacle.getSample() + thickness);
-				hyperkfc.setSample(pinacle.getSample() + hyperkfcInt);
+				updateContols();
 			}
 		};
 		
@@ -268,5 +279,33 @@ public class Hyperbola implements BaseObject {
 	
 	public int getTraceFinishGlobal() {
 		return offset.localToGlobal(right.getTrace());
+	}
+
+	@Override
+	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
+		
+		Hyperbola result = new Hyperbola();
+		result.offset = verticalCutPart;
+		result.initDragAnchors();
+		
+		result.pinacle.setTrace(pinacle.getTrace() - traceoffset);
+		result.pinacle.setSample(pinacle.getSample());
+		result.thickness = thickness;
+		result.leftWidth = leftWidth;
+		result.rightWidth = rightWidth;
+		result.hyperkfcInt = hyperkfcInt;
+		
+		//
+		result.updateContols();
+		
+		return result;
+		
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		
+
+		return left.getTrace() >= begin && right.getTrace() <= end;
 	}
 }

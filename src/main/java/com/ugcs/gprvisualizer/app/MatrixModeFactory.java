@@ -96,14 +96,14 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isFileopened()) {
-			
-			initList();
-			
-			am.init(model.getFileManager().getTraces());
-			updateImage();
-			
-		}
+//		if(changed.isFileopened()) {
+//			
+//			initList();
+//			
+//			am.init(model.getFileManager().getTraces());
+//			updateImage();
+//			
+//		}
 		
 	}
 

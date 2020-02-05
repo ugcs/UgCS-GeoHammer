@@ -81,13 +81,13 @@ public class TaskRunner implements ProgressListener {
 	protected void closePopup() {
 		//dialog.close();
 		
-		primaryStage.getScene().setCursor(Cursor.DEFAULT);
+		//primaryStage.getScene().setCursor(Cursor.DEFAULT);
 	}
 	
 	protected void showPopup() {
 		 
 		
-		primaryStage.getScene().setCursor(Cursor.WAIT);
+		//primaryStage.getScene().setCursor(Cursor.WAIT);
         //Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
         //dialog.setScene(dialogScene);
         //dialog.show();		

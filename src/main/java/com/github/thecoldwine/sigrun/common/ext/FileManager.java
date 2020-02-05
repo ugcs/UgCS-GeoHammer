@@ -24,42 +24,44 @@ public class FileManager {
 	private List<SgyFile> files;
 
 	private List<Trace> traces = null;
-	
+
 	private File topFolder = null;
 
-	
 	public boolean isActive() {
 		return files != null && !files.isEmpty();
 	}
 
-
 	public void processList(List<File> fileList, ProgressListener listener) {
-		traces = null;
-		files = new ArrayList<>();
-		topFolder = null;
-		
+		clear();
+
 		Set<File> sf = new TreeSet<File>(fileList);
-		
+
 		for (File fl : sf) {
-			if(fl.isDirectory()) {
+			if (fl.isDirectory()) {
 				processDirectory(fl, listener);
-			}else {
+			} else {
 				listener.progressMsg("load file " + fl.getAbsolutePath());
 				processFile(fl);
 			}
-			
+
 		}
 	}
-	
+
+	public void clear() {
+		traces = null;
+		files = new ArrayList<>();
+		topFolder = null;
+	}
+
 	private void processDirectory(File fl, ProgressListener listener) {
-		if(topFolder == null) {
+		if (topFolder == null) {
 			topFolder = fl;
 		}
-		
+
 		listener.progressMsg("load directory " + fl.getAbsolutePath());
-		
+
 		processFileList(Arrays.asList(fl.listFiles(filter)));
-		
+
 	}
 
 	private void processFile(File fl) {
@@ -68,6 +70,8 @@ public class FileManager {
 			sgyFile.open(fl);
 			files.add(sgyFile);
 
+			
+			new MarkupFile().load(sgyFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -75,20 +79,30 @@ public class FileManager {
 
 	private void processFileList(List<File> fileList) {
 		for (File fl : fileList) {
-			processFile(fl);			
+			processFile(fl);
 		}
-		System.out.println("stop files.size(): " + files.size() );
+		System.out.println("stop files.size(): " + files.size());
 	}
 
 	public List<SgyFile> getFiles() {
 		return files;
 	}
 
+	public void setFiles(List<SgyFile> fl) {
+		clear();
+		files = fl;
+	}
+
 	public List<Trace> getTraces() {
 		if (traces == null) {
 			traces = new ArrayList<>();
+
+			int traceIndex = 0;
 			for (SgyFile file : files) {
-				traces.addAll(file.getTraces());
+				for (Trace trace : file.getTraces()) {
+					traces.add(trace);
+					trace.indexInSet = traceIndex++;
+				}
 			}
 		}
 		return traces;

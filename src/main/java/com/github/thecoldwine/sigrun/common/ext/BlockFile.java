@@ -44,6 +44,14 @@ public class BlockFile {
 		}
 	}
 
+	public boolean hasNext(long size) {
+		try {
+			return position+size < chan.size();
+		} catch (IOException e) {
+			return false;			
+		}
+	}
+
 	public void close() {
 		try {
 			chan.close();

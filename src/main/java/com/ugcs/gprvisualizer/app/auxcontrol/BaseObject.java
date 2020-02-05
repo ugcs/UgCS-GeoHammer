@@ -9,8 +9,10 @@ import java.util.List;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 
 public interface BaseObject extends MouseHandler {
@@ -30,4 +32,9 @@ public interface BaseObject extends MouseHandler {
 	
 	boolean mousePressHandle(Point2D point, Field field);
 	 
+	
+	BaseObject copy(int offset, VerticalCutPart verticalCutPart);
+	
+	boolean isFit(int begin, int end);
+	
 }

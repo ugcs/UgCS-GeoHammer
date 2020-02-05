@@ -184,5 +184,17 @@ public class DragAnchor implements BaseObject, MouseHandler{
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 	
 }

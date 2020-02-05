@@ -64,25 +64,29 @@ public class Loader {
         	ProgressTask loadTask = new ProgressTask() {
 				@Override
 				public void run(ProgressListener listener) {
+					try {
 					
-					if(files.size() == 1 && files.get(0).getName().endsWith(".constPoints")) {
-						
-						ConstPointsFile cpf = new ConstPointsFile();
-						cpf.load(files.get(0));
-						
-						for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-							cpf.calcVerticalCutNearestPoints(sgyFile);
+						if(files.size() == 1 && files.get(0).getName().endsWith(".constPoints")) {
+							
+							ConstPointsFile cpf = new ConstPointsFile();
+							cpf.load(files.get(0));
+							
+							for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+								cpf.calcVerticalCutNearestPoints(sgyFile);
+							}
+							
+							model.updateAuxElements();
+							
+						}else {
+							try {
+								model.setLoading(true);
+								load(files, listener);
+							}finally {
+								model.setLoading(false);
+							}
 						}
-						
-						model.updateAuxElements();
-						
-					}else {
-						try {
-							model.setLoading(true);
-							load(files, listener);
-						}finally {
-							model.setLoading(false);
-						}
+					}catch(Exception e) {
+						e.printStackTrace();
 					}
 				}        		
         	};
@@ -107,78 +111,16 @@ public class Loader {
 		try {
 			model.getFileManager().processList(files, listener);
 		
-			System.out.println("getFileManager().processList " + model.getFileManager().getFiles().size());
+			model.init();
 			
-			initField();
-			System.out.println("===initField() " + model.getField().getPathCenter());
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
 		
-		
-		//set index of traces
-		int maxHeight = 0;
-		for(int i=0; i<model.getFileManager().getTraces().size(); i++ ) {
-			Trace tr = model.getFileManager().getTraces().get(i);
-			tr.indexInSet = i;
-			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
-		}
-		model.setMaxHeightInSamples(maxHeight);
-		
-		//
-		int startTraceNum = 0;
-		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-			
-			sgyFile.getOffset().setStartTrace(startTraceNum);
-			startTraceNum += sgyFile.getTraces().size();
-			sgyFile.getOffset().setFinishTrace(startTraceNum);
-			sgyFile.getOffset().setMaxSamples(maxHeight);
-			try {
-				new MarkupFile().load(sgyFile, model);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		//load const points
-		
-		
-		//
-		
-		model.updateAuxElements();
-		
-		model.getVField().clear();
-
-		Platform.runLater(new Runnable(){
-			@Override
-			public void run() {
-				AppContext.notifyAll(new WhatChanged(Change.fileopened));
-			}
-		});
+		AppContext.notifyAll(new WhatChanged(Change.fileopened));
 		
 	}
 
-	private void initField() {
-		// center
-		MinMaxAvg lonMid = new MinMaxAvg();
-		MinMaxAvg latMid = new MinMaxAvg();
-		for (Trace trace : model.getFileManager().getTraces()) {
-			if(trace == null || trace.getLatLon() == null) {
-				System.out.println("null");
-				continue;
-			}
-			
-			latMid.put(trace.getLatLon().getLatDgr());
-			lonMid.put(trace.getLatLon().getLonDgr());
-		}
-		
-		  
-		model.getField().setPathCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
 
-		model.getField().setSceneCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
-		
-		model.getField().setZoom(18);
-	}
-    
 	
 }

@@ -29,9 +29,6 @@ public class FoundPlace implements BaseObject, MouseHandler {
 
 	private Color flagColor = Color.getHSBColor((float)Math.random(), 1, 1f); 
 	private int traceInFile;
-	//private Trace trace;
-	//private Trace trace2;
-	//private Trace traceMidl;
 	private VerticalCutPart offset;
 	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
 	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
@@ -40,7 +37,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 	static int R_VER_M = ShapeHolder.flag.getBounds().height/2;
 	
 	
-	public static FoundPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
+	public static FoundPlace loadFromJson(JSONObject json, SgyFile sgyFile) {
 		int traceNum = (int)(long)(Long)json.get("trace");		
 		//Trace trace = sgyFile.getTraces().get(traceNum);
 		
@@ -209,6 +206,19 @@ public class FoundPlace implements BaseObject, MouseHandler {
 		}
 		
 		return false;
+	}
+
+	@Override
+	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
+		FoundPlace result = new FoundPlace(traceInFile-traceoffset, verticalCutPart); 
+		
+		return result;
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		
+		return traceInFile >= begin && traceInFile <=end;
 	}
 
 }
