@@ -24,8 +24,8 @@ public class Work {
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected BufferedImage img;
-	protected int width;
-	protected int height;
+	//protected int width;
+	//protected int height;
 	
 	
 	protected RepaintListener listener = new RepaintListener() {
@@ -80,10 +80,13 @@ public class Work {
             @Override
             public void run() {
             	if(img == null) {
+            		System.out.println("work img == null");
             		return;
             	}
 			    Image i = SwingFXUtils.toFXImage(img, null);
+			    
 			    imageView.setImage(i);
+			    System.out.println("set img");
             }
           });
 	}

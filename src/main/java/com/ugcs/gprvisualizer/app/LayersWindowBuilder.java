@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.Dimension;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -40,15 +41,16 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	ToolBar toolBar = new ToolBar();
 	
 	RadarMap radarMap;
+	Dimension windowSize = new Dimension();
 	
 	public LayersWindowBuilder(Model model) {
 		super(model);
 		
-		radarMap = new RadarMap(model, listener);
+		radarMap = new RadarMap(windowSize, model, listener);
 		
-		getLayers().add(new SatelliteMap(model, listener));
+		getLayers().add(new SatelliteMap(windowSize, model, listener));
 		getLayers().add(radarMap);
-		getLayers().add(new GpsTrack(model, listener));
+		getLayers().add(new GpsTrack(windowSize, model, listener));
 		getLayers().add(new FoundTracesLayer(model));
 		
 		traceCutter = new TraceCutter(model, listener);
@@ -99,9 +101,6 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
             @Override
             public void handle(MouseDragEvent event) {
-            	
-            	
-            	AppContext.notifyAll(new WhatChanged(Change.mapscroll));
             	
             	event.consume();
             }
@@ -163,9 +162,13 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 
 	
 	protected void repaintEvent() {
-		img = draw(width, height);
+		
+		img = draw(windowSize.width, windowSize.height);
+		
 		
 		updateWindow();
+		
+		System.out.println("lwb repaint 3");
 	}
 
 	@Override
@@ -176,10 +179,13 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 
 
 	public void setSize(int width, int height) {
-		this.width = width; 
-		this.height = height;
 		
-		repaintEvent();
+		windowSize.setSize(width, height);
+		
+		//repaintEvent();
+		
+		AppContext.notifyAll(new WhatChanged(Change.windowresized));
+		
 	}
 
 	

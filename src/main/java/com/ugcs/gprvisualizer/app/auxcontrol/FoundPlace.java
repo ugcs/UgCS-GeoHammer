@@ -63,7 +63,7 @@ public class FoundPlace implements BaseObject, MouseHandler {
 				
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
 			
 			return true;
 		}

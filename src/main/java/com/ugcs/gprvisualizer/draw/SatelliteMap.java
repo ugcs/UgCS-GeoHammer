@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -43,7 +44,7 @@ import javafx.scene.input.MouseEvent;
 public class SatelliteMap extends BaseLayer {
 
 	private RepaintListener listener;
-	private Model model;
+	
 	private BufferedImage img;
 	private LatLon imgLatLon;
 	private int imgZoom;
@@ -81,9 +82,11 @@ public class SatelliteMap extends BaseLayer {
 	
 	private LatLon click;
 	
-	public SatelliteMap(Model model,  RepaintListener listener) {
+	public SatelliteMap(Dimension parentDimension, Model model,  RepaintListener listener) {
+		super(parentDimension, model);
+		
 		this.listener = listener;
-		this.model = model;
+		
 	}
 	
 	@Override
@@ -215,6 +218,9 @@ public class SatelliteMap extends BaseLayer {
 		
 		dragField = null;
 		click = null;
+		
+		AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+		
 		return true;
 	}
 

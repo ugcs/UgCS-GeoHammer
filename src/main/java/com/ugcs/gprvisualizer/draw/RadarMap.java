@@ -1,21 +1,21 @@
 package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.sun.javafx.collections.SetAdapterChange;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
@@ -30,7 +30,6 @@ import com.ugcs.gprvisualizer.ui.DepthSlider;
 import com.ugcs.gprvisualizer.ui.DepthWindowSlider;
 import com.ugcs.gprvisualizer.ui.GainBottomSlider;
 import com.ugcs.gprvisualizer.ui.GainTopSlider;
-import com.ugcs.gprvisualizer.ui.LayerVisibilityCheckbox;
 import com.ugcs.gprvisualizer.ui.RadiusSlider;
 import com.ugcs.gprvisualizer.ui.ThresholdSlider;
 
@@ -38,22 +37,15 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 
 public class RadarMap extends BaseLayer{
 
 	private RepaintListener listener;
-	private Model model;
 	private BufferedImage img;
 	private LatLon imgLatLon;
-	
-	private int width = 800;
-	private int height = 800;
-	
 	
 	private BaseSlider depthSlider;
 	private BaseSlider depthWindowSlider;
@@ -117,21 +109,6 @@ public class RadarMap extends BaseLayer{
 		model.getSettings().isRadarMapVisible = active;
 	}
 	
-	
-//	private ChangeListener<Boolean> showLayerListener = new ChangeListener<Boolean>() {
-//		@Override
-//		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-//			
-//			setActive(newValue);
-//			vBox.setVisible(isActive());
-//			
-//			if(isActive()) {
-//				executor.submit(t);
-//			}else {
-//				listener.repaint();
-//			}
-//		}
-//	};
 	private ChangeListener<Boolean> autoGainListener = new ChangeListener<Boolean>() {
 		@Override
 		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -139,16 +116,15 @@ public class RadarMap extends BaseLayer{
 			gainBottomSlider.updateUI();
 			gainTopSlider.updateUI();
 			thresholdSlider.updateUI();
-			
-			//controller.render(RecalculationLevel.BUFFERED_IMAGE);
 			executor.submit(t);
 		}
 	};
 	
 	
-	public RadarMap(Model model, RepaintListener listener) {
+	public RadarMap(Dimension parentDimension, Model model, RepaintListener listener) {
+		super(parentDimension, model);
+		
 		this.listener = listener;
-		this.model = model;
 		
 		autoArrayBuilder = new AutomaticScaleBuilder(model);
 		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
@@ -162,16 +138,6 @@ public class RadarMap extends BaseLayer{
 		radiusSlider = new RadiusSlider(settings, sliderListener);
 		
 		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
-	
-		
-		
-//		new EventHandler<ActionEvent>() {
-//		    @Override public void handle(ActionEvent e) {
-//		        
-//		    	updateBtns();
-//		    }
-//		});
-
 		
 		String cssLayout = "-fx-border-color: gray;\n" +
                 "-fx-border-insets: 5;\n" +
@@ -190,14 +156,9 @@ public class RadarMap extends BaseLayer{
 		
 		BufferedImage _img = img;
 		
-		//System.out.println(" draw radar" + (_img != null ? "+" : "-"));
-		
 		if(_img == null) {
 			return;
 		}
-		
-		//int width = model.getSettings().width; 
-		//int height = model.getSettings().height;
 		
 		Point2D offst = model.getField().latLonToScreen(imgLatLon);
 		
@@ -209,28 +170,24 @@ public class RadarMap extends BaseLayer{
 
 	@Override
 	public boolean isReady() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isWindowresized()) {
-			width = model.getSettings().center_box_width;
-			height = model.getSettings().center_box_height;
-		}
-		
 		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
-			//System.out.println(" radar start thread");
 			executor.submit(t);
 		}		
 	}
 	
 	private BufferedImage createHiRes() {
 		
+		Field field = new Field(model.getField());
 		
-		DblArray da = new DblArray(width, height);
+		imgLatLon = field.getSceneCenter();
+		
+		DblArray da = new DblArray(parentDimension.width, parentDimension.height);
 		
 		scaleArray = getArrayBuilder().build();
 		
@@ -240,13 +197,13 @@ public class RadarMap extends BaseLayer{
 
 		for (Trace trace : model.getFileManager().getTraces()) {
 
-			Point2D p = model.getField().latLonToScreen(trace.getLatLon());
+			Point2D p = field.latLonToScreen(trace.getLatLon());
 			
 			double alpha = calcAlpha(trace.getNormValues(), start, finish);
 			
 			da.drawCircle(
-				(int)p.getX() + width/2, 
-				(int)p.getY() + height/2, 
+				(int)p.getX() + parentDimension.width/2, 
+				(int)p.getY() + parentDimension.height/2, 
 				model.getSettings().radius, alpha);
 		}
 		
@@ -277,11 +234,11 @@ public class RadarMap extends BaseLayer{
 	
 	int r = 5;
 	private BufferedImage createLowRes() {
-		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage img = new BufferedImage(parentDimension.width, parentDimension.height, BufferedImage.TYPE_INT_ARGB);
 		
 		
 		Graphics2D g2 = (Graphics2D)img.getGraphics();
-		g2.translate(width/2, height/2);
+		g2.translate(parentDimension.width/2, parentDimension.height/2);
 		g2.setColor(new Color((float)Math.random(), (float)Math.random(), (float)Math.random()));
 		for(SgyFile sf : model.getFileManager().getFiles()) {
 			
@@ -306,29 +263,21 @@ public class RadarMap extends BaseLayer{
 				if(!model.getFileManager().isActive()) {
 					return;
 				}
-				//TODO: show lowres
-				//img = createLowRes();
-				//imgLatLon = model.getField().getSceneCenter();				
-				//listener.repaint();
-				
 				
 				if(executor.getQueue().size() > 0) {
 					return;
 				}
-				
 			
 				img = createHiRes();
-				imgLatLon = model.getField().getSceneCenter();
+				
 				
 				listener.repaint();
 							
 
 			}catch(Exception e) {
 				e.printStackTrace();
-			}
-			
+			}			
 		}
-
 	};
 
 	@Override

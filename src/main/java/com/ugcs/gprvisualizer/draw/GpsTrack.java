@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -26,7 +27,6 @@ import javafx.scene.input.MouseEvent;
 public class GpsTrack extends BaseLayer{
 
 	private RepaintListener listener;
-	private Model model;
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
@@ -45,9 +45,11 @@ public class GpsTrack extends BaseLayer{
 	
 	
 	
-	public GpsTrack(Model model, RepaintListener listener) {
-		this.listener = listener;
-		this.model = model;
+	public GpsTrack(Dimension parentDimension, Model model, RepaintListener listener) {
+		
+		super(parentDimension, model);
+		
+		this.listener = listener;		
 	}
 	
 	@Override
