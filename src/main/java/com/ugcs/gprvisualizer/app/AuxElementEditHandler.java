@@ -11,13 +11,14 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -31,23 +32,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-public class AuxElementEditHandler implements MouseHandler {
+public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 
 	private Model model;
-	private CleverImageView cleverView;
-	
-	//private AuxElement selectedAuxElement;
-	private VerticalCutField field;
+	private ProfileView profileView;
+	private ProfileField field;
 	private boolean moved = false;
 	
-	//private List<BaseObject> controls = null;
 	private BaseObject selected;
 	private MouseHandler mouseInput;
-	
-//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addHyp.png")));
-//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addRect.png")));
-//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addFlag.png")));
-//	tb.getItems().add(new Button("", ResourceImageHolder.getImageView("addSurf.png")));
 	
 	private Button addBtn = new Button("", ResourceImageHolder.getImageView("addRect.png"));
 	private Button addHypBtn = new Button("", ResourceImageHolder.getImageView("addHyp.png"));	
@@ -57,44 +50,46 @@ public class AuxElementEditHandler implements MouseHandler {
 	private Button delBtn = new Button("", ResourceImageHolder.getImageView("delete-20.png"));
 	private Button clearBtn = new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
 	
-	public AuxElementEditHandler(CleverImageView cleverView) {
-		this.cleverView = cleverView;
-		this.model = this.cleverView.model;
+	public AuxElementEditHandler(ProfileView cleverView) {
+		this.profileView = cleverView;
+		this.model = this.profileView.model;
 		field = cleverView.getField();
 		
 		initButtons();
+		
+		AppContext.smthListener.add(this);
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		
 		boolean processed = false;
 		if(model.getControls() != null) {
 			processed = processPress(model.getControls(), localPoint, vField);
 		}
 		
-		if(!processed && selected != null) {
-			processed = selected.mousePressHandle(localPoint, vField);
+		if(!processed && getSelected() != null) {
+			processed = getSelected().mousePressHandle(localPoint, vField);
 			if(processed) {
-				mouseInput = selected;
+				mouseInput = getSelected();
 			}
 		}
 		
 		if(!processed) {
-			processed = processPress1(cleverView.model.getAuxElements(), localPoint, vField);
+			processed = processPress1(profileView.model.getAuxElements(), localPoint, vField);
 		}
 		
 		if(!processed) {
 			//deselect
 			mouseInput = null;
-			selected = null;
+			setSelected(null);
 			model.setControls(null);
 		}
 		
 		moved = false;
 
 		if(processed) {
-			cleverView.repaintEvent();
+			profileView.repaintEvent();
 		}
 
 		return processed;
@@ -111,11 +106,7 @@ public class AuxElementEditHandler implements MouseHandler {
 	}
 	
 	public Node getRight() {
-		
 		return new VBox();
-		//new VBox(
-			//	new HBox( addBtn, addHypBtn, addSurfaceBtn, addFoundBtn),
-				//new HBox( delBtn, clearBtn));
 	}
 	
 	protected void initButtons(){
@@ -136,19 +127,19 @@ public class AuxElementEditHandler implements MouseHandler {
 		
 		delBtn.setOnAction(e -> {		
 			
-			if(selected != null) {
+			if(getSelected() != null) {
 				for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-					sgyFile.getAuxElements().remove(selected);
+					sgyFile.getAuxElements().remove(getSelected());
 				}				
 				
 				mouseInput = null;
-				selected = null;
+				setSelected(null);
 				model.setControls(null);
 			}
 			
 			model.updateAuxElements();
 			
-			cleverView.repaintEvent();
+			profileView.repaintEvent();
 			
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		});
@@ -158,28 +149,36 @@ public class AuxElementEditHandler implements MouseHandler {
 				
 				SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 				
-				if(sf != null) {
-					AuxRect rect = new AuxRect(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
-					
-					sf.getAuxElements().add(rect);
-					model.updateAuxElements();
+				if(sf == null) {
+					return;
 				}
-				cleverView.repaintEvent();
+				
+				AuxRect rect = new AuxRect(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
+				
+				sf.getAuxElements().add(rect);
+				model.updateAuxElements();
+				
+				selectControl(rect);
+				
+				profileView.repaintEvent();
 			}
 		);
 		
 		addHypBtn.setOnAction(e -> {				
-			
-			
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 			
-			if(sf != null) {
-				Hyperbola rect = new Hyperbola(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
-				
-				sf.getAuxElements().add(rect);
-				model.updateAuxElements();
+			if(sf == null) {
+				return;
 			}
-			cleverView.repaintEvent();
+
+			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
+				
+			sf.getAuxElements().add(rect);
+			model.updateAuxElements();			
+			
+			selectControl(rect);
+			
+			profileView.repaintEvent();
 		}
 	);
 		
@@ -196,22 +195,25 @@ public class AuxElementEditHandler implements MouseHandler {
 			sf.getAuxElements().add(rect);
 			model.updateAuxElements();
 			
-			cleverView.repaintEvent();
+			profileView.repaintEvent();
 		});
 		
 		addFoundBtn.setOnAction(e -> {				
 			
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 			
-			//Trace tr = model.getFileManager().getTraces().get(field.getSelectedTrace());
-			
-			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(field.getSelectedTrace()), sf.getOffset());
-				
-			if(sf != null) {
-				sf.getAuxElements().add(rect);
-				model.updateAuxElements();
+			if(sf == null) {
+				return;
 			}
-			cleverView.repaintEvent();
+				
+			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(field.getSelectedTrace()), sf.getOffset());
+			
+			sf.getAuxElements().add(rect);
+			model.updateAuxElements();
+
+			selectControl(rect);
+			
+			profileView.repaintEvent();
 		});
 		
 	}
@@ -222,13 +224,13 @@ public class AuxElementEditHandler implements MouseHandler {
 		}				
 			
 		mouseInput = null;
-		selected = null;
+		setSelected(null);
 		model.setControls(null);
 
 		
 		model.updateAuxElements();
 		
-		cleverView.repaintEvent();
+		profileView.repaintEvent();
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
@@ -275,7 +277,7 @@ public class AuxElementEditHandler implements MouseHandler {
 		return rect;
 	}
 
-	private boolean processPress(List<BaseObject> controls2, Point localPoint, VerticalCutField vField) {
+	private boolean processPress(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
 		for(BaseObject o : controls2) {
 			if(o.isPointInside(localPoint, vField)) {
 				
@@ -289,16 +291,11 @@ public class AuxElementEditHandler implements MouseHandler {
 		return false;
 	}
 
-	private boolean processPress1(List<BaseObject> controls2, Point localPoint, VerticalCutField vField) {
+	private boolean processPress1(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
 		for(BaseObject o : controls2) {
 			if(o.mousePressHandle(localPoint, vField)) {
 				
-				selected  = o;
-				model.setControls(null);
-				List<BaseObject> c = selected.getControls();
-				if(c != null) {
-					model.setControls(c);
-				}
+				selectControl(o);
 				
 				return true;
 			}
@@ -306,44 +303,47 @@ public class AuxElementEditHandler implements MouseHandler {
 		
 		return false;
 	}
-	/**
-				
 
-	 */
+	public void selectControl(BaseObject o) {
+		setSelected(o);
+		model.setControls(null);
+		List<BaseObject> c = getSelected().getControls();
+		if(c != null) {
+			model.setControls(c);
+		}
+	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
 
 		if(mouseInput != null) {			
 			mouseInput.mouseReleaseHandle(localPoint, vField);
 			mouseInput = null;
 			
-			cleverView.imageView.setCursor(Cursor.DEFAULT);
+			profileView.imageView.setCursor(Cursor.DEFAULT);
 			
-			cleverView.repaintEvent();
+			profileView.repaintEvent();
 			return true;
 		}
-		
-		
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point localPoint, ProfileField vField) {
 
 		if(mouseInput != null) {			
 			mouseInput.mouseMoveHandle(localPoint, vField);
 			
-			cleverView.repaintEvent();
+			profileView.repaintEvent();
 			
 			return true;
 		}else{
 			if(aboveControl(localPoint, vField)) {
-				cleverView.imageView.setCursor(Cursor.MOVE);
+				profileView.imageView.setCursor(Cursor.MOVE);
 			}else if(aboveElement(localPoint, vField)) {
-				cleverView.imageView.setCursor(Cursor.HAND);
+				profileView.imageView.setCursor(Cursor.HAND);
 			}else{
-				cleverView.imageView.setCursor(Cursor.DEFAULT);
+				profileView.imageView.setCursor(Cursor.DEFAULT);
 			}			
 		}		
 		
@@ -351,7 +351,7 @@ public class AuxElementEditHandler implements MouseHandler {
 		return false;
 	}
 
-	private boolean aboveControl(Point localPoint, VerticalCutField vField) {
+	private boolean aboveControl(Point localPoint, ProfileField vField) {
 		if(model.getControls() == null) {
 			return false;
 		}
@@ -364,7 +364,7 @@ public class AuxElementEditHandler implements MouseHandler {
 		return false;
 	}
 	
-	private boolean aboveElement(Point localPoint, VerticalCutField vField) {
+	private boolean aboveElement(Point localPoint, ProfileField vField) {
 		if(model.getAuxElements() == null) {
 			return false;
 		}
@@ -378,5 +378,29 @@ public class AuxElementEditHandler implements MouseHandler {
 		return false;
 	}
 
+	private BaseObject getSelected() {
+		return selected;
+	}
 
+	private void setSelected(BaseObject newselected) {
+		if(this.selected != null) {
+			this.selected.setSelected(false);
+		}
+		
+		if(newselected != null) {
+			newselected.setSelected(true);
+		}
+		
+		this.selected = newselected;
+	}
+
+	@Override
+	public void somethingChanged(WhatChanged changed) {
+		if(changed.isFileopened()) {
+			
+			mouseInput = null;
+			setSelected(null);
+			model.setControls(null);			
+		}		
+	}
 }

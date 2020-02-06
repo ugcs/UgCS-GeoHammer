@@ -35,7 +35,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class LayersWindowBuilder extends Work implements SmthChangeListener, ModeFactory {
+public class MapView extends Work implements SmthChangeListener, ModeFactory {
 	
 	TraceCutter traceCutter;
 	ToolBar toolBar = new ToolBar();
@@ -43,7 +43,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 	RadarMap radarMap;
 	Dimension windowSize = new Dimension();
 	
-	public LayersWindowBuilder(Model model) {
+	public MapView(Model model) {
 		super(model);
 		
 		radarMap = new RadarMap(windowSize, model, listener);
@@ -165,10 +165,7 @@ public class LayersWindowBuilder extends Work implements SmthChangeListener, Mod
 		
 		img = draw(windowSize.width, windowSize.height);
 		
-		
 		updateWindow();
-		
-		System.out.println("lwb repaint 3");
 	}
 
 	@Override

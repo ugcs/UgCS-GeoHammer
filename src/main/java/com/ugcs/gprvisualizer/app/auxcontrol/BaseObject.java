@@ -11,7 +11,7 @@ import org.json.simple.JSONObject;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 
@@ -19,10 +19,10 @@ public interface BaseObject extends MouseHandler {
 
 	
 	void drawOnMap(Graphics2D g2, Field hField);
-	void drawOnCut(Graphics2D g2, VerticalCutField vField);
+	void drawOnCut(Graphics2D g2, ProfileField vField);
 	
-	boolean isPointInside(Point localPoint, VerticalCutField vField);
-	Rectangle getRect(VerticalCutField vField);
+	boolean isPointInside(Point localPoint, ProfileField vField);
+	Rectangle getRect(ProfileField vField);
 	
 	void signal(Object obj);
 	
@@ -37,4 +37,6 @@ public interface BaseObject extends MouseHandler {
 	
 	boolean isFit(int begin, int end);
 	
+	void setSelected(boolean selected);
+	boolean isSelected();
 }

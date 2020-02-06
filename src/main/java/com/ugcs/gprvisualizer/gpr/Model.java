@@ -16,7 +16,7 @@ import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.LocalScan;
@@ -29,7 +29,7 @@ public class Model {
 	private boolean loading = false; 
 	
 	private Field field = new Field();
-	private VerticalCutField vField = new VerticalCutField(this, TOP_MARGIN);
+	private ProfileField vField = new ProfileField(this, TOP_MARGIN);
 	
 	private FileManager fileManager = new FileManager();
 	private List<SgyFile> undoFiles = null;
@@ -133,7 +133,7 @@ public class Model {
 		return 0;
 	}
 	
-	public VerticalCutField getVField() {
+	public ProfileField getVField() {
 		return vField;
 	}
 

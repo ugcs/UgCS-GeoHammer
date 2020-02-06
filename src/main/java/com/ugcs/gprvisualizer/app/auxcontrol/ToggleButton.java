@@ -5,7 +5,7 @@ import java.awt.Point;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
 public class ToggleButton extends DragAnchor {
@@ -38,7 +38,7 @@ public class ToggleButton extends DragAnchor {
 	
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		
 		if(isPointInside(localPoint, vField)) {
 			
@@ -51,7 +51,7 @@ public class ToggleButton extends DragAnchor {
 	}
 	
 	@Override
-	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 		
 		return false;
 	}

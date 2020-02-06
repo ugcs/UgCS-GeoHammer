@@ -16,7 +16,7 @@ public class MainJavafx extends Application {
 	private Model model = new Model();
 	
 	//private SceneAmplitudeMap sceneAmplitudeMap = new SceneAmplitudeMap(model);
-	private LayersWindowBuilder layersWindowBuilder = new LayersWindowBuilder(model);
+	private MapView layersWindowBuilder = new MapView(model);
 	
 	Scene scene1;
 	Scene scene2;

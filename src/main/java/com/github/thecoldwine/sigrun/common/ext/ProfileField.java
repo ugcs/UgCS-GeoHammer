@@ -5,7 +5,7 @@ import java.awt.Point;
 
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class VerticalCutField {
+public class ProfileField {
 
 	
 	public static final double ZOOM_A = 1.2;
@@ -24,13 +24,13 @@ public class VerticalCutField {
 	
 	private Dimension viewDimension = new Dimension();
 
-	public VerticalCutField(Model model, int topMargin) {
+	public ProfileField(Model model, int topMargin) {
 		this.model  = model;
 		
 		this.topMargin = topMargin;
 	}
 
-	public VerticalCutField(VerticalCutField copy){
+	public ProfileField(ProfileField copy){
 		this.model  = copy.model;
 		this.selectedTrace = copy.selectedTrace;
 		this.startSample = copy.startSample;

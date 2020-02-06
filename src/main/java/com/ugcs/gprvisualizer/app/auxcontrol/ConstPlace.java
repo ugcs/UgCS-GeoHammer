@@ -16,7 +16,7 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.MouseHandler;
@@ -24,7 +24,7 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class ConstPlace implements BaseObject, MouseHandler {
+public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
 
 	private LatLon latLon;
 	private int traceInFile;
@@ -46,7 +46,7 @@ public class ConstPlace implements BaseObject, MouseHandler {
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		
 		if(isPointInside(localPoint, vField)) {
 			
@@ -62,13 +62,13 @@ public class ConstPlace implements BaseObject, MouseHandler {
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 		
 		return false;
 	}
@@ -88,7 +88,7 @@ public class ConstPlace implements BaseObject, MouseHandler {
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		
 		Rectangle rect = getRect(vField);
 		
@@ -99,7 +99,7 @@ public class ConstPlace implements BaseObject, MouseHandler {
 		g2.fillOval(rect.x , rect.y, rect.width, rect.height);
 	}
 	
-	public Rectangle getRect(VerticalCutField vField) {
+	public Rectangle getRect(ProfileField vField) {
 		
 		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
 				
@@ -120,7 +120,7 @@ public class ConstPlace implements BaseObject, MouseHandler {
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField vField) {
 		
 		Rectangle rect = getRect(vField);
 		

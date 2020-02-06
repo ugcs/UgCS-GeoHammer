@@ -14,12 +14,12 @@ import org.json.simple.JSONObject;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
 import sun.security.action.GetLongAction;
 
-public class Hyperbola implements BaseObject {
+public class Hyperbola extends BaseObjectImpl implements BaseObject {
 
 	private int leftWidth = 100;
 	private int rightWidth = 100;
@@ -83,7 +83,6 @@ public class Hyperbola implements BaseObject {
 		hyperkfc = new DragAnchor(ResourceImageHolder.IMG_WIDTH, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				hyperkfcInt = hyperkfc.getSample() - pinacle.getSample();
-				System.out.println(" hyperkfcInt " + hyperkfcInt);
 			}
 			
 			public int getTrace() {
@@ -130,18 +129,18 @@ public class Hyperbola implements BaseObject {
 	}
 	
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {		
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {		
 		return isPointInside(localPoint, vField);
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -153,13 +152,13 @@ public class Hyperbola implements BaseObject {
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		drawHyperbola(g2, vField);
 		
 	}
 
 	@Override
-	public Rectangle getRect(VerticalCutField vField) {
+	public Rectangle getRect(ProfileField vField) {
 		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), pinacle.getSample()-10));
 		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), pinacle.getSample()+thickness));
 		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
@@ -225,14 +224,14 @@ public class Hyperbola implements BaseObject {
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField vField) {
 		
 		Rectangle rect = getRect(vField);
 		
 		return rect.contains(localPoint);
 	}
 
-	private void drawHyperbola(Graphics2D g2, VerticalCutField vField) {
+	private void drawHyperbola(Graphics2D g2, ProfileField vField) {
 		
 		//Rectangle rect = getRect(vField); 
 		//g2.setColor(Color.RED);
@@ -248,7 +247,7 @@ public class Hyperbola implements BaseObject {
 		drawHyperbolaLine(g2, vField, kf, tr, y+thickness);
 	}
 
-	private void drawHyperbolaLine(Graphics2D g2, VerticalCutField vField, double kf, int tr, double y) {
+	private void drawHyperbolaLine(Graphics2D g2, ProfileField vField, double kf, int tr, double y) {
 		Point prev = null;
 		
 		int s = getTraceStartGlobal(); //tracePinacle.intValue() - leftWidth;

@@ -80,13 +80,11 @@ public class Work {
             @Override
             public void run() {
             	if(img == null) {
-            		System.out.println("work img == null");
             		return;
             	}
 			    Image i = SwingFXUtils.toFXImage(img, null);
 			    
-			    imageView.setImage(i);
-			    System.out.println("set img");
+			    imageView.setImage(i);			    
             }
           });
 	}

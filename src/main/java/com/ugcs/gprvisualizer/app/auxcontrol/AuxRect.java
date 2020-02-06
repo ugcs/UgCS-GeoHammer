@@ -19,14 +19,14 @@ import com.github.thecoldwine.sigrun.common.ext.AreaType;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 import javafx.scene.control.ChoiceDialog;
 
-public class AuxRect implements BaseObject {
+public class AuxRect extends BaseObjectImpl implements BaseObject {
 	
 	public static final Color maskColor = new Color(50, 0, 255, 70);
 	
@@ -338,7 +338,7 @@ public class AuxRect implements BaseObject {
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 
 		if(isPointInside(localPoint, vField)){
 			
@@ -361,14 +361,14 @@ public class AuxRect implements BaseObject {
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
 
 		return false;
 	}
 
 	int lastX=-1;
 	@Override
-	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 
 		if(img == null) {
 			return false;
@@ -447,7 +447,7 @@ public class AuxRect implements BaseObject {
 		
 	}
 
-	public Rectangle getRect(VerticalCutField vField) {
+	public Rectangle getRect(ProfileField vField) {
 		
 		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), getSampleStart()));
 		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), getSampleFinish()));
@@ -456,7 +456,7 @@ public class AuxRect implements BaseObject {
 	}
 	
 	@Override
-	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		Rectangle rect = getRect(vField); 
 	
 		if(img != null) {
@@ -474,7 +474,7 @@ public class AuxRect implements BaseObject {
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField vField) {
 		
 		Rectangle rect = getRect(vField);
 		

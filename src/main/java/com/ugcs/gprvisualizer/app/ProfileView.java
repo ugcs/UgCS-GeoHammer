@@ -16,7 +16,7 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -53,17 +53,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-public class CleverImageView implements SmthChangeListener, ModeFactory {
+public class ProfileView implements SmthChangeListener, ModeFactory {
 	
-	//public static final int TOP_AREA_HEIGHT = 30;
-	PrismDrawer prismDrawer;	
+	protected PrismDrawer prismDrawer;	
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
 	protected ScrollBar s1 = new ScrollBar();
 	
 	protected BufferedImage img;
-	Image i ;
+	protected Image i ;
 	protected int width;
 	protected int height;
 	protected double contrast = 900;	
@@ -75,17 +74,14 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
-	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png" ));//"zoom-in_20.png"
+	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png" ));
 	private Button zoomOutBtn = new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
 	
-	
 	private MouseHandler selectedMouseHandler;   
-	
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
 	
 	private HyperFinder hyperFinder; 
-	
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -102,8 +98,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 	};
 	
-	
-	public CleverImageView(Model model) {
+	public ProfileView(Model model) {
 		this.model = model;
 		
 		hyperFinder = new HyperFinder(model);
@@ -126,12 +121,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
                 
             }
         });
-		
 
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
-		
-		
 		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
@@ -145,23 +137,8 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().add(getSpacer());
 		
 		toolBar.getItems().add(hyperLiveViewBtn);
-		///
-		
-//		Spinner<Integer> spinner = new Spinner<Integer>();
-//		 
-//        final int initialValue = 3;
-// 
-//        // Value factory.
-//        SpinnerValueFactory<Integer> valueFactory = //
-//                new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 50, initialValue);
-// 
-//        spinner.setValueFactory(valueFactory);	
-//        toolBar.getItems().add(spinner);
-		///
 		
 		vbox.getChildren().addAll(toolBar, imageView, s1);
-		
-		
 		
 		zoomInBtn.setOnAction(e -> {
 			zoom(1, width/2, height/2);
@@ -170,8 +147,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		zoomOutBtn.setOnAction(e -> {
 			zoom(-1, width/2, height/2);
 		});
-		
-		//updateAspect();
 		
 		AppContext.smthListener.add(this);
 	}
@@ -183,7 +158,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		List<Trace> traces = model.getFileManager().getTraces();
 
-		VerticalCutField field = new VerticalCutField(getField());
+		ProfileField field = new ProfileField(getField());
 		
 		BufferedImage bi ;
 		if(img != null && img.getWidth() == width && img.getHeight() == height) {
@@ -214,9 +189,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		drawFileNames(height, field, g2);
 
-		
 		drawAmplitudeMapLevels(field, g2);
-		
 		
 		drawAuxElements(field, g2);
 		
@@ -235,12 +208,11 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	                        BasicStroke.JOIN_MITER,
 	                        10.0f, dash1, 0.0f);
 	
-	private void drawAmplitudeMapLevels(VerticalCutField field, Graphics2D g2) {
+	private void drawAmplitudeMapLevels(ProfileField field, Graphics2D g2) {
 		if(model.getSettings().isRadarMapVisible) {
 		
 			g2.setColor(Color.MAGENTA);
-			g2.setStroke(dashed);
-			
+			g2.setStroke(dashed);			
 			
 			int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
 			g2.drawLine(-width/2, y, width/2, y);
@@ -251,7 +223,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}		
 	}
 	
-	private void drawAuxElements(VerticalCutField field, Graphics2D g2) {
+	private void drawAuxElements(ProfileField field, Graphics2D g2) {
 		for(BaseObject bo : model.getAuxElements()) {
 			bo.drawOnCut(g2, field);
 		}
@@ -267,7 +239,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
 	}
 
-	private void drawGroundLevel(VerticalCutField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
+	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
 		g2.setColor(Color.GREEN);
 		for(int i=startTrace+1; i<finishTrace; i++) {
 			Trace trace1 = traces.get(i-1);
@@ -279,7 +251,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
-	private void drawFileNames(int height, VerticalCutField field, Graphics2D g2) {
+	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 		g2.setColor(Color.WHITE);
 		for(SgyFile fl : model.getFileManager().getFiles()) {
 			Point p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
@@ -289,7 +261,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
-	private void drawPrism(int width, int height, VerticalCutField field, int[] buffer, int vOffset, int startTrace, int finishTrace) {
+	private void drawPrism(int width, int height, ProfileField field, int[] buffer, int vOffset, int startTrace, int finishTrace) {
 		int lastSample = field.getLastVisibleSample(height-vOffset);
 		int vscale = Math.max(1, (int)field.getVScale());
 		int hscale = Math.max(1, (int)field.getHScale());
@@ -359,17 +331,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public List<Node> getRight() {
 		
-//		ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
-//	        @Override
-//	        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
-//	        	model.getSettings().hyperliveview = newValue;
-//	        } 
-//	    };
-//		
-//		CheckBox checkBox = new CheckBox("Hyperbola live view");
-//		checkBox.selectedProperty().addListener(listener);
-		
-		
 		return Arrays.asList(
 				new HBox( zoomInBtn, zoomOutBtn),
 				contrastSlider.produce() , 
@@ -390,10 +351,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 			double ey = event.getSceneY();
 			
 			zoom(ch, ex, ey);
-				
-			
-			
-			
 	    } );
 		
 		imageView.setOnMousePressed(mousePressHandler);
@@ -413,9 +370,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		getField().setZoom(getField().getZoom()+ch);
 		
-		//updateAspect();
-		
-		
 		Point t2 = getLocalCoords(ex, ey);
 		TraceSample ts2 = getField().screenToTraceSample(t2);
 		
@@ -428,15 +382,9 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		
 		updateScroll();
 		repaintEvent();
-		//updateScroll();
-		
+	
 	}
 
-//	private void updateAspect() {
-//		double as = Math.pow(1.14, aspect/4.0);			
-//		getField().setHScale(getField().getVScale()*as);
-//	}
-	
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(MouseEvent mouseEvent) {
@@ -450,22 +398,12 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
         @Override
         public void handle(MouseDragEvent event) {
-        	
-        	
-        	
         	Point p = getLocalCoords(event);
         	
         	if(selectedMouseHandler != null) {
-        		
-        		
-        		
         		selectedMouseHandler.mouseReleaseHandle(p, getField());
         		selectedMouseHandler = null;
         	}
-//        	if(!auxEditHandler.mouseReleaseHandle(p, getField())) {
-//        		scrollHandler.mouseReleaseHandle(p, getField());
-//        	}
-        	//getMouseHandler().mouseReleaseHandle();
         	
         	imageView.setCursor(Cursor.DEFAULT);
         	
@@ -477,7 +415,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         
 		@Override
         public void handle(MouseEvent event) {
-			
 			
         	Point p = getLocalCoords(event);
         	
@@ -492,13 +429,10 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         			selectedMouseHandler.mouseMoveHandle(p, getField());
         		}else{
 	        		if(!auxEditHandler.mouseMoveHandle(p, getField())) {
-	        	        //scrollHandler.mouseMoveHandle(p, getField());
+
 	        		}
         		}
-			
-        		//getMouseHandler().mouseMoveHandle(getLocalCoords(event));
         	}
-        	
         }
 	};
 	
@@ -512,7 +446,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
     	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
     	Point p = new Point(
     			(int)(imgCoord.getX() - imageView.getBoundsInLocal().getWidth()/2), 
-    			(int)(imgCoord.getY() ));//- imageView.getBoundsInLocal().getHeight()/2
+    			(int)(imgCoord.getY() ));
 		return p;
 	}
 
@@ -530,7 +464,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         	}
         	
         	imageView.setCursor(Cursor.CLOSED_HAND);
-        	//getMouseHandler().mousePressHandle(getLocalCoords(event));
         }
 	};
 
@@ -538,7 +471,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
         @Override
         public void handle(MouseEvent event) {        	
         	
-        	//getMouseHandler().mouseReleaseHandle(getLocalCoords(event));
         	Point p = getLocalCoords(event);
         	
         	if(selectedMouseHandler != null) {
@@ -580,17 +512,13 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-//		if() {
-//			updateAspect();
-//		}
-		
 		if(changed.isFileopened()) {
 			s1.setVisible(true);
 			toolBar.setDisable(false);
 		}
 		
 		if(changed.isAuxOnMapSelected()) {
-			//field.setSelectedTrace(selectedTrace);
+
 		}
 		
 		repaintEvent();
@@ -609,11 +537,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		s1.setVisibleAmount(am);
 		s1.setUnitIncrement(am/4);
 		s1.setBlockIncrement(am);
-		
-		
-		
 		s1.setValue(getField().getSelectedTrace());
-
 	}
 	
 
@@ -640,7 +564,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		public void updateUI() {
 			slider.setMax(15000);
 			slider.setMin(10);
-			//slider.set
 			slider.setValue(contrast);
 		}
 		
@@ -682,7 +605,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		public void updateUI() {
 			slider.setMax(400);
 			slider.setMin(2);
-			//slider.set
 			slider.setValue(settings.hyperkfc);
 		}
 		
@@ -704,7 +626,6 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		public void updateUI() {
 			slider.setMax(350);
 			slider.setMin(40);
-			//slider.set
 			slider.setValue(settings.hypergoodsize);
 		}
 		
@@ -720,8 +641,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		this.height = height-Model.TOP_MARGIN;
 		getField().setViewDimension(new Dimension(this.width, this.height));
 		
-		repaintEvent();
-		
+		repaintEvent();		
 	}
 
 	MouseHandler getMouseHandler() {
@@ -736,7 +656,7 @@ public class CleverImageView implements SmthChangeListener, ModeFactory {
 		this.scrollHandler = scrollHandler;
 	}
 
-	protected VerticalCutField getField() {
+	protected ProfileField getField() {
 		return model.getVField();
 	}
 

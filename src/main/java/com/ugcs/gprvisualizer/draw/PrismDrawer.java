@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 
@@ -35,7 +35,7 @@ public class PrismDrawer implements VCutDrawer {
 	}
 	
 	public void draw(int width, int height, 
-			VerticalCutField field,
+			ProfileField field,
 			Graphics2D g2,
 			int[] buffer,			
 			double threshold) {

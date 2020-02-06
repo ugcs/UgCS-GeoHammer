@@ -10,7 +10,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 
 public class AuxElement {
 
@@ -30,7 +30,7 @@ public class AuxElement {
 		
 	}
 	
-	public void drawOnCut(Graphics2D g2, VerticalCutField field) {
+	public void drawOnCut(Graphics2D g2, ProfileField field) {
 		
 		
 		TraceSample ts = new TraceSample(traceStart.indexInSet, sampleStart != null ? sampleStart : 0);

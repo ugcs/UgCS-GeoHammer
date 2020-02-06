@@ -39,8 +39,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	
 	SplitPane sp;
 	
-	LayersWindowBuilder layersWindowBuilder;
-	CleverImageView cleverImageView;
+	MapView layersWindowBuilder;
+	ProfileView cleverImageView;
 	
 	public MainSingleWindow() {
 		
@@ -53,10 +53,10 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		AppContext.statusBar = new StatusBar(model);
 		
-		layersWindowBuilder = new LayersWindowBuilder(model);
+		layersWindowBuilder = new MapView(model);
 		AppContext.smthListener.add(layersWindowBuilder);
 
-		cleverImageView = new CleverImageView(model);
+		cleverImageView = new ProfileView(model);
 		
 		AppContext.smthListener.add(this);
 	}
@@ -143,9 +143,6 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	private Node getToolBar() {
 
 		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
-		
-		
-		toolBar.getItems().add(getSpacer());
 		
 		toolBar.getItems().add(getSpacer());
 		

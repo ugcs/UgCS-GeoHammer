@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -70,7 +70,7 @@ public class Navigator implements ToolProducer {
 		
 		double vScale = (double)model.getVField().getViewDimension().height / (double)maxSamples;
 		
-		double z = Math.log(vScale) / Math.log(VerticalCutField.ZOOM_A);
+		double z = Math.log(vScale) / Math.log(ProfileField.ZOOM_A);
 		
 		model.getVField().setZoom((int)z);
 		model.getVField().setStartSample(0);
@@ -79,7 +79,7 @@ public class Navigator implements ToolProducer {
 		
 		double realAspect = h / model.getVField().getVScale();
 		
-		model.getVField().setAspect(Math.log(realAspect) / Math.log(VerticalCutField.ASPECT_A));
+		model.getVField().setAspect(Math.log(realAspect) / Math.log(ProfileField.ASPECT_A));
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}

@@ -15,11 +15,11 @@ import org.json.simple.JSONObject;
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 
-public class DragAnchor implements BaseObject, MouseHandler{
+public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandler{
 
 	//private static final int R = 5;
 	
@@ -72,7 +72,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, VerticalCutField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		if(!isVisible()) {
 			return;
 		}
@@ -86,7 +86,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 		}		
 	}
 
-	public Rectangle getRect(VerticalCutField vField) {
+	public Rectangle getRect(ProfileField vField) {
 		TraceSample ts = new TraceSample(offset.localToGlobal(this.getTrace()), getSample());
 		Point scr = vField.traceSampleToScreen(ts);		
 		Rectangle rect = alignRect.getRect(scr, dim); //new Rectangle(scr.x-R, scr.y-R, R*2, R*2);
@@ -94,7 +94,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, VerticalCutField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField vField) {
 		if(!isVisible()) {
 			return false;
 		}
@@ -106,7 +106,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		
 		if(isPointInside(localPoint, vField)) {
 			signal(null);
@@ -116,7 +116,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, VerticalCutField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
 
 		
 		
@@ -124,7 +124,7 @@ public class DragAnchor implements BaseObject, MouseHandler{
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, VerticalCutField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 		if(!isVisible()) {
 			return false;
 		}

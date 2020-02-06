@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -331,7 +331,7 @@ public class HyperFinder {
 	}
 	
 	
-	public void drawHyperbolaLine(Graphics2D g2, VerticalCutField vField) {
+	public void drawHyperbolaLine(Graphics2D g2, ProfileField vField) {
 		
 		if(ts == null) {
 			return;
@@ -375,7 +375,7 @@ public class HyperFinder {
 		
 	}
 	
-	public void drawHyperbolaLine(Graphics2D g2, VerticalCutField vField, int smp, boolean positive, int lft, int rht, boolean containsOpposite) {
+	public void drawHyperbolaLine(Graphics2D g2, ProfileField vField, int smp, boolean positive, int lft, int rht, boolean containsOpposite) {
 		if(ts == null) {
 			return;
 		}
