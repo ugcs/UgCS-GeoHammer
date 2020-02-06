@@ -76,7 +76,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		scene = createScene();
 
-		stage.setTitle("UgCS GPR GeoHammer v.0.9.3");
+		stage.setTitle("UgCS GPR GeoHammer v.0.9.4");
 		stage.setScene(scene);
 		stage.show();
 
