@@ -19,6 +19,8 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.github.thecoldwine.sigrun.common.ext.Field;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -67,15 +69,23 @@ public class SatelliteMap extends BaseLayer {
 	
 	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
 	{
-		showLayerCheckbox.setSelected(true);
+		boolean apiExists = StringUtils.isNotBlank(GOOGLE_API_KEY);
+		
+		showLayerCheckbox.setDisable(!apiExists);
+		showLayerCheckbox.setSelected(apiExists);
 		showLayerCheckbox.setOnAction(showMapListener);
 	}
 	
 	private static String GOOGLE_API_KEY;
 	static {
-		InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
-		java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
-		GOOGLE_API_KEY = s.hasNext() ? s.next() : "";		
+		try {
+			InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
+			java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
+			GOOGLE_API_KEY = s.hasNext() ? s.next() : "";
+		}catch(Exception e) {
+			System.out.println("no google api key -> no googlemaps");
+			
+		}
 	}
 	
 	
@@ -135,7 +145,7 @@ public class SatelliteMap extends BaseLayer {
 	}
 
 	private void loadMap() {
-		if(isActive()) {
+		if(isActive() && StringUtils.isNotBlank(GOOGLE_API_KEY)) {
 			new Calc().start();
 		}
 	}
