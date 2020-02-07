@@ -65,9 +65,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected Image i ;
 	protected int width;
 	protected int height;
-	protected double contrast = 900;	
+	protected double contrast = 50;	
 	
-	private ThresholdSlider contrastSlider;
+	private ContrastSlider contrastSlider;
 	private AspectSlider aspectSlider;
 	private HyperbolaSlider hyperbolaSlider;
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
@@ -105,7 +105,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		prismDrawer = new PrismDrawer(model, 0);
 		
-		contrastSlider = new ThresholdSlider(model.getSettings(), sliderListener);
+		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
 		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
@@ -182,8 +182,10 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
 		
-		
-		prismDrawer.draw(width, height, field, g2, buffer, contrast);
+		double contr = Math.pow(1.08, 140-contrast);
+		System.out.println(contr);
+
+		prismDrawer.draw(width, height, field, g2, buffer, contr);
 		
 		drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
 		
@@ -266,6 +268,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int vscale = Math.max(1, (int)field.getVScale());
 		int hscale = Math.max(1, (int)field.getHScale());
 		
+		double contr = Math.pow(1.4, contrast+10);
+		System.out.println(contr);
+		
 		for(int i=startTrace; i<finishTrace; i++ ) {
 			
 				Trace trace = model.getFileManager().getTraces().get(i);
@@ -274,7 +279,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 					
 					Point p = field.traceSampleToScreen(new TraceSample(i, j));
 					
-		    		int c = (int) (127.0 + Math.tanh(values[j]/contrast) * 127.0);
+		    		int c = (int) (127.0 + Math.tanh(values[j]/contr) * 127.0);
 		    		int color = ((c) << 16) + ((c) << 8) + c;
 		    		
 		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;
@@ -552,18 +557,18 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 	});
 	
-	public class ThresholdSlider extends BaseSlider {
+	public class ContrastSlider extends BaseSlider {
 		
-		public ThresholdSlider(Settings settings, ChangeListener<Number> listenerExt) {
+		public ContrastSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Contrast";
 			units = "";
-			tickUnits = 1000;
+			tickUnits = 10;
 		}
 
 		public void updateUI() {
-			slider.setMax(15000);
-			slider.setMin(10);
+			slider.setMax(100);
+			slider.setMin(1);
 			slider.setValue(contrast);
 		}
 		

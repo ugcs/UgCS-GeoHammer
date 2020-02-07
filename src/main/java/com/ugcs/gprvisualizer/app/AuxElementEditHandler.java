@@ -37,7 +37,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	private Model model;
 	private ProfileView profileView;
 	private ProfileField field;
-	private boolean moved = false;
 	
 	private BaseObject selected;
 	private MouseHandler mouseInput;
@@ -86,8 +85,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			model.setControls(null);
 		}
 		
-		moved = false;
-
 		if(processed) {
 			profileView.repaintEvent();
 		}
