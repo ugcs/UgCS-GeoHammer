@@ -256,7 +256,7 @@ public class TraceCutter implements Layer {
 	}
 
 	public boolean isGoodForFile(List<Trace> sublist) {
-		return sublist.size() > 20;
+		return sublist.size() > 1;
 	}
 	
 	private List<Point2D> getScreenPoligon(Field fld) {
