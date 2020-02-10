@@ -78,7 +78,7 @@ public class ProfileScroll extends Canvas{
 		int width = (int)getWidth();
 		int height = (int)getHeight();
 		
-		System.out.println(" profile scroll   " +width + " " +height );
+		//System.out.println(" profile scroll   " +width + " " +height );
 		
 		double tracesFull = model.getFileManager().getTraces().size();
 		double center = model.getVField().getSelectedTrace();

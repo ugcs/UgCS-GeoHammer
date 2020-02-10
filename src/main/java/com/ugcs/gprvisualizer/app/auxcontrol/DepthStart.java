@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.util.List;
 
@@ -16,25 +17,32 @@ import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandler {
 
-	static int HOR_M = ShapeHolder.topSelection.getBounds().width;
-	static int VER_M = ShapeHolder.topSelection.getBounds().height;
-
+	int HOR_M;
+	int VER_M;
+	int offsetX;
+	int offsetY;
+	
 	Model model = AppContext.model;
+	
+	Shape shape;
+	
+	public DepthStart(Shape shape){
+		this.shape = shape;
+		HOR_M = shape.getBounds().width;
+		VER_M = shape.getBounds().height;
+		offsetX = shape.getBounds().x;
+		offsetY = shape.getBounds().y;
+		System.out.println(" offsetX " + offsetX + "  offsetY " + offsetY  + "  " + HOR_M + " " + VER_M );
+	}
 	
 	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		if(isPointInside(localPoint, vField)) {
-			
-			//AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
-			
-			//AppContext.notifyAll(new WhatChanged(Change.adjusting));
-			
 			return true;
 		}
 		
@@ -51,12 +59,16 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	public boolean mouseMoveHandle(Point point, ProfileField vField) {
 		TraceSample ts = vField.screenToTraceSample(point);
 		
-		int max = model.getMaxHeightInSamples();
-		model.getSettings().layer = Math.min( max-1, Math.max(0, ts.getSample()));
+		controlToSettings(ts);
 		
 		AppContext.notifyAll(new WhatChanged(Change.adjusting));
 		
 		return true;
+	}
+
+	public void controlToSettings(TraceSample ts) {
+		int max = model.getMaxHeightInSamples();
+		model.getSettings().layer = Math.min( max-model.getSettings().hpage, Math.max(0, ts.getSample()));
 	}
 
 	@Override
@@ -67,20 +79,26 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		Rectangle rect = getRect(vField);
-		//ShapeHolder.topSelection.
+		//Rectangle r = getRect(vField);
+		//g2.drawRect(r.x, r.y, r.width, r.height);
+		
+		
+		Point p = getCenter(vField);
+
 		g2.setColor(Color.CYAN);
 		
-		g2.translate(rect.x , rect.y+rect.height);
-		g2.fill(ShapeHolder.topSelection);
+		g2.translate(p.x , p.y);
+		g2.fill(shape);
 		
 		if(isSelected()) {
 			g2.setColor(Color.green);
 			g2.setStroke(FoundPlace.SELECTED_STROKE);
-			g2.draw(ShapeHolder.topSelection);
+			g2.draw(shape);
 		}
 		
-		g2.translate(-rect.x , -(rect.y+rect.height));
+		g2.translate(-p.x , -p.y);
+		
+		
 		
 	}
 
@@ -91,14 +109,20 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect.contains(localPoint);
 	}
 
+	
+	
 	@Override
 	public Rectangle getRect(ProfileField vField) {
 		
-		Point scr = vField.traceSampleToScreen(new TraceSample(0, model.getSettings().layer));
-		
-		
-		Rectangle rect = new Rectangle(vField.visibleStart, scr.y-VER_M, HOR_M, VER_M);
+		Point scr = getCenter(vField);
+		Rectangle rect = new Rectangle(scr.x+offsetX, scr.y+offsetY, HOR_M, VER_M);
 		return rect;
+	}
+
+	public Point getCenter(ProfileField vField) {
+		Point scr = vField.traceSampleToScreen(new TraceSample(0, model.getSettings().layer));
+		scr.x = vField.visibleStart;
+		return scr;
 	}
 
 	@Override

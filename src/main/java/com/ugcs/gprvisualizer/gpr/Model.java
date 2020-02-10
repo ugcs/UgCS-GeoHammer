@@ -19,8 +19,10 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.draw.LocalScan;
+import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 public class Model {
@@ -107,7 +109,8 @@ public class Model {
 			auxElements.addAll(sf.getAuxElements());
 		}
 		
-		auxElements.add(new DepthStart());
+		auxElements.add(new DepthStart(ShapeHolder.topSelection));
+		auxElements.add(new DepthHeight(ShapeHolder.botSelection));
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {
