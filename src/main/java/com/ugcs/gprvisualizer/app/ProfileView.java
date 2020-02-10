@@ -60,6 +60,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
 	protected ScrollBar s1 = new ScrollBar();
+	protected Pane topPane = new Pane();
 	
 	protected BufferedImage img;
 	protected Image i ;
@@ -82,6 +83,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	private AuxElementEditHandler auxEditHandler;
 	
 	private HyperFinder hyperFinder; 
+	public ProfileScroll profileScroll = new ProfileScroll();
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -138,7 +140,14 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		toolBar.getItems().add(hyperLiveViewBtn);
 		
-		vbox.getChildren().addAll(toolBar, imageView, s1);
+		profileScroll.draw();
+		vbox.getChildren().addAll(toolBar, profileScroll, imageView,  s1);
+		
+		profileScroll.widthProperty().bind(
+				topPane.widthProperty());
+		//profileScroll.heightProperty().bind(
+         //       stackPane.heightProperty());		
+		
 		
 		zoomInBtn.setOnAction(e -> {
 			zoom(1, width/2, height/2);
@@ -183,7 +192,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int finishTrace = field.getLastVisibleTrace(width);		
 		
 		double contr = Math.pow(1.08, 140-contrast);
-		System.out.println(contr);
+		
 
 		prismDrawer.draw(width, height, field, g2, buffer, contr);
 		
@@ -269,7 +278,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int hscale = Math.max(1, (int)field.getHScale());
 		
 		double contr = Math.pow(1.4, contrast+10);
-		System.out.println(contr);
 		
 		for(int i=startTrace; i<finishTrace; i++ ) {
 			
@@ -304,18 +312,18 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	@Override
 	public Node getCenter() {
 		
-		Pane sp2 = new Pane();
-		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			this.setSize((int) (sp2.getWidth()), (int) (sp2.getHeight()));
-		};
-		sp2.widthProperty().addListener(sp2SizeListener);
-		sp2.heightProperty().addListener(sp2SizeListener);
 		
-		sp2.getChildren().add(vbox);
+		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
+			this.setSize((int) (topPane.getWidth()), (int) (topPane.getHeight()));
+		};
+		topPane.widthProperty().addListener(sp2SizeListener);
+		topPane.heightProperty().addListener(sp2SizeListener);
+		
+		topPane.getChildren().add(vbox);
 		
 		//sp2.getChildren().add(toolBar);
 		
-		return sp2;
+		return topPane;
 	}
 
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
@@ -534,6 +542,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		if(!model.getFileManager().isActive()) {
 			return;
 		}
+		
+		profileScroll.draw();
 		
 		s1.setMin(0);
 		s1.setMax(model.getFileManager().getTraces().size());
