@@ -304,8 +304,8 @@ public class RadarMap extends BaseLayer{
 		
 		vBox.getChildren().addAll(
 			Arrays.asList(
-				depthSlider.produce(),
-				depthWindowSlider.produce(),
+				//depthSlider.produce(),
+				//depthWindowSlider.produce(),
 				autoGainCheckbox.produce(),
 				gainTopSlider.produce(),
 				gainBottomSlider.produce(),
