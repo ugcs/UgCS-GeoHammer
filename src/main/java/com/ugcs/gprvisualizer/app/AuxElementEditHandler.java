@@ -256,7 +256,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		rect.setType(AreaType.Surface);
 
 		int width = tr2.indexInSet - tr1.indexInSet +1;
-		System.out.println("width " + width);
+		
 		int[] topCut = new int[width];
 		int[] botCut = new int[width];
 		
@@ -264,8 +264,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			Trace t = sf.getTraces().get(i);
 			topCut[i] = Math.max(0, t.maxindex2-topMarg-topStart);
 			botCut[i] = Math.min(botFinish-topStart, t.maxindex2+botMarg-topStart);
-			
-			System.out.println(" " + topCut[i] + " " + botCut[i] );
+		
 		}
 		
 		rect.setTopCut(topCut);

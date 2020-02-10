@@ -563,12 +563,12 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			super(settings, listenerExt);
 			name = "Contrast";
 			units = "";
-			tickUnits = 10;
+			tickUnits = 25;
 		}
 
 		public void updateUI() {
 			slider.setMax(100);
-			slider.setMin(1);
+			slider.setMin(0);
 			slider.setValue(contrast);
 		}
 		

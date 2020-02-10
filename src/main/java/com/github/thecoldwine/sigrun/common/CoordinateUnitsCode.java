@@ -17,7 +17,7 @@ public enum CoordinateUnitsCode {
     }
 
     public static CoordinateUnitsCode create(short code) {
-    	//System.out.println(code);
+
         switch (code) {
             case 0:
                 return UNDEFINED;

@@ -211,7 +211,6 @@ public class HyperFinder {
 	}
 
 	private double processTrace(List<Trace> traces, int tr, int[][] good, double hyperkf) {
-		System.out.println(tr);
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
@@ -242,13 +241,9 @@ public class HyperFinder {
 		int hyperRate = rht.getTrace() - lft.getTrace(); 
 		if(hyperRate > AppContext.model.getSettings().hypergoodsize) {		
 			
-			System.out.println(tr + " " + smp + "  (" + lft.getSample() + " " + rht.getSample() + ")");
-			
 			boolean b1 = findOppositeBelowHyperSide(traces, tr, smp, example, -1, hyperkf, lft.getSample());
 			boolean b2 = findOppositeBelowHyperSide(traces, tr, smp, example, +1, hyperkf, rht.getSample());
 		
-			System.out.println(tr + " " + smp + "  (" + b1 + " " + b2 + ")");
-			
 			if(b1 || b2) {
 				
 				good[tr][smp] = example > 0 ? 1 : -1;				

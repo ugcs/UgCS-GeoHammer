@@ -90,7 +90,7 @@ public final class ByteANumberConverter {
             throw new IllegalArgumentException("Offset cannot be less than zero");
 
         short res = ByteBuffer.wrap(source, offset, SeismicValuesConverter.SHORT_SIZE).order(ByteOrder.LITTLE_ENDIAN).getShort();
-        //System.out.println("read: " +res);
+
         return res;
     }
 
@@ -102,7 +102,7 @@ public final class ByteANumberConverter {
             throw new IllegalArgumentException("Offset cannot be less than zero");
 
         short res = ByteBuffer.wrap(source, offset, SeismicValuesConverter.SHORT_SIZE).order(ByteOrder.BIG_ENDIAN).getShort();
-        //System.out.println("read: " +res);
+
         return res;
     }
     
@@ -135,7 +135,6 @@ public final class ByteANumberConverter {
         	.order(ByteOrder.LITTLE_ENDIAN)
         	.getFloat();
          
-         //System.out.println("float: " + f);
          return f;
     }
 

@@ -26,10 +26,6 @@ public class LevelFilter implements ToolProducer {
 
 	Button buttonNoise = new Button("background removal");
 	Button buttonFindLevel = new Button("find ground level");
-	
-	//Button buttonShiftAvg = new Button("ShiftAvg");
-	//Button buttonShiftAvgRemoval = new Button("ShiftAvgRemoval");
-	
 	Button buttonSmoothLevel = new Button("Smooth ground level");
 	Button buttonSet = new Button("level ground");
 
@@ -91,7 +87,7 @@ public class LevelFilter implements ToolProducer {
 		}
 
 		int largesIndex = getLargestGrpIndex(continGrps);
-		System.out.println("largesIndex " + largesIndex + " size " + continGrps.get(largesIndex).size());
+
 		while (continGrps.size() > largesIndex + 1) {
 			combineTwoGroupsFirst(continGrps, largesIndex, largesIndex + 1);
 		}
@@ -378,4 +374,12 @@ public class LevelFilter implements ToolProducer {
 		return Arrays.asList(buttonNoise, buttonFindLevel, buttonSet);
 	}
 
+	public void clearForNewFile() {
+		buttonNoise.setGraphic(null);
+		buttonFindLevel.setGraphic(null);
+		buttonSmoothLevel.setGraphic(null);
+		buttonSet.setGraphic(null);
+	}
+	
+	
 }

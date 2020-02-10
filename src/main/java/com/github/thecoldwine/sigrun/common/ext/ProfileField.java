@@ -40,9 +40,6 @@ public class ProfileField {
 	}
 
 	public void clear() {
-		System.out.println("VerticalCutField clear");
-		//vScale=1;
-		//hScale=2;
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;

@@ -177,7 +177,6 @@ public class AmplitudeMatrix {
 		long selsum = 0;
 		for(List<Integer> row : selected) {
 			long sum = getIndignation(row);
-			//System.out.println(String.format("indignation:  %.2f ", ((double)sum / row.size())));
 			
 			if(selrow == null || sum < selsum) {
 				selrow = row;
@@ -222,12 +221,9 @@ public class AmplitudeMatrix {
 		
 		int x=0;
 		for(List<Grp> col : colls) {
-//			if(x==299) {
-//				System.out.println("stop");
-//			}
 			
 			Grp avggrp = getAvgGrp();
-			avgrow.add(avggrp);//tmp
+			avgrow.add(avggrp);
 			List<Grp> grpcandidats = find(avggrp, col);
 			if(grpcandidats.isEmpty()) {
 				
@@ -375,7 +371,6 @@ public class AmplitudeMatrix {
 		int[] palette = new PaletteBuilder().build();
 		width = matrix.length;
 		height = matrix[0].length;
-		System.out.println("dimension " + width + " " + height );
 	    BufferedImage image = new BufferedImage(width, height*vertkf, BufferedImage.TYPE_INT_RGB);
 	    
 	    int[] buffer = ((DataBufferInt)image.getRaster().getDataBuffer()).getData() ;	    
@@ -417,30 +412,6 @@ public class AmplitudeMatrix {
 	    	}
 	    }
 	    
-	    
-	    
-//	    for(List<Grp> path : selected) {
-//	    	int x =0;
-//	    	for(Grp grp : path) {
-//
-//	    		Grp ag = avgrow.get(x);
-//	    		buffer[getIndex(x, ag.start, 0)] = red;
-//	    		try {
-//	    			buffer[getIndex(x, ag.finish, vertkf-1)] = red;
-//	    		}catch(Exception e) {
-//	    			System.out.println(x + " " + ag.finish + " " + (vertkf-1));
-//	    		}
-//	    		
-//	    		
-//	    		buffer[getIndex(x, grp.start, 0)] = grn;
-//	    		buffer[getIndex(x, grp.finish-1, vertkf-1)] = grn2;
-//	    		
-//	    		buffer[getIndex(x, level[x], vertkf/2)] = levelColor; 
-//	    		
-//	    		x++;
-//	    	}	    	
-//	    }
-	    
 	    return image;
 		
 	}
@@ -472,10 +443,8 @@ public class AmplitudeMatrix {
 	}
 	
 	public static void execute(File file, int prefix) throws Exception {
-		System.out.println(" " + file.getName() + "  ->  " + prefix);
 		
 		SgyFile sgyFile = new SgyFile();
-		//sgyFile.open(new File("d:\\georadarData\\mines\\2019-08-29-12-48-48-gpr_0005.SGY"));
 		sgyFile.open(file);
 		
 		BackgroundRemovalFilter lf = new BackgroundRemovalFilter();
@@ -504,8 +473,6 @@ public class AmplitudeMatrix {
 	public BufferedImage createImg(File file, int prefix) {
 		
 		try {
-			System.out.println(" " + file.getName() + "  ->  " + prefix);
-			
 			SgyFile sgyFile = new SgyFile();
 			//sgyFile.open(new File("d:\\georadarData\\mines\\2019-08-29-12-48-48-gpr_0005.SGY"));
 			sgyFile.open(file);

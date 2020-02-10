@@ -141,7 +141,8 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 
 	private Node getToolBar() {
-
+		toolBar.setDisable(true);
+		
 		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
 		
 		toolBar.getItems().add(getSpacer());
@@ -209,7 +210,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 
 		if(changed.isFileopened()) {
-
+			toolBar.setDisable(false);
+			
+			AppContext.levelFilter.clearForNewFile();
 			//gpsMode.setSelected(true);
 			//setModeFactory(modeMap.get(gpsMode));			
 		}
