@@ -174,8 +174,9 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public void saveTo(JSONObject json) {
-		// TODO Auto-generated method stub
+	public boolean saveTo(JSONObject json) {
+		
+		return false;
 		
 	}
 

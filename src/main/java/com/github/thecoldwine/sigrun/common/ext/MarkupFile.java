@@ -56,7 +56,8 @@ public class MarkupFile {
 				
 			}else if(clazz.equals(FoundPlace.class.getSimpleName())){
 				
-				obj = FoundPlace.loadFromJson(ob, sgyFile); 
+				//save in sgy file
+				//obj = FoundPlace.loadFromJson(ob, sgyFile); 
 			}
 			
 			if(obj != null) {
@@ -82,11 +83,12 @@ public class MarkupFile {
 		 for(BaseObject bo : sgyFile.getAuxElements()) {
 			 
 			 JSONObject boj = new JSONObject();
-			 
-			 bo.saveTo(boj);
-			 boj.put("clazz", bo.getClass().getSimpleName());
-			 
-			 objects.add(boj);			 
+
+			 //save if object allows saving
+			 if(bo.saveTo(boj)) {
+				 boj.put("clazz", bo.getClass().getSimpleName());
+				 objects.add(boj);
+			 }
 		 }
 		 
 

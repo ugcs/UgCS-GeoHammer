@@ -28,7 +28,7 @@ public interface BaseObject extends MouseHandler {
 	
 	List<BaseObject> getControls();
 	
-	void saveTo(JSONObject json);
+	boolean saveTo(JSONObject json);
 	
 	boolean mousePressHandle(Point2D point, Field field);
 	 

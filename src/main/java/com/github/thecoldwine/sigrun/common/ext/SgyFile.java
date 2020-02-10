@@ -10,7 +10,9 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ConverterFactory;
@@ -25,12 +27,14 @@ import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 public class SgyFile {
 	
 
+	private static final int MARK_BYTE_POS = 238;
 	private static final Charset charset = Charset.forName("UTF8");
     private static final BinaryHeaderFormat binaryHeaderFormat = SgyLoader.makeBinHeaderFormat();
     private static final TraceHeaderFormat traceHeaderFormat = SgyLoader.makeTraceHeaderFormat();
@@ -116,6 +120,17 @@ public class SgyFile {
         Trace trace = new Trace(headerBin, header, values, latLon);
         trace.indexInFile = currentTraceIndex;
         currentTraceIndex++;
+
+        
+        if(headerBin[MARK_BYTE_POS] != 0 ) {
+        	String s =  trace.indexInFile + " -> ";
+        	for(int i=238; i<=239; i++) {
+        		s += headerBin[i] + " ";
+        	}
+        	System.out.println("marks "+s);
+        	
+        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
+        }
         
         return trace;
 		
@@ -154,6 +169,8 @@ public class SgyFile {
 
 	public void save(File file) throws Exception {
 		
+		Set<Integer> marks = prepareMarksIndexSet();
+		
 		BinFile binFile = new BinFile();
 		
 		binFile.setTxtHdr(txtHdr);
@@ -163,12 +180,29 @@ public class SgyFile {
 			BinTrace binTrace = new BinTrace();
 			
 			binTrace.header = trace.getBinHeader();
+			
+			//set or clear marks
+			binTrace.header[MARK_BYTE_POS] = (byte)(marks.contains(trace.indexInFile) ? -1 : 0);
+			
 			binTrace.data = ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()).array();
 			
 			binFile.getTraces().add(binTrace);
 		}		
 		
 		binFile.save(file);
+	}
+
+	private Set<Integer> prepareMarksIndexSet() {
+		Set<Integer> result = new HashSet<>();
+		
+		for(BaseObject bo : getAuxElements()) {
+			if(bo instanceof FoundPlace) {
+				FoundPlace fp = (FoundPlace)bo;
+				result .add(((FoundPlace) bo).getTraceInFile());
+			}			
+		}
+		
+		return result;
 	}
 	
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) throws IOException {

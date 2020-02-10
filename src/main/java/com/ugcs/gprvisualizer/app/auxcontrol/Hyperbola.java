@@ -179,7 +179,7 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
-	public void saveTo(JSONObject json) {
+	public boolean saveTo(JSONObject json) {
 		json.put("tracePinacle", pinacle.getTrace());
 		json.put("samplePinacle", pinacle.getSample());
 		json.put("leftWidth", leftWidth);
@@ -204,6 +204,7 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 		}		
 		json.put("botCut", arr2);
 		
+		return true;
 	}
 
 	private int[] getCutArray(int y, int top) {
