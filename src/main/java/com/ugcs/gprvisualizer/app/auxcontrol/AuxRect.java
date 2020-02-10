@@ -16,7 +16,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -444,7 +444,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, Field hField) {
+	public void drawOnMap(Graphics2D g2, MapField hField) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -498,7 +498,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, Field field) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
 		// TODO Auto-generated method stub
 		return false;
 	}

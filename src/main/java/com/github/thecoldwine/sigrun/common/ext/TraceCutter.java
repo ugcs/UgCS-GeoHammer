@@ -36,7 +36,7 @@ import javafx.scene.layout.Region;
 
 public class TraceCutter implements Layer {
 
-	private Field field;
+	private MapField field;
 	private List<LatLon> points;
 	private final int RADIUS = 5;
 	private Integer active = null;
@@ -144,7 +144,7 @@ public class TraceCutter implements Layer {
 	}
 	
 	public void apply() {
-		Field fld = new Field(field);
+		MapField fld = new MapField(field);
 		fld.setZoom(22);
 		List<Point2D> border = getScreenPoligon(fld);
 		
@@ -178,7 +178,7 @@ public class TraceCutter implements Layer {
 	}
 
 	
-	public boolean isTraceInsideSelection(Field fld, List<Point2D> border, Trace trace) {
+	public boolean isTraceInsideSelection(MapField fld, List<Point2D> border, Trace trace) {
 		Point2D p = fld.latLonToScreen(trace.getLatLon());
 		boolean ins = inside(p, border);
 		return ins;
@@ -212,7 +212,7 @@ public class TraceCutter implements Layer {
 	}
 
 	
-	private List<SgyFile> splitFile(SgyFile file, Field field, List<Point2D> border) {
+	private List<SgyFile> splitFile(SgyFile file, MapField field, List<Point2D> border) {
 		
 		
 		List<SgyFile> splitList = new ArrayList<>();
@@ -256,10 +256,10 @@ public class TraceCutter implements Layer {
 	}
 
 	public boolean isGoodForFile(List<Trace> sublist) {
-		return sublist.size() > 1;
+		return sublist.size() > 20;
 	}
 	
-	private List<Point2D> getScreenPoligon(Field fld) {
+	private List<Point2D> getScreenPoligon(MapField fld) {
 
 		List<Point2D> border = new ArrayList<>();
 		for(LatLon ll : points) {
@@ -373,3 +373,4 @@ public class TraceCutter implements Layer {
 	}
 	
 }
+

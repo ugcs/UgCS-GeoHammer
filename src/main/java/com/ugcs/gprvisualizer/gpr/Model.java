@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -19,6 +19,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
@@ -28,7 +29,7 @@ public class Model {
 	
 	private boolean loading = false; 
 	
-	private Field field = new Field();
+	private MapField field = new MapField();
 	private ProfileField vField = new ProfileField(this, TOP_MARGIN);
 	
 	private FileManager fileManager = new FileManager();
@@ -64,7 +65,7 @@ public class Model {
 		return bounds;
 	}
 
-	public Field getField() {
+	public MapField getField() {
 		return field;
 	}
 
@@ -105,6 +106,8 @@ public class Model {
 		for(SgyFile sf : getFileManager().getFiles()) {
 			auxElements.addAll(sf.getAuxElements());
 		}
+		
+		auxElements.add(new DepthStart());
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {

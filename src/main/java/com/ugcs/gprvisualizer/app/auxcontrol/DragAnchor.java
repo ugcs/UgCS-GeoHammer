@@ -12,7 +12,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -67,7 +67,7 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	@Override
-	public void drawOnMap(Graphics2D g2, Field hField) {
+	public void drawOnMap(Graphics2D g2, MapField hField) {
 		//is not visible on the map view
 	}
 
@@ -181,7 +181,7 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, Field field) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
 		// TODO Auto-generated method stub
 		return false;
 	}

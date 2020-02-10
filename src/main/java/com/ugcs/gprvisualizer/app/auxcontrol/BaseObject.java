@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -18,7 +18,7 @@ import com.ugcs.gprvisualizer.app.MouseHandler;
 public interface BaseObject extends MouseHandler {
 
 	
-	void drawOnMap(Graphics2D g2, Field hField);
+	void drawOnMap(Graphics2D g2, MapField hField);
 	void drawOnCut(Graphics2D g2, ProfileField vField);
 	
 	boolean isPointInside(Point localPoint, ProfileField vField);
@@ -30,7 +30,7 @@ public interface BaseObject extends MouseHandler {
 	
 	boolean saveTo(JSONObject json);
 	
-	boolean mousePressHandle(Point2D point, Field field);
+	boolean mousePressHandle(Point2D point, MapField field);
 	 
 	
 	BaseObject copy(int offset, VerticalCutPart verticalCutPart);

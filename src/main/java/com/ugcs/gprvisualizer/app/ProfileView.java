@@ -183,7 +183,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int finishTrace = field.getLastVisibleTrace(width);		
 		
 		double contr = Math.pow(1.08, 140-contrast);
-		System.out.println(contr);
 
 		prismDrawer.draw(width, height, field, g2, buffer, contr);
 		

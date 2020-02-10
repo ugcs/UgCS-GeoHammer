@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -76,7 +76,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 
 	@Override
-	public void drawOnMap(Graphics2D g2, Field hField) {
+	public void drawOnMap(Graphics2D g2, MapField hField) {
 		
 		Rectangle rect = getRect(hField);
 
@@ -107,7 +107,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 	
-	public Rectangle getRect(Field hField) {
+	public Rectangle getRect(MapField hField) {
 		
 		Point2D p =  hField.latLonToScreen(latLon);
 		
@@ -146,7 +146,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, Field field) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
 		
 		Rectangle r = getRect(field);
 		if(r.contains(point)) {
