@@ -21,7 +21,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -156,7 +156,7 @@ public class SatelliteMap extends BaseLayer {
 		
 		StaticMap map = new StaticMap(640, 640, GOOGLE_API_KEY);
 		
-		map.setScale(Field.MAP_SCALE);
+		map.setScale(MapField.MAP_SCALE);
 		map.setMaptype(Maptype.hybrid);
 		
 		LatLon midlPoint = model.getField().getSceneCenter();
@@ -202,7 +202,7 @@ public class SatelliteMap extends BaseLayer {
 		}
 	}
 
-	Field dragField = null;
+	MapField dragField = null;
 	
 	@Override
 	public boolean mousePressed(Point2D point) {
@@ -211,7 +211,7 @@ public class SatelliteMap extends BaseLayer {
 			return false;
 		}
 		
-		dragField = new Field(model.getField());
+		dragField = new MapField(model.getField());
 		
 		click = model.getField().screenTolatLon(point);
 		

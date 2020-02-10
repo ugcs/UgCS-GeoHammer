@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -31,10 +31,10 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
 	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
-		static int R_HOR_M = ShapeHolder.flag.getBounds().width/2;
+	static int R_HOR_M = ShapeHolder.flag.getBounds().width/2;
 	static int R_VER_M = ShapeHolder.flag.getBounds().height/2;
 
-	static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
+	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
 	final static float dash1[] = {7.0f, 2.0f};
 	static Stroke VERTICAL_STROKE = 	
@@ -98,7 +98,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 
 	@Override
-	public void drawOnMap(Graphics2D g2, Field hField) {
+	public void drawOnMap(Graphics2D g2, MapField hField) {
 		
 		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
 		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());
@@ -156,7 +156,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 	
-	public Rectangle getRect(Field hField) {
+	public Rectangle getRect(MapField hField) {
 		
 		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
 		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());		
@@ -202,7 +202,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, Field field) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
 		
 		Rectangle r = getRect(field);
 		if(r.contains(point)) {

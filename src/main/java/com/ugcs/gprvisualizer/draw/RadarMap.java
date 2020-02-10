@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -183,7 +183,7 @@ public class RadarMap extends BaseLayer{
 	
 	private BufferedImage createHiRes() {
 		
-		Field field = new Field(model.getField());
+		MapField field = new MapField(model.getField());
 		
 		imgLatLon = field.getSceneCenter();
 		

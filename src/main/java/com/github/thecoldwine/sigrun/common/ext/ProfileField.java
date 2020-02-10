@@ -15,14 +15,17 @@ public class ProfileField {
 	private Model model;
 	private int selectedTrace=0;
 	private int startSample=0;
-	//private double vScale=1;
 	private int zoom = 1;
 	
 	private double aspect = -15;
 	
-	//private double hScale=2;
-	
 	private Dimension viewDimension = new Dimension();
+	
+	
+	//
+	public int visibleStart;
+	public int visibleFinish;
+	
 
 	public ProfileField(Model model, int topMargin) {
 		this.model  = model;
@@ -37,9 +40,13 @@ public class ProfileField {
 		this.zoom = copy.zoom;
 		this.aspect = copy.aspect;
 		this.topMargin = copy.topMargin;
+		
+		this.visibleStart = copy.visibleStart;
+		this.visibleFinish = copy.visibleFinish;
 	}
 
 	public void clear() {
+		System.out.println("VerticalCutField clear");
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;
@@ -77,8 +84,8 @@ public class ProfileField {
 
 	public Point traceSampleToScreenCenter(TraceSample ts) {
 		
-		double x = (ts.getTrace()-getSelectedTrace()) * getHScale() + getHScale()/2; 
-		double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin + getVScale()/2;
+		//double x = (ts.getTrace()-getSelectedTrace()) * getHScale() + getHScale()/2; 
+		//double y = (ts.getSample()-getStartSample()) * getVScale() + topMargin + getVScale()/2;
 		return new Point(
 			traceToScreen(ts.getTrace()) + (int)(getHScale()/2), 
 			sampleToScreen(ts.getSample()) + (int)(getVScale()/2));
@@ -179,6 +186,8 @@ public class ProfileField {
 
 	public void setViewDimension(Dimension viewDimension) {
 		this.viewDimension = viewDimension;
+		
+		visibleStart = -viewDimension.width/2;
 	}
 
 	public double getAspect() {
@@ -197,3 +206,4 @@ public class ProfileField {
 		this.zoom = zoom;
 	}
 }
+

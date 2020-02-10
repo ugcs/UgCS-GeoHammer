@@ -7,7 +7,7 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.List;
 
-import com.github.thecoldwine.sigrun.common.ext.Field;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -41,7 +41,7 @@ public class AuxElement {
 		g2.fillOval(scr.x-r, scr.y-r, r*2, r*2);
 	}
 
-	public void drawOnMap(Graphics2D g2, Field field) {
+	public void drawOnMap(Graphics2D g2, MapField field) {
 		
 		Point2D scr = field.latLonToScreen(traceStart.getLatLon());
 		
