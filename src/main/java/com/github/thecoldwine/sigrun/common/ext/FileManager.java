@@ -81,7 +81,6 @@ public class FileManager {
 		for (File fl : fileList) {
 			processFile(fl);
 		}
-		System.out.println("stop files.size(): " + files.size());
 	}
 
 	public List<SgyFile> getFiles() {

@@ -47,6 +47,9 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	private int traceInFile;
 	private VerticalCutPart offset;	
 	
+	public int getTraceInFile() {
+		return traceInFile;
+	}
 	
 	public static FoundPlace loadFromJson(JSONObject json, SgyFile sgyFile) {
 		int traceNum = (int)(long)(Long)json.get("trace");		
@@ -193,8 +196,9 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public void saveTo(JSONObject json) {
-		json.put("trace", traceInFile);		
+	public boolean saveTo(JSONObject json) {
+		//json.put("trace", traceInFile);
+		return false;
 	}
 
 	@Override

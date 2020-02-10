@@ -140,8 +140,9 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public void saveTo(JSONObject json) {
+	public boolean saveTo(JSONObject json) {
 		//json.put("trace", traceInFile);
+		return false;
 	}
 
 	@Override

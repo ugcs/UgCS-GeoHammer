@@ -49,7 +49,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	boolean locked = false;
 	private AreaType type = AreaType.Hyperbola;
 	
-	public void saveTo(JSONObject json) {
+	public boolean saveTo(JSONObject json) {
 		json.put("traceStart", left.getTrace());
 		json.put("traceFinish", right.getTrace());
 		json.put("sampleStart", top.getSample());
@@ -69,6 +69,8 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 			arr2.add(i);
 		}		
 		json.put("botCut", arr2);
+		
+		return true;
 	}
 
 	public void setSampleStart(int sampleStart) {
