@@ -25,6 +25,7 @@ public class ProfileScroll extends Canvas{
 	static final int SIDE_WIDTH = 20;
 	static final int CENTER_MARGIN = 5; 
 	static final int V_MARGIN = 4;
+	static final int V_GRAY_MARGIN = 7;
 	double start;
 	double finish;
 	
@@ -243,6 +244,8 @@ public class ProfileScroll extends Canvas{
 		GraphicsContext gc = this.getGraphicsContext2D();	
 		gc.clearRect(0, 0, getWidth(), getHeight());
 		
+		gc.setFill(Color.GRAY);
+		gc.fillRect(0, V_GRAY_MARGIN, getWidth(), getHeight()-2*V_GRAY_MARGIN);
 		
 		gc.setFill(Color.BLUE);
 		Rectangle c = getCenterBar();
