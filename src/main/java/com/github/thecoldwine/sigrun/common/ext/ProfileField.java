@@ -40,6 +40,7 @@ public class ProfileField {
 		this.zoom = copy.zoom;
 		this.aspect = copy.aspect;
 		this.topMargin = copy.topMargin;
+		this.realAspect = copy.realAspect;
 		
 		this.visibleStart = copy.visibleStart;
 		this.visibleFinish = copy.visibleFinish;
@@ -165,9 +166,18 @@ public class ProfileField {
 		return getVScale()*getAspectReal();
 	}
 
-	private double getAspectReal() {
-		return Math.pow(ASPECT_A, getAspect());
+//	private double getAspectReal() {
+//		return Math.pow(ASPECT_A, getAspect());
+//	}
+
+	double realAspect = 0.5;
+	public double getAspectReal() {
+		return realAspect;
 	}
+	public void setAspectReal(double realAspect) {
+		this.realAspect = realAspect;
+	}
+	
 
 //	public void setHScale(double hScale) {
 //		this.hScale = hScale;

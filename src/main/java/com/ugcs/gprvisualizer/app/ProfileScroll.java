@@ -1,75 +1,221 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.awt.Point;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Box;
 import javafx.scene.shape.Rectangle;
 
 public class ProfileScroll extends Canvas{
 
 	Model model = AppContext.model;
-	static final int HEIGHT = 30;
-	static final int SIDE_WIDTH = 20; 
+	static final int HEIGHT = 24;
+	static final int SIDE_WIDTH = 20;
+	static final int CENTER_MARGIN = 5; 
+	static final int V_MARGIN = 4;
 	double start;
 	double finish;
 	
+	double pressX;
+	double pressXInBar;
+	
+	ChangeListener<Number> changeListener;
+	
+	public void setChangeListener(ChangeListener<Number> changeListener) {
+		this.changeListener = changeListener;
+	}
+	
 	interface MouseSInput{
-		boolean isInside(Point2D localPoint);
+		//boolean isInside(Point2D localPoint);
+		Rectangle getRect();
 		void move(Point2D localPoint);
 	}
+	
 	
 	MouseSInput leftInput = new MouseSInput() {
 
 		@Override
-		public boolean isInside(Point2D localPoint) {
-			return getLeftBar().contains(localPoint);
+		public Rectangle getRect() {
+			return getLeftBar();
 		}
 
 		@Override
 		public void move(Point2D localPoint) {
 			
-			//start = ;
+			double barStart = localPoint.getX()-pressXInBar;
+			start = barStart+SIDE_WIDTH+CENTER_MARGIN;
+			
+			recalcField();
+			
+			draw();			
+			changeListener.changed(null, null, null);
+			//recalc back
 		}
-		
 	};
+	MouseSInput rightInput = new MouseSInput() {
+
+		@Override
+		public Rectangle getRect() {
+			return getRightBar();
+		}
+
+		@Override
+		public void move(Point2D localPoint) {
+			
+			double barStart = localPoint.getX()-pressXInBar;
+			
+			
+			finish = barStart-CENTER_MARGIN;
+			
+			//recalc back			
+			recalcField();
+			
+			draw();
+			changeListener.changed(null, null, null);
+			
+		}
+	};
+	MouseSInput centerInput = new MouseSInput() {
+
+		@Override
+		public Rectangle getRect() {
+			return getCenterBar();
+		}
+
+		@Override
+		public void move(Point2D localPoint) {
+			
+			double barStart = localPoint.getX()-pressXInBar;
+			double centerPos = barStart + CENTER_MARGIN + (finish-start)/2; 
+			//finish = barStart;
+			double tracesFull = model.getFileManager().getTraces().size();
+			
+			double trCenter = centerPos*tracesFull/getWidth();
+			
+			model.getVField().setSelectedTrace((int) trCenter);
+			
+			double rectWidth = (finish-start);
+			start = centerPos-rectWidth/2;
+			finish = centerPos+rectWidth/2;
+			
+			//recalc();
+			draw();
+			
+			changeListener.changed(null, null, trCenter);
+		}
+	};	
 	
+	
+	MouseSInput selected;
+	Set<MouseSInput> bars = ImmutableSet.of(centerInput, leftInput, rightInput); 
+			//ImmutableSet.<MouseSInput>Builder().add(leftInput).build(); 
 	
 	public ProfileScroll(){
 		setWidth(400);
 		setHeight(HEIGHT);		
 		
-        widthProperty().addListener(evt -> draw());
-        heightProperty().addListener(evt -> draw());
+        widthProperty().addListener(evt -> recalc());
+        heightProperty().addListener(evt -> recalc());
         
          //makeDraggable(new Label("ssdf"));
         //add
         //setB
+        
+		this.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
+		this.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
+		this.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
+		this.setOnMouseReleased(mouseReleaseHandler);   
 	}
+	
+	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {        	
+        	selected = null;
+        	System.out.println("release2");
+        }
+	};
+	
+	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
+	    @Override
+	    public void handle(MouseEvent mouseEvent) {
+	    	
+	    	selected = null;
+	    	
+			javafx.geometry.Point2D imgCoord = getLocal(mouseEvent);        	
+	    	
+	    	for(MouseSInput msi : bars) {
+	    		Rectangle r = msi.getRect();
+	    		if(r.contains(imgCoord)) {
+	    			
+	    			selected = msi;
+	    			pressX = imgCoord.getX();
+	    			pressXInBar = imgCoord.getX() - r.getX();
+	    		}
+	    	}
+	    	
+	    	ProfileScroll.this.startFullDrag();
+	    	ProfileScroll.this.setCursor(Cursor.CLOSED_HAND);	    	
+	    	
+	    }
+
+	};
+
+	public javafx.geometry.Point2D getLocal(MouseEvent mouseEvent) {
+		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+    	javafx.geometry.Point2D imgCoord = sceneToLocal(sceneCoords);
+		return imgCoord;
+	}
+	
+	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
+        @Override
+        public void handle(MouseDragEvent event) {
+
+        	System.out.println("release");
+        	selected = null;
+        	
+        	ProfileScroll.this.setCursor(Cursor.DEFAULT);
+        	
+        	event.consume();
+        }
+	};
+	
+	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
+        
+		@Override
+        public void handle(MouseEvent event) {
+			if(selected != null) {
+			
+				javafx.geometry.Point2D imgCoord = getLocal(event);
+			
+				selected.move(imgCoord);
+			}
+        	
+        }
+	};
 	
 	Rectangle getCenterBar() {
-		return new Rectangle(start, 0, finish-start, HEIGHT);
+		return new Rectangle(start-CENTER_MARGIN, 0, finish-start + 2 *CENTER_MARGIN, HEIGHT);
 	}
 	Rectangle getLeftBar() {
-		return new Rectangle(start-SIDE_WIDTH , 0, SIDE_WIDTH, HEIGHT);
+		return new Rectangle(start-SIDE_WIDTH-CENTER_MARGIN , 0, SIDE_WIDTH, HEIGHT);
 	}
 	Rectangle getRightBar() {
-		return new Rectangle(finish, 0, SIDE_WIDTH, HEIGHT);
+		return new Rectangle(finish+CENTER_MARGIN, 0, SIDE_WIDTH, HEIGHT);
 	}
 	
-	void draw() {
+	void recalc() {
 		
 		if(!model.getFileManager().isActive()) {
 			return;
@@ -91,21 +237,32 @@ public class ProfileScroll extends Canvas{
 		start = centerPos-rectWidth/2;
 		finish = centerPos+rectWidth/2;
 		
+		draw();
+	}
+	public void draw() {
 		GraphicsContext gc = this.getGraphicsContext2D();	
-		gc.clearRect(0, 0, width, height);
+		gc.clearRect(0, 0, getWidth(), getHeight());
 		
 		
 		gc.setFill(Color.BLUE);
 		Rectangle c = getCenterBar();
-		gc.fillRect(c.getX(), c.getY(), c.getWidth(), c.getHeight());
+		//gc.fillRect(c.getX(), c.getY(), c.getWidth(), c.getHeight());
+		gc.strokeRoundRect(c.getX()+CENTER_MARGIN, c.getY()+V_MARGIN, c.getWidth()-2*CENTER_MARGIN, c.getHeight()-2*V_MARGIN, 10, 10);
+		
+		double centerX = c.getX()+c.getWidth()/2;
+		gc.strokeLine(centerX, 0, centerX, HEIGHT);
 		
 		gc.setFill(Color.AQUAMARINE);
 		Rectangle l = getLeftBar();
-		gc.fillRect(l.getX(), l.getY(), l.getWidth(), l.getHeight());
+		
+		//gc.fillRect(l.getX(), l.getY(), l.getWidth(), l.getHeight());
+		gc.strokeRoundRect(l.getX()+V_MARGIN, l.getY()+V_MARGIN, l.getWidth()-2*V_MARGIN, l.getHeight()-2*V_MARGIN, 10, 10);
 
 		gc.setFill(Color.AQUAMARINE);
 		Rectangle r = getRightBar();
-		gc.fillRect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
+		gc.strokeRoundRect(r.getX()+V_MARGIN, r.getY()+V_MARGIN, r.getWidth()-2*V_MARGIN, r.getHeight()-2*V_MARGIN, 10, 10);
+		
+		
 		
 		//gc.fillRect(10, 5, 20, 20);
 		//gc.fillRect(width-30, 5, 20, 20);
@@ -174,6 +331,18 @@ public class ProfileScroll extends Canvas{
 
 		return wrapGroup;
 
+	}
+	public void recalcField() {
+		double scrCenter = (finish+start)/2;			
+		double scrWidth = (finish-start);
+		
+		double visibletracesCount = scrWidth / (double)getWidth() * (double)model.getTracesCount();
+		double hsc = getWidth() / visibletracesCount;
+		double aspect = hsc/model.getVField().getVScale();
+		
+		double trCenter = scrCenter / (double)getWidth() * (double)model.getTracesCount();
+		model.getVField().setSelectedTrace((int) trCenter);
+		model.getVField().setAspectReal(aspect);
 	}
 
 }

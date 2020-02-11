@@ -50,6 +50,9 @@ public class Model {
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
 	
+	public int getTracesCount() {
+		return getFileManager().getTraces().size();
+	}
 	
 	public Settings getSettings() {
 		return settings;
