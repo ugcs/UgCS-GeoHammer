@@ -99,11 +99,15 @@ public class ProfileScroll extends Canvas{
 		public void move(Point2D localPoint) {
 			
 			double barStart = localPoint.getX()-pressXInBar;
-			double centerPos = barStart + CENTER_MARGIN + (finish-start)/2; 
+			double centerPos = barStart + CENTER_MARGIN + (finish-start)/2;
+			
+			centerPos = Math.min(Math.max(centerPos, 0), getWidth());
+			
 			//finish = barStart;
 			double tracesFull = model.getFileManager().getTraces().size();
 			
 			double trCenter = centerPos*tracesFull/getWidth();
+			
 			
 			model.getVField().setSelectedTrace((int) trCenter);
 			
@@ -144,7 +148,7 @@ public class ProfileScroll extends Canvas{
         @Override
         public void handle(MouseEvent event) {        	
         	selected = null;
-        	System.out.println("release2");
+        	
         }
 	};
 	
@@ -183,7 +187,6 @@ public class ProfileScroll extends Canvas{
         @Override
         public void handle(MouseDragEvent event) {
 
-        	System.out.println("release");
         	selected = null;
         	
         	ProfileScroll.this.setCursor(Cursor.DEFAULT);

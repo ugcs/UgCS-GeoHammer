@@ -85,7 +85,7 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		Point p = getCenter(vField);
 
-		g2.setColor(Color.CYAN);
+		g2.setColor(Color.BLUE);
 		
 		g2.translate(p.x , p.y);
 		g2.fill(shape);

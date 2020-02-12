@@ -79,7 +79,8 @@ public class Navigator implements ToolProducer {
 		
 		double realAspect = h / model.getVField().getVScale();
 		
-		model.getVField().setAspect(Math.log(realAspect) / Math.log(ProfileField.ASPECT_A));
+		//model.getVField().setAspect(Math.log(realAspect) / Math.log(ProfileField.ASPECT_A));
+		model.getVField().setAspectReal(realAspect);
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}

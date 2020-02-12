@@ -215,6 +215,9 @@ public class RadarMap extends BaseLayer{
 		double threshold = scaleArray[0][start];
 		double factor = scaleArray[1][start];
 
+		start = norm(start, 0, values.length);
+		finish = norm(finish, 0, values.length);
+		
 		for (int i = start; i < finish; i++) {
 
 			mx = Math.max(mx, Math.abs(values[i]));

@@ -59,7 +59,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
-	protected ScrollBar scrollBar = new ScrollBar();
+	//protected ScrollBar scrollBar = new ScrollBar();
 	protected Pane topPane = new Pane();
 	
 	protected BufferedImage img;
@@ -69,7 +69,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected double contrast = 50;	
 	
 	private ContrastSlider contrastSlider;
-	private AspectSlider aspectSlider;
+	//private AspectSlider aspectSlider;
 	private HyperbolaSlider hyperbolaSlider;
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
 	
@@ -108,21 +108,21 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		prismDrawer = new PrismDrawer(model, 0);
 		
 		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
-		aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
+		//aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
 		initImageView();
 		
-		scrollBar.setOrientation(Orientation.HORIZONTAL);
-		scrollBar.setVisible(false);
-		scrollBar.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov,
-                    Number old_val, Number new_val) {
-            	getField().setSelectedTrace(new_val.intValue());
-                repaintEvent();
-                
-            }
-        });
+//		scrollBar.setOrientation(Orientation.HORIZONTAL);
+//		scrollBar.setVisible(false);
+//		scrollBar.valueProperty().addListener(new ChangeListener<Number>() {
+//            public void changed(ObservableValue<? extends Number> ov,
+//                    Number old_val, Number new_val) {
+//            	getField().setSelectedTrace(new_val.intValue());
+//                repaintEvent();
+//                
+//            }
+//        });
 		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
             public void changed(ObservableValue<? extends Number> ov,
@@ -150,7 +150,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().add(hyperLiveViewBtn);
 		
 		profileScroll.recalc();
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView,  scrollBar);
+		vbox.getChildren().addAll(toolBar, profileScroll, imageView/*,  scrollBar*/);
 		
 		profileScroll.widthProperty().bind(
 				topPane.widthProperty());
@@ -356,7 +356,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				new HBox( zoomInBtn, zoomOutBtn),
 				contrastSlider.produce() , 
 				//auxEditHandler.getRight(), 
-				aspectSlider.produce(), 
+				//aspectSlider.produce(), 
 				hyperbolaSlider.produce(),
 				hyperGoodSizeSlider.produce()
 			);
@@ -534,7 +534,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public void somethingChanged(WhatChanged changed) {
 
 		if(changed.isFileopened()) {
-			scrollBar.setVisible(true);
+			//scrollBar.setVisible(true);
 			toolBar.setDisable(false);
 		}
 		
@@ -553,14 +553,14 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		profileScroll.recalc();
 		
-		scrollBar.setMin(0);
-		scrollBar.setMax(model.getFileManager().getTraces().size());
-		
-		int am = getField().getVisibleNumberOfTrace(width);
-		scrollBar.setVisibleAmount(am);
-		scrollBar.setUnitIncrement(am/4);
-		scrollBar.setBlockIncrement(am);
-		scrollBar.setValue(getField().getSelectedTrace());
+//		scrollBar.setMin(0);
+//		scrollBar.setMax(model.getFileManager().getTraces().size());
+//		
+//		int am = getField().getVisibleNumberOfTrace(width);
+//		scrollBar.setVisibleAmount(am);
+//		scrollBar.setUnitIncrement(am/4);
+//		scrollBar.setBlockIncrement(am);
+//		scrollBar.setValue(getField().getSelectedTrace());
 	}
 	
 
