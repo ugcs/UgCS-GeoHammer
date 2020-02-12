@@ -204,7 +204,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 		prismDrawer.draw(width, height, field, g2, buffer, contr);
 		
-		drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
+		//drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
 		
 		drawFileNames(height, field, g2);
 

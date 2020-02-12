@@ -22,6 +22,8 @@ public class PrismDrawer implements VCutDrawer {
 	
 	int goodcolor1 = (255<<16) + (70 << 8 ) + 177;
 	int goodcolor2 = (70<<16) + (255 << 8 ) + 177;
+	int geencolor = (32<<16) + (255 << 8 ) + 32;
+	
 	private static int goodcolors[] = new int[100];
 	static {
 		for(int i=0; i< goodcolors.length; i++) {
@@ -87,8 +89,17 @@ public class PrismDrawer implements VCutDrawer {
 		    					trace.good[j] > 0 ? goodcolor1 : goodcolor2;
 		    					//[trace.good[j]];
 		    			}
+		    			//
 		    		}
 				}
+				
+				//Point p1 = field.traceSampleToScreenCenter(new TraceSample(i-1,  trace.maxindex2));
+				int sampStart = field.sampleToScreen(trace.maxindex2);
+				if(sampStart>0 && sampStart <height) {
+					buffer[width / 2 + 0 + traceStartX + (vOffset + sampStart + 0) * width ] = geencolor;
+				}
+    			
+				
 			
 		}
 	}
