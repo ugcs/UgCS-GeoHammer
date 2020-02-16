@@ -18,6 +18,10 @@ public class Trace {
     private LatLon latLon;
     //private boolean active = true;
     private boolean end = false;
+    
+    //tmp for loading
+    private boolean marked = false;
+    
     private double prevDist = 100000;
     
     public int maxindex;
@@ -81,6 +85,14 @@ public class Trace {
     
 	public byte[] getBinHeader() {
 		return binHeader;
+	}
+
+	public boolean isMarked() {
+		return marked;
+	}
+
+	public void setMarked(boolean marked) {
+		this.marked = marked;
 	}
 	
 }

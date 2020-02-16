@@ -81,17 +81,35 @@ public class SgyFile {
 		for(BinTrace binTrace : binFile.getTraces()) {
 			
 			Trace trace = next(binTrace);
+			if(trace == null) {
+				continue;
+			}
 			
-			if(tracePrev != null && trace != null) {
-				trace.setPrevDist(CoordinatesMath.measure(
-					tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
-					trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr()));
+			System.out.println(currentTraceIndex + "  " + trace.getLatLon().toString());
+			
+			if(tracePrev != null) {
+				double dist = CoordinatesMath.measure(
+						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
+				
+				if(dist > 1000 || Double.isNaN(dist)) {
+					System.out.println(currentTraceIndex + " dist from prev: " + dist + "  " + trace.getLatLon().toString());
+					continue;
+				}
+				
+				trace.setPrevDist(dist);
 			}
 			tracePrev = trace;
 			
-			if(trace != null) {
-				traces.add(trace);
-			}
+			
+	        trace.indexInFile = currentTraceIndex;
+	        currentTraceIndex++;
+	        
+	        if(trace.isMarked()) {
+	        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
+	        }	        
+			
+			traces.add(trace);			
 			
 			
 		}
@@ -118,18 +136,9 @@ public class SgyFile {
         	return null;
         }
         Trace trace = new Trace(headerBin, header, values, latLon);
-        trace.indexInFile = currentTraceIndex;
-        currentTraceIndex++;
-
-        
         if(headerBin[MARK_BYTE_POS] != 0 ) {
-        	String s =  trace.indexInFile + " -> ";
-        	for(int i=238; i<=239; i++) {
-        		s += headerBin[i] + " ";
-        	}
-        	System.out.println("marks "+s);
-        	
-        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
+        	System.out.println("mark " +headerBin[MARK_BYTE_POS]);
+        	trace.setMarked(true);
         }
         
         return trace;
@@ -140,7 +149,7 @@ public class SgyFile {
 		double lon = retrieveVal(header.getLongitude(), header.getSourceX()); 
 		double lat = retrieveVal(header.getLatitude(), header.getSourceY()); 
 
-		if (Math.abs(lon) < 0.1 && Math.abs(lat) < 0.1) {
+		if (Math.abs(lon) < 0.1 || Math.abs(lat) < 0.1 || Math.abs(lon) > 18000 && Math.abs(lat) > 18000) {
 			return null;
 		}
 
