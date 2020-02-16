@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ugcs</groupId>
-    <artifactId>gprviewer</artifactId>
+    <artifactId>gprgeohammer</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.4</version>
-    <name>UgCS GPR data visualizer</name>
+    <version>0.9.5</version>
+    <name>UgCS GPR GeoHammer</name>
     <url>https://github.com/ugsc/gprvisualizer</url>
-    <description>UgCS GPR data viewer</description>
+    <description>UgCS GPR GeoHammer</description>
 
     <licenses>
         <license>

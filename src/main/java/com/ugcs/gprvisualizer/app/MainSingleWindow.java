@@ -26,6 +26,7 @@ import javafx.stage.WindowEvent;
 
 public class MainSingleWindow extends Application implements SmthChangeListener {
 
+	private static final String TITLE_VERSION = "UgCS GPR GeoHammer v.0.9.5";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
@@ -76,7 +77,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		
 		scene = createScene();
 
-		stage.setTitle("UgCS GPR GeoHammer v.0.9.4");
+		stage.setTitle(TITLE_VERSION);
 		stage.setScene(scene);
 		stage.show();
 
