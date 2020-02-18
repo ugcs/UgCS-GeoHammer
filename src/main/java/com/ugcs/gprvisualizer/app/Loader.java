@@ -14,6 +14,7 @@ import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.LevelFilter;
+import com.ugcs.gprvisualizer.math.ManuilovFilter;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 import javafx.application.Platform;
@@ -95,6 +96,15 @@ public class Loader {
 						}
 					}catch(Exception e) {
 						e.printStackTrace();
+						
+						MessageBoxHelper.showError("error opening files", "");
+						
+						model.getFileManager().getFiles().clear();
+						model.updateAuxElements();
+						model.initField();
+						model.getVField().clear();
+						
+						
 					}
 				}        		
         	};
@@ -121,8 +131,15 @@ public class Loader {
 		
 			model.init();
 			
+			
+			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+				new ManuilovFilter().filter(sgyFile.getTraces());
+			}
+			
 		}catch(Exception e) {
 			e.printStackTrace();
+			
+			
 		}
 		
 		

@@ -34,6 +34,8 @@ import javafx.scene.control.ButtonType;
 
 public class PluginRunner implements ToolProducer {
 
+	private static final String NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW = "Neural network is not available now";
+
 	private static final String FOUND_ANOMALIES = "Found anomalies: ";
 
 	private Button buttonRunNeuralNetwork = new Button("Find anomalies");
@@ -67,7 +69,7 @@ public class PluginRunner implements ToolProducer {
 			err.printStackTrace();
 			
 			
-			showError("");			
+			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW, "");			
 			
 		}
 	}
@@ -75,24 +77,6 @@ public class PluginRunner implements ToolProducer {
 
 
 
-	public void showError(String msg) {
-		
-		Platform.runLater(new Runnable(){
-			@Override
-			public void run() {
-				
-				Alert alert = new Alert(AlertType.ERROR);
-				alert.setTitle("Error");
-				alert.setHeaderText("Neural network is not available now");
-				alert.setContentText(msg);
-				alert.showAndWait().ifPresent(rs -> {
-				    if (rs == ButtonType.OK) {
-				        //System.out.println("Pressed OK.");
-				    }
-				});
-			}
-		});
-	}	
 	
 	private void processSgyFiles(ProgressListener listener, List<SgyFile> sgfl) {
 		try {
@@ -107,7 +91,7 @@ public class PluginRunner implements ToolProducer {
 			
 			String sgyprocPath = System.getenv().get("SGYPROC");
 			if(StringUtils.isBlank(sgyprocPath)) {
-				showError("System environment variable 'SGYPROC' absent");
+				MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW, "System environment variable 'SGYPROC' absent");
 				return;
 			}
 			
@@ -149,10 +133,8 @@ public class PluginRunner implements ToolProducer {
 		} catch (Exception err) {
 			err.printStackTrace();
 			
-			showError("");
+			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW,"");
 		}
-		
-		
 	}
 	
 	private ProgressTask neuralNetworkTask = new ProgressTask() {

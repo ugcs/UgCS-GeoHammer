@@ -2,13 +2,15 @@ package com.ugcs.gprvisualizer.math;
 
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Scan;
 
 public class ManuilovFilter {
 
 	
 	
-	public void filter(List<Scan> list) {
+	public void filter(List<Trace> list) {
 		
 		
 		double ll[][] = new double[2][];
@@ -16,15 +18,14 @@ public class ManuilovFilter {
 		ll[1] = new double[list.size()];
 		
 		for(int i = 0; i < list.size(); i++){			
-			ll[0][i] = list.get(i).getLatDgr();
-			ll[1][i] = list.get(i).getLonDgr();			
+			ll[0][i] = list.get(i).getLatLon().getLatDgr();
+			ll[1][i] = list.get(i).getLatLon().getLonDgr();			
 		}
 		
 		ll = filt(ll);
 		
 		for(int i = 0; i < list.size(); i++){			
-			list.get(i).setLatDgr(ll[0][i]);
-			list.get(i).setLonDgr(ll[1][i]);
+			list.get(i).setLatLon(new LatLon(ll[0][i], ll[1][i])) ;
 		}	
 		
 	}

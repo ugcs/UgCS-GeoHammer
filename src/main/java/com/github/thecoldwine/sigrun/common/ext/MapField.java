@@ -151,7 +151,7 @@ public class MapField {
 	}
 	
 	public void setZoom(int zoom) {
-		this.zoom = zoom;
+		this.zoom = Math.max(0, Math.min(30, zoom));
 	}
 
 	public LatLon getSceneCenter() {

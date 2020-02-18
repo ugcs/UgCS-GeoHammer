@@ -148,7 +148,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	
 	public void apply() {
 		MapField fld = new MapField(field);
-		fld.setZoom(22);
+		fld.setZoom(28);
 		List<Point2D> border = getScreenPoligon(fld);
 		
 		////
