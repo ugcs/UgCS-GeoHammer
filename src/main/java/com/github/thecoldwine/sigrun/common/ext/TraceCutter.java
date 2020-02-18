@@ -242,6 +242,11 @@ public class TraceCutter implements Layer {
 			SgyFile subfile = generateSgyFileFrom(file, sublist, part++);
 			splitList.add(subfile);
 		}
+		
+		if(splitList.size() == 1) {
+			splitList.get(0).setFile(file.getFile());
+		}
+		
 		return splitList;
 	}
 
