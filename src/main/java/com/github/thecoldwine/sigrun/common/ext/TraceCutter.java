@@ -19,6 +19,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -34,7 +35,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 
-public class TraceCutter implements Layer {
+public class TraceCutter implements Layer, SmthChangeListener {
 
 	private MapField field;
 	private List<LatLon> points;
@@ -51,7 +52,9 @@ public class TraceCutter implements Layer {
 	public TraceCutter(Model model, RepaintListener listener) {
 		this.model = model; 
 		this.listener = listener;
-		this.field = model.getField();		
+		this.field = model.getField();
+		
+		AppContext.smthListener.add(this);
 	}
 	
 	public void clear() {
@@ -302,6 +305,7 @@ public class TraceCutter implements Layer {
 	public void somethingChanged(WhatChanged changed) {
 		
 		if(changed.isFileopened()) {
+			clear();
 			model.setUndoFiles(null);
 			initButtons();
 		}

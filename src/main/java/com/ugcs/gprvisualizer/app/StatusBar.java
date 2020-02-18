@@ -47,12 +47,13 @@ public class StatusBar extends GridPane {
 	}
 	
 	public void showProgressText(String txt) {
+		System.out.println("status text: '" + txt + "'");
 		textField.setText(txt);	
 	}
 	
 	public void showGPSPoint(LatLon click) {
 		
-		textField.setText(click.toString());
+		showProgressText(click.toString());
 		
 	}
 

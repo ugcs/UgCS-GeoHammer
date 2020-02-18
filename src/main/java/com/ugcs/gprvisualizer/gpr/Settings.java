@@ -31,7 +31,7 @@ public class Settings {
 	public int zoom = 100;
     
 	public boolean showpath = true;
-	public boolean autogain = false;
+	public boolean autogain = true;
 	
 	public int threshold = 0;
     

@@ -3,10 +3,13 @@ package com.ugcs.gprvisualizer.app;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,16 +23,20 @@ import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 
 public class PluginRunner implements ToolProducer {
 
 	private static final String FOUND_ANOMALIES = "Found anomalies: ";
 
-	private Button buttonRun = new Button("Find anomalies");
+	private Button buttonRunNeuralNetwork = new Button("Find anomalies");
 
 	private Model model;
 
@@ -58,11 +65,34 @@ public class PluginRunner implements ToolProducer {
 			input.close();
 		} catch (Exception err) {
 			err.printStackTrace();
+			
+			
+			showError("");			
+			
 		}
 	}
 
-	
-	
+
+
+
+	public void showError(String msg) {
+		
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Error");
+				alert.setHeaderText("Neural network is not available now");
+				alert.setContentText(msg);
+				alert.showAndWait().ifPresent(rs -> {
+				    if (rs == ButtonType.OK) {
+				        //System.out.println("Pressed OK.");
+				    }
+				});
+			}
+		});
+	}	
 	
 	private void processSgyFiles(ProgressListener listener, List<SgyFile> sgfl) {
 		try {
@@ -76,6 +106,11 @@ public class PluginRunner implements ToolProducer {
 			}
 			
 			String sgyprocPath = System.getenv().get("SGYPROC");
+			if(StringUtils.isBlank(sgyprocPath)) {
+				showError("System environment variable 'SGYPROC' absent");
+				return;
+			}
+			
 			System.out.println(sgyprocPath);
 			
 			String line;
@@ -85,26 +120,42 @@ public class PluginRunner implements ToolProducer {
 					+ "--model \"" + sgyprocPath + "\\model.pb\" --no_progressbar";
 			System.out.println(cmd);
 			Process p = Runtime.getRuntime().exec(cmd);
+			
+			
+			//
 			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			while ((line = input.readLine()) != null) {
 				
 				if(!line.contains("Iterations")) {
 					System.out.println(line);
+					listener.progressMsg(line);
 				}
 				
 				processV2(sgfl, line);
 				
-				listener.progressMsg(line);
-				
-				
 			}
 			input.close();
+			
+			System.out.println("p.exitValue() " + p.exitValue());
+			if(p.exitValue() != 0) {
+				String text = IOUtils.toString(p.getErrorStream(), StandardCharsets.UTF_8.name());
+				System.out.println(text);
+				
+				throw new RuntimeException("p.exitValue() != 0 " + p.exitValue());
+			}
+			
+			listener.progressMsg("search finished");
+			
 		} catch (Exception err) {
 			err.printStackTrace();
+			
+			showError("");
 		}
+		
+		
 	}
 	
-	private ProgressTask saveTask = new ProgressTask() {
+	private ProgressTask neuralNetworkTask = new ProgressTask() {
 		@Override
 		public void run(ProgressListener listener) {
 			listener.progressMsg("searching start now");
@@ -123,9 +174,9 @@ public class PluginRunner implements ToolProducer {
 		
 		
 	{
-		buttonRun.setOnAction(new EventHandler<ActionEvent>() {
+		buttonRunNeuralNetwork.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-				new TaskRunner(null, saveTask).start();
+				new TaskRunner(null, neuralNetworkTask).start();
 		    	
 		    }
 		});
@@ -138,7 +189,7 @@ public class PluginRunner implements ToolProducer {
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Arrays.asList(buttonRun);
+		return Arrays.asList(buttonRunNeuralNetwork);
 	}
 
 	// {"filename":

@@ -42,6 +42,8 @@ public class Saver implements ToolProducer {
 	    	AppContext.loader.load(newfiles, listener);
 	    	
 	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+	    	
+	    	AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -56,6 +58,8 @@ public class Saver implements ToolProducer {
 	    	AppContext.loader.load(newfiles, listener);
 	    	
 	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+	    	
+	    	AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 

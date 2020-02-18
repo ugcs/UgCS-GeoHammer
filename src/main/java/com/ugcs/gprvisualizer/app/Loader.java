@@ -87,6 +87,8 @@ public class Loader {
 								model.getVField().clear();
 								
 								AppContext.notifyAll(new WhatChanged(Change.fileopened));
+								
+								AppContext.statusBar.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
 							}finally {
 								model.setLoading(false);
 							}
