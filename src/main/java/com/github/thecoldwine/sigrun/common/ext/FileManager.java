@@ -31,7 +31,7 @@ public class FileManager {
 		return files != null && !files.isEmpty();
 	}
 
-	public void processList(List<File> fileList, ProgressListener listener) {
+	public void processList(List<File> fileList, ProgressListener listener) throws Exception {
 		clear();
 
 		Set<File> sf = new TreeSet<File>(fileList);
@@ -53,7 +53,7 @@ public class FileManager {
 		topFolder = null;
 	}
 
-	private void processDirectory(File fl, ProgressListener listener) {
+	private void processDirectory(File fl, ProgressListener listener) throws Exception {
 		if (topFolder == null) {
 			topFolder = fl;
 		}
@@ -64,20 +64,20 @@ public class FileManager {
 
 	}
 
-	private void processFile(File fl) {
-		try {
-			SgyFile sgyFile = new SgyFile();
-			sgyFile.open(fl);
-			files.add(sgyFile);
+	private void processFile(File fl) throws Exception {
+		
+		SgyFile sgyFile = new SgyFile();
+		sgyFile.open(fl);
+		files.add(sgyFile);
 
-			
+		try {	
 			new MarkupFile().load(sgyFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void processFileList(List<File> fileList) {
+	private void processFileList(List<File> fileList) throws Exception {
 		for (File fl : fileList) {
 			processFile(fl);
 		}

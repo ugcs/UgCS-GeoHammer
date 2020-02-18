@@ -49,13 +49,12 @@ public class ManuilovFilter {
 	}
 
 	private double avg(int i, double[] ds) {
-		int range = 40;
+		int range = 20;
 		double weight = 0;
 		double sum = 0;
 		
 		for(int j= Math.max(0, i-range); j< Math.min(ds.length-1, i+range); j++) {
 			double dst = Math.abs(j - i);
-			//double kf = 1/(dst + 4);
 			double kf = range - dst;
 			
 			weight += kf;

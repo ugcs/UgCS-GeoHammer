@@ -9,6 +9,9 @@ public class MessageBoxHelper {
 
 	public static void showError(String header, String msg) {
 		
+		
+		System.out.println("  MessageBoxHelper.showError " + header + " " + msg);
+		
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run() {

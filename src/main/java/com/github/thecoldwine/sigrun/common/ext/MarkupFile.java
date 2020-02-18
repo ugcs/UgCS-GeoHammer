@@ -36,9 +36,14 @@ public class MarkupFile {
 			return;
 		}
 		
+		JSONObject jsonObject;
+		JSONParser jsonParser = new JSONParser();
 		FileReader reader = new FileReader(mkupfile);
-	    JSONParser jsonParser = new JSONParser();
-		JSONObject jsonObject = (JSONObject)jsonParser.parse(reader);
+		try {	    
+			jsonObject = (JSONObject)jsonParser.parse(reader);
+		}finally {
+			reader.close();
+		}
 		
 		JSONArray objects = (JSONArray)jsonObject.get("markup");
 		for(Object t : objects) {

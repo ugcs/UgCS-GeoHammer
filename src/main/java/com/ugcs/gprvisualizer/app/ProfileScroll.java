@@ -221,7 +221,9 @@ public class ProfileScroll extends Canvas{
 	
 	void recalc() {
 		
-		if(!model.getFileManager().isActive()) {
+		if(!model.isActive()) {
+			GraphicsContext gc = this.getGraphicsContext2D();	
+			gc.clearRect(0, 0, getWidth(), getHeight());
 			return;
 		}
 		

@@ -211,7 +211,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 
 
 		if(changed.isFileopened()) {
-			toolBar.setDisable(false);
+			toolBar.setDisable(!model.isActive());
 			
 			AppContext.levelFilter.clearForNewFile();
 			//gpsMode.setSelected(true);

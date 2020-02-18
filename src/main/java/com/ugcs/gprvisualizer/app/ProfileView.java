@@ -170,7 +170,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
-		if(width <= 0 || height <= 0 || !model.getFileManager().isActive()) {
+		if(width <= 0 || height <= 0 || !model.isActive()) {
 			return null;
 		}		
 		
@@ -513,6 +513,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		img = draw(width, height);
 		if(img != null) {
 			i = SwingFXUtils.toFXImage(img, null);
+		}else {
+			i = null;
 		}
 		updateWindow();
 	}
@@ -521,9 +523,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
-            	if(i == null) {
-            		return;
-            	}
+//            	if(i == null) {
+//            		return;
+//            	}
 			    
 			    imageView.setImage(i);
             }
@@ -534,8 +536,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public void somethingChanged(WhatChanged changed) {
 
 		if(changed.isFileopened()) {
-			//scrollBar.setVisible(true);
-			toolBar.setDisable(false);
+			profileScroll.setVisible(model.isActive());
+			toolBar.setDisable(!model.isActive());
 		}
 		
 		if(changed.isAuxOnMapSelected()) {
@@ -547,7 +549,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 
 	private void updateScroll() {
-		if(!model.getFileManager().isActive()) {
+		if(!model.isActive()) {
 			return;
 		}
 		

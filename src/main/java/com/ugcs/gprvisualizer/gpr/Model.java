@@ -229,5 +229,9 @@ public class Model {
 	public void setUndoFiles(List<SgyFile> undoFiles) {
 		this.undoFiles = undoFiles;
 	}
+
+	public boolean isActive() {
+		return getFileManager().isActive();
+	}
 	
 }

@@ -51,7 +51,9 @@ public class ProfileField {
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;
-		selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
+		if(model.isActive()) {
+			selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
+		}
 
 	}
 	

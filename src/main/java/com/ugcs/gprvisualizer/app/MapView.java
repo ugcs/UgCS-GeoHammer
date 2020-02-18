@@ -63,7 +63,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		super.somethingChanged(changed);
 		
 		if(changed.isFileopened()) {
-			toolBar.setDisable(false);
+			toolBar.setDisable(!model.isActive());
 		}
 		
 	}

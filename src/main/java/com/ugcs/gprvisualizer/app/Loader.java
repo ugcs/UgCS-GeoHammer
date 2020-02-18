@@ -79,22 +79,11 @@ public class Loader {
 							model.updateAuxElements();
 							
 						}else {
-							try {
-								model.setLoading(true);
-								load(files, listener);
-								
-								//when open file by dnd (not after save)
-								model.initField();
-								model.getVField().clear();
-								
-								AppContext.notifyAll(new WhatChanged(Change.fileopened));
-								
-								AppContext.statusBar.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
-							}finally {
-								model.setLoading(false);
-							}
+							load(files, listener);
 						}
 					}catch(Exception e) {
+						System.out.println("------------------------------");
+						
 						e.printStackTrace();
 						
 						MessageBoxHelper.showError("error opening files", "");
@@ -105,8 +94,10 @@ public class Loader {
 						model.getVField().clear();
 						
 						
+						AppContext.notifyAll(new WhatChanged(Change.fileopened));
 					}
-				}        		
+				}
+
         	};
         	
 			new TaskRunner(null, loadTask).start();
@@ -117,8 +108,23 @@ public class Loader {
         }
 
     };
+
+	public void load(final List<File> files, ProgressListener listener) throws Exception {
+		try {
+			model.setLoading(true);
+			
+			load2(files, listener);
+			
+			
+		}finally {
+			model.setLoading(false);
+		}
+		
+		AppContext.notifyAll(new WhatChanged(Change.fileopened));
+		AppContext.statusBar.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
+	}        		
     
-	public void load(List<File> files, ProgressListener listener) {
+	public void load2(List<File> files, ProgressListener listener) throws Exception {
 		/// clear
 		System.out.println("start load");
 		
@@ -126,21 +132,22 @@ public class Loader {
 		model.getChanges().clear();
 		
 		listener.progressMsg("load");
-		try {
+		//try {
 			model.getFileManager().processList(files, listener);
 		
-			model.init();
-			
+			model.init();			
 			
 			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
 				new ManuilovFilter().filter(sgyFile.getTraces());
 			}
 			
-		}catch(Exception e) {
-			e.printStackTrace();
-			
-			
-		}
+		//}catch(Exception e) {
+			//e.printStackTrace();			
+		//}
+		
+		//when open file by dnd (not after save)
+		model.initField();
+		model.getVField().clear();
 		
 		
 		

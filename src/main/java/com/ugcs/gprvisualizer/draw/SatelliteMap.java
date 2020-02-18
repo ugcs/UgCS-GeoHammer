@@ -136,12 +136,12 @@ public class SatelliteMap extends BaseLayer {
 		
 		if(changed.isFileopened() || changed.isZoom()) {
 			
-			
-			loadMap();
-			
-			
-		}
-		
+			if(model.isActive()) {
+				loadMap();
+			}else {
+				this.img = null;
+			}			
+		}		
 	}
 
 	private void loadMap() {
