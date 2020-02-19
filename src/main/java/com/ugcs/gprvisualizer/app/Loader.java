@@ -86,7 +86,7 @@ public class Loader {
 						
 						e.printStackTrace();
 						
-						MessageBoxHelper.showError("error opening files", "");
+						MessageBoxHelper.showError("Can`t open files", "Probably file has incorrect format");
 						
 						model.getFileManager().getFiles().clear();
 						model.updateAuxElements();

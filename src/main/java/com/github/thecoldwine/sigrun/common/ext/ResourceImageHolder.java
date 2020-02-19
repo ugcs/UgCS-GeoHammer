@@ -18,6 +18,7 @@ public class ResourceImageHolder {
 	public static Image IMG_UNLOCK;
 	
 	public static Image IMG_CHOOSE;
+	public static Image IMG_GPS;
 	
 	public static javafx.scene.image.Image IMG_LOGO24;
 	
@@ -46,6 +47,9 @@ public class ResourceImageHolder {
 			IMG_UNLOCK = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("unlock16.png"));
 			IMG_CHOOSE = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("choose16.png"));
 			FXIMG_DONE =  new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream("done-16.png"));
+			
+			IMG_GPS = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("gps32.png"));
+			
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

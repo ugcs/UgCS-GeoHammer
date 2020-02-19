@@ -94,11 +94,10 @@ public class PrismDrawer implements VCutDrawer {
 				}
 				
 				//Point p1 = field.traceSampleToScreenCenter(new TraceSample(i-1,  trace.maxindex2));
-				int sampStart = field.sampleToScreen(trace.maxindex2);
-				if(sampStart>0 && sampStart <height) {
-					buffer[width / 2 + 0 + traceStartX + (vOffset + sampStart + 0) * width ] = geencolor;
-				}
-    			
+//				int sampStart = field.sampleToScreen(trace.maxindex2);
+//				if(sampStart>0 && sampStart <height) {
+//					buffer[width / 2 + 0 + traceStartX + (vOffset + sampStart + 0) * width ] = geencolor;
+//				}    			
 				
 			
 		}

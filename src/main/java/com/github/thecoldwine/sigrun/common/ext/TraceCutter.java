@@ -147,6 +147,9 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	}
 	
 	public void apply() {
+		
+		model.setControls(null);
+		
 		MapField fld = new MapField(field);
 		fld.setZoom(28);
 		List<Point2D> border = getScreenPoligon(fld);
@@ -168,6 +171,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	}
 
 	public void undo() {
+		model.setControls(null);
 
 		if(model.getUndoFiles() != null) {
 			model.getFileManager().setFiles(model.getUndoFiles());

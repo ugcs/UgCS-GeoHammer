@@ -53,6 +53,13 @@ public class FoundTracesLayer implements Layer {
 			
 			bo.drawOnMap(g2, model.getField());
 		}
+
+		if(model.getControls() != null) {
+			for (BaseObject bo : model.getControls()) {
+				
+				bo.drawOnMap(g2, model.getField());
+			}
+		}
 		
 //		for (Trace trace : model.getFoundTrace()) {
 //
