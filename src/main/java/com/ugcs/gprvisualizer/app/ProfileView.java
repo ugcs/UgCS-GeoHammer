@@ -412,7 +412,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(MouseEvent mouseEvent) {
-	    	System.out.println("mouse dragDetected " );
+
 	    	imageView.startFullDrag();
 	    	
 	    	imageView.setCursor(Cursor.CLOSED_HAND);
@@ -422,7 +422,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
         @Override
         public void handle(MouseDragEvent event) {
-        	System.out.println("mouseDragRelease " );
+
         	Point p = getLocalCoords(event);
         	
         	if(selectedMouseHandler != null) {
@@ -478,7 +478,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-        	//System.out.println("mouseClick " + event.getClickCount());
+
         	if(event.getClickCount() == 2) {
         		//add tmp flag
         		Point p = getLocalCoords(event);
@@ -516,7 +516,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-        	System.out.println("mousePress");
+        	
         	
         	Point p = getLocalCoords(event);
         	if(auxEditHandler.mousePressHandle(p, getField())) {
@@ -534,7 +534,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {        	
-        	System.out.println("mouseRelease " );
+        	
         	Point p = getLocalCoords(event);
         	
         	if(selectedMouseHandler != null) {
