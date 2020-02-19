@@ -1,7 +1,9 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -22,7 +24,7 @@ public class AppContext {
 	public static Navigator navigator;
 	public static StatusBar statusBar;
 	
-	public static List<SmthChangeListener> smthListener = new ArrayList<>();
+	public static Set<SmthChangeListener> smthListener = new HashSet<>();
 	
 	public static void notifyAll(WhatChanged changed) {
 		Platform.runLater(new Runnable(){

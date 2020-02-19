@@ -51,6 +51,12 @@ public class Trace {
     	return latLon;
     }
 
+    public void setLatLon(LatLon latLon2) {
+		this.latLon = latLon2;
+		
+	}
+    
+
     public float[] getOriginalValues() {
     	return originalvalues;
     }

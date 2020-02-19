@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
@@ -63,7 +64,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		super.somethingChanged(changed);
 		
 		if(changed.isFileopened()) {
-			toolBar.setDisable(false);
+			toolBar.setDisable(!model.isActive());
 		}
 		
 	}
@@ -85,6 +86,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 			AppContext.notifyAll(new WhatChanged(Change.mapzoom));
 	    } );		
 	
+		imageView.setOnMouseClicked(mouseClickHandler);
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
 		//imageView.setOnMouseMoved(mouseMoveHandler);
@@ -106,6 +108,49 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
             }
 		});		
 	}
+	
+	protected EventHandler mouseClickHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+        	if(event.getClickCount() == 2) {
+        		
+        		Point2D p = getLocalCoords(event);
+        		
+        		LatLon ll = model.getField().screenTolatLon(p);
+        		
+        		int traceIndex = findNearestTraceIndex(model.getFileManager().getTraces(), ll);
+        		
+        		model.getVField().setSelectedTrace(traceIndex);
+        		
+        		ProfileView.createTempPlace(model, traceIndex);
+        		
+    			    			
+    			//AppContext.notifyAll(new WhatChanged(Change.justdraw));
+        		
+        		
+        	}
+        }
+
+		private int findNearestTraceIndex(List<Trace> traces, LatLon ll) {
+			
+			int resultIndex = 0;
+			double mindst = ll.getDistance(traces.get(0).getLatLon());
+			
+			for(int i=0; i<traces.size(); i++) {
+				
+				double dst = ll.getDistance(traces.get(i).getLatLon());
+				if(dst < mindst) {
+					resultIndex = i;
+					
+					mindst = dst;
+				}
+				
+			}
+			
+			return resultIndex;
+		}
+
+	};
 	
 	@Override
 	public Node getCenter() {

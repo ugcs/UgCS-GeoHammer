@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,6 +106,7 @@ public class Work {
 
 	};
 
+
 	protected EventHandler mouseReleaseHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {        	
@@ -137,7 +139,7 @@ public class Work {
         }
 	};
 
-	private Point2D getLocalCoords(MouseEvent event) {
+	public Point2D getLocalCoords(MouseEvent event) {
 		
 		return getLocalCoords(event.getSceneX(), event.getSceneY());
 	

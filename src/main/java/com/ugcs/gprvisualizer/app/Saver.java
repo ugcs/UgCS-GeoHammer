@@ -39,9 +39,17 @@ public class Saver implements ToolProducer {
 			List<File> newfiles = saveTheSame();		
 			
 			listener.progressMsg("load now");
-	    	AppContext.loader.load(newfiles, listener);
-	    	
+			
+			try {
+				AppContext.loader.load(newfiles, listener);
+				
+			}catch(Exception e) {
+				MessageBoxHelper.showError("error reopening files", "");
+			}
+		    	
 	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+		    	
+		    AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -53,9 +61,18 @@ public class Saver implements ToolProducer {
 			List<File> newfiles = saveAs(folder);
 			
 			listener.progressMsg("load now");
-	    	AppContext.loader.load(newfiles, listener);
+			
+			try {
+				AppContext.loader.load(newfiles, listener);
+			}catch(Exception e) {
+				MessageBoxHelper.showError("error reopening files", "");
+			}
+				
+				
 	    	
 	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+	    	
+	    	AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 

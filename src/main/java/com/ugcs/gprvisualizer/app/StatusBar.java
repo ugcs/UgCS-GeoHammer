@@ -4,6 +4,7 @@ package com.ugcs.gprvisualizer.app;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
@@ -47,12 +48,21 @@ public class StatusBar extends GridPane {
 	}
 	
 	public void showProgressText(String txt) {
-		textField.setText(txt);	
+		System.out.println("status text: '" + txt + "'");
+		
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				textField.setText(txt);
+			}
+		});
+		
+			
 	}
 	
 	public void showGPSPoint(LatLon click) {
 		
-		textField.setText(click.toString());
+		showProgressText(click.toString());
 		
 	}
 

@@ -16,8 +16,12 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -104,34 +108,18 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		this.model = model;
 		
 		hyperFinder = new HyperFinder(model);
-		
 		prismDrawer = new PrismDrawer(model, 0);
-		
 		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
-		//aspectSlider = new AspectSlider(model.getSettings(), aspectSliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
 		initImageView();
 		
-//		scrollBar.setOrientation(Orientation.HORIZONTAL);
-//		scrollBar.setVisible(false);
-//		scrollBar.valueProperty().addListener(new ChangeListener<Number>() {
-//            public void changed(ObservableValue<? extends Number> ov,
-//                    Number old_val, Number new_val) {
-//            	getField().setSelectedTrace(new_val.intValue());
-//                repaintEvent();
-//                
-//            }
-//        });
-		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
             public void changed(ObservableValue<? extends Number> ov,
                     Number old_val, Number new_val) {
-            	//getField().setSelectedTrace(new_val.intValue());
                 repaintEvent();                
             }
         });
-		
 
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
@@ -170,7 +158,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
-		if(width <= 0 || height <= 0 || !model.getFileManager().isActive()) {
+		if(width <= 0 || height <= 0 || !model.isActive()) {
 			return null;
 		}		
 		
@@ -197,14 +185,14 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		g2.translate(width/2, 0);
 
-		int startTrace = field.getFirstVisibleTrace(width);
-		int finishTrace = field.getLastVisibleTrace(width);		
 		
 		double contr = Math.pow(1.08, 140-contrast);
 
 		prismDrawer.draw(width, height, field, g2, buffer, contr);
 		
-		//drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
+		int startTrace = field.getFirstVisibleTrace(width);
+		int finishTrace = field.getLastVisibleTrace(width);		
+		drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
 		
 		drawFileNames(height, field, g2);
 
@@ -260,13 +248,27 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
 		g2.setColor(Color.GREEN);
+		
+		Trace trace1 = traces.get(startTrace);
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  trace1.maxindex2));
+		int max2 = 0;
+		
 		for(int i=startTrace+1; i<finishTrace; i++) {
-			Trace trace1 = traces.get(i-1);
+			//Trace trace1 = traces.get(i-1);
+			
 			Trace trace2 = traces.get(i);
 			
-			Point p1 = field.traceSampleToScreenCenter(new TraceSample(i-1,  trace1.maxindex2));
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  trace2.maxindex2));
-			g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+			max2 = Math.max(max2, trace2.maxindex2);
+			
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
+			if(p2.x - p1.x > 2) {
+				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+				trace1 = trace2;
+				p1 = p2;
+				
+				max2 = 0;
+			}
+			
 		}
 	}
 
@@ -377,6 +379,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
 		imageView.setOnMouseMoved(mouseMoveHandler);
+		imageView.setOnMouseClicked(mouseClickHandler);
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
@@ -409,7 +412,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(MouseEvent mouseEvent) {
-	    	
+
 	    	imageView.startFullDrag();
 	    	
 	    	imageView.setCursor(Cursor.CLOSED_HAND);
@@ -419,6 +422,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
         @Override
         public void handle(MouseDragEvent event) {
+
         	Point p = getLocalCoords(event);
         	
         	if(selectedMouseHandler != null) {
@@ -471,9 +475,48 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		return p;
 	}
 
+	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+
+        	if(event.getClickCount() == 2) {
+        		//add tmp flag
+        		Point p = getLocalCoords(event);
+        		
+        		int trace = getField().screenToTraceSample(p).getTrace();
+        		
+        		if(trace>=0 && trace < model.getTracesCount()) {
+        		
+        			//	select in MapView
+        			model.getField().setSceneCenter(model.getFileManager().getTraces().get(trace).getLatLon());
+        		
+        			createTempPlace(model, trace);
+        			
+        			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+        		}
+        		
+        		
+        	}
+        	
+        }
+
+     };
+
+	public static void createTempPlace(Model model, int trace) {
+		
+		ClickPlace fp = new ClickPlace(trace);
+		fp.setSelected(true);
+		model.setControls(Arrays.asList(fp));
+		//model.getControls().add();
+		
+		//repaintEvent();
+		//AppContext.notifyAll(new WhatChanged(Change.justdraw));
+	}
+     
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+        	
         	
         	Point p = getLocalCoords(event);
         	if(auxEditHandler.mousePressHandle(p, getField())) {
@@ -513,6 +556,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		img = draw(width, height);
 		if(img != null) {
 			i = SwingFXUtils.toFXImage(img, null);
+		}else {
+			i = null;
 		}
 		updateWindow();
 	}
@@ -521,9 +566,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
-            	if(i == null) {
-            		return;
-            	}
+//            	if(i == null) {
+//            		return;
+//            	}
 			    
 			    imageView.setImage(i);
             }
@@ -534,8 +579,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public void somethingChanged(WhatChanged changed) {
 
 		if(changed.isFileopened()) {
-			//scrollBar.setVisible(true);
-			toolBar.setDisable(false);
+			profileScroll.setVisible(model.isActive());
+			toolBar.setDisable(!model.isActive());
 		}
 		
 		if(changed.isAuxOnMapSelected()) {
@@ -547,7 +592,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 
 	private void updateScroll() {
-		if(!model.getFileManager().isActive()) {
+		if(!model.isActive()) {
 			return;
 		}
 		

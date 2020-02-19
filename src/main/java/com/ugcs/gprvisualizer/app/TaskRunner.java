@@ -60,7 +60,7 @@ public class TaskRunner implements ProgressListener {
 				try {
 					task.run(TaskRunner.this);
 
-					progressMsg("");
+					//progressMsg("");
 					Platform.runLater(new Runnable(){
 						@Override
 						public void run() {
