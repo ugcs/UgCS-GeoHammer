@@ -340,7 +340,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	    	buttonUndo.setDisable(false);
 
 	    	
-	    	AppContext.notifyAll(new WhatChanged(Change.mapzoom));
+	    	AppContext.notifyAll(new WhatChanged(Change.traceCut));
 	    	
 		});
 		
@@ -352,7 +352,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	    	updateCutMode();
 	    	buttonUndo.setDisable(true);
 
-	    	AppContext.notifyAll(new WhatChanged(Change.mapzoom));
+	    	AppContext.notifyAll(new WhatChanged(Change.traceCut));
 	    	
 		});
 		

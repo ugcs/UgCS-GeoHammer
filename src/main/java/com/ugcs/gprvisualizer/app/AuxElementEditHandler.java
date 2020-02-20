@@ -210,9 +210,15 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 
 			selectControl(rect);
 			
-			profileView.repaintEvent();
+			
+			updateViews();
 		});
 		
+	}
+	
+	protected void updateViews() {
+		//profileView.repaintEvent();
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));		
 	}
 
 	private void clearAuxElements() {
@@ -392,7 +398,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isFileopened()) {
+		if(changed.isFileopened() || changed.isTraceCut()) {
 			
 			mouseInput = null;
 			setSelected(null);

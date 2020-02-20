@@ -4,7 +4,7 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 
 	private Settings settings;
 
-	private double[][] scaleArray;
+	private double[][] scaleArray = null;
 	
 	public ScaleArrayBuilder(Settings settings) {
 		this.settings = settings;
@@ -17,6 +17,11 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 	 */
 	@Override
 	public double[][] build() {
+		
+		if(scaleArray != null) {
+			return scaleArray;
+		}
+		
 		scaleArray = new double[2][settings.maxsamples];
 		
 		for(int i=0; i < settings.maxsamples; i++) {
@@ -29,7 +34,7 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
+		scaleArray = null;
 		
 	}
 	

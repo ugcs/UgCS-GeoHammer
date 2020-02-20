@@ -20,6 +20,7 @@ import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.DblArray;
+import com.ugcs.gprvisualizer.gpr.MedianScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.ScaleArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings;
@@ -41,14 +42,12 @@ import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
 
-public class RadarMap extends BaseLayer{
+public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 
 	private RepaintListener listener;
 	private BufferedImage img;
 	private LatLon imgLatLon;
 	
-	private BaseSlider depthSlider;
-	private BaseSlider depthWindowSlider;
 	private BaseSlider gainTopSlider;
 	private BaseSlider gainBottomSlider;
 	private BaseSlider thresholdSlider;
@@ -126,12 +125,10 @@ public class RadarMap extends BaseLayer{
 		
 		this.listener = listener;
 		
-		autoArrayBuilder = new AutomaticScaleBuilder(model);
+		autoArrayBuilder = new MedianScaleBuilder(model);
 		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
 		Settings settings = model.getSettings();
 		
-		depthSlider = new DepthSlider(settings, sliderListener);
-		depthWindowSlider = new DepthWindowSlider(settings, sliderListener);
 		gainTopSlider = new GainTopSlider(settings, sliderListener);
 		gainBottomSlider = new GainBottomSlider(settings, sliderListener);
 		thresholdSlider = new ThresholdSlider(settings, sliderListener);
@@ -176,7 +173,16 @@ public class RadarMap extends BaseLayer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
+		if(changed.isFileopened() || changed.isTraceCut()) {
+			autoArrayBuilder.clear();
+			scaleArrayBuilder.clear();
+		}
+		
+		if(changed.isAdjusting()) {
+			scaleArrayBuilder.clear();
+		}
+		
+		if(changed.isTraceCut() || changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
 			executor.submit(t);
 		}		
 	}
@@ -189,13 +195,12 @@ public class RadarMap extends BaseLayer{
 		
 		DblArray da = new DblArray(parentDimension.width, parentDimension.height);
 		
-		scaleArray = getArrayBuilder().build();
-		
+		scaleArray = getArrayBuilder().build();		
 		 
 		int start = norm(model.getSettings().layer, 0, model.getMaxHeightInSamples());
 		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
 
-		for (Trace trace : model.getFileManager().getTraces()) {
+		for(Trace trace : model.getFileManager().getTraces()) {
 
 			Point2D p = field.latLonToScreen(trace.getLatLon());
 			
@@ -228,7 +233,6 @@ public class RadarMap extends BaseLayer{
 		return Math.max(0, Math.min(val, 200));
 
 	}
-	
 
 	private int norm(int i, int min, int max) {
 

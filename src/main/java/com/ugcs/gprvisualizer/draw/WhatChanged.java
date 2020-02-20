@@ -14,8 +14,8 @@ public class WhatChanged {
 	public boolean isAdjusting() {
 		return change == Change.adjusting;
 	}
-	public boolean isTraces() {
-		return change == Change.traces;
+	public boolean isTraceCut() {
+		return change == Change.traceCut;
 	}
 	public boolean isFileopened() {
 		return change == Change.fileopened;

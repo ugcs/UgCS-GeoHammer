@@ -85,7 +85,7 @@ public class SgyFile {
 				continue;
 			}
 			
-			System.out.println(currentTraceIndex + "  " + trace.getLatLon().toString());
+			//System.out.println(currentTraceIndex + "  " + trace.getLatLon().toString());
 			
 			if(tracePrev != null) {
 				double dist = CoordinatesMath.measure(
@@ -93,7 +93,7 @@ public class SgyFile {
 						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
 				
 				if(dist > 1000 || Double.isNaN(dist)) {
-					System.out.println(currentTraceIndex + " dist from prev: " + dist + "  " + trace.getLatLon().toString());
+					//System.out.println(currentTraceIndex + " dist from prev: " + dist + "  " + trace.getLatLon().toString());
 					continue;
 				}
 				
