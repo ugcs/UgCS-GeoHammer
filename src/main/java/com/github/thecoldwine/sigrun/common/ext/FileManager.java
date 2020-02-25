@@ -107,4 +107,8 @@ public class FileManager {
 		return traces;
 	}
 
+	public void clearTraces() {
+		traces = null;		
+	}
+
 }

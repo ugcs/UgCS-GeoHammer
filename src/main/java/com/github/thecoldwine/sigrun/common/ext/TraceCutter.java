@@ -164,6 +164,10 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		model.setUndoFiles(model.getFileManager().getFiles());
 		
 		model.getFileManager().setFiles(slicedSgyFiles);
+		
+		//to update index inset
+		model.getFileManager().clearTraces();
+		
 		model.init();
 		
 		//model.initField();
@@ -176,6 +180,13 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		if(model.getUndoFiles() != null) {
 			model.getFileManager().setFiles(model.getUndoFiles());
 			model.setUndoFiles(null);
+			
+			for(SgyFile sf : model.getFileManager().getFiles()) {
+				sf.updateInternalIndexes();
+			}
+
+			model.getFileManager().clearTraces();
+			
 			model.init();
 			
 			//model.initField();
@@ -204,6 +215,9 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		int begin = traces.get(0).indexInFile;
 		int end = traces.get(traces.size()-1).indexInFile;
 		sgyFile.setAuxElements(filterAuxObjects(file, sgyFile, begin, end));
+		
+		
+		sgyFile.updateInternalIndexes();
 		
 		return sgyFile;
 	}

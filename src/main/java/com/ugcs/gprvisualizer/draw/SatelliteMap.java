@@ -182,10 +182,10 @@ public class SatelliteMap extends BaseLayer {
 		
 		//drawTrack(img);
 		
-		Graphics2D g2 = (Graphics2D)img.getGraphics();
-		int r = 40;
-		g2.drawLine(img.getWidth()/2-r, img.getHeight()/2, img.getWidth()/2+r, img.getHeight()/2);
-		g2.drawLine(img.getWidth()/2, img.getHeight()/2-r, img.getWidth()/2, img.getHeight()/2+r);
+//		Graphics2D g2 = (Graphics2D)img.getGraphics();
+//		int r = 40;
+//		g2.drawLine(img.getWidth()/2-r, img.getHeight()/2, img.getWidth()/2+r, img.getHeight()/2);
+//		g2.drawLine(img.getWidth()/2, img.getHeight()/2-r, img.getWidth()/2, img.getHeight()/2+r);
 		
 		this.img = img;
 		this.imgLatLon = midlPoint;

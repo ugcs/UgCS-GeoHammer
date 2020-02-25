@@ -43,7 +43,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
                 BasicStroke.JOIN_MITER,
                 10.0f, dash1, 0.0f);
 
-	private Color flagColor = Color.getHSBColor((float)Math.random(), 0.8f, 0.9f); 
+	private Color flagColor = Color.getHSBColor((float)Math.random(), 0.9f, 0.97f); 
 	private int traceInFile;
 	private VerticalCutPart offset;	
 	

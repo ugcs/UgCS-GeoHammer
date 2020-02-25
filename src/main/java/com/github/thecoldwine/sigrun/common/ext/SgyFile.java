@@ -30,6 +30,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
+import com.ugcs.gprvisualizer.math.ManuilovFilter;
 
 public class SgyFile {
 	
@@ -68,8 +69,27 @@ public class SgyFile {
 		binaryHeader = binaryHeaderReader.read(binFile.getBinHdr());
 		
 		
-		setTraces(loadTraces(binFile));		
+		setTraces(loadTraces(binFile));
 		
+		updateInternalIndexes();
+		
+		markToAux();		
+		
+		new ManuilovFilter().filter(getTraces());
+		
+		updateInternalDist();
+		
+	}
+
+	public void markToAux() {
+		
+		for(int i=0; i<traces.size(); i++) {
+			Trace trace = traces.get(i);
+
+			if(trace.isMarked()) {
+				this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
+			}
+		}
 	}
 	
 	private List<Trace> loadTraces(BinFile binFile) throws Exception {
@@ -86,28 +106,23 @@ public class SgyFile {
 			}
 			
 			//System.out.println(currentTraceIndex + "  " + trace.getLatLon().toString());
-			
-			if(tracePrev != null) {
-				double dist = CoordinatesMath.measure(
-						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
-						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
-				
-				if(dist > 1000 || Double.isNaN(dist)) {
-					//System.out.println(currentTraceIndex + " dist from prev: " + dist + "  " + trace.getLatLon().toString());
-					continue;
-				}
-				
-				trace.setPrevDist(dist);
-			}
-			tracePrev = trace;
+//			
+//			if(tracePrev != null) {
+//				double dist = CoordinatesMath.measure(
+//						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+//						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
+//				
+//				trace.setPrevDist(dist);
+//			}
+//			tracePrev = trace;
 			
 			
-	        trace.indexInFile = currentTraceIndex;
-	        currentTraceIndex++;
-	        
-	        if(trace.isMarked()) {
-	        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
-	        }	        
+//	        trace.indexInFile = currentTraceIndex;
+//	        currentTraceIndex++;
+//	        
+//	        if(trace.isMarked()) {
+//	        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
+//	        }	        
 			
 			traces.add(trace);			
 			
@@ -115,11 +130,34 @@ public class SgyFile {
 		}
 		
 		//end mark
-		if(!traces.isEmpty()) {
-			traces.get(traces.size()-1).setEnd(true);
-		}
+		//if(!traces.isEmpty()) {
+		//	traces.get(traces.size()-1).setEnd(true);
+		//}
 		
 		return traces;
+	}
+	
+	public void updateInternalIndexes() {
+		for(int i=0; i<traces.size(); i++) {
+			traces.get(i).indexInFile = i;
+			traces.get(i).setEnd(false);			
+		}		
+		traces.get(traces.size()-1).setEnd(true);
+	}
+
+	public void updateInternalDist() {
+		traces.get(0).setPrevDist(0);		
+		for(int i=1; i<traces.size(); i++) {
+			Trace tracePrev = traces.get(i-1);
+			Trace trace 	= traces.get(i);
+			
+			double dist = CoordinatesMath.measure(
+				tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+				trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
+			
+			trace.setPrevDist(dist);
+		}		
+		
 	}
 	
 	public Trace next(BinTrace binTrace) throws IOException {
@@ -135,6 +173,7 @@ public class SgyFile {
         if(latLon == null) {
         	return null;
         }
+        
         Trace trace = new Trace(headerBin, header, values, latLon);
         if(headerBin[MARK_BYTE_POS] != 0 ) {
         	System.out.println("mark " +headerBin[MARK_BYTE_POS]);
@@ -149,7 +188,10 @@ public class SgyFile {
 		double lon = retrieveVal(header.getLongitude(), header.getSourceX()); 
 		double lat = retrieveVal(header.getLatitude(), header.getSourceY()); 
 
-		if (Math.abs(lon) < 0.1 || Math.abs(lat) < 0.1 || Math.abs(lon) > 18000 && Math.abs(lat) > 18000) {
+		if (Double.isNaN(lon) || Double.isNaN(lat) ||
+			Math.abs(lon) < 0.1 || Math.abs(lat) < 0.1 || 
+			Math.abs(lon) > 18000 && Math.abs(lat) > 18000) {
+			
 			return null;
 		}
 
@@ -207,8 +249,8 @@ public class SgyFile {
 		for(BaseObject bo : getAuxElements()) {
 			if(bo instanceof FoundPlace) {
 				FoundPlace fp = (FoundPlace)bo;
-				result .add(((FoundPlace) bo).getTraceInFile());
-			}			
+				result.add(((FoundPlace) bo).getTraceInFile());
+			}
 		}
 		
 		return result;

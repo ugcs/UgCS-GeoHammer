@@ -93,7 +93,7 @@ public class GpsTrack extends BaseLayer{
 					
 						sumdist += trace.getPrevDist();
 						
-						if(sumdist >= threshold && !trace.isEnd()) {
+						if(sumdist >= threshold /*&& !trace.isEnd()*/) {
 							
 							Point2D pNext = model.getField().latLonToScreen(trace.getLatLon());
 									
