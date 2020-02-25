@@ -266,7 +266,11 @@ public class HyperFinder {
 			double x = Math.sqrt(c*c - y*y);
 			
 			for(int i=0; i<x; i++) {
-				float []values = traces.get(tr+side*i).getNormValues();
+				int ind = tr+side*i;
+				if(ind <0 || ind >= traces.size()) {
+					continue;
+				}
+				float []values = traces.get(ind).getNormValues();
 				float f = values[smpcheck];
 				if((f>0) != positive || Math.abs(f) < Math.abs(threshold)) {
 					sum++;

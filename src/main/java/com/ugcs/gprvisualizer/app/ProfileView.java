@@ -361,9 +361,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		return Arrays.asList(
 				new HBox( zoomInBtn, zoomOutBtn),
-				contrastSlider.produce() , 
-				//auxEditHandler.getRight(), 
-				//aspectSlider.produce(), 
+				contrastSlider.produce()  
+			);
+	}
+
+	public List<Node> getRightSearch() {
+		
+		return Arrays.asList(
 				hyperbolaSlider.produce(),
 				hyperGoodSizeSlider.produce()
 			);

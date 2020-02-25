@@ -15,7 +15,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
@@ -26,7 +29,7 @@ import javafx.stage.WindowEvent;
 
 public class MainSingleWindow extends Application implements SmthChangeListener {
 
-	private static final String TITLE_VERSION = "UgCS GPR GeoHammer v.0.9.5";
+	private static final String TITLE_VERSION = "UgCS GPR GeoHammer v.0.9.6";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
@@ -123,8 +126,26 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		bPane.setCenter(sp);
 		
 		rightBox.getChildren().clear();
-		rightBox.getChildren().addAll(layersWindowBuilder.getRight());
-		rightBox.getChildren().addAll(cleverImageView.getRight());
+		
+        TabPane tabPane = new TabPane();
+
+        Tab tab1 = new Tab("Gain", new Label("Show all planes available"));
+        Tab tab2 = new Tab("Search"  , new Label("Show all cars available"));
+        tabPane.getTabs().add(tab1);
+        tabPane.getTabs().add(tab2);
+        
+        VBox t1 = new VBox();
+        t1.getChildren().addAll(layersWindowBuilder.getRight());
+        t1.getChildren().addAll(cleverImageView.getRight());
+        tab1.setContent(t1);
+
+        VBox t2 = new VBox();
+        t2.getChildren().addAll(cleverImageView.getRightSearch());
+        tab2.setContent(t2);
+        
+        rightBox.getChildren().addAll(tabPane);
+		//rightBox.getChildren().addAll();
+		//rightBox.getChildren().addAll(cleverImageView.getRight());
 		
 		/////////
 		

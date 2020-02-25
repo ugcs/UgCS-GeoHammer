@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>gprgeohammer</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.5</version>
+    <version>0.9.6</version>
     <name>UgCS GPR GeoHammer</name>
     <url>https://github.com/ugsc/gprvisualizer</url>
     <description>UgCS GPR GeoHammer</description>

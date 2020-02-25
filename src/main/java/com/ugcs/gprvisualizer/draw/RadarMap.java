@@ -214,14 +214,14 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 				model.getSettings().radius, alpha);
 			
 			
-			////
-			p = field.latLonToScreen(trace.getLatLonOrigin());			
-			alpha = 500;
-			
-			da.drawCircle(
-				(int)p.getX() + parentDimension.width/2, 
-				(int)p.getY() + parentDimension.height/2, 
-				2, 500);
+			//// origin point
+//			p = field.latLonToScreen(trace.getLatLonOrigin());			
+//			alpha = 500;
+//			
+//			da.drawCircle(
+//				(int)p.getX() + parentDimension.width/2, 
+//				(int)p.getY() + parentDimension.height/2, 
+//				2, 500);
 			
 			
 		}
