@@ -37,7 +37,7 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		VER_M = shape.getBounds().height;
 		offsetX = shape.getBounds().x;
 		offsetY = shape.getBounds().y;
-		System.out.println(" offsetX " + offsetX + "  offsetY " + offsetY  + "  " + HOR_M + " " + VER_M );
+		//System.out.println(" offsetX " + offsetX + "  offsetY " + offsetY  + "  " + HOR_M + " " + VER_M );
 	}
 	
 	@Override

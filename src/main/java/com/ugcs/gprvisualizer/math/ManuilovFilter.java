@@ -8,6 +8,7 @@ import com.ugcs.gprvisualizer.gpr.Scan;
 
 public class ManuilovFilter {
 
+	static final int RANGE = 2;
 	
 	
 	public void filter(List<Trace> list) {
@@ -38,8 +39,8 @@ public class ManuilovFilter {
 		result[1] = new double[size];
 		
 		for(int i=0; i<size; i++ ) {
-			result[0][i] = avg(i, src[0]); 
-			result[1][i] = avg(i, src[1]);			
+			result[0][i] = avg(i, src[0], size); 
+			result[1][i] = avg(i, src[1], size);			
 			//result[0][i] = src[0][i];//avg(i, src[0]); 
 			//result[1][i] = src[1][i];//result[1][i] = avg(i, src[1]);			
 
@@ -48,14 +49,18 @@ public class ManuilovFilter {
 		return result;
 	}
 
-	private double avg(int i, double[] ds) {
-		int range = 20;
+	private double avg(int i, double[] ds, int size) {
+		
 		double weight = 0;
 		double sum = 0;
+		//don`t move points near edges
+		if(i<RANGE || i> size-1-RANGE) {
+			return ds[i];
+		}
 		
-		for(int j= Math.max(0, i-range); j< Math.min(ds.length-1, i+range); j++) {
+		for(int j= Math.max(0, i-RANGE); j< Math.min(size-1, i+RANGE); j++) {
 			double dst = Math.abs(j - i);
-			double kf = range - dst;
+			double kf = RANGE - dst;
 			
 			weight += kf;
 			sum += (ds[j] * kf);

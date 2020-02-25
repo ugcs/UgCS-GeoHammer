@@ -41,6 +41,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 
 public class SatelliteMap extends BaseLayer {
@@ -71,6 +72,7 @@ public class SatelliteMap extends BaseLayer {
 	{
 		boolean apiExists = StringUtils.isNotBlank(GOOGLE_API_KEY);
 		
+		showLayerCheckbox.setTooltip(new Tooltip("Toggle satellite map layer"));
 		showLayerCheckbox.setDisable(!apiExists);
 		showLayerCheckbox.setSelected(apiExists);
 		showLayerCheckbox.setOnAction(showMapListener);

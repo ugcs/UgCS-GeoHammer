@@ -214,10 +214,12 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		
 		int begin = traces.get(0).indexInFile;
 		int end = traces.get(traces.size()-1).indexInFile;
-		sgyFile.setAuxElements(filterAuxObjects(file, sgyFile, begin, end));
+		sgyFile.setAuxElements(copyAuxObjects(file, sgyFile, begin, end));
 		
 		
 		sgyFile.updateInternalIndexes();
+		
+		System.out.println("generate sgy file " + traces.size()  + "     '" + file.getFile().getName()+"'" );
 		
 		return sgyFile;
 	}
@@ -271,7 +273,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		return splitList;
 	}
 
-	public List<BaseObject> filterAuxObjects(SgyFile file, SgyFile sgyFile, int begin, int end) {
+	public List<BaseObject> copyAuxObjects(SgyFile file, SgyFile sgyFile, int begin, int end) {
 		List<BaseObject> auxObjects = new ArrayList<>();				
 		for(BaseObject au : file.getAuxElements()) {
 			if(au.isFit(begin, end)) {
@@ -282,7 +284,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	}
 
 	public boolean isGoodForFile(List<Trace> sublist) {
-		return sublist.size() > 20;
+		return sublist.size() > 3;
 	}
 	
 	private List<Point2D> getScreenPoligon(MapField fld) {

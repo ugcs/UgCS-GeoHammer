@@ -40,6 +40,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
 public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
@@ -74,6 +75,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	
 	private ToggleButton showMapButton = new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
 	{
+		showMapButton.setTooltip(new Tooltip("Toggle amplitude map layer"));
 		showMapButton.setSelected(true);
 		showMapButton.setOnAction(showMapListener);
 	}
@@ -210,6 +212,18 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 				(int)p.getX() + parentDimension.width/2, 
 				(int)p.getY() + parentDimension.height/2, 
 				model.getSettings().radius, alpha);
+			
+			
+			////
+			p = field.latLonToScreen(trace.getLatLonOrigin());			
+			alpha = 500;
+			
+			da.drawCircle(
+				(int)p.getX() + parentDimension.width/2, 
+				(int)p.getY() + parentDimension.height/2, 
+				2, 500);
+			
+			
 		}
 		
 		return da.toImg();

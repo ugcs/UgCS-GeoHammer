@@ -13,6 +13,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 
 public class Navigator implements ToolProducer {
 
@@ -25,6 +26,11 @@ public class Navigator implements ToolProducer {
 	
 	public Navigator(Model model) {
 		this.model = model;
+		
+		backBtn.setTooltip(new Tooltip("Fit previous SGY file to window"));
+		fitBtn.setTooltip(new Tooltip("Fit current SGY file to window"));
+		nextBtn.setTooltip(new Tooltip("Fit next SGY file to window"));
+
 		
 		fitBtn.setOnAction(e -> {
 			

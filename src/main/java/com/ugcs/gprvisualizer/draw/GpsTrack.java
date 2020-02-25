@@ -22,6 +22,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 
 public class GpsTrack extends BaseLayer{
@@ -39,6 +40,7 @@ public class GpsTrack extends BaseLayer{
 	
 	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("path_20.png"));
 	{
+		showLayerCheckbox.setTooltip(new Tooltip("Toggle GPS track layer"));
 		showLayerCheckbox.setSelected(true);
 		showLayerCheckbox.setOnAction(showMapListener);
 	}

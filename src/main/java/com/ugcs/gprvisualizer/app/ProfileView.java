@@ -48,6 +48,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
@@ -106,6 +107,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	
 	public ProfileView(Model model) {
 		this.model = model;
+		
+		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
+		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 		
 		hyperFinder = new HyperFinder(model);
 		prismDrawer = new PrismDrawer(model, 0);
@@ -346,6 +350,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	
 	private ToggleButton hyperLiveViewBtn = new ToggleButton("", ResourceImageHolder.getImageView("hypLive.png"));
 	{
+		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
 	}
 

@@ -16,6 +16,7 @@ public class Trace {
     private float[] normvalues;
     
     private LatLon latLon;
+    private LatLon latLonOrigin;
     //private boolean active = true;
     private boolean end = false;
     
@@ -41,6 +42,7 @@ public class Trace {
         this.binHeader = binHeader; 
         this.originalvalues = originalvalues;
         this.latLon = latLon;
+        this.latLonOrigin = latLon;
     }
 
     public TraceHeader getHeader() {
@@ -49,6 +51,10 @@ public class Trace {
     
     public LatLon getLatLon() {
     	return latLon;
+    }
+
+    public LatLon getLatLonOrigin() {
+    	return latLonOrigin;
     }
 
     public void setLatLon(LatLon latLon2) {

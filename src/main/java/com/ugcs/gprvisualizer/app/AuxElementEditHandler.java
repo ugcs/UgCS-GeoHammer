@@ -28,6 +28,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -107,6 +108,13 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 	
 	protected void initButtons(){
+		
+		addBtn.setTooltip(new Tooltip("Create rectangle with mask"));
+		addHypBtn.setTooltip(new Tooltip("Create parametric hyperbola"));
+		addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
+		addFoundBtn.setTooltip(new Tooltip("Create mark"));
+		delBtn.setTooltip(new Tooltip("Delete selected element"));
+		clearBtn.setTooltip(new Tooltip("Delete all additional elements"));
 		
 		clearBtn.setOnAction(e -> {		
 			

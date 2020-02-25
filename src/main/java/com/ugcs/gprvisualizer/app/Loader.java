@@ -138,7 +138,7 @@ public class Loader {
 			model.init();			
 			
 			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-				new ManuilovFilter().filter(sgyFile.getTraces());
+				//new ManuilovFilter().filter(sgyFile.getTraces());
 			}
 			
 		//}catch(Exception e) {

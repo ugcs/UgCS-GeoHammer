@@ -43,7 +43,8 @@ public class MedianScaleBuilder implements ArrayBuilder {
 			for(int traceIndex=0; traceIndex<traces.size(); traceIndex++) {
 				Trace trace = traces.get(traceIndex);
 				
-				horizontalValues[traceIndex] = Math.abs(trace.getNormValues()[smp]);
+				float[] vals = trace.getNormValues();
+				horizontalValues[traceIndex] = Math.abs(smp < vals.length ? vals[smp] : 0);
 				
 			}
 			Arrays.sort(horizontalValues);

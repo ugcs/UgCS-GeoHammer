@@ -347,7 +347,7 @@ public class HyperFinder {
 		
 		Point lt = vField.traceSampleToScreen(ts);
 		g2.setColor(Color.RED);
-		g2.drawString(ts.getTrace() + " " + ts.getSample() + " (" + traces.get(tr).getNormValues()[ts.getSample()] + ")" , lt.x-100, lt.y - 20);
+		g2.drawString(ts.getTrace() + " (" + traces.get(tr).indexInFile + ") " + ts.getSample() + " (" + traces.get(tr).getNormValues()[ts.getSample()] + ")" , lt.x-100, lt.y - 20);
 
 		for(int smp = ts.getSample(); smp < Math.min(ts.getSample() + 30, values.length); smp++) {
 			float example = values[smp];

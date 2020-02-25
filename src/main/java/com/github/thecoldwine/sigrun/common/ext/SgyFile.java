@@ -75,9 +75,11 @@ public class SgyFile {
 		
 		markToAux();		
 		
-		new ManuilovFilter().filter(getTraces());
+		//new ManuilovFilter().filter(getTraces());
 		
 		updateInternalDist();
+		
+		System.out.println("opened  '"+file.getName() + "'   load size: " + getTraces().size() + "  actual size: " + binFile.getTraces().size());
 		
 	}
 
@@ -97,36 +99,17 @@ public class SgyFile {
 		
 
 		Trace tracePrev = null;
+		ctrace= 0;
 		//while(blockFile.hasNext()) {
 		for(BinTrace binTrace : binFile.getTraces()) {
 			
 			Trace trace = next(binTrace);
+			ctrace++;
 			if(trace == null) {
 				continue;
 			}
 			
-			//System.out.println(currentTraceIndex + "  " + trace.getLatLon().toString());
-//			
-//			if(tracePrev != null) {
-//				double dist = CoordinatesMath.measure(
-//						tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
-//						trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
-//				
-//				trace.setPrevDist(dist);
-//			}
-//			tracePrev = trace;
-			
-			
-//	        trace.indexInFile = currentTraceIndex;
-//	        currentTraceIndex++;
-//	        
-//	        if(trace.isMarked()) {
-//	        	this.getAuxElements().add(new FoundPlace(trace.indexInFile, offset));
-//	        }	        
-			
 			traces.add(trace);			
-			
-			
 		}
 		
 		//end mark
@@ -160,6 +143,7 @@ public class SgyFile {
 		
 	}
 	
+	int ctrace= 0;
 	public Trace next(BinTrace binTrace) throws IOException {
 		
 		byte[] headerBin = binTrace.header;		
@@ -188,13 +172,17 @@ public class SgyFile {
 		double lon = retrieveVal(header.getLongitude(), header.getSourceX()); 
 		double lat = retrieveVal(header.getLatitude(), header.getSourceY()); 
 
+		
+		
 		if (Double.isNaN(lon) || Double.isNaN(lat) ||
 			Math.abs(lon) < 0.1 || Math.abs(lat) < 0.1 || 
-			Math.abs(lon) > 18000 && Math.abs(lat) > 18000) {
-			
+			Math.abs(lon) > 18000 || Math.abs(lat) > 18000) {
+		
+			System.out.println( "bad lat lon  " + ctrace + " -> "+ lat + " " + lon  );
 			return null;
 		}
 
+		
 		// prism: 65.3063232422°N 40.0569335938°W
 		// 65.3063232421875 -40.05693359375
 		double rlon = convertDegreeFraction(lon);
@@ -221,6 +209,9 @@ public class SgyFile {
 	public void save(File file) throws Exception {
 		
 		Set<Integer> marks = prepareMarksIndexSet();
+		_logSaveMarks(file, marks);
+		
+		
 		
 		BinFile binFile = new BinFile();
 		
@@ -233,6 +224,9 @@ public class SgyFile {
 			binTrace.header = trace.getBinHeader();
 			
 			//set or clear marks
+			if(marks.contains(trace.indexInFile)) {
+				System.out.println("marks.contains(trace.indexInFile) " + trace.indexInFile);
+			}
 			binTrace.header[MARK_BYTE_POS] = (byte)(marks.contains(trace.indexInFile) ? -1 : 0);
 			
 			binTrace.data = ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()).array();
@@ -241,6 +235,16 @@ public class SgyFile {
 		}		
 		
 		binFile.save(file);
+		
+		System.out.println("saved  "+file + "  size: " + getTraces().size());
+	}
+
+	public void _logSaveMarks(File file, Set<Integer> marks) {
+		System.out.println("prepare marks   " + file.getName());
+		for(Integer i : marks) {
+			System.out.print(i + "  ");
+		}
+		System.out.println();
 	}
 
 	private Set<Integer> prepareMarksIndexSet() {
