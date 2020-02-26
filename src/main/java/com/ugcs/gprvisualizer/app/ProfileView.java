@@ -139,7 +139,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(getSpacer());
 		
-		toolBar.getItems().add(hyperLiveViewBtn);
+		//toolBar.getItems().add(hyperLiveViewBtn);
 		
 		profileScroll.recalc();
 		vbox.getChildren().addAll(toolBar, profileScroll, imageView/*,  scrollBar*/);
@@ -340,27 +340,12 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		return topPane;
 	}
 
-	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
-		@Override
-		public void handle(ActionEvent event) {
-			model.getSettings().hyperliveview = hyperLiveViewBtn.isSelected();
-			repaintEvent();
-		}
-	};
-	
-	private ToggleButton hyperLiveViewBtn = new ToggleButton("", ResourceImageHolder.getImageView("hypLive.png"));
-	{
-		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
-		hyperLiveViewBtn.setOnAction(showMapListener);
-	}
-
-
 	
 	@Override
 	public List<Node> getRight() {
 		
 		return Arrays.asList(
-				new HBox( zoomInBtn, zoomOutBtn),
+				//new HBox( zoomInBtn, zoomOutBtn),
 				contrastSlider.produce()  
 			);
 	}

@@ -1,15 +1,21 @@
 package com.ugcs.gprvisualizer.app;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion.Setting;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
+import com.ugcs.gprvisualizer.math.TraceDecimator;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -19,7 +25,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -136,14 +144,29 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
         
         VBox t1 = new VBox();
         t1.getChildren().addAll(layersWindowBuilder.getRight());
-        t1.getChildren().addAll(cleverImageView.getRight());
+        //t1.getChildren().addAll();
         tab1.setContent(t1);
 
-        VBox t2 = new VBox();
-        t2.getChildren().addAll(cleverImageView.getRightSearch());
-        tab2.setContent(t2);
+        prepareTab2(tab2);
+        
+        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() { 
+            @Override 
+            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
+                if(newTab.equals (tab1)) {            
+                    System.out.print("gain mode");
+                    model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
+                    model.getSettings().hyperliveview = false;
+                }else if(newTab.equals (tab2)) {
+                	System.out.print("search mode");
+                	model.getSettings().radarMapMode = RadarMapMode.SEARCH;
+                }
+                AppContext.notifyAll(new WhatChanged(Change.adjusting));
+            }
+
+        });        
         
         rightBox.getChildren().addAll(tabPane);
+        rightBox.getChildren().addAll( cleverImageView.getRight());
 		//rightBox.getChildren().addAll();
 		//rightBox.getChildren().addAll(cleverImageView.getRight());
 		
@@ -161,6 +184,54 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		return scene;
 	}
 
+	private ToggleButton hyperLiveViewBtn = new ToggleButton("Hyperbola detection mode", ResourceImageHolder.getImageView("hypLive.png"));
+	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			model.getSettings().hyperliveview = hyperLiveViewBtn.isSelected();
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			//repaintEvent();
+		}
+	};
+	
+	public void prepareTab2(Tab tab2) {
+		VBox t2 = new VBox(10);		
+        t2.getChildren().addAll(cleverImageView.getRightSearch());
+        
+		///		
+		Button buttonHyperFinder = new Button("Start algorithmic search");
+		buttonHyperFinder.setOnAction(e -> {
+			HyperFinder hf = new HyperFinder(model);
+			hf.process();
+		});
+
+		
+		
+		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
+		hyperLiveViewBtn.setOnAction(showMapListener);
+
+		Button buttonDecimator = new Button("Trace decimator");
+		buttonDecimator.setOnAction(e -> {
+			
+			new TraceDecimator().process(model);
+		});
+		
+		
+		
+		t2.getChildren().addAll(buttonHyperFinder, hyperLiveViewBtn, buttonDecimator);
+        tab2.setContent(t2);
+        
+        
+	
+	
+	
+    	
+
+
+        
+        
+	}
+
 
 	private Node getToolBar() {
 		toolBar.setDisable(true);
@@ -174,14 +245,6 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 		toolBar.getItems().add(getSpacer());
 
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
-		
-		///		
-		Button buttonHyperFinder = new Button("Hyper math finder");
-		toolBar.getItems().add(buttonHyperFinder);
-		buttonHyperFinder.setOnAction(e -> {
-			HyperFinder hf = new HyperFinder(model);
-			hf.process();
-		});
 		
 		//toolBar.getItems().add(getSpacer());
 		//toolBar.getItems().addAll(AppContext.navigator.getToolNodes());

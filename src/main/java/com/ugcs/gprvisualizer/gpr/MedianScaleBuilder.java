@@ -48,7 +48,7 @@ public class MedianScaleBuilder implements ArrayBuilder {
 				
 			}
 			Arrays.sort(horizontalValues);
-			float median = horizontalValues[horizontalValues.length*6/7];
+			float median = horizontalValues[horizontalValues.length*60/70];
 			float principal95 = horizontalValues[horizontalValues.length*99/100];
 
 			scale[0][smp] = median;

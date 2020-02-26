@@ -69,6 +69,8 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	public void controlToSettings(TraceSample ts) {
 		int max = model.getMaxHeightInSamples();
 		model.getSettings().layer = Math.min( max-model.getSettings().hpage, Math.max(0, ts.getSample()));
+		
+		//AppContext.notifyAll(new WhatChanged(Change.));
 	}
 
 	@Override

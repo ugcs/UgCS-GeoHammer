@@ -4,6 +4,12 @@ import java.awt.geom.Point2D;
 
 public class Settings {
 
+	public enum RadarMapMode {
+		AMPLITUDE,
+		SEARCH
+	}
+	
+	public RadarMapMode radarMapMode = RadarMapMode.AMPLITUDE;
 	
 	public Point2D middleLatLonDgr;
 	public Point2D middleLatLonRad;

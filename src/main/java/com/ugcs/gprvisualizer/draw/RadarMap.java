@@ -24,6 +24,7 @@ import com.ugcs.gprvisualizer.gpr.MedianScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.ScaleArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.ui.AutoGainCheckbox;
 import com.ugcs.gprvisualizer.ui.BaseCheckBox;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
@@ -81,8 +82,6 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	}
 	
 	VBox vBox = new VBox();
-	//rightBox.setPadding(new Insets(3, 13, 3, 3));
-
 	
 	private double[][] scaleArray;
 	private ArrayBuilder scaleArrayBuilder;
@@ -175,7 +174,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isTraceCut()) {
+		if(changed.isFileopened() || changed.isTraceCut() || changed.isTraceValues()) {
 			autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
@@ -184,12 +183,42 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 			scaleArrayBuilder.clear();
 		}
 		
-		if(changed.isTraceCut() || changed.isFileopened() || changed.isZoom() || changed.isAdjusting() || changed.isMapscroll() || changed.isWindowresized()) {
+		if(		changed.isTraceCut() || 
+				changed.isTraceValues() ||
+				changed.isFileopened() || 
+				changed.isZoom() || 
+				changed.isAdjusting() || 
+				changed.isMapscroll() || 
+				changed.isWindowresized()) {
+			
 			executor.submit(t);
 		}		
 	}
 	
+	
+	private void calcMaxindexMath(){
+		
+		//do nothing
+		//new HyperFinder(model).process();
+		
+	}
+	
+	private void calcMaxindexAmpl(){
+		
+		int start = norm(model.getSettings().layer, 0, model.getMaxHeightInSamples());
+		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
+		
+		for(Trace trace : model.getFileManager().getTraces()) {
+			double alpha = calcAlpha(trace.getNormValues(), start, finish);
+			
+			trace.maxindex2 = (int)alpha;
+		}
+	}
+	
+	
 	private BufferedImage createHiRes() {
+		
+		
 		
 		MapField field = new MapField(model.getField());
 		
@@ -197,16 +226,27 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		
 		DblArray da = new DblArray(parentDimension.width, parentDimension.height);
 		
-		scaleArray = getArrayBuilder().build();		
-		 
-		int start = norm(model.getSettings().layer, 0, model.getMaxHeightInSamples());
-		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
+
+		switch(model.getSettings().radarMapMode) {
+			case AMPLITUDE:
+				
+				scaleArray = getArrayBuilder().build();
+				calcMaxindexAmpl();
+				
+				break;
+			case SEARCH:
+				calcMaxindexMath();		
+				break;
+		}
+		//
+		
 
 		for(Trace trace : model.getFileManager().getTraces()) {
 
 			Point2D p = field.latLonToScreen(trace.getLatLon());
 			
-			double alpha = calcAlpha(trace.getNormValues(), start, finish);
+			//double alpha = calcAlpha(trace.getNormValues(), start, finish);
+			double alpha = trace.maxindex2;
 			
 			da.drawCircle(
 				(int)p.getX() + parentDimension.width/2, 

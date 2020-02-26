@@ -37,7 +37,11 @@ public class RecalculationController {
 				RecalculationLevel lev = level;
 				do {
 					
-					consumer.accept(lev);
+					try{
+						consumer.accept(lev);
+					}catch(Exception e) {
+						System.out.println(e.getMessage());
+					}
 					
 					synchronized (RecalculationController.this) {
 						lev = refLevel.get();

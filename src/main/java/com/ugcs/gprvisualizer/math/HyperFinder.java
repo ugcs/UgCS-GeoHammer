@@ -271,9 +271,12 @@ public class HyperFinder {
 					continue;
 				}
 				float []values = traces.get(ind).getNormValues();
-				float f = values[smpcheck];
-				if((f>0) != positive || Math.abs(f) < Math.abs(threshold)) {
-					sum++;
+				
+				if(smpcheck < values.length) {
+					float f = values[smpcheck];
+					if((f>0) != positive || Math.abs(f) < Math.abs(threshold)) {
+						sum++;
+					}
 				}
 			}			
 		}
