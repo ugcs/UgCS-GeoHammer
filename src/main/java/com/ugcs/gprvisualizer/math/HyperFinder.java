@@ -292,7 +292,7 @@ public class HyperFinder {
 		double bad = 0;
 		int index = 0;
 		int hypergoodsize = model.getSettings().hypergoodsize;
-		while(i<hypergoodsize && bad < 3 ) {
+		while(i<hypergoodsize && bad < 0.2 ) {
 			index = tr + side * i;
 			if(index<0 || index>= traces.size() ) {
 				break;

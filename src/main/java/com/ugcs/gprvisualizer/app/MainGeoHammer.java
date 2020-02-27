@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion.Setting;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -35,9 +34,9 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 
-public class MainSingleWindow extends Application implements SmthChangeListener {
+public class MainGeoHammer extends Application implements SmthChangeListener {
 
-	private static final String TITLE_VERSION = "UgCS GPR GeoHammer v.0.9.6";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.0.9.6";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
@@ -54,7 +53,7 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
 	MapView layersWindowBuilder;
 	ProfileView cleverImageView;
 	
-	public MainSingleWindow() {
+	public MainGeoHammer() {
 		
 		AppContext.model = model;
 		AppContext.levelFilter = new LevelFilter(model);
@@ -156,6 +155,9 @@ public class MainSingleWindow extends Application implements SmthChangeListener 
                     System.out.print("gain mode");
                     model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
                     model.getSettings().hyperliveview = false;
+                    
+                    //todo toggle btn
+                    
                 }else if(newTab.equals (tab2)) {
                 	System.out.print("search mode");
                 	model.getSettings().radarMapMode = RadarMapMode.SEARCH;

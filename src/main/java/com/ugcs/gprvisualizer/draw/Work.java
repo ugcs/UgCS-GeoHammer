@@ -58,7 +58,11 @@ public class Work {
 		g2.translate(width/2, height/2);
 		
 		for (Layer l : getLayers()) {
-			l.draw(g2);
+			try {
+				l.draw(g2);
+			}catch(Exception e) {
+				System.err.println(e.getMessage());
+			}
 		}
 		
 		return bi;

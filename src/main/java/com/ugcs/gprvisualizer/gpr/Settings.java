@@ -28,7 +28,7 @@ public class Settings {
 	public int layer = 40; 
 	
 	public boolean hyperliveview = false;
-	public int hyperkfc = 27; 
+	public int hyperkfc = 127; 
 	public int hypergoodsize = 150;
 	
 	public int topscale = 200;

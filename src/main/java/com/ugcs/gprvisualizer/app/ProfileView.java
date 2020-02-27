@@ -682,12 +682,12 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			super(settings, listenerExt);
 			name = "Hyper size";
 			units = "";
-			tickUnits = 200;
+			tickUnits = 10;
 		}
 
 		public void updateUI() {
 			slider.setMax(350);
-			slider.setMin(40);
+			slider.setMin(0);
 			slider.setValue(settings.hypergoodsize);
 		}
 		

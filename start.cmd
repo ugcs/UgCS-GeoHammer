@@ -1,1 +1,1 @@
-java -Xmx2g -cp gprviewer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainSingleWindow
+java -Xmx2g -cp geohammer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainGeoHammer
