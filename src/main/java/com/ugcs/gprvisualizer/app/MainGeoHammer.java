@@ -36,7 +36,7 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application implements SmthChangeListener {
 
-	private static final String TITLE_VERSION = "UgCS GeoHammer v.0.9.6";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.0.9.7";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
