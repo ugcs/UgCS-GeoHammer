@@ -25,10 +25,13 @@ import javafx.scene.image.ImageView;
 public class LevelFilter implements ToolProducer {
 
 	Button buttonNoise = new Button("background removal");
+	
 	Button buttonFindLevel = new Button("find ground level");
-	Button buttonSmoothLevel = new Button("Smooth ground level");
-	Button buttonSet = new Button("level ground");
+	Button buttonRemoveLevel = new Button("X");
+	Button buttonLevelGround = new Button("level ground");
 
+	
+	//Button buttonSmoothLevel = new Button("Smooth ground level");
 	Model model;
 
 	public LevelFilter(Model model) {
@@ -59,6 +62,7 @@ public class LevelFilter implements ToolProducer {
 			am.findLevel();
 		}
 		
+		
 		AppContext.notifyAll(new WhatChanged(Change.traceValues));
 	}
 	
@@ -75,7 +79,7 @@ public class LevelFilter implements ToolProducer {
 			trace.max.addAll(st);
 			
 			trace.maxindex = getMaxAmpIndex(trace, model.getSettings().heightStart, trace.getNormValues().length);
-			trace.maxindex2 = trace.maxindex;
+			
 			
 			if (lastMaxIndex == -1 || Math.abs(lastMaxIndex - trace.maxindex) > WND) {
 				continGrps.add(new ArrayList<>());
@@ -164,12 +168,12 @@ public class LevelFilter implements ToolProducer {
 	void combineTwoGroupsFirst(List<List<Trace>> continGrps, int i, int j) {
 		List<Trace> g1 = continGrps.get(i);
 		List<Trace> g2 = continGrps.get(j);
-		int max = g1.get(g1.size() - 1).maxindex2;
+		int max = g1.get(g1.size() - 1).maxindex;
 		g1.addAll(g2);
 		if (g2.size() < GRP_SIZE) {
 			for (Trace t : g2) {
-				t.maxindex2 = getMaxAmpIndex(t, max - WND-1, max + WND);
-				max = t.maxindex2;
+				t.maxindex = getMaxAmpIndex(t, max - WND-1, max + WND);
+				max = t.maxindex;
 			}
 		}
 		continGrps.remove(j);
@@ -185,7 +189,7 @@ public class LevelFilter implements ToolProducer {
 			
 			for(int i = 0; i < sf.getTraces().size(); i++) {
 				Trace tr = sf.getTraces().get(i);
-				tr.maxindex2 = result[i];				
+				tr.maxindex = result[i];				
 			}			
 		}
 	}
@@ -200,7 +204,7 @@ public class LevelFilter implements ToolProducer {
 		int sum = 0;
 		int cnt = 0;
 		for(int j=from; j<= to; j++) {
-			sum += traces.get(j).maxindex2;
+			sum += traces.get(j).maxindex;
 			cnt++;
 		}
 		return sum/cnt;
@@ -209,23 +213,23 @@ public class LevelFilter implements ToolProducer {
 	void combineTwoGroupsSecond(List<List<Trace>> continGrps, int i, int j) {
 		List<Trace> g1 = continGrps.get(i);
 		List<Trace> g2 = continGrps.get(j);
-		int max = g2.get(0).maxindex2;
+		int max = g2.get(0).maxindex;
 		int g1size = g1.size();
 		g1.addAll(g2);
 		if (g1size < GRP_SIZE) {
 			for (int index = g1size - 1; index >= 0; index--) {
 				Trace t = g1.get(index);
-				t.maxindex2 = getMaxAmpIndex(t, max - WND-1, max + WND);
-				max = t.maxindex2;
+				t.maxindex = getMaxAmpIndex(t, max - WND-1, max + WND);
+				max = t.maxindex;
 			}
 		}
 		continGrps.remove(j);
 	}
 
 	protected void leveling(List<Trace> lst) {
-		int minlev = model.getFileManager().getTraces().get(0).maxindex2;
+		int minlev = model.getFileManager().getTraces().get(0).maxindex;
 		for(Trace trace : model.getFileManager().getTraces()) {
-			minlev = Math.min(minlev, trace.maxindex2);
+			minlev = Math.min(minlev, trace.maxindex);
 		}
 		
 		for (int index = 0; index < lst.size(); index++) {
@@ -233,9 +237,9 @@ public class LevelFilter implements ToolProducer {
 
 			float values[] = trace.getNormValues();
 
-			System.arraycopy(values, trace.maxindex2-minlev, values, 0, values.length - (trace.maxindex2-minlev));
+			System.arraycopy(values, trace.maxindex-minlev, values, 0, values.length - (trace.maxindex-minlev));
 			
-			trace.maxindex2 = 0;
+			trace.maxindex = 0;
 		}
 		
 		model.getChanges().add(FileChangeType.LEVEL_TO_GROUND);
@@ -327,58 +331,66 @@ public class LevelFilter implements ToolProducer {
 
 	@Override
 	public List<Node> getToolNodes() {
-//		buttonShiftAvg.setOnAction(e -> {
-//
-//			AvgShiftFilter f = new AvgShiftFilter(model);
-//			f.execute();			
-//			
-//			buttonShiftAvg.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
-//		});
-//
-//		buttonShiftAvgRemoval.setOnAction(e -> {
-//
-//			AvgShiftFilter f = new AvgShiftFilter(model);
-//			f.execute2();			
-//			
-//			buttonShiftAvgRemoval.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
-//		});
-
-		
 		buttonNoise.setOnAction(e -> {
 
 			removeConstantNoise();
 			
 			buttonNoise.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
+			
 		});
 		
 		buttonFindLevel.setOnAction(e -> {
 
 			findGroundLevel();
 			
+			model.getFileManager().levelCalculated = true;
+			
+			updateButtons();
+			
 			buttonFindLevel.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
 		});
 
-		buttonSmoothLevel.setOnAction(e -> {
-
-			smoothLevel();
+		buttonRemoveLevel.setOnAction(e -> {
+			
+			model.getFileManager().levelCalculated = false;
+			updateButtons();
+			
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
-		buttonSet.setOnAction(e -> {
+//		buttonSmoothLevel.setOnAction(e -> {
+//
+//			smoothLevel();
+//		});
+
+		buttonLevelGround.setOnAction(e -> {
 
 			leveling(model.getFileManager().getTraces());
 			
-			buttonSet.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
+			model.getFileManager().levelCalculated = false;
+			
+			buttonLevelGround.setGraphic(new ImageView(ResourceImageHolder.FXIMG_DONE));
+			updateButtons();
+			
 		});
 
 		//buttonShiftAvg, buttonShiftAvgRemoval, 
-		return Arrays.asList(buttonNoise, buttonFindLevel, buttonSet);
+		return Arrays.asList(buttonNoise, buttonFindLevel, buttonRemoveLevel, buttonLevelGround);
 	}
 
+	protected void updateButtons() {
+
+		buttonLevelGround.setDisable(!model.getFileManager().levelCalculated);
+		buttonRemoveLevel.setDisable(!model.getFileManager().levelCalculated);
+		
+	}
+	
 	public void clearForNewFile() {
 		buttonNoise.setGraphic(null);
 		buttonFindLevel.setGraphic(null);
-		buttonSmoothLevel.setGraphic(null);
-		buttonSet.setGraphic(null);
+		buttonLevelGround.setGraphic(null);
+
+		updateButtons();
 	}
 	
 	

@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.Arrays;
@@ -59,12 +60,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class ProfileView implements SmthChangeListener, ModeFactory {
+	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
+	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 	
 	protected PrismDrawer prismDrawer;	
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
-	//protected ScrollBar scrollBar = new ScrollBar();
 	protected Pane topPane = new Pane();
 	
 	protected BufferedImage img;
@@ -74,7 +76,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected double contrast = 50;	
 	
 	private ContrastSlider contrastSlider;
-	//private AspectSlider aspectSlider;
 	private HyperbolaSlider hyperbolaSlider;
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
 	
@@ -82,6 +83,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	ToolBar toolBar = new ToolBar();
 	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png" ));
 	private Button zoomOutBtn = new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
+	private ToggleButton showGreenLineBtn = new ToggleButton("", ResourceImageHolder.getImageView("level.png"));
 	
 	private MouseHandler selectedMouseHandler;   
 	private MouseHandler scrollHandler;
@@ -128,6 +130,37 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
 		
+		prepareToolbar();
+		
+		profileScroll.recalc();
+		vbox.getChildren().addAll(toolBar, profileScroll, imageView/*,  scrollBar*/);
+		
+		profileScroll.widthProperty().bind(
+				topPane.widthProperty());
+		//profileScroll.heightProperty().bind(
+         //       stackPane.heightProperty());		
+		
+		
+		
+		zoomInBtn.setOnAction(e -> {
+			zoom(1, width/2, height/2);
+
+		});
+		zoomOutBtn.setOnAction(e -> {
+			zoom(-1, width/2, height/2);
+		});
+		
+		
+		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
+		showGreenLineBtn.setOnAction(e -> {
+			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		});
+		
+		AppContext.smthListener.add(this);
+	}
+
+	public void prepareToolbar() {
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
@@ -139,26 +172,10 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(getSpacer());
 		
+		
+		toolBar.getItems().add(showGreenLineBtn);
+		
 		//toolBar.getItems().add(hyperLiveViewBtn);
-		
-		profileScroll.recalc();
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView/*,  scrollBar*/);
-		
-		profileScroll.widthProperty().bind(
-				topPane.widthProperty());
-		//profileScroll.heightProperty().bind(
-         //       stackPane.heightProperty());		
-		
-		
-		zoomInBtn.setOnAction(e -> {
-			zoom(1, width/2, height/2);
-
-		});
-		zoomOutBtn.setOnAction(e -> {
-			zoom(-1, width/2, height/2);
-		});
-		
-		AppContext.smthListener.add(this);
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
@@ -196,7 +213,20 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		int startTrace = field.getFirstVisibleTrace(width);
 		int finishTrace = field.getLastVisibleTrace(width);		
-		drawGroundLevel(field, g2, traces,  startTrace, finishTrace);
+		
+		if(model.getFileManager().levelCalculated) {
+			g2.setColor(new Color(210,105,30));
+			g2.setStroke(LEVEL_STROKE);
+			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
+			
+		}
+		if(model.getSettings().showGreenLine) {
+			
+			g2.setColor(Color.GREEN);
+			g2.setStroke(AMP_STROKE);
+			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, true);
+			
+		}
 		
 		drawFileNames(height, field, g2);
 
@@ -250,11 +280,11 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
 	}
 
-	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace) {
-		g2.setColor(Color.GREEN);
+	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace, boolean m2) {
+		
 		
 		Trace trace1 = traces.get(startTrace);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  trace1.maxindex2));
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  m2 ? trace1.maxindex2 : trace1.maxindex));
 		int max2 = 0;
 		
 		for(int i=startTrace+1; i<finishTrace; i++) {
@@ -262,7 +292,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			
 			Trace trace2 = traces.get(i);
 			
-			max2 = Math.max(max2, trace2.maxindex2);
+			max2 = Math.max(max2, m2 ? trace2.maxindex2 : trace2.maxindex);
 			
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
 			if(p2.x - p1.x > 2) {

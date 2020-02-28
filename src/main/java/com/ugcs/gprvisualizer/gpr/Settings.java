@@ -11,6 +11,9 @@ public class Settings {
 	
 	public RadarMapMode radarMapMode = RadarMapMode.AMPLITUDE;
 	
+	public boolean showGreenLine = false;
+	
+	
 	public Point2D middleLatLonDgr;
 	public Point2D middleLatLonRad;
 	

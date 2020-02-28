@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 
 public class ResourceImageHolder {
 
+	public static Image IMG_LEVEL;
 	public static Image IMG_SHOVEL;
 	public static Image IMG_HOR_SLIDER;
 	public static Image IMG_VER_SLIDER;
@@ -36,6 +37,8 @@ public class ResourceImageHolder {
 	
 	static {
 		try {
+			
+			IMG_LEVEL = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("level.png"));
 			
 			IMG_LOGO24 = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream("logo24.png"));
 			

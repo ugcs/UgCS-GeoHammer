@@ -12,6 +12,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
+import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 
 public class PrismDrawer implements VCutDrawer {
 
@@ -45,6 +46,8 @@ public class PrismDrawer implements VCutDrawer {
 		if(model.isLoading() || !model.getFileManager().isActive()) {
 			return;
 		}
+		
+		boolean showInlineHyperbolas = model.getSettings().radarMapMode == RadarMapMode.SEARCH;
 		
 		List<Trace> traces = model.getFileManager().getTraces();
 		
@@ -84,10 +87,9 @@ public class PrismDrawer implements VCutDrawer {
 		    			}
 		    			
 		    			//hyperbola
-		    			if(trace.good != null && trace.good[j] != 0) {
+		    			if(showInlineHyperbolas && trace.good != null && trace.good[j] != 0) {
 		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + 0) * width ] = 
 		    					trace.good[j] > 0 ? goodcolor1 : goodcolor2;
-		    					//[trace.good[j]];
 		    			}
 		    			//
 		    		}

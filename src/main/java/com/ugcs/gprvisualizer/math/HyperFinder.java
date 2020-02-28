@@ -67,7 +67,7 @@ public class HyperFinder {
 		
 		System.out.println("finish");
 		
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		AppContext.notifyAll(new WhatChanged(Change.adjusting));
 	}
 
 	private void processSgyFile(SgyFile sf, double hyperkf) {
