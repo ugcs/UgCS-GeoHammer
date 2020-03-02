@@ -80,6 +80,8 @@ public class MarkupFile {
 	
 	public void save(SgyFile sgyFile, File nfile) {
 		
+		
+		
 		 JSONObject sampleObject = new JSONObject();
 		 sampleObject.put("filename", nfile.getAbsolutePath());
 		 
@@ -95,6 +97,12 @@ public class MarkupFile {
 				 objects.add(boj);
 			 }
 		 }
+		 
+		if(objects.isEmpty()) {
+			deleteMarkup(nfile);
+			
+			return;
+		}
 		 
 
 		 sampleObject.put("markup", objects);
@@ -121,6 +129,18 @@ public class MarkupFile {
 			e.printStackTrace();
 		}		
 		
+	}
+
+	public void deleteMarkup(File nfile) {
+		//try to delete
+		File mrkpFile = getMarkupFileBySgy(nfile);
+		if(mrkpFile.exists()) {
+			try {
+				mrkpFile.delete();
+			}catch(Exception e) {
+				e.printStackTrace();					
+			}
+		}
 	}
 	
 	
