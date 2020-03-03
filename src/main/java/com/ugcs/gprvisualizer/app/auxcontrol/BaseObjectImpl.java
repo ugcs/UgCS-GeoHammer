@@ -11,5 +11,9 @@ public abstract class BaseObjectImpl implements BaseObject {
 	public boolean isSelected() {
 		return selected;
 	}
+	
+	public int getGlobalTrace() {
+		return -1;
+	}
 
 }

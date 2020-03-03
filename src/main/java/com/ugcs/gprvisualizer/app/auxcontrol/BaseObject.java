@@ -39,4 +39,6 @@ public interface BaseObject extends MouseHandler {
 	
 	void setSelected(boolean selected);
 	boolean isSelected();
+	
+	int getGlobalTrace();
 }

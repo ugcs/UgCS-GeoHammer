@@ -521,12 +521,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
         			
         			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
         		}
-        		
-        		
         	}
-        	
         }
-
      };
 
 	public static void createTempPlace(Model model, int trace) {
@@ -534,10 +530,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		ClickPlace fp = new ClickPlace(trace);
 		fp.setSelected(true);
 		model.setControls(Arrays.asList(fp));
-		//model.getControls().add();
-		
-		//repaintEvent();
-		//AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
      
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {

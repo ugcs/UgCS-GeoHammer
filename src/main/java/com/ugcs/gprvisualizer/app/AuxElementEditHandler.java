@@ -205,13 +205,19 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		
 		addFoundBtn.setOnAction(e -> {				
 			
-			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
+			int trace;
+			if(model.getControls() != null && !model.getControls().isEmpty() && model.getControls().get(0).getGlobalTrace() >= 0) { 
+				trace = model.getControls().get(0).getGlobalTrace();
+			}else {
+				trace = field.getSelectedTrace();
+			}
+			SgyFile sf = model.getSgyFileByTrace(trace);
 			
 			if(sf == null) {
 				return;
 			}
 				
-			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(field.getSelectedTrace()), sf.getOffset());
+			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(trace), sf.getOffset());
 			
 			sf.getAuxElements().add(rect);
 			model.updateAuxElements();
