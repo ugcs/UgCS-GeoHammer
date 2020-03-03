@@ -68,6 +68,7 @@ public class PrismDrawer implements VCutDrawer {
 				}
 				
 				Trace trace = traces.get(i);
+				float middleAmp = model.getSettings().hypermiddleamp;
 				float[] values = trace.getNormValues();
 				for(int j = field.getStartSample(); j<Math.min(lastSample, values.length ); j++) {
 					
@@ -79,7 +80,7 @@ public class PrismDrawer implements VCutDrawer {
 						continue;
 					}
 					
-					int color = tanh.trans(values[j]);
+					int color = tanh.trans(values[j] - middleAmp);
 					
 		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {

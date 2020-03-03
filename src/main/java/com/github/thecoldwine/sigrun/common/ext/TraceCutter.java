@@ -45,8 +45,8 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	private RepaintListener listener;
 	
 	private ToggleButton buttonCutMode = new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
-	private Button buttonSet = new Button("Cut", ResourceImageHolder.getImageView("scisors3-20.png"));	
-	private Button buttonUndo = new Button("Undo Cut", ResourceImageHolder.getImageView("clear20.png"));
+	private Button buttonSet = new Button("Crop", ResourceImageHolder.getImageView("scisors3-20.png"));	
+	private Button buttonUndo = new Button("Undo Crop", ResourceImageHolder.getImageView("clear20.png"));
 	
 	
 	public TraceCutter(Model model, RepaintListener listener) {

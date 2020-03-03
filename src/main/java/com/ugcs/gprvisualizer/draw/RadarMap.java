@@ -63,7 +63,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		public void handle(ActionEvent event) {
 
 			setActive(showMapButton.isSelected());
-			vBox.setVisible(isActive());
+			vBox.setDisable(!isActive());
 			
 			if(isActive()) {
 				executor.submit(t);

@@ -31,6 +31,9 @@ public class HyperFinder {
 	                        BasicStroke.JOIN_MITER,
 	                        10.0f, dash1, 0.0f);
 
+	final static BasicStroke line1 =
+	        new BasicStroke(1.0f);
+	
 	final static BasicStroke line =
 	        new BasicStroke(2.0f);
 	final static BasicStroke line2 =
@@ -107,11 +110,14 @@ public class HyperFinder {
 	
 	
 	private int cleversum(int[][] good, int tr) {
-		int margin = 0;
+		int margin = 4;
 		double sum = 0;
+		double maxsum = 0;
 		int mult = 0;
 		int prevsign = 0;
 		int onesize=1;
+		
+		int emptycount =0;
 		for(int i=0; i<good[tr].length; i++) {
 			
 			int val = getAtLeastOneGood(good, tr, margin, i);
@@ -128,14 +134,21 @@ public class HyperFinder {
 				}
 				
 				sum += 1.0 / (double)onesize;
+			}else {
+				emptycount++;
+				if(emptycount > 7) {
+					maxsum = Math.max(maxsum, sum*mult);
+					sum = 0;
+					emptycount = 0;					
+				}
 			}			
-			
 			if(sum>0) {
-				margin+=3;
+				margin+=0;
 			}
 		}
 		
-		return (int)(sum*mult);
+		maxsum = Math.max(maxsum, sum*mult);
+		return (int)(maxsum*4);//
 	}
 	
 	private int getAtLeastOneGood(int[][] good, int tr, int margin, int smp) {
@@ -220,26 +233,45 @@ public class HyperFinder {
 		for(int smp = AppContext.model.getSettings().layer;				
 			smp< maxSmp ; smp++) {
 			
-			processHyper(traces, tr, smp, hyperkf, good);
+			processHyper2(traces, tr, smp, hyperkf, good);
 			//	good[tr][smp] = 1;
 			//}
 		}
 		
 		return goodSmpCnt;
 	}
+
+	
+	private void processHyper2(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
+		
+		double result = 0;
+		float example = traces.get(tr).getNormValues()[smp];
+		
+		HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
+		
+		HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);
+		
+		good[tr][smp] = (left.isGood() || right.isGood()) ? (example > 0 ? 1 : -1) : 0; 
+		
+		//return result;
+	}
+		
+		
+
 	
 	private boolean processHyper(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
-		double y = smp;
 		
 		float example = traces.get(tr).getNormValues()[smp];
 		
-		TraceSample lft = getHyperSideLength(traces, tr, y, example, -1, hyperkf);
-		TraceSample rht = getHyperSideLength(traces, tr, y, example, +1, hyperkf);
+		TraceSample lft = getHyperSideLength(traces, tr, smp, example, -1, hyperkf);
+		TraceSample rht = getHyperSideLength(traces, tr, smp, example, +1, hyperkf);
 		
 		//find opposite value inside hyperbola
 		
-		int hyperRate = rht.getTrace() - lft.getTrace(); 
-		if(hyperRate > AppContext.model.getSettings().hypergoodsize) {		
+		//int hyperRate = rht.getTrace() - lft.getTrace(); 
+		//if(hyperRate > AppContext.model.getSettings().hypergoodsize) {
+		int goodside = HalfHyper.getGoodSideSize(smp);
+		if(rht.getTrace() - tr > goodside || tr - lft.getTrace() > goodside) {
 			
 			boolean b1 = findOppositeBelowHyperSide(traces, tr, smp, example, -1, hyperkf, lft.getSample());
 			boolean b2 = findOppositeBelowHyperSide(traces, tr, smp, example, +1, hyperkf, rht.getSample());
@@ -253,6 +285,21 @@ public class HyperFinder {
 		return false;
 	}
 
+//	private boolean findOppositeAroundHyperSide2(List<Trace> traces, int tr, int smp, float example, int side, double hyperkf, int sizetr) {
+//		boolean positive = example > 0;
+//		
+//		double y = smp;
+//		int sum = 0;
+//		
+//		
+//		for(int trcheck=tr; trcheck < sizetr; tr+= ) {
+//			int 
+//			
+//		}
+//		
+//		return false;
+//	}
+	
 	private boolean findOppositeBelowHyperSide(List<Trace> traces, int tr, int smp, float example, int side, double hyperkf, int sizesmp) {
 		boolean positive = example > 0;
 		
@@ -284,15 +331,18 @@ public class HyperFinder {
 		return sum > 30;
 	}
 	
-	private TraceSample getHyperSideLength(List<Trace> traces, int tr, double y, float example, int side, double hyperkf) {
+
+	private TraceSample getHyperSideLength(List<Trace> traces, int tr, int org_smp, float example, int side, double hyperkf) {
 		
 		double kf = hyperkf;
 		
 		int i=1;
 		double bad = 0;
 		int index = 0;
-		int hypergoodsize = model.getSettings().hypergoodsize;
-		while(i<hypergoodsize && bad < 0.2 ) {
+		int hypergoodsize = HalfHyper.getGoodSideSize(org_smp);//model.getSettings().hypergoodsize;
+		double y = org_smp;
+		
+		while(i<hypergoodsize*13/10 && bad < 0.2 ) {
 			index = tr + side * i;
 			if(index<0 || index>= traces.size() ) {
 				break;
@@ -350,44 +400,85 @@ public class HyperFinder {
 		if(ts.getSample() < 0 || ts.getSample() >= values.length) {
 			return;
 		}
-		
-		
+		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;		
 		Point lt = vField.traceSampleToScreen(ts);
+		
+		g2.setColor(Color.LIGHT_GRAY);
+		g2.fillRect(lt.x-100, lt.y - 60, 100, 35);
 		g2.setColor(Color.RED);
-		g2.drawString(ts.getTrace() + " (" + traces.get(tr).indexInFile + ") " + ts.getSample() + " (" + traces.get(tr).getNormValues()[ts.getSample()] + ")" , lt.x-100, lt.y - 20);
+		
+		
+		float example2 = traces.get(tr).getNormValues()[ts.getSample()];
+		HalfHyper left2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, -1, hyperkf);		
+		
+		HalfHyper right2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, +1, hyperkf);		
+		
+		
+		
+		g2.drawString(ts.getTrace() + " (" + traces.get(tr).indexInFile + ") " + ts.getSample() + 
+				" \n(" + example2 + ")" + 
+				" l: " + fl(left2.oppositeAbovePerc) + " " + fl(left2.oppositeBelowPerc) + 
+				" r: " +  fl(right2.oppositeAbovePerc) + " " + fl(right2.oppositeBelowPerc)				
+				, 				
+				lt.x-100, lt.y - 40);
 
+		
+		int goodsidet = HalfHyper.getGoodSideSize(ts.getSample());
+		g2.setColor(Color.ORANGE);
+		g2.setStroke(line1);
+		drawHyperbolaLine(g2, vField, ts.getSample(), ts.getTrace()-goodsidet, ts.getTrace()+goodsidet, -2);
+		
 		for(int smp = ts.getSample(); smp < Math.min(ts.getSample() + 30, values.length); smp++) {
 			float example = values[smp];
 			
-			double kf = AppContext.model.getSettings().hyperkfc / 100.0;
-			
-			double y = smp;
-			TraceSample lts = getHyperSideLength(traces, tr, y, example, -1, kf);
-			TraceSample rts = getHyperSideLength(traces, tr, y, example, +1, kf);
 			
 			
-			boolean b1 = findOppositeBelowHyperSide(traces, tr, smp, example, -1, kf, lts.getSample());
-			boolean b2 = findOppositeBelowHyperSide(traces, tr, smp, example, +1, kf, rts.getSample());
+			//double y = smp;
+			double result = 0;
 			
-			int lft = lts.getTrace();
-			int rht = rts.getTrace();
+			HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
 			
-			drawHyperbolaLine(g2, vField, smp, example>0, lft, rht, b1||b2);
+			drawHalfHyperLine(g2, vField, left, 0);
+			
+			HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);		
+			
+			drawHalfHyperLine(g2, vField, right, 0);
+			
+//			boolean positive = example>0;
+//			int goodside= getGoodSideSize(smp);
+//			if(rht-ts.getTrace() >= goodside || ts.getTrace()-lft >= goodside ) {
+//				
+//				if(b1||b2) {
+//					g2.setStroke(line2);
+//					g2.setColor(positive ? plusBest : minusBad);
+//				}else {
+//					g2.setStroke(line);
+//					g2.setColor(positive ? plusGood : minusGood);
+//				}
+//				
+//			}else {
+//				g2.setStroke(dashed);			
+//				g2.setColor(positive ? plusBad : minusBad);
+//			}
+//
+//			
+//			
+//			
+//			drawHyperbolaLine(g2, vField, smp, lft, rht, 0);
 		}
 		
 	}
 	
-	public void drawHyperbolaLine(Graphics2D g2, ProfileField vField, int smp, boolean positive, int lft, int rht, boolean containsOpposite) {
-		if(ts == null) {
-			return;
-		}
+	public void drawHalfHyperLine(Graphics2D g2, ProfileField vField, HalfHyper hh, int voffst) {
 		
 		
-		if(rht-lft > AppContext.model.getSettings().hypergoodsize) {
+		boolean positive = hh.example>0;
+		int goodside = HalfHyper.getGoodSideSize(hh.pinnacle_smp);
+		if(hh.length >= goodside ) {
 			
-			if(containsOpposite) {
+			if(hh.isGood()) {
 				g2.setStroke(line2);
-				g2.setColor(positive ? plusBest : minusBad);
+				g2.setColor(positive ? plusBest : minusBest);
 			}else {
 				g2.setStroke(line);
 				g2.setColor(positive ? plusGood : minusGood);
@@ -397,7 +488,25 @@ public class HyperFinder {
 			g2.setStroke(dashed);			
 			g2.setColor(positive ? plusBad : minusBad);
 		}
-
+		
+		
+		
+		Point prev = null;
+		for(int i=0; i<hh.length; i++) {
+			Point lt = vField.traceSampleToScreen(new TraceSample(hh.pinnacle_tr + i * hh.side, hh.smp[i]));
+			if(prev != null) {
+				g2.drawLine(prev.x, prev.y+voffst, lt.x, lt.y+voffst);				
+			}
+			
+			prev = lt;
+		}
+		
+	}
+	
+	public void drawHyperbolaLine(Graphics2D g2, ProfileField vField, int smp, int lft, int rht, int voffst) {
+		if(ts == null) {
+			return;
+		}
 		
 		
 		Point prev = null;
@@ -414,14 +523,20 @@ public class HyperFinder {
 			
 			double x=(i-tr) * kf;
 			double c = Math.sqrt(x*x+y*y);
+			//g2.setColor(Math.abs(x) < y/2 ? Color.RED:Color.GRAY ); 
 			
 			Point lt = vField.traceSampleToScreen(new TraceSample(i, (int)c));
 			if(prev != null) {
-				g2.drawLine(prev.x, prev.y, lt.x, lt.y);				
+				g2.drawLine(prev.x, prev.y+voffst, lt.x, lt.y+voffst);				
 			}
 			
 			prev = lt;
 		}
+	}
+	
+	
+	String fl(double d) {
+		return String.format(" %.2f ", d);
 	}
 	
 	

@@ -1,5 +1,9 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -74,6 +78,8 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	
 	public static void main(String args[]) {
 		launch(args);
+		
+		
 	}
 
 	@Override
@@ -102,6 +108,29 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		        System.exit(0);
 		    }
 		});		
+		
+		
+		if(getParameters().getRaw().size() > 0) {
+			String name = getParameters().getRaw().get(0);
+			System.out.println("args " + name);
+			
+			List<File> f = new ArrayList<>();
+			f.add(new File(name));
+			AppContext.loader.load(f, new ProgressListener() {
+				
+				@Override
+				public void progressPercent(int percent) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void progressMsg(String msg) {
+					// TODO Auto-generated method stub
+					
+				}
+			});
+		}
 	}
 
 	private Scene createScene() {

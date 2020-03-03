@@ -78,6 +78,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	private ContrastSlider contrastSlider;
 	private HyperbolaSlider hyperbolaSlider;
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
+	private MiddleAmplitudeSlider middleAmplitudeSlider;
 	
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
@@ -118,6 +119,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
+		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), sliderListener);
 		initImageView();
 		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
@@ -384,7 +386,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		return Arrays.asList(
 				hyperbolaSlider.produce(),
-				hyperGoodSizeSlider.produce()
+				hyperGoodSizeSlider.produce(),
+				middleAmplitudeSlider.produce()
 			);
 	}
 
@@ -724,6 +727,27 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		public int updateModel() {
 			settings.hypergoodsize = (int)slider.getValue();
 			return (int)settings.hypergoodsize;
+		}
+	}
+
+	public class MiddleAmplitudeSlider extends BaseSlider {
+		
+		public MiddleAmplitudeSlider(Settings settings, ChangeListener<Number> listenerExt) {
+			super(settings, listenerExt);
+			name = "Middle amp";
+			units = "";
+			tickUnits = 200;
+		}
+
+		public void updateUI() {
+			slider.setMax(1000);
+			slider.setMin(-1000);
+			slider.setValue(settings.hypermiddleamp);
+		}
+		
+		public int updateModel() {
+			settings.hypermiddleamp = (int)slider.getValue();
+			return (int)settings.hypermiddleamp;
 		}
 	}
 	
