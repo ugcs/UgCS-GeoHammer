@@ -150,11 +150,6 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	public Rectangle getRect(ProfileField vField) {
 		
-		//int x = vField.traceToScreen(offset.localToGlobal(trace.indexInFile));
-		
-		//int x1 = vField.traceToScreen(offset.localToGlobal(trace.indexInFile));
-		//int x2 = vField.traceToScreen(offset.localToGlobal(trace2.indexInFile));
-		//int x = (x1+x2)/2;
 		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
 				
 		Rectangle rect = new Rectangle(x, Model.TOP_MARGIN-R_VER_M*2, R_HOR_M*2, R_VER_M*2);

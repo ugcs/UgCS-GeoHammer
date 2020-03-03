@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
@@ -73,6 +74,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	protected Image i ;
 	protected int width;
 	protected int height;
+	
 	protected double contrast = 50;	
 	
 	private ContrastSlider contrastSlider;
@@ -115,7 +117,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 		
 		hyperFinder = new HyperFinder(model);
-		prismDrawer = new PrismDrawer(model, 0);
+		prismDrawer = new PrismDrawer(model);
 		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
 		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
@@ -204,17 +206,20 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 	    g2.setRenderingHints(rh);		
 		
-		clearBitmap(bi, g2);
+	    
+	    
+	    
+		clearBitmap(bi, g2, field);
 		
-		g2.translate(width/2, 0);
+		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 
 		
 		double contr = Math.pow(1.08, 140-contrast);
 
-		prismDrawer.draw(width, height, field, g2, buffer, contr);
+		prismDrawer.draw(width, field, g2, buffer, contr);
 		
-		int startTrace = field.getFirstVisibleTrace(width);
-		int finishTrace = field.getLastVisibleTrace(width);		
+		int startTrace = field.getFirstVisibleTrace();
+		int finishTrace = field.getLastVisibleTrace();		
 		
 		if(model.getFileManager().levelCalculated) {
 			g2.setColor(new Color(210,105,30));
@@ -277,9 +282,27 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
-	private void clearBitmap(BufferedImage bi, Graphics2D g2) {
+	private void clearBitmap(BufferedImage bi, Graphics2D g2, ProfileField field) {
+		
+		
+		Rectangle mainRectRect = field.getMainRect();
+		Rectangle topRuleRect = field.getTopRuleRect();
+		Rectangle leftRuleRect = field.getLeftRuleRect();
+		
 		g2.setPaint ( Color.DARK_GRAY );
-		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );
+		g2.fillRect(mainRectRect.x, mainRectRect.y, mainRectRect.width, mainRectRect.height);
+		
+		g2.setPaint (new Color(45, 60, 100));
+		g2.fillRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
+		g2.setPaint (Color.white);
+		g2.drawRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
+		
+		g2.setPaint (new Color(45, 60, 100));
+		g2.fillRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
+		g2.setPaint (Color.white);
+		g2.drawRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
+		
+		
 	}
 
 	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace, boolean m2) {
@@ -497,7 +520,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
     	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
     	Point p = new Point(
-    			(int)(imgCoord.getX() - imageView.getBoundsInLocal().getWidth()/2), 
+    			(int)(imgCoord.getX() - getField().getMainRect().x - getField().getMainRect().width/2), 
     			(int)(imgCoord.getY() ));
 		return p;
 	}
@@ -746,8 +769,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public void setSize(int width, int height) {
 		
 		this.width = width;
-		this.height = height-Model.TOP_MARGIN;
+		this.height = height;
 		getField().setViewDimension(new Dimension(this.width, this.height));
+		
 		
 		repaintEvent();		
 	}

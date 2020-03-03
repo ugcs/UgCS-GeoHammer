@@ -235,7 +235,7 @@ public class ProfileScroll extends Canvas{
 		double tracesFull = model.getFileManager().getTraces().size();
 		double center = model.getVField().getSelectedTrace();
 		
-		double tracesVisible = model.getVField().getVisibleNumberOfTrace(width);
+		double tracesVisible = model.getVField().getVisibleNumberOfTrace();
 		
 		double centerPos =  center / tracesFull * (double)width;
 		double rectWidth = tracesVisible / tracesFull * (double)width;

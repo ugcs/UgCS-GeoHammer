@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.util.List;
 
@@ -14,10 +15,10 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 
-public class PrismDrawer implements VCutDrawer {
+public class PrismDrawer {
 
 	private Model model;
-	private int vOffset;
+	//private int vOffset;
 	Tanh tanh = new Tanh();
 	
 	
@@ -32,12 +33,12 @@ public class PrismDrawer implements VCutDrawer {
 		}
 	}
 	
-	public PrismDrawer(Model model, int vOffset) {
+	public PrismDrawer(Model model) {
 		this.model = model;
-		this.vOffset = vOffset;
 	}
 	
-	public void draw(int width, int height, 
+	public void draw(//int width, int height, 
+			int bytesInRow, 
 			ProfileField field,
 			Graphics2D g2,
 			int[] buffer,			
@@ -47,16 +48,17 @@ public class PrismDrawer implements VCutDrawer {
 			return;
 		}
 		
+		Rectangle rect = field.getMainRect();
+		
 		boolean showInlineHyperbolas = model.getSettings().radarMapMode == RadarMapMode.SEARCH;
 		
 		List<Trace> traces = model.getFileManager().getTraces();
 		
 		tanh.setThreshold((float)threshold);
 		
-		int startTrace = field.getFirstVisibleTrace(width);
-		int finishTrace = field.getLastVisibleTrace(width);		
-		
-		int lastSample = field.getLastVisibleSample(height-vOffset);
+		int startTrace = field.getFirstVisibleTrace();
+		int finishTrace = field.getLastVisibleTrace();
+		int lastSample = field.getLastVisibleSample(rect.height);
 		
 		for(int i=startTrace; i<finishTrace; i++ ) {
 
@@ -84,12 +86,12 @@ public class PrismDrawer implements VCutDrawer {
 					
 		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {
-		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + yt) * width ] = color;
+		    				buffer[ rect.x +rect.width / 2 + xt + traceStartX + (sampStart + yt) * bytesInRow ] = color;
 		    			}
 		    			
 		    			//hyperbola
 		    			if(showInlineHyperbolas && trace.good != null && trace.good[j] != 0) {
-		    				buffer[width / 2 + xt + traceStartX + (vOffset + sampStart + 0) * width ] = 
+		    				buffer[ rect.x +rect.width / 2 + xt + traceStartX + (sampStart + 0) * bytesInRow ] = 
 		    					trace.good[j] > 0 ? goodcolor1 : goodcolor2;
 		    			}
 		    			//

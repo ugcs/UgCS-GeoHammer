@@ -32,7 +32,7 @@ public class Model {
 	private boolean loading = false; 
 	
 	private MapField field = new MapField();
-	private ProfileField vField = new ProfileField(this, TOP_MARGIN);
+	private ProfileField vField = new ProfileField(this);
 	
 	private FileManager fileManager = new FileManager();
 	private List<SgyFile> undoFiles = null;

@@ -2,6 +2,7 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -11,7 +12,7 @@ public class ProfileField {
 	public static final double ZOOM_A = 1.2;
 	public static final double ASPECT_A = 1.14;
 	
-	private int topMargin = 0;
+
 	private Model model;
 	private int selectedTrace=0;
 	private int startSample=0;
@@ -20,6 +21,9 @@ public class ProfileField {
 	private double aspect = -15;
 	
 	private Dimension viewDimension = new Dimension();
+	private Rectangle topRuleRect = new Rectangle();
+	private Rectangle leftRuleRect = new Rectangle();
+	private Rectangle mainRectRect = new Rectangle();
 	
 	
 	//
@@ -27,10 +31,9 @@ public class ProfileField {
 	public int visibleFinish;
 	
 
-	public ProfileField(Model model, int topMargin) {
-		this.model  = model;
+	public ProfileField(Model model) {
+		this.model  = model;		
 		
-		this.topMargin = topMargin;
 	}
 
 	public ProfileField(ProfileField copy){
@@ -39,11 +42,15 @@ public class ProfileField {
 		this.startSample = copy.startSample;
 		this.zoom = copy.zoom;
 		this.aspect = copy.aspect;
-		this.topMargin = copy.topMargin;
+		//this.topMargin = copy.getTopMargin();
 		this.realAspect = copy.realAspect;
 		
 		this.visibleStart = copy.visibleStart;
 		this.visibleFinish = copy.visibleFinish;
+		
+		this.topRuleRect = copy.topRuleRect;
+		this.leftRuleRect = copy.leftRuleRect;
+		this.mainRectRect = copy.mainRectRect;
 	}
 
 	public void clear() {
@@ -58,8 +65,8 @@ public class ProfileField {
 	}
 	
 	public TraceSample screenToTraceSample(Point point, VerticalCutPart vcp) {
-		int trace = vcp.globalToLocal(getSelectedTrace() + (int)(point.getX()/getHScale())); 
-		int sample = getStartSample() + (int)((point.getY() - topMargin)/getVScale());
+		int trace = vcp.globalToLocal(getSelectedTrace() + (int)((point.getX())/getHScale())); 
+		int sample = getStartSample() + (int)((point.getY() - getTopMargin())/getVScale());
 		
 		return new TraceSample(trace, sample);
 		
@@ -67,8 +74,8 @@ public class ProfileField {
 	
 	public TraceSample screenToTraceSample(Point point) {
 	
-		int trace = getSelectedTrace() + (int)(point.getX()/getHScale()); 
-		int sample = getStartSample() + (int)((point.getY() - topMargin)/getVScale());
+		int trace = getSelectedTrace() + (int)((point.getX() )/getHScale()); 
+		int sample = getStartSample() + (int)((point.getY() - getTopMargin())/getVScale());
 		
 		return new TraceSample(trace, sample);
 	}
@@ -78,7 +85,7 @@ public class ProfileField {
 	}
 
 	public int sampleToScreen(int sample) {
-		return (int)((sample-getStartSample()) * getVScale() + topMargin);
+		return (int)((sample-getStartSample()) * getVScale() + getTopMargin());
 	}
 	
 	public Point traceSampleToScreen(TraceSample ts) {
@@ -94,29 +101,29 @@ public class ProfileField {
 			sampleToScreen(ts.getSample()) + (int)(getVScale()/2));
 	}
 	
-	public int getVisibleNumberOfTrace(int width) {
+	public int getVisibleNumberOfTrace() {
 		
 		Point p = traceSampleToScreen(new TraceSample(0,0));
-		Point p2 = new Point(p.x + width, 0); 
+		Point p2 = new Point(p.x + getMainRect().width, 0); 
 		TraceSample t2 = screenToTraceSample(p2);		
 		
 		return t2.getTrace();
 	}
 	
-	public int getFirstVisibleTrace(int width) {
+	public int getFirstVisibleTrace() {
 		
 		return 
 			Math.max(
 			Math.min(
-				screenToTraceSample(new Point( -width/2, 0)).getTrace(),
+				screenToTraceSample(new Point(-getMainRect().width/2, 0)).getTrace(),
 				model.getFileManager().getTraces().size()-1), 0);
 	}
 
-	public int getLastVisibleTrace(int width) {
+	public int getLastVisibleTrace() {
 		return 
 			Math.max(
 			Math.min(
-				screenToTraceSample(new Point( width/2, 0)).getTrace(),
+				screenToTraceSample(new Point(getMainRect().width/2, 0)).getTrace(),
 				model.getFileManager().getTraces().size()-1), 0);					
 	}
 
@@ -199,6 +206,14 @@ public class ProfileField {
 	public void setViewDimension(Dimension viewDimension) {
 		this.viewDimension = viewDimension;
 		
+		topRuleRect = new Rectangle(Model.TOP_MARGIN, 0, viewDimension.width-Model.TOP_MARGIN, Model.TOP_MARGIN-1);
+		leftRuleRect = new Rectangle(0, Model.TOP_MARGIN-1, Model.TOP_MARGIN-1, viewDimension.height - Model.TOP_MARGIN);
+		mainRectRect = new Rectangle(Model.TOP_MARGIN, Model.TOP_MARGIN, viewDimension.width-Model.TOP_MARGIN, viewDimension.height - Model.TOP_MARGIN);
+		
+		
+		
+		
+		
 		visibleStart = -viewDimension.width/2;
 	}
 
@@ -217,5 +232,22 @@ public class ProfileField {
 	public void setZoom(int zoom) {
 		this.zoom = zoom;
 	}
+
+	private int getTopMargin() {
+		return mainRectRect.y;
+	}
+	
+	public Rectangle getTopRuleRect() {
+		return topRuleRect;
+	}
+	
+	public Rectangle getLeftRuleRect() {
+		return leftRuleRect;
+	}
+	
+	public Rectangle getMainRect() {
+		return mainRectRect;
+	}
+	
 }
 
