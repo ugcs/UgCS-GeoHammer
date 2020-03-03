@@ -210,11 +210,7 @@ public class ProfileField {
 		leftRuleRect = new Rectangle(0, Model.TOP_MARGIN-1, Model.TOP_MARGIN-1, viewDimension.height - Model.TOP_MARGIN);
 		mainRectRect = new Rectangle(Model.TOP_MARGIN, Model.TOP_MARGIN, viewDimension.width-Model.TOP_MARGIN, viewDimension.height - Model.TOP_MARGIN);
 		
-		
-		
-		
-		
-		visibleStart = -viewDimension.width/2;
+		visibleStart = -mainRectRect.x -mainRectRect.width/2;
 	}
 
 	public double getAspect() {

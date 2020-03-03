@@ -211,6 +211,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	    
 		clearBitmap(bi, g2, field);
 		
+		new VerticalRulerDrawer().draw(g2, field, model);
+		
 		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 
 		
@@ -340,36 +342,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			g2.drawString(fl.getFile().getName(), p.x + 7, 11);
 		}
 	}
-
-	private void drawPrism(int width, int height, ProfileField field, int[] buffer, int vOffset, int startTrace, int finishTrace) {
-		int lastSample = field.getLastVisibleSample(height-vOffset);
-		int vscale = Math.max(1, (int)field.getVScale());
-		int hscale = Math.max(1, (int)field.getHScale());
-		
-		double contr = Math.pow(1.4, contrast+10);
-		
-		for(int i=startTrace; i<finishTrace; i++ ) {
-			
-				Trace trace = model.getFileManager().getTraces().get(i);
-				float[] values = trace.getNormValues();
-				for(int j = field.getStartSample(); j<Math.min(lastSample, values.length ); j++) {
-					
-					Point p = field.traceSampleToScreen(new TraceSample(i, j));
-					
-		    		int c = (int) (127.0 + Math.tanh(values[j]/contr) * 127.0);
-		    		int color = ((c) << 16) + ((c) << 8) + c;
-		    		
-		    		//buffer[width/2 + p.x + vscale * p.y  * width ] = color;
-		    		for(int xt=0; xt < hscale; xt ++) {
-		    			for(int yt =0; yt < vscale; yt++) {
-		    				buffer[width / 2 + xt + p.x + (vOffset + p.y + yt) * width ] = color;
-		    			}
-		    		}
-				}
-			
-		}
-	}
-	
 
 	@Override
 	public void show() {
