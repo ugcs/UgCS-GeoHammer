@@ -1,9 +1,11 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
 
 public class LeftRulerController {
+	public static Stroke STROKE = new BasicStroke(1.0f);
 	
 	public interface Converter {
 		Pair<Integer, Integer> convert(int s, int f);
@@ -95,13 +98,14 @@ public class LeftRulerController {
 			Rectangle  r = getRect(vField);
 			
 			//g2.fillRect(r.x, r.y, r.width, r.height);
+			g2.setStroke(STROKE);
 			g2.setColor(Color.YELLOW);
-			g2.drawRoundRect(r.x, r.y, r.width, r.height, 5, 5);			
+			g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);			
 			
 			g2.setColor(Color.white);
 			String text = getConverter().getUnit();
 			int width = g2.getFontMetrics().stringWidth(text);
-			g2.drawString(text, r.x + r.width - width - 3, r.y + r.height - 5);
+			g2.drawString(text, r.x + r.width - width - 4, r.y + r.height - 5);
 			
 		}
 
@@ -115,7 +119,7 @@ public class LeftRulerController {
 		public Rectangle getRect(ProfileField vField) {
 
 			Rectangle  r = vField.getInfoRect();
-			return new Rectangle(vField.visibleStart + r.x, r.y + r.height - 15, r.width, 15);
+			return new Rectangle(vField.visibleStart + r.x+5, r.y + r.height - 25, r.width-10, 20);
 
 		}
 

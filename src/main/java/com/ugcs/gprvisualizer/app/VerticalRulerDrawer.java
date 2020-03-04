@@ -25,7 +25,7 @@ public class VerticalRulerDrawer {
 		Converter converter = getConverter(); 
 		
 		Rectangle ir = field.getInfoRect();
-		g2.setColor(new Color(10, 10, 10));
+		g2.setColor(new Color(10, 10, 20));
 		g2.fillRect(ir.x, ir.y, ir.width, ir.height);
 		
 		
@@ -46,6 +46,8 @@ public class VerticalRulerDrawer {
 		int tick[] = {100, 50, 10, 5};
 		
 		int sz = 21;
+		
+		g2.setColor(Color.WHITE);
 		for(int b : tick) {
 			
 			int s = ((first)/b +1 )*b;
