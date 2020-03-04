@@ -1,29 +1,43 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import org.json.simple.JSONObject;
+
 import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.github.thecoldwine.sigrun.common.ext.AreaType;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.auxcontrol.AlignRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
+import com.ugcs.gprvisualizer.app.auxcontrol.ToggleButton;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
+
+import javafx.scene.control.ChoiceDialog;
 
 public class Model {
 
@@ -39,6 +53,7 @@ public class Model {
 	
 	
 	private Settings settings = new Settings();
+	private LeftRulerController leftRulerController = new LeftRulerController(this);
 	
 	//private List<Trace> foundTrace = new ArrayList<>();
 	//private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
@@ -114,6 +129,7 @@ public class Model {
 		
 		auxElements.add(new DepthStart(ShapeHolder.topSelection));
 		auxElements.add(new DepthHeight(ShapeHolder.botSelection));
+		auxElements.add(getLeftRulerController().tb);
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {
@@ -193,7 +209,7 @@ public class Model {
 		MinMaxAvg latMid = new MinMaxAvg();
 		for (Trace trace : this.getFileManager().getTraces()) {
 			if(trace == null || trace.getLatLon() == null) {
-				System.out.println("null");
+				System.out.println("null trace or ot latlon");
 				continue;
 			}
 			
@@ -232,6 +248,10 @@ public class Model {
 
 	public boolean isActive() {
 		return getFileManager().isActive();
+	}
+
+	public LeftRulerController getLeftRulerController() {
+		return leftRulerController;
 	}
 	
 }

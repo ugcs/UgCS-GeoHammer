@@ -76,7 +76,6 @@ public enum DataSample {
             case 8:
                 return TC_1B_I;
             case 9:
-            	System.out.println("----  KSHA");
             	return KSHA;
             default:
                 throw new IllegalArgumentException("This code value is not supported by the SEG Y standard rev 1 : " + code);

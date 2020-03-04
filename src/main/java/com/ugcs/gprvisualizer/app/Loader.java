@@ -126,8 +126,6 @@ public class Loader {
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {
 		/// clear
-		System.out.println("start load");
-		
 		model.getAuxElements().clear();
 		model.getChanges().clear();
 		

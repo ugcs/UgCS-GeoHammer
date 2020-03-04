@@ -40,7 +40,7 @@ public class RecalculationController {
 					try{
 						consumer.accept(lev);
 					}catch(Exception e) {
-						System.out.println(e.getMessage());
+						e.printStackTrace();						
 					}
 					
 					synchronized (RecalculationController.this) {

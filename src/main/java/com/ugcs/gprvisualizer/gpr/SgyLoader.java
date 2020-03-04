@@ -54,13 +54,41 @@ public class SgyLoader {
 
     public static BinaryHeaderFormat makeBinHeaderFormat() {
         return BinaryHeaderFormatBuilder.aBinaryHeaderFormat()
+        		
+/*
+3201–3204 Job identification number.
++3205–3208 Line number. For 3-D poststack data, this will typically contain the in-line number.
++3209–3212 Reel number.
+3213–3214 Number of data traces per ensemble. Mandatory for prestack data.
+3215–3216 Number of auxiliary traces per ensemble. Mandatory for prestack data.
+3217–3218 Sample interval. Microseconds (µs) for time data, Hertz (Hz) for frequency data, meters (m) or feet (ft) for depth data.
+3219–3220 Sample interval of original field recording. Microseconds (µs) for time data, Hertz (Hz) for frequency data, meters (m) or feet (ft) for depth data.
+3221–3222 Number of samples per data trace.
+	Note: The sample interval and number of samples in the Binary File Header
+	should be for the primary set of seismic data traces in the file.
+3223–3224 Number of samples per data trace for original field recording.        		
+ */
                 .withLineNumberFormat(FormatEntry.create(4, 8))
+                .withReelNumberFormat(FormatEntry.create(8, 12))
+                .withDataTracesPerEnsembleFormat(FormatEntry.create(12, 14))
+                .withAuxiliaryTracesPerEnsembleFormat(FormatEntry.create(14, 16))
                 .withSampleIntervalFormat(FormatEntry.create(16, 18))
-                .withSamplesPerDataTraceFormat(FormatEntry.create(20, 22))                
+                .withSampleIntervalOfOFRFormat(FormatEntry.create(18, 20))
+                .withSamplesPerDataTraceFormat(FormatEntry.create(20, 22))
+                .withSamplesPerDataTraceOfOFRFormat(FormatEntry.create(22, 24))
+                
                 .withDataSampleCodeFormat(FormatEntry.create(24, 26))
+                
+                //.withMeasurementSystemFormat(FormatEntry.create(24, 26)measurementSystemFormat)
+                .withSweepLengthFormat(FormatEntry.create(36, 38))
+                
+                //36 38
+                
                 .withSegyFormatRevNumberFormat(FormatEntry.create(300, 302))
                 .withFixedLengthTraceFlagFormat(FormatEntry.create(302, 304))
                 .withNumberOf3200ByteFormat(FormatEntry.create(304, 306))
+                
+                
                 .build();
     }
 
@@ -78,9 +106,16 @@ public class SgyLoader {
                 withGroupYFormat(FormatEntry.create(84, 88)).
                 withXOfCDPPositionFormat(FormatEntry.create(180, 184)).
                 withYOfCDPPositionFormat(FormatEntry.create(184, 188)).
+                
+                //115 116
                 withNumberOfSamplesFormat(FormatEntry.create(114, 116)).
                 
-                //withLongtitude(FormatEntry.create(72, 76)).
+                //117-118     59            119 isiptr   * "Sample interval in us for this trace".
+                withSampleIntervalInMcsFormat(FormatEntry.create(116, 118)).
+                
+                withSecondOfMinuteFormat(FormatEntry.create(164, 166)).
+                withDelayRecordingTimeFormat(FormatEntry.create(164, 166)).
+
                 build();
     }
 

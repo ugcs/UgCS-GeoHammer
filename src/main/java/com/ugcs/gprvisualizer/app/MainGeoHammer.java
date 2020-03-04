@@ -181,14 +181,14 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
             @Override 
             public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
                 if(newTab.equals (tab1)) {            
-                    System.out.print("gain mode");
+                    
                     model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
                     model.getSettings().hyperliveview = false;
                     
                     //todo toggle btn
                     
                 }else if(newTab.equals (tab2)) {
-                	System.out.print("search mode");
+                	
                 	model.getSettings().radarMapMode = RadarMapMode.SEARCH;
                 }
                 AppContext.notifyAll(new WhatChanged(Change.adjusting));

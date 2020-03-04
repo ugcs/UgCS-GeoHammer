@@ -63,7 +63,7 @@ public class HyperFinder {
 			
 		int kf = model.getSettings().hyperkfc;
 			for(SgyFile sf : model.getFileManager().getFiles()) {
-				System.out.println("file: " + sf.getFile().getName());
+				System.out.println("analize file: " + sf.getFile().getName());
 				processSgyFile(sf, kf/100.0);			
 			}
 		//}

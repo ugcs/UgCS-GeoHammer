@@ -211,7 +211,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	    
 		clearBitmap(bi, g2, field);
 		
-		new VerticalRulerDrawer().draw(g2, field, model);
+		new VerticalRulerDrawer(model).draw(g2, field);
 		
 		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 
@@ -297,12 +297,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		g2.setPaint (new Color(45, 60, 100));
 		g2.fillRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
 		g2.setPaint (Color.white);
-		g2.drawRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
+		g2.drawLine(topRuleRect.x, topRuleRect.y+topRuleRect.height, topRuleRect.x + topRuleRect.width, topRuleRect.y+topRuleRect.height);
 		
 		g2.setPaint (new Color(45, 60, 100));
 		g2.fillRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
 		g2.setPaint (Color.white);
-		g2.drawRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
+		g2.drawLine(leftRuleRect.x+leftRuleRect.width, leftRuleRect.y, 
+				leftRuleRect.x+leftRuleRect.width, leftRuleRect.y+leftRuleRect.height);
 		
 		
 	}

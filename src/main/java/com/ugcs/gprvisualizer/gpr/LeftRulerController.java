@@ -1,0 +1,187 @@
+package com.ugcs.gprvisualizer.gpr;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Point2D;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.json.simple.JSONObject;
+
+import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
+
+public class LeftRulerController {
+	
+	public interface Converter {
+		Pair<Integer, Integer> convert(int s, int f);
+		int back(int unt);
+		String getUnit();
+	}
+	
+	
+	private Model model;
+	private Converter[] list = {
+			new SamplConverter(),
+			new NanosecConverter()
+	};
+	private int index = 0;
+	
+	public LeftRulerController(Model model){
+		this.model = model;
+	}
+	
+	public Converter getConverter() {
+		return list[index];
+	}
+	
+	public void nextConverter() {
+		index = (index +1) % list.length;
+	}
+	
+	
+	class SamplConverter implements Converter {
+
+		@Override
+		public Pair<Integer, Integer> convert(int s, int f) {
+			return Pair.of(s, f);
+		}
+		
+		public int back(int unt) {
+			return unt;
+		}
+
+		@Override
+		public String getUnit() {
+			return "smpl";
+		}		
+	}
+	class NanosecConverter implements Converter {
+
+		@Override
+		public Pair<Integer, Integer> convert(int s, int f) {
+			
+			SgyFile fl = model.getFileManager().getFiles().get(0);
+			
+			
+			return Pair.of(
+					fl.getBinaryHeader().getSampleInterval() * s / 1000, 
+					fl.getBinaryHeader().getSampleInterval() * f / 1000);
+		}
+		
+		public int back(int unt) {
+			SgyFile fl = model.getFileManager().getFiles().get(0);
+			return unt * 1000 / fl.getBinaryHeader().getSampleInterval();
+		}
+		
+
+		@Override
+		public String getUnit() {
+			return "  ns";
+		}		
+	}
+	
+	
+	public BaseObjectImpl tb = new BaseObjectImpl () {
+
+		@Override
+		public void drawOnCut(Graphics2D g2, ProfileField vField) {
+			Rectangle  r = getRect(vField);
+			
+			//g2.fillRect(r.x, r.y, r.width, r.height);
+			g2.setColor(Color.YELLOW);
+			g2.drawRoundRect(r.x, r.y, r.width, r.height, 5, 5);			
+			
+			g2.setColor(Color.white);
+			String text = getConverter().getUnit();
+			int width = g2.getFontMetrics().stringWidth(text);
+			g2.drawString(text, r.x + r.width - width - 3, r.y + r.height - 5);
+			
+		}
+
+		@Override
+		public boolean isPointInside(Point localPoint, ProfileField vField) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public Rectangle getRect(ProfileField vField) {
+
+			Rectangle  r = vField.getInfoRect();
+			return new Rectangle(vField.visibleStart + r.x, r.y + r.height - 15, r.width, 15);
+
+		}
+
+		@Override
+		public void signal(Object obj) {
+			
+		}
+
+		@Override
+		public List<BaseObject> getControls() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean saveTo(JSONObject json) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean mousePressHandle(Point2D point, MapField field) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean isFit(int begin, int end) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+			if(getRect(vField).contains(localPoint)) {
+				
+				nextConverter();
+				return true;
+			}
+			
+			return false;
+		}
+
+		@Override
+		public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean mouseMoveHandle(Point point, ProfileField vField) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		@Override
+		public void drawOnMap(Graphics2D g2, MapField hField) {
+							
+		}
+
+
+	};
+
+}

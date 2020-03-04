@@ -218,9 +218,6 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		
 		
 		sgyFile.updateInternalIndexes();
-		
-		System.out.println("generate sgy file " + traces.size()  + "     '" + file.getFile().getName()+"'" );
-		
 		return sgyFile;
 	}
 

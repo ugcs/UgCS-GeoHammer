@@ -24,6 +24,7 @@ public class ProfileField {
 	private Rectangle topRuleRect = new Rectangle();
 	private Rectangle leftRuleRect = new Rectangle();
 	private Rectangle mainRectRect = new Rectangle();
+	private Rectangle infoRect = new Rectangle();
 	
 	
 	//
@@ -51,10 +52,10 @@ public class ProfileField {
 		this.topRuleRect = copy.topRuleRect;
 		this.leftRuleRect = copy.leftRuleRect;
 		this.mainRectRect = copy.mainRectRect;
+		this.infoRect = copy.infoRect;
 	}
 
 	public void clear() {
-		System.out.println("VerticalCutField clear");
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;
@@ -206,6 +207,7 @@ public class ProfileField {
 	public void setViewDimension(Dimension viewDimension) {
 		this.viewDimension = viewDimension;
 		
+		infoRect = new Rectangle(0, 0, Model.TOP_MARGIN-1, Model.TOP_MARGIN-1);
 		topRuleRect = new Rectangle(Model.TOP_MARGIN, 0, viewDimension.width-Model.TOP_MARGIN, Model.TOP_MARGIN-1);
 		leftRuleRect = new Rectangle(0, Model.TOP_MARGIN-1, Model.TOP_MARGIN-1, viewDimension.height - Model.TOP_MARGIN);
 		mainRectRect = new Rectangle(Model.TOP_MARGIN, Model.TOP_MARGIN, viewDimension.width-Model.TOP_MARGIN, viewDimension.height - Model.TOP_MARGIN);
@@ -243,6 +245,10 @@ public class ProfileField {
 	
 	public Rectangle getMainRect() {
 		return mainRectRect;
+	}
+	
+	public Rectangle getInfoRect() {
+		return infoRect;
 	}
 	
 }

@@ -68,8 +68,35 @@ public class SgyFile {
 		
 		binaryHeader = binaryHeaderReader.read(binFile.getBinHdr());
 		
+		System.out.println("dataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());		
+		
+		System.out.println("binaryHeader.getSampleInterval() " + binaryHeader.getSampleInterval());
+		System.out.println("binaryHeader.getSampleIntervalOfOFR() " + binaryHeader.getSampleIntervalOfOFR());
+		
+		System.out.println("ReelNumber            " + binaryHeader.getReelNumber());
+		System.out.println("DataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());
+		System.out.println("AuxiliaryTracesPerEnsemble " + binaryHeader.getAuxiliaryTracesPerEnsemble());
+		
+		
+		System.out.println("SamplesPerDataTrace " + binaryHeader.getSamplesPerDataTrace());
+		System.out.println("SamplesPerDataTraceOfOFR " + binaryHeader.getSamplesPerDataTraceOfOFR());
+		
+		System.out.println("SweepLength " + binaryHeader.getSweepLength());
 		
 		setTraces(loadTraces(binFile));
+		
+		//////////
+		
+		//sampleIntervalInMcs
+		Trace t = getTraces().get(getTraces().size()/2);
+		System.out.println("SampleIntervalInMcs: " + t.getHeader().getSampleIntervalInMcs());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getReeDelayRecordingTime());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getDelayRecordingTime());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getGapSize());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getGroupStaticCorrectionInMs());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getMuteTimeStart());
+//		System.out.println("SampleIntervalInMcs: " + t.getHeader().getMuteTimeEnd());
+		////////////
 		
 		updateInternalIndexes();
 		
@@ -149,6 +176,8 @@ public class SgyFile {
 		byte[] headerBin = binTrace.header;		
         TraceHeader header = traceHeaderReader.read(headerBin);
         
+        //System.out.println("getSecondOfMinute "+header.getSecondOfMinute());
+        
         SeismicValuesConverter converter = ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
         
         final float[] values = converter.convert(binTrace.data);        
@@ -160,7 +189,7 @@ public class SgyFile {
         
         Trace trace = new Trace(headerBin, header, values, latLon);
         if(headerBin[MARK_BYTE_POS] != 0 ) {
-        	System.out.println("mark " +headerBin[MARK_BYTE_POS]);
+        	//System.out.println("mark " +headerBin[MARK_BYTE_POS]);
         	trace.setMarked(true);
         }
         
@@ -209,10 +238,6 @@ public class SgyFile {
 	public void save(File file) throws Exception {
 		
 		Set<Integer> marks = prepareMarksIndexSet();
-		_logSaveMarks(file, marks);
-		
-		
-		
 		BinFile binFile = new BinFile();
 		
 		binFile.setTxtHdr(txtHdr);
@@ -224,9 +249,6 @@ public class SgyFile {
 			binTrace.header = trace.getBinHeader();
 			
 			//set or clear marks
-			if(marks.contains(trace.indexInFile)) {
-				System.out.println("marks.contains(trace.indexInFile) " + trace.indexInFile);
-			}
 			binTrace.header[MARK_BYTE_POS] = (byte)(marks.contains(trace.indexInFile) ? -1 : 0);
 			
 			binTrace.data = ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()).array();
@@ -237,14 +259,6 @@ public class SgyFile {
 		binFile.save(file);
 		
 		System.out.println("saved  "+file + "  size: " + getTraces().size());
-	}
-
-	public void _logSaveMarks(File file, Set<Integer> marks) {
-		System.out.println("prepare marks   " + file.getName());
-		for(Integer i : marks) {
-			System.out.print(i + "  ");
-		}
-		System.out.println();
 	}
 
 	private Set<Integer> prepareMarksIndexSet() {
@@ -326,5 +340,9 @@ public class SgyFile {
 
 	public void setBinHdr(byte[] d) {
 		binHdr = d;		
+	}
+	
+	public BinaryHeader getBinaryHeader() {
+		return binaryHeader;
 	}
 }

@@ -75,14 +75,11 @@ public class Repack {
 		        blocks.add(traceDataBlock);
 		        
 		        lastBlock = traceDataBlock;
-		        System.out.println("read");
+		        
 			}while(lastBlock != null);
 		}catch(IOException e) {
-			System.out.println("exception finish");
+			e.printStackTrace();
 		}
-		System.out.println("finish " + new String(txtHdrBlock.read(bf).array()));
-        
-		
 		
 		FileOutputStream fos = new FileOutputStream("d:\\georadarData\\created.sgy");
 		FileChannel writechan = fos.getChannel();

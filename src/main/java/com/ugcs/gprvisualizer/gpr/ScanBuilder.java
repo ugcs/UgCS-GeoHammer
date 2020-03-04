@@ -80,7 +80,7 @@ public class ScanBuilder {
 		
 		
 		scan.values = normalizeV2(scan.originalvalues);
-		System.out.println("normalizeV2+");
+
 		
 		scans.add(scan);
 

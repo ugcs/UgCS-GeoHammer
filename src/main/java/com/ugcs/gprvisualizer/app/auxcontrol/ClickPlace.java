@@ -187,7 +187,6 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	public int getGlobalTrace() {
-		System.out.println("getGlobalTrace() " + traceInAll);
 		return traceInAll;
 	}
 

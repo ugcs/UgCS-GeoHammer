@@ -40,7 +40,7 @@ public class ShapeHolder {
 	    result.closePath();
 	    
 	    Rectangle r = result.getBounds();
-	    System.out.println(r.x + "  " + r.y);
+	    
 	    
 	    return result;
 	}
@@ -57,7 +57,7 @@ public class ShapeHolder {
 	    result.closePath();
 	    
 	    Rectangle r = result.getBounds();
-	    System.out.println(r.x + "  " + r.y);
+	    
 
 	    return result;
 	}
