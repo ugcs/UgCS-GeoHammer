@@ -102,9 +102,13 @@ public class Work {
         	for(int i = getLayers().size()-1; i>=0; i--) {
         		Layer layer = getLayers().get(i);
         		
-        		if(layer.mousePressed(p)) {
-        			return;
-        		}        		
+        		try {
+	        		if(layer.mousePressed(p)) {
+	        			return;
+	        		}
+        		}catch(Exception e) {
+        			e.printStackTrace();
+        		}
         	}
         }
 

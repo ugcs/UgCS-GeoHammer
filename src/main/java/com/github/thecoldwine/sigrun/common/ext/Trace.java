@@ -27,6 +27,7 @@ public class Trace {
     
     public int maxindex;
     public int maxindex2;
+    public int verticalOffset;
     
     public int indexInFile;
     public int indexInSet;

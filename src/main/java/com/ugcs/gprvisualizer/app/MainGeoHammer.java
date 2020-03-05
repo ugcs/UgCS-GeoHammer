@@ -13,6 +13,7 @@ import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.TraceDecimator;
+import com.ugcs.gprvisualizer.math.TraceStacking;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -241,10 +242,12 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
 
-		Button buttonDecimator = new Button("Trace decimator");
+		Button buttonDecimator = new Button("Stacking");
+		buttonDecimator.setTooltip(new Tooltip("reduce number of traces by half"));
 		buttonDecimator.setOnAction(e -> {
 			
-			new TraceDecimator().process(model);
+			//new TraceDecimator().process(model);
+			new TraceStacking().process(model);
 		});
 		
 		

@@ -31,7 +31,7 @@ public class Settings {
 	public int layer = 40; 
 	
 	public boolean hyperliveview = false;
-	public int hyperkfc = 217; 
+	public int hyperkfc = 100; 
 	public int hypergoodsize = 150;
 	public int hypermiddleamp = 0;
 	
