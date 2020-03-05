@@ -345,4 +345,8 @@ public class SgyFile {
 	public BinaryHeader getBinaryHeader() {
 		return binaryHeader;
 	}
+
+	public void setBinaryHeader(BinaryHeader bh) {
+		binaryHeader = bh;
+	}
 }

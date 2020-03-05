@@ -212,6 +212,8 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		sgyFile.setBinHdr(file.getBinHdr());
 		sgyFile.setTxtHdr(file.getTxtHdr());
 		
+		sgyFile.setBinaryHeader(file.getBinaryHeader());
+		
 		int begin = traces.get(0).indexInFile;
 		int end = traces.get(traces.size()-1).indexInFile;
 		sgyFile.setAuxElements(copyAuxObjects(file, sgyFile, begin, end));
