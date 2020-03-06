@@ -48,6 +48,8 @@ public class BinFile {
 			
 			BinaryHeader binaryHeader = SgyFile.binaryHeaderReader.read(binHdrBlock.read(blockFile).array());
 			
+			System.out.println(binaryHeader.getDataSampleCode() + " " + binaryHeader.getDataSampleCode().getSize());
+			
 			while(blockFile.hasNext(TraceHeader.TRACE_HEADER_LENGTH)) {
 				Block traceHdrBlock = blockFile.next(TraceHeader.TRACE_HEADER_LENGTH);
 				
@@ -56,6 +58,8 @@ public class BinFile {
 				
 				
 		        TraceHeader header = SgyFile.traceHeaderReader.read(binTrace.header);
+		        
+		        
 		        int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
 		        
 		        if(dataLength > 0 && blockFile.hasNext(dataLength)){

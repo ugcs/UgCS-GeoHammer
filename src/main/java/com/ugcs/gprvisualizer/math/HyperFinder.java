@@ -110,7 +110,7 @@ public class HyperFinder {
 	
 	
 	private int cleversum(int[][] good, int tr) {
-		int margin = 4;
+		int margin = 6;
 		double sum = 0;
 		double maxsum = 0;
 		int mult = 0;
@@ -292,7 +292,7 @@ public class HyperFinder {
 		Point lt = vField.traceSampleToScreen(ts);
 		
 		g2.setColor(Color.LIGHT_GRAY);
-		g2.fillRect(lt.x-100, lt.y - 60, 100, 35);
+		g2.fillRect(lt.x-100, lt.y - 60, 200, 40);
 		g2.setColor(Color.RED);
 		
 		
@@ -302,18 +302,19 @@ public class HyperFinder {
 		
 		
 		
-		g2.drawString(ts.getTrace() + " (" + traces.get(tr).indexInFile + ") " + ts.getSample() + 
-				" \n(" + example2 + ")" + 
-				" l: " + fl(left2.oppositeAbovePerc) + " " + fl(left2.oppositeBelowPerc) + 
-				" r: " +  fl(right2.oppositeAbovePerc) + " " + fl(right2.oppositeBelowPerc)				
-				, 				
+		Trace ex = traces.get(tr);
+		g2.drawString("" + ts.getTrace() + " (" + ex.indexInFile + ") " + ts.getSample() + " (" + fl(example2) + ")   ofst: " + ex.verticalOffset,
 				lt.x-100, lt.y - 40);
+		
+		g2.drawString(" l: " + fl(left2.oppositeAbovePerc) + " " + fl(left2.oppositeBelowPerc) + " <-|-> " +  
+				" r: " +  fl(right2.oppositeAbovePerc) + " " + fl(right2.oppositeBelowPerc),				
+				lt.x-100, lt.y - 30);
 
 		
-		int goodsidet = HalfHyper.getGoodSideSize(ts.getSample());
+		int goodsidet = HalfHyper.getGoodSideSize(ts.getSample()-traces.get(tr).verticalOffset);
 		g2.setColor(Color.ORANGE);
 		g2.setStroke(line1);
-		drawHyperbolaLine(g2, vField, ts.getSample()-traces.get(tr).verticalOffset, ts.getTrace()-goodsidet, ts.getTrace()+goodsidet, -2);
+		drawHyperbolaLine(g2, vField, ts.getSample(), ts.getTrace()-goodsidet, ts.getTrace()+goodsidet, -2);
 		
 		for(int smp = ts.getSample(); smp < Math.min(ts.getSample() + 30, values.length); smp++) {
 			float example = values[smp];

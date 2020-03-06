@@ -32,9 +32,19 @@ public class TraceStacking {
 	}
 
 	
+	private static double SPEED_SM_NS_VACUUM = 30.0;
+	private static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
+	
 	private void process(SgyFile sgyFile) {
 		
-		double STACK_DIST = 0.01;
+		// dist between 2 samples
+		double sampleIntervalNS = sgyFile.getBinaryHeader().getSampleInterval() / 1000.0;
+		double sampleDist = SPEED_SM_NS_SOIL * sampleIntervalNS / 2;
+		
+		// to meters
+		double STACK_DIST = sampleDist/100.0;		
+		System.out.println(" sample length: " + STACK_DIST);
+		
 		
 		List<Trace> traces = sgyFile.getTraces();
 		List<Trace> result = new ArrayList<>();
@@ -49,7 +59,8 @@ public class TraceStacking {
 			
 			if(stackSumDist >= STACK_DIST) {
 				
-				System.out.println(" stack " + i + ", size " +  stack.size() );
+				System.out.println(" stack: " + stackSumDist + " > " + STACK_DIST + "    unite " + stack.size());
+				
 				result.add(merge(stack));
 				
 				stack.clear();
@@ -65,7 +76,7 @@ public class TraceStacking {
 
 
 	private Trace merge(List<Trace> stack) {
-		Trace example = stack.get(0);
+		Trace example = stack.get(stack.size()/2);
 		float[] res = new float[example.getNormValues().length];
 		
 		for(int i=0; i< res.length; i++) {
@@ -75,6 +86,8 @@ public class TraceStacking {
 		}
 		
 		Trace combined = new Trace(example.getBinHeader(), example.getHeader(), res, example.getLatLon());
+		
+		combined.verticalOffset = example.verticalOffset; 
 		
 		return combined;
 	}

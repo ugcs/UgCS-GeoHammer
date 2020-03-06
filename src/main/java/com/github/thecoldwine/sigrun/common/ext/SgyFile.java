@@ -243,6 +243,8 @@ public class SgyFile {
 		binFile.setTxtHdr(txtHdr);
 		binFile.setBinHdr(binHdr);
 		
+		SeismicValuesConverter converter = ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
+		
 		for(Trace trace : traces) {
 			BinTrace binTrace = new BinTrace();
 			
@@ -251,7 +253,7 @@ public class SgyFile {
 			//set or clear marks
 			binTrace.header[MARK_BYTE_POS] = (byte)(marks.contains(trace.indexInFile) ? -1 : 0);
 			
-			binTrace.data = ByteBufferHolder.valuesToByteBuffer(trace.getNormValues()).array();
+			binTrace.data = converter.valuesToByteBuffer(trace.getNormValues()).array();
 			
 			binFile.getTraces().add(binTrace);
 		}		

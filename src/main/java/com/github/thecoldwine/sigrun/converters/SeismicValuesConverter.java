@@ -1,5 +1,7 @@
 package com.github.thecoldwine.sigrun.converters;
 
+import java.nio.ByteBuffer;
+
 /**
  * Created by maksenov on 16/01/15.
  */
@@ -11,4 +13,6 @@ public interface SeismicValuesConverter {
 
 
     float[] convert(byte[] bytes);
+    
+    ByteBuffer valuesToByteBuffer(float values[]) ;
 }

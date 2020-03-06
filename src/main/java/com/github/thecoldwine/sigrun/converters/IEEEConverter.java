@@ -27,4 +27,8 @@ public class IEEEConverter implements SeismicValuesConverter {
 
         return result;
     }
+    
+    public ByteBuffer valuesToByteBuffer(float values[]) {
+    	throw new RuntimeException("unsuported");
+    }
 }

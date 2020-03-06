@@ -25,5 +25,16 @@ public class TC4BIConverter implements SeismicValuesConverter{
 		
 		return result;
 	}
+	
+	public ByteBuffer valuesToByteBuffer(float values[]) {
+		
+		ByteBuffer bb = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
+		for(int i =0; i < values.length; i++) {
+			bb.putInt((int)values[i]);
+		}
+		
+		return bb;
+	}
+	
 
 }

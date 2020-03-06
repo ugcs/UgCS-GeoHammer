@@ -14,16 +14,21 @@ public class TC2BIConverter implements SeismicValuesConverter{
         ByteBuffer bits = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         
         for (int i = 0; i < result.length; i++) {
-        	
         	int val = bits.getShort();
-        	//System.out.print(", " + val);
             result[i] = val;
-            
         }
-		
-		//int i = ByteBuffer.wrap(bytes, 0, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
 		
 		return result;
 	}
 
+	public ByteBuffer valuesToByteBuffer(float values[]) {
+		
+		ByteBuffer bb = ByteBuffer.allocate(values.length * 2).order(ByteOrder.LITTLE_ENDIAN);
+		for(int i =0; i < values.length; i++) {
+			bb.putShort((short)values[i]);
+		}
+		
+		return bb;
+	}
+	
 }

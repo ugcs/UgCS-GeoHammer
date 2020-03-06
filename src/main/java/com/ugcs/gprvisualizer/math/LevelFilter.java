@@ -228,27 +228,32 @@ public class LevelFilter implements ToolProducer {
 
 	protected void leveling(List<Trace> lst) {
 		int minlev = model.getFileManager().getTraces().get(0).maxindex;
+		int maxlev = model.getFileManager().getTraces().get(0).maxindex;
 		for(Trace trace : model.getFileManager().getTraces()) {
-			minlev = Math.max(minlev, trace.maxindex);
+			minlev = Math.min(minlev, trace.maxindex);
+			maxlev = Math.max(maxlev, trace.maxindex);
 		}
+		
+		int level = (minlev+maxlev)/2;
 		
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);
 
 			float values[] = trace.getNormValues();
 			float n_values[] = new float[values.length];
-			int src_start = Math.max(0, trace.maxindex-minlev);
-			int dst_start = Math.max(0, minlev-trace.maxindex);
+			int src_start = Math.max(0, trace.maxindex-level);
+			int dst_start = Math.max(0, level-trace.maxindex);
 			
 			System.arraycopy(
 				values, src_start, 
 				n_values, dst_start, 
-				values.length - Math.abs(trace.maxindex-minlev));
+				values.length - Math.abs(trace.maxindex-level));
 			
 			
 			trace.setNormValues(n_values);
+			trace.verticalOffset = level-trace.maxindex;
 			trace.maxindex = 0;
-			trace.verticalOffset = minlev-trace.maxindex;
+			
 		}
 		
 		model.getChanges().add(FileChangeType.LEVEL_TO_GROUND);

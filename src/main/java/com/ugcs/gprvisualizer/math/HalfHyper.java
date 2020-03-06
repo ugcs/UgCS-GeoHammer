@@ -51,7 +51,7 @@ public class HalfHyper {
 		HalfHyper hh = new HalfHyper();
 		hh.pinnacle_tr = tr;
 		
-		hh.pinnacle_smp = org_smp - trace.verticalOffset;
+		hh.pinnacle_smp = org_smp;
 		hh.side = side;
 		hh.example = example;
 		
@@ -59,8 +59,8 @@ public class HalfHyper {
 		int i=0;
 		double bad = 0;
 		int index=0;
-		int hypergoodsize = getGoodSideSize(hh.pinnacle_smp);//model.getSettings().hypergoodsize;
-		double y = hh.pinnacle_smp;
+		int hypergoodsize = getGoodSideSize(hh.pinnacle_smp - trace.verticalOffset);//model.getSettings().hypergoodsize;
+		double y = hh.pinnacle_smp - trace.verticalOffset;
 		
 		while(i<hypergoodsize+1 && bad < 0.2 ) {
 			index = tr + side * i;
@@ -73,7 +73,7 @@ public class HalfHyper {
 			
 			float values[] = traces.get(index).getNormValues();
 			
-			int smp = (int)c;
+			int smp = (int)c + trace.verticalOffset;
 			if(smp >= values.length) {
 				break;
 			}

@@ -207,7 +207,7 @@ public class AmplitudeMatrix {
 		
 		
 		//return r.subList(0, r.size());
-		return r.subList(0, 4);
+		return r.subList(0, Math.min(4, r.size()));
 	}
 
 	List<Grp> findLevelStartingAt(Grp start) {

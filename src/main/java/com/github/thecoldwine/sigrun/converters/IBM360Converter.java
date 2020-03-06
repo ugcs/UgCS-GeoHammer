@@ -74,4 +74,9 @@ public class IBM360Converter implements SeismicValuesConverter {
 
         return result;
     }
+    
+    public ByteBuffer valuesToByteBuffer(float values[]) {
+    	throw new RuntimeException("unsuported");
+    }
+    
 }
