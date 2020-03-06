@@ -61,8 +61,13 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		points = null;
 		active = null;
 	}
-	
+
 	public void init() {
+		
+		points = new TraceCutInitializer().initialRect(model, model.getFileManager().getTraces());
+
+	}
+	public void init_old() {
 		
 		points = new ArrayList<>();
 		points.add(field.screenTolatLon(new Point(100, 100)));
@@ -137,7 +142,8 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		for(int i=0; i<border.size(); i++) {
 			Point2D p1 = border.get(i);			
 			
-			g2.setColor(Color.RED);
+			//g2.setColor(Color.RED);
+			g2.setColor(new Color(i*80, i*80, i*80));
 			g2.fillOval((int)p1.getX() - RADIUS, (int)p1.getY() - RADIUS, 2*RADIUS, 2*RADIUS);
 			if(active != null && active == i) {
 				g2.setColor(Color.BLUE);

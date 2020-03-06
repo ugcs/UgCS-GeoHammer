@@ -39,7 +39,7 @@ public class HalfHyper {
 	public static int getGoodSideSize(int smp) {
 		double kf = AppContext.model.getSettings().hyperkfc/100.0;
 		
-		return (int)((double)smp * 0.46 / kf);
+		return (int)((double)smp * 0.43 / kf);
 	}
 	
 
