@@ -2,6 +2,9 @@ package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Point2D;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableInt;
+
 public class Settings {
 
 	public enum RadarMapMode {
@@ -28,12 +31,15 @@ public class Settings {
 	public int height = 600;
 	public int radius = 15;
 	public int hpage = 47;
-	public int layer = 40; 
+	public int layer = 80; 
 	
 	public boolean hyperliveview = false;
 	public int hyperkfc = 100; 
-	public int hypergoodsize = 150;
+	public MutableInt hyperSensitivity = new MutableInt(80);
 	public int hypermiddleamp = 0;
+	
+	public MutableBoolean showEdge = new MutableBoolean(); 
+	public MutableBoolean showGood = new MutableBoolean();
 	
 	public int topscale = 200;
 	public int bottomscale = 250;

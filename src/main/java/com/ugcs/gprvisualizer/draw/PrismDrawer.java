@@ -22,9 +22,14 @@ public class PrismDrawer {
 	Tanh tanh = new Tanh();
 	
 	
-	int goodcolor1 = (255<<16) + (70 << 8 ) + 177;
+	int goodcolor1 = (250<<16) + (250 << 8 ) + 32;
 	int goodcolor2 = (70<<16) + (255 << 8 ) + 177;
-	int geencolor = (32<<16) + (255 << 8 ) + 32;
+	int color_red3 = (235<<16) + (0 << 8 ) + 0;
+	int color_blu4 = (0<<16) + (0 << 8 ) + 235;
+	
+	int geencolorp = (0<<16) + (235 << 8 ) + 96;
+	int geencolorm = (96<<16) + (235 << 8 ) + 0;
+	int geencolorb = (96<<16) + (255 << 8 ) + 96;
 	
 	private static int goodcolors[] = new int[100];
 	static {
@@ -36,6 +41,24 @@ public class PrismDrawer {
 	public PrismDrawer(Model model) {
 		this.model = model;
 	}
+
+	int good_colors[] = {
+			
+			0,
+			geencolorp,
+			geencolorm,
+			geencolorb,
+			color_blu4
+	};
+	
+	int edge_colors[] = {
+			
+			0,
+			goodcolor1,
+			goodcolor2,			
+			color_blu4,
+			color_red3
+	};
 	
 	public void draw(//int width, int height, 
 			int bytesInRow, 
@@ -50,7 +73,10 @@ public class PrismDrawer {
 		
 		Rectangle rect = field.getMainRect();
 		
-		boolean showInlineHyperbolas = model.getSettings().radarMapMode == RadarMapMode.SEARCH;
+		//boolean showInlineHyperbolas = model.getSettings().radarMapMode == RadarMapMode.SEARCH;
+		
+		boolean showInlineHyperbolas = model.getSettings().showGood.booleanValue();
+		boolean showEdge = model.getSettings().showEdge.booleanValue();
 		
 		List<Trace> traces = model.getFileManager().getTraces();
 		
@@ -84,16 +110,26 @@ public class PrismDrawer {
 					
 					int color = tanh.trans(values[j] - middleAmp);
 					
+					if(showEdge && trace.edge != null && trace.edge[j] > 0) {
+						color = edge_colors[trace.edge[j]] ;
+					}
+
+					if(showInlineHyperbolas && trace.good != null && trace.good[j] > 0) {
+						color = good_colors[trace.good[j]] ;
+					}
+					
 		    		for(int xt=0; xt < hscale; xt ++) {
 		    			for(int yt =0; yt < vscale; yt++) {
 		    				buffer[ rect.x +rect.width / 2 + xt + traceStartX + (sampStart + yt) * bytesInRow ] = color;
 		    			}
 		    			
 		    			//hyperbola
-		    			if(showInlineHyperbolas && trace.good != null && trace.good[j] != 0) {
-		    				buffer[ rect.x +rect.width / 2 + xt + traceStartX + (sampStart + 0) * bytesInRow ] = 
-		    					trace.good[j] > 0 ? goodcolor1 : goodcolor2;
-		    			}
+//		    			if(showInlineHyperbolas && trace.good != null && trace.good[j] != 0) {
+//		    				
+//		    				int colorval = good_colors[trace.good[j]+1] ;// > 0 ? goodcolor1 : goodcolor2;
+//		    				
+//		    				buffer[ rect.x +rect.width / 2 + xt + traceStartX + (sampStart + 0) * bytesInRow ] = colorval;
+//		    			}
 		    			//
 		    		}
 				}

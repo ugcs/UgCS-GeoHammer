@@ -4,12 +4,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
+
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
+import com.ugcs.gprvisualizer.math.EdgeFinder;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.TraceDecimator;
@@ -33,6 +36,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -216,6 +220,25 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		return scene;
 	}
 
+	ToggleButton prepareToggleButton(String title, String imageName, MutableBoolean bool, Change change) {
+		ToggleButton btn = new ToggleButton(title, ResourceImageHolder.getImageView(imageName));
+		
+		btn.setSelected(bool.booleanValue());
+		
+		btn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				System.out.println(btn.isSelected());
+				
+				bool.setValue(btn.isSelected());
+				
+				AppContext.notifyAll(new WhatChanged(change));
+			}
+		});
+		
+		return btn;
+	}
+	
 	private ToggleButton hyperLiveViewBtn = new ToggleButton("Hyperbola detection mode", ResourceImageHolder.getImageView("hypLive.png"));
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
@@ -237,7 +260,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 			hf.process();
 		});
 
-		
+		//MutableBoolean
 		
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
@@ -250,9 +273,21 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 			new TraceStacking().process(model);
 		});
 		
+
+		Button buttonEdgeFinder = new Button("Edge");
+		buttonEdgeFinder.setOnAction(e -> {
+			
+			new EdgeFinder().process(model);
+		});
 		
 		
-		t2.getChildren().addAll(buttonHyperFinder, hyperLiveViewBtn, buttonDecimator);
+		t2.getChildren().addAll(buttonHyperFinder, hyperLiveViewBtn, buttonDecimator, buttonEdgeFinder,
+				new HBox(
+						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
+						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)
+						)
+				
+				);
         tab2.setContent(t2);
         
         

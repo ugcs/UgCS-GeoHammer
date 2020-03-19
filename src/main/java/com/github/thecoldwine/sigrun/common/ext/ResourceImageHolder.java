@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.image.ImageView;
 
 public class ResourceImageHolder {
@@ -26,7 +28,9 @@ public class ResourceImageHolder {
 	public static javafx.scene.image.Image FXIMG_DONE;
 
 	public static ImageView getImageView(String name) {
-		
+		if(StringUtils.isBlank(name)) {
+			return null;
+		}
 		
 		javafx.scene.image.Image img = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream(name));
 		ImageView iv = new ImageView();

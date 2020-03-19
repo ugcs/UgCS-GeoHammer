@@ -701,20 +701,20 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
-			name = "Hyper size";
+			name = "Sensitivity";
 			units = "";
 			tickUnits = 10;
 		}
 
 		public void updateUI() {
-			slider.setMax(350);
+			slider.setMax(100);
 			slider.setMin(0);
-			slider.setValue(settings.hypergoodsize);
+			slider.setValue(settings.hyperSensitivity.intValue());
 		}
 		
 		public int updateModel() {
-			settings.hypergoodsize = (int)slider.getValue();
-			return (int)settings.hypergoodsize;
+			settings.hyperSensitivity.setValue((int)slider.getValue());
+			return (int)settings.hyperSensitivity.intValue();
 		}
 	}
 

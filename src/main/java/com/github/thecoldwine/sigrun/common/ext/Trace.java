@@ -23,6 +23,8 @@ public class Trace {
     //tmp for loading
     private boolean marked = false;
     
+    
+    //meters
     private double prevDist = 100000;
     
     public int maxindex;
@@ -33,6 +35,7 @@ public class Trace {
     public int indexInSet;
     
     public int[] good;
+    public int[] edge;
     
     public Set<Integer> max = new HashSet<>();
     
