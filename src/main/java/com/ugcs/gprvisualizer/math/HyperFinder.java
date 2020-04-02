@@ -83,7 +83,7 @@ public class HyperFinder {
 		int good[][] = new int[traces.size()][height];
 		
 		for(int i=0; i<traces.size(); i++) {
-			processTrace(traces, i, good, hyperkf); 
+			processTrace(sf, i, good, hyperkf); 
 		}
 		
 		//filter
@@ -114,31 +114,31 @@ public class HyperFinder {
 	private int cleversumdst(int[][] good, int tr) {
 		int margin = 6;
 		double sum = 0;		
-		boolean bothside = false;
+		//boolean bothside = false;
 		//boolean bothsidemax;
 		double maxsum = 0;
 		int emptycount =0;
+		int both = 0;
 		for(int i=0; i<good[tr].length; i++) {
 			
+			// 0 1 2 3
 			int val = getAtLeastOneGood(good, tr, margin, i);
-			
+			both = both | val;
 			if(val != 0) {				
-				sum += 1.0;
-				if(val == 3) {
-					bothside = true;
-				}
+				sum += (val < 3 ? 1.0 : 2.0);
 			}else {
 				emptycount++;
 				if(emptycount > 5) {
-					maxsum = Math.max(maxsum, sum);
+					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
+					both = 0;
 					sum = 0;
 					emptycount = 0;					
 				}
 			}			
 		}
 		
-		maxsum = Math.max(maxsum, sum);
-		return (int)(maxsum* (bothside ? 10 : 2) );//
+		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
+		return (int)(maxsum);//
 	}
 	
 	
@@ -188,9 +188,9 @@ public class HyperFinder {
 		int r = 0;
 		
 		for(int chtr = Math.max(0, tr-margin); chtr < Math.min(good.length, tr+margin+1); chtr++) {
-			if(good[chtr][smp] != 0) {
+			//if(good[chtr][smp] != 0) {
 				r = r | good[chtr][smp]; //0 1 2 3				
-			}
+			//}
 		}
 		
 		return r;
@@ -257,35 +257,33 @@ public class HyperFinder {
 		}
 	}
 
-	private double processTrace(List<Trace> traces, int tr, int[][] good, double hyperkf) {
+	private double processTrace(SgyFile sgyFile, int tr, int[][] good, double hyperkf) {
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
 						AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
-						traces.get(tr).getNormValues().length-2
+						sgyFile.getTraces().get(tr).getNormValues().length-2
 				);
 		for(int smp = AppContext.model.getSettings().layer;				
 			smp< maxSmp ; smp++) {
 			
-			processHyper3(traces, tr, smp, hyperkf, good);
-			//	good[tr][smp] = 1;
-			//}
+			processHyper3(sgyFile, tr, smp, hyperkf, good);
 		}
 		
 		return goodSmpCnt;
 	}
 
 
-	private void processHyper3(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
+	private void processHyper3(SgyFile sgyFile, int tr, int smp, double hyperkf, int[][] good) {
 		
-		double result = 0;
+		
 		double thr = getThreshold();
 		
-		float example = traces.get(tr).getNormValues()[smp];
+		List<Trace> traces = sgyFile.getTraces();
+				
+		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1);		
 		
-		HalfHyperDst left = HalfHyperDst.getHalfHyper(traces, tr, smp, -1);		
-		
-		HalfHyperDst right = HalfHyperDst.getHalfHyper(traces, tr, smp, +1);
+		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1);
 		
 		good[tr][smp] = 
 			(left.isGood(traces, thr) ? 1 : 0) | 
@@ -438,12 +436,15 @@ public class HyperFinder {
 		int tr = ts.getTrace();
 		int smp = ts.getSample();
 		
+		SgyFile sgyFile = AppContext.model.getSgyFileByTrace(tr);
+		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
+		
 		List<Trace> traces = AppContext.model.getFileManager().getTraces();
 		
-		HalfHyperDst lft = HalfHyperDst.getHalfHyper(traces, tr, smp, -1);
+		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1);
 		double lftRate = lft.analize(traces);
 		
-		HalfHyperDst rht = HalfHyperDst.getHalfHyper(traces, tr, smp, +1);
+		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1);
 		double rhtRate = rht.analize(traces);
 		
 		g2.setColor(lftRate > thr ? Color.RED : Color.CYAN);

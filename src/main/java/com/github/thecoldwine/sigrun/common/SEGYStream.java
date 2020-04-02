@@ -41,7 +41,7 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
             readTextHeader(chan, textHeaderReader);
             readBinaryHeader(chan, binaryHeaderReader);
         } catch (IOException e) {
-            log.error(e.getMessage());
+            e.printStackTrace();// log.error(e.getMessage());
             throw new IllegalArgumentException("Looks like file is not a SEGY, aborting");
         }
 
@@ -105,7 +105,9 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
 
             return true;
         } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
+        	
+        	e.printStackTrace();
+            //log.error(e.getLocalizedMessage());
 
             return false;
         }

@@ -32,14 +32,9 @@ public class TraceStacking {
 	}
 
 	
-	private static double SPEED_SM_NS_VACUUM = 30.0;
-	private static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
-	
 	private void process(SgyFile sgyFile) {
 		
-		// dist between 2 samples
-		double sampleIntervalNS = sgyFile.getBinaryHeader().getSampleInterval() / 1000.0;
-		double sampleDist = SPEED_SM_NS_SOIL * sampleIntervalNS / 2;
+		double sampleDist = sgyFile.getSamplesToCmGrn();
 		
 		// to meters
 		double STACK_DIST = sampleDist/100.0;		

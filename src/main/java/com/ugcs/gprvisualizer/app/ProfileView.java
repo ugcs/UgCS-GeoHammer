@@ -147,11 +147,11 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		
 		zoomInBtn.setOnAction(e -> {
-			zoom(1, width/2, height/2);
+			zoom(1, width/2, height/2, false);
 
 		});
 		zoomOutBtn.setOnAction(e -> {
-			zoom(-1, width/2, height/2);
+			zoom(-1, width/2, height/2, false);
 		});
 		
 		
@@ -396,7 +396,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			double ex = event.getSceneX();
 			double ey = event.getSceneY();
 			
-			zoom(ch, ex, ey);
+			
+			
+			zoom(ch, ex, ey, event.isControlDown());
 	    } );
 		
 		imageView.setOnMousePressed(mousePressHandler);
@@ -408,14 +410,28 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
 	}
 
-	private void zoom(int ch, double ex, double ey) {
+	private void zoom(int ch, double ex, double ey, boolean justHorizont) {
 		Point t = getLocalCoords(ex, ey);
 		
 		TraceSample ts = getField().screenToTraceSample(t);
 		
 		z = z + ch;
 		
-		getField().setZoom(getField().getZoom()+ch);
+		/////
+		
+		if(justHorizont) {
+			
+			double realAspect = getField().getAspectReal() * (ch > 0 ? ProfileField.ASPECT_A : 1/ProfileField.ASPECT_A);
+					//h / model.getVField().getVScale();
+
+			getField().setAspectReal(realAspect);
+
+		}else{
+			getField().setZoom(getField().getZoom()+ch);
+		}		
+		
+		
+		////
 		
 		Point t2 = getLocalCoords(ex, ey);
 		TraceSample ts2 = getField().screenToTraceSample(t2);

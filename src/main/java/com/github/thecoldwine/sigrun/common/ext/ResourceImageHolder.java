@@ -57,9 +57,7 @@ public class ResourceImageHolder {
 			
 			IMG_GPS = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("gps32.png"));
 			
-			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

@@ -48,7 +48,7 @@ public class Trace {
         this.latLon = latLon;
         this.latLonOrigin = latLon;
     }
-
+    
     public TraceHeader getHeader() {
         return header;
     }

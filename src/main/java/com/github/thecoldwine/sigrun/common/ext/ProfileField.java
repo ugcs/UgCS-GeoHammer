@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class ProfileField {
@@ -60,7 +61,9 @@ public class ProfileField {
 		aspect = -15;		
 		startSample = 0;
 		if(model.isActive()) {
-			selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
+			//selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
+			
+			AppContext.navigator.fitFull();
 		}
 
 	}

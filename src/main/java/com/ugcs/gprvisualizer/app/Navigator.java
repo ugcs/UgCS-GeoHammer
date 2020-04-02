@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
@@ -68,27 +69,38 @@ public class Navigator implements ToolProducer {
 		
 		model.getVField().setSelectedTrace((sgyFile.getOffset().getStartTrace()+sgyFile.getOffset().getFinishTrace())/2);
 		
-		//int sizeTrace = sgyFile.getOffset().getFinishTrace() - sgyFile.getOffset().getStartTrace();
-		
 		int maxSamples = sgyFile.getOffset().getMaxSamples();
+		int tracesCount = sgyFile.getTraces().size(); 
 		
-		//screen =  (int)(model.getMaxHeightInSamples() * getVScale()
+		fit(maxSamples, tracesCount);
 		
+		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+	}
+
+	public void fit(int maxSamples, int tracesCount) {
 		double vScale = (double)model.getVField().getViewDimension().height / (double)maxSamples;
-		
 		double z = Math.log(vScale) / Math.log(ProfileField.ZOOM_A);
 		
 		model.getVField().setZoom((int)z);
 		model.getVField().setStartSample(0);
 		
-		double h = (double)(model.getVField().getViewDimension().width - 20) / ((double)sgyFile.getTraces().size());
+		double h = (double)(model.getVField().getViewDimension().width - model.getVField().getLeftRuleRect().width - 20) / ((double)tracesCount);
 		
 		double realAspect = h / model.getVField().getVScale();
-		
-		//model.getVField().setAspect(Math.log(realAspect) / Math.log(ProfileField.ASPECT_A));
+
 		model.getVField().setAspectReal(realAspect);
 		
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		
+	}
+
+	public void fitFull() {
+		
+		
+		model.getVField().setSelectedTrace(model.getTracesCount()/2);
+		
+		int maxSamples = model.getMaxHeightInSamples();
+
+		fit(maxSamples*2, model.getTracesCount());
 	}
 	
 	@Override

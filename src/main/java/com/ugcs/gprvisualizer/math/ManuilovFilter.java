@@ -8,7 +8,7 @@ import com.ugcs.gprvisualizer.gpr.Scan;
 
 public class ManuilovFilter {
 
-	static final int RANGE = 2;
+	static final int RANGE = 3;
 	
 	
 	public void filter(List<Trace> list) {

@@ -61,7 +61,8 @@ public class Work {
 			try {
 				l.draw(g2);
 			}catch(Exception e) {
-				System.err.println(e.getMessage());
+				//System.err.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		

@@ -68,20 +68,20 @@ public class SgyFile {
 		
 		binaryHeader = binaryHeaderReader.read(binFile.getBinHdr());
 		
-		System.out.println("dataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());		
+		//System.out.println("dataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());		
 		
 		System.out.println("binaryHeader.getSampleInterval() " + binaryHeader.getSampleInterval());
-		System.out.println("binaryHeader.getSampleIntervalOfOFR() " + binaryHeader.getSampleIntervalOfOFR());
+		//System.out.println("binaryHeader.getSampleIntervalOfOFR() " + binaryHeader.getSampleIntervalOfOFR());
 		
-		System.out.println("ReelNumber            " + binaryHeader.getReelNumber());
-		System.out.println("DataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());
-		System.out.println("AuxiliaryTracesPerEnsemble " + binaryHeader.getAuxiliaryTracesPerEnsemble());
+		//System.out.println("ReelNumber            " + binaryHeader.getReelNumber());
+		//System.out.println("DataTracesPerEnsemble " + binaryHeader.getDataTracesPerEnsemble());
+		//System.out.println("AuxiliaryTracesPerEnsemble " + binaryHeader.getAuxiliaryTracesPerEnsemble());
 		
 		
 		System.out.println("SamplesPerDataTrace " + binaryHeader.getSamplesPerDataTrace());
-		System.out.println("SamplesPerDataTraceOfOFR " + binaryHeader.getSamplesPerDataTraceOfOFR());
+		//System.out.println("SamplesPerDataTraceOfOFR " + binaryHeader.getSamplesPerDataTraceOfOFR());
 		
-		System.out.println("SweepLength " + binaryHeader.getSweepLength());
+		//System.out.println("SweepLength " + binaryHeader.getSweepLength());
 		
 		setTraces(loadTraces(binFile));
 		
@@ -90,6 +90,9 @@ public class SgyFile {
 		//sampleIntervalInMcs
 		Trace t = getTraces().get(getTraces().size()/2);
 		System.out.println("SampleIntervalInMcs: " + t.getHeader().getSampleIntervalInMcs());
+		
+		System.out.println( " sgyFile.SamplesToCmAir: " + getSamplesToCmAir());
+		System.out.println( " sgyFile.SamplesToCmGrn: " + getSamplesToCmGrn());
 //		System.out.println("SampleIntervalInMcs: " + t.getHeader().getReeDelayRecordingTime());
 //		System.out.println("SampleIntervalInMcs: " + t.getHeader().getDelayRecordingTime());
 //		System.out.println("SampleIntervalInMcs: " + t.getHeader().getGapSize());
@@ -102,7 +105,7 @@ public class SgyFile {
 		
 		markToAux();		
 		
-		//new ManuilovFilter().filter(getTraces());
+		new ManuilovFilter().filter(getTraces());
 		
 		updateInternalDist();
 		
@@ -110,6 +113,27 @@ public class SgyFile {
 		
 	}
 
+	
+	private static double SPEED_SM_NS_VACUUM = 30.0;
+	private static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
+
+	public double getSamplesToCmGrn() {
+		// dist between 2 samples
+		double sampleIntervalNS = getBinaryHeader().getSampleInterval() / 1000.0;
+		double sampleDist = SPEED_SM_NS_SOIL * sampleIntervalNS / 2;
+		return sampleDist;
+	}
+
+	public double getSamplesToCmAir() {
+		// dist between 2 samples
+		double sampleIntervalNS = getBinaryHeader().getSampleInterval() / 1000.0;
+		double sampleDist = SPEED_SM_NS_VACUUM * sampleIntervalNS / 2;
+		return sampleDist;
+	}
+
+
+	
+	
 	public void markToAux() {
 		
 		for(int i=0; i<traces.size(); i++) {

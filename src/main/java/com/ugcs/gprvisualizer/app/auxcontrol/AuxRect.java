@@ -18,6 +18,8 @@ import org.json.simple.JSONObject;
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
@@ -106,6 +108,29 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	public void setTraceFinish(int traceStart) {
 		right.setTrace(traceStart);
 	}
+	
+	
+	public void checkdst() {
+		
+		int s = left.getTrace();
+		int f = right.getTrace();
+		
+		SgyFile file = AppContext.model.getFileManager().getFiles().get(0);
+		List<Trace> traces = file.getTraces();
+		
+		double dst = 0;
+		for(int i=s+1; i<=f; i++) {
+			dst += traces.get(i).getPrevDist();
+		}
+		
+		double h_dst_cm = dst*100;
+		double v_dst_cm = file.getSamplesToCmGrn() * (double)(bottom.getSample() - top.getSample());
+		
+		double diag = Math.sqrt(h_dst_cm*h_dst_cm + v_dst_cm*v_dst_cm);
+		
+		System.out.println("auxrect hor dst : " + h_dst_cm + "   ver dst: " + v_dst_cm + "  diagonal: " + diag);
+	}
+	
 
 	public int getTraceFinishLocal() {
 		return right.getTrace();
@@ -259,6 +284,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 				
 				clearCut();
 				updateMaskImg();
+				checkdst();
 			}
 			public int getTrace() {
 				return (left.getTrace() + right.getTrace()) / 2;
@@ -287,6 +313,8 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 				
 				clearCut();
 				updateMaskImg();
+				
+				checkdst();
 			}
 			public int getSample() {
 				return (top.getSample() + bottom.getSample()) / 2;

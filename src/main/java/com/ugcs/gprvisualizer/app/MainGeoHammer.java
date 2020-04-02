@@ -100,6 +100,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
 		stage.setTitle(TITLE_VERSION);
 		stage.setScene(scene);
+		stage.setMaximized(true);
 		stage.show();
 
 		model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
@@ -155,7 +156,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		bPane.heightProperty().addListener(stageSizeListener);
 
 		sp = new SplitPane();
-		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
+		sp.setDividerPositions(0.15f, 0.65f, 0.2f);
 		
 		
 		sp.getItems().add(layersWindowBuilder.getCenter());

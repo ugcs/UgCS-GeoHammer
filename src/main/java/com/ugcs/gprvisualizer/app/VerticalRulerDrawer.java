@@ -13,8 +13,6 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class VerticalRulerDrawer {
 	
-	private static Color txtColor = new Color(230, 221, 150);
-	
 	Model model;
 	VerticalRulerDrawer(Model model){
 		this.model = model;
