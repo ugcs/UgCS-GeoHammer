@@ -32,6 +32,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
+import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
 import com.ugcs.gprvisualizer.app.auxcontrol.ToggleButton;
 import com.ugcs.gprvisualizer.draw.LocalScan;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
@@ -125,6 +126,14 @@ public class Model {
 		auxElements.clear();
 		for(SgyFile sf : getFileManager().getFiles()) {
 			auxElements.addAll(sf.getAuxElements());
+			
+			Trace lastTrace = sf.getTraces().get(sf.getTraces().size()-1);
+			
+			// add remove button
+			RemoveFileButton rfb = new RemoveFileButton(lastTrace.indexInFile, sf.getOffset(), sf); 			
+			
+			auxElements.add(rfb);
+			
 		}
 		
 		auxElements.add(new DepthStart(ShapeHolder.topSelection));
@@ -227,15 +236,11 @@ public class Model {
 
 	public void init() {
 		
-		
 		this.updateMaxHeightInSamples();
 		
 		this.updateSgyFileOffsets();
 		
 		this.updateAuxElements();
-		
-		//this.initField();
-		//this.getVField().clear();
 	}
 
 	public List<SgyFile> getUndoFiles() {

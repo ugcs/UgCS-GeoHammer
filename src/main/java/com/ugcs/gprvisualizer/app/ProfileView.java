@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -94,6 +95,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	
 	private HyperFinder hyperFinder; 
 	public ProfileScroll profileScroll = new ProfileScroll();
+	
+	static Font fontB = new Font("Verdana", Font.BOLD, 8);
+	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -216,9 +220,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 
 		
-		double contr = Math.pow(1.08, 140-contrast);
-
-		prismDrawer.draw(width, field, g2, buffer, contr);
+		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
 		
 		int startTrace = field.getFirstVisibleTrace();
 		int finishTrace = field.getLastVisibleTrace();		
@@ -249,6 +251,11 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		///
 		return bi;
+	}
+
+	public double getRealContrast() {
+		double contr = Math.pow(1.08, 140-contrast);
+		return contr;
 	}
 
 	final static float dash1[] = {5.0f};
@@ -335,12 +342,45 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
-		g2.setColor(Color.WHITE);
+		
+		SgyFile currentFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
+		
+		int selected_x1 = 0;
+		int selected_x2 = 0;
+		Point p = null;
+		Point p2 = null;
 		for(SgyFile fl : model.getFileManager().getFiles()) {
-			Point p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
-			
+
+			p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
+			p2 = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(fl.getTraces().size()-1).indexInSet, 0));
+
+			if(currentFile == fl) {
+				g2.setColor(Color.YELLOW);
+				g2.setFont(fontB);
+				
+				selected_x1 = p.x;
+				selected_x2 = p2.x;
+			}else {
+				g2.setColor(Color.WHITE);
+				g2.setFont(fontP);
+			}
+			///separator
 			g2.drawLine(p.x, 0, p.x, height);
+			
+			g2.setClip(p.x, 0, p2.x-p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
 			g2.drawString(fl.getFile().getName(), p.x + 7, 11);
+			g2.setClip(null);
+		}
+		
+		if(p2 != null) {
+			g2.drawLine(p2.x, 0, p2.x, height);
+		}
+		
+		if(currentFile != null) {
+			g2.setColor(Color.YELLOW);
+			g2.setStroke(AMP_STROKE);
+			g2.drawLine(selected_x1, 0, selected_x1, height);
+			g2.drawLine(selected_x2, 0, selected_x2, height);
 		}
 	}
 

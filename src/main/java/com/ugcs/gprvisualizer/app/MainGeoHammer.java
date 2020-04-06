@@ -122,7 +122,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 			
 			List<File> f = new ArrayList<>();
 			f.add(new File(name));
-			AppContext.loader.load(f, new ProgressListener() {
+			AppContext.loader.loadWithNotify(f, new ProgressListener() {
 				
 				@Override
 				public void progressPercent(int percent) {

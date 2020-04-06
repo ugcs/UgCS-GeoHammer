@@ -36,10 +36,12 @@ public class Saver implements ToolProducer {
 		@Override
 		public void run(ProgressListener listener) {
 			listener.progressMsg("save now");
+			
+			
 			List<File> newfiles = saveTheSame();		
 			
-			listener.progressMsg("load now");
 			
+			listener.progressMsg("load now");			
 			try {
 				AppContext.loader.load(newfiles, listener);
 				

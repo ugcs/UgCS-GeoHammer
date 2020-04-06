@@ -282,7 +282,11 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		List<BaseObject> auxObjects = new ArrayList<>();				
 		for(BaseObject au : file.getAuxElements()) {
 			if(au.isFit(begin, end)) {
-				auxObjects.add(au.copy(begin, sgyFile.getOffset()));
+				
+				BaseObject copy = au.copy(begin, sgyFile.getOffset());
+				if(copy != null) {
+					auxObjects.add(copy);
+				}
 			}
 		}
 		return auxObjects;

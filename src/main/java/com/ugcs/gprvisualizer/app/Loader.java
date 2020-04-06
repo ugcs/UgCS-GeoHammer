@@ -79,7 +79,9 @@ public class Loader {
 							model.updateAuxElements();
 							
 						}else {
-							load(files, listener);
+							
+							loadWithNotify(files, listener);
+							
 						}
 					}catch(Exception e) {
 						System.out.println("------------------------------");
@@ -109,6 +111,15 @@ public class Loader {
 
     };
 
+	public void loadWithNotify(final List<File> files, ProgressListener listener) throws Exception {
+		load(files, listener);
+		
+		model.getVField().clear();
+		
+		AppContext.notifyAll(new WhatChanged(Change.fileopened));
+	}
+
+    
 	public void load(final List<File> files, ProgressListener listener) throws Exception {
 		try {
 			model.setLoading(true);
@@ -120,7 +131,7 @@ public class Loader {
 			model.setLoading(false);
 		}
 		
-		AppContext.notifyAll(new WhatChanged(Change.fileopened));
+		
 		AppContext.statusBar.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
 	}        		
     
@@ -130,22 +141,13 @@ public class Loader {
 		model.getChanges().clear();
 		
 		listener.progressMsg("load");
-		//try {
-			model.getFileManager().processList(files, listener);
-		
-			model.init();			
-			
-			for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-				//new ManuilovFilter().filter(sgyFile.getTraces());
-			}
-			
-		//}catch(Exception e) {
-			//e.printStackTrace();			
-		//}
+
+		model.getFileManager().processList(files, listener);
+	
+		model.init();			
 		
 		//when open file by dnd (not after save)
-		model.initField();
-		model.getVField().clear();
+		model.initField();		
 		
 		
 		
