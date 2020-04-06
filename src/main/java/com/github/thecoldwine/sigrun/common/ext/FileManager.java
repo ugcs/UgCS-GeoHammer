@@ -115,10 +115,11 @@ public class FileManager {
 	}
 
 	public boolean isUnsavedExists() {
-		
-		for(SgyFile sgyFile : getFiles()) {
-			if(sgyFile.isUnsaved()) {
-				return true;
+		if(isActive()) {
+			for(SgyFile sgyFile : getFiles()) {
+				if(sgyFile.isUnsaved()) {
+					return true;
+				}
 			}
 		}
 		
