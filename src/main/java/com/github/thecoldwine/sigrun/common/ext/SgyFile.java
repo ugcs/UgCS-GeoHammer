@@ -56,6 +56,10 @@ public class SgyFile {
 	private File file;
 	private int currentTraceIndex = 0;
 	
+	private boolean unsaved = true;
+	
+	
+	
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
 	public void open(File file) throws Exception {
@@ -108,6 +112,8 @@ public class SgyFile {
 		new ManuilovFilter().filter(getTraces());
 		
 		updateInternalDist();
+		
+		setUnsaved(false);
 		
 		System.out.println("opened  '"+file.getName() + "'   load size: " + getTraces().size() + "  actual size: " + binFile.getTraces().size());
 		
@@ -374,5 +380,13 @@ public class SgyFile {
 
 	public void setBinaryHeader(BinaryHeader bh) {
 		binaryHeader = bh;
+	}
+
+	public boolean isUnsaved() {
+		return unsaved;
+	}
+
+	public void setUnsaved(boolean unsaved) {
+		this.unsaved = unsaved;
 	}
 }

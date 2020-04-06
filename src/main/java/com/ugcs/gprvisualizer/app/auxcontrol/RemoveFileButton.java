@@ -80,6 +80,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 				AppContext.model.getFileManager().clearTraces();
 				AppContext.model.init();
 				AppContext.model.getVField().clear();
+				
+				
+				AppContext.notifyAll(new WhatChanged(Change.fileopened));
 			}
 			
 			//AppContext.model.getField().setSceneCenter(getTrace().getLatLon());			

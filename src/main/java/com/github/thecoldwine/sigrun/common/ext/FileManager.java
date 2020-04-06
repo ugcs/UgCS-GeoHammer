@@ -114,4 +114,15 @@ public class FileManager {
 		traces = null;		
 	}
 
+	public boolean isUnsavedExists() {
+		
+		for(SgyFile sgyFile : getFiles()) {
+			if(sgyFile.isUnsaved()) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 }

@@ -134,7 +134,10 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			
 			if(getSelected() != null) {
 				for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-					sgyFile.getAuxElements().remove(getSelected());
+					if(sgyFile.getAuxElements().contains(getSelected())){
+						sgyFile.getAuxElements().remove(getSelected());
+						sgyFile.setUnsaved(true);
+					}					
 				}				
 				
 				mouseInput = null;
@@ -161,6 +164,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 				AuxRect rect = new AuxRect(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
 				
 				sf.getAuxElements().add(rect);
+				sf.setUnsaved(true);
 				model.updateAuxElements();
 				
 				selectControl(rect);
@@ -179,6 +183,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
 				
 			sf.getAuxElements().add(rect);
+			sf.setUnsaved(true);
+			
 			model.updateAuxElements();			
 			
 			selectControl(rect);
@@ -198,6 +204,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 				
 			
 			sf.getAuxElements().add(rect);
+			sf.setUnsaved(true);
+			
 			model.updateAuxElements();
 			
 			profileView.repaintEvent();
@@ -220,6 +228,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(trace), sf.getOffset());
 			
 			sf.getAuxElements().add(rect);
+			sf.setUnsaved(true);
+			
 			model.updateAuxElements();
 
 			selectControl(rect);
@@ -238,6 +248,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	private void clearAuxElements() {
 		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
 			sgyFile.getAuxElements().clear();
+			
+			sgyFile.setUnsaved(true);
 		}				
 			
 		mouseInput = null;

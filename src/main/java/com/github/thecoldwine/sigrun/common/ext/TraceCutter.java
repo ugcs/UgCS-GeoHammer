@@ -212,6 +212,8 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		
 		SgyFile sgyFile = new SgyFile();
 		
+		sgyFile.setUnsaved(true);
+		
 		sgyFile.setTraces(traces);
 		sgyFile.setFile(getPartFile(file, part, file.getFile().getParentFile()));
 		

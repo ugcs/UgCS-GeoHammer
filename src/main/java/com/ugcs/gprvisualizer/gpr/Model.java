@@ -38,7 +38,10 @@ import com.ugcs.gprvisualizer.draw.LocalScan;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Alert.AlertType;
 
 public class Model {
 
@@ -257,6 +260,22 @@ public class Model {
 
 	public LeftRulerController getLeftRulerController() {
 		return leftRulerController;
+	}
+
+	public boolean stopUnsaved() {
+    	if(getFileManager().isUnsavedExists()) {
+    		
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("warning");
+			alert.setContentText("Current files are not saved. Continue?");
+			 
+			Optional<ButtonType> result = alert.showAndWait();
+			 
+			if (!result.isPresent() || result.get() != ButtonType.OK) {
+				return true;    			
+			}
+    	}
+		return false;
 	}
 	
 }

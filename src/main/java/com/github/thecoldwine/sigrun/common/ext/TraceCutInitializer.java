@@ -51,8 +51,7 @@ public class TraceCutInitializer {
 			maxrad = Math.max(maxrad, center.distance(p1));
 		}
 		int maxindex=0;
-		for(int i=0; i<180;i++) {
-			System.out.println(i + " -> " +angcount[i]);
+		for(int i=0; i<180;i++) {			
 			if(angcount[maxindex] < angcount[i]) {
 				maxindex = i;
 			}

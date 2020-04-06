@@ -10,3 +10,4 @@
 /bin/
 src/main/resources/googleapikey
 gpr-viewer-tasklist.txt
+*.log

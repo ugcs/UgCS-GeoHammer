@@ -46,6 +46,8 @@ public class LevelFilter implements ToolProducer {
 			if(lst.size() > 1) {
 				brf.removeConstantNoise(lst);
 			}
+			
+			sf.setUnsaved(true);
 		}
 		model.getChanges().add(FileChangeType.BACKGROUND_NOISE_REMOVED);
 		
@@ -226,7 +228,7 @@ public class LevelFilter implements ToolProducer {
 		continGrps.remove(j);
 	}
 
-	protected void leveling(List<Trace> lst) {
+	protected void leveling() {
 		int minlev = model.getFileManager().getTraces().get(0).maxindex;
 		int maxlev = model.getFileManager().getTraces().get(0).maxindex;
 		for(Trace trace : model.getFileManager().getTraces()) {
@@ -236,24 +238,27 @@ public class LevelFilter implements ToolProducer {
 		
 		int level = (minlev+maxlev)/2;
 		
-		for (int index = 0; index < lst.size(); index++) {
-			Trace trace = lst.get(index);
-
-			float values[] = trace.getNormValues();
-			float n_values[] = new float[values.length];
-			int src_start = Math.max(0, trace.maxindex-level);
-			int dst_start = Math.max(0, level-trace.maxindex);
+		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+			for (Trace trace : sgyFile.getTraces()) {
+	
+				float values[] = trace.getNormValues();
+				float n_values[] = new float[values.length];
+				int src_start = Math.max(0, trace.maxindex-level);
+				int dst_start = Math.max(0, level-trace.maxindex);
+				
+				System.arraycopy(
+					values, src_start, 
+					n_values, dst_start, 
+					values.length - Math.abs(trace.maxindex-level));
+				
+				
+				trace.setNormValues(n_values);
+				trace.verticalOffset = level-trace.maxindex;
+				trace.maxindex = 0;
+				
+			}
 			
-			System.arraycopy(
-				values, src_start, 
-				n_values, dst_start, 
-				values.length - Math.abs(trace.maxindex-level));
-			
-			
-			trace.setNormValues(n_values);
-			trace.verticalOffset = level-trace.maxindex;
-			trace.maxindex = 0;
-			
+			sgyFile.setUnsaved(true);
 		}
 		
 		model.getChanges().add(FileChangeType.LEVEL_TO_GROUND);
@@ -379,7 +384,7 @@ public class LevelFilter implements ToolProducer {
 
 		buttonLevelGround.setOnAction(e -> {
 
-			leveling(model.getFileManager().getTraces());
+			leveling();
 			
 			model.getFileManager().levelCalculated = false;
 			

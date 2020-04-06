@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -19,6 +20,9 @@ import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -59,6 +63,11 @@ public class Loader {
         	if (!db.hasFiles()) {
         		return;
         	}
+        	
+        	if(model.stopUnsaved()) {
+        		return;
+        	}        	
+        	
         	
         	final List<File> files = db.getFiles();
         	

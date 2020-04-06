@@ -110,6 +110,12 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 		    @Override
 		    public void handle(WindowEvent t) {
+		    	
+	        	if(model.stopUnsaved()) {
+	        		t.consume();
+	        		return;
+	        	}        	
+		    	
 		        Platform.exit();
 		        System.exit(0);
 		    }

@@ -368,7 +368,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			g2.drawLine(p.x, 0, p.x, height);
 			
 			g2.setClip(p.x, 0, p2.x-p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
-			g2.drawString(fl.getFile().getName(), p.x + 7, 11);
+			g2.drawString((fl.isUnsaved() ? "*" : "") + fl.getFile().getName(), p.x + 7, 11);
 			g2.setClip(null);
 		}
 		
@@ -378,7 +378,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		if(currentFile != null) {
 			g2.setColor(Color.YELLOW);
-			g2.setStroke(AMP_STROKE);
+			g2.setStroke(LEVEL_STROKE);
 			g2.drawLine(selected_x1, 0, selected_x1, height);
 			g2.drawLine(selected_x2, 0, selected_x2, height);
 		}
