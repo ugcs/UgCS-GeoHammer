@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -361,32 +362,6 @@ public class HyperFinder {
 				lt.x-100, lt.y - 30);
 
 		
-//		int goodsidet = HalfHyper.getGoodSideSize(ts.getSample()-traces.get(tr).verticalOffset);
-//		g2.setColor(Color.ORANGE);
-//		g2.setStroke(line2);
-//		drawHyperbolaLine(g2, vField, ts.getSample(), ts.getTrace()-goodsidet, ts.getTrace()+goodsidet, -2);
-		
-		
-		
-		
-//		for(int smp = ts.getSample(); smp < Math.min(ts.getSample() + 30, values.length); smp++) {
-//			float example = values[smp];
-//			
-//			
-//			
-//			//double y = smp;
-//			double result = 0;
-//			
-//			HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
-//			
-//			drawHalfHyperLine(g2, vField, left, 0);
-//			
-//			HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);		
-//			
-//			drawHalfHyperLine(g2, vField, right, 0);
-//		}
-		
-		
 		g2.setColor(Color.CYAN);
 		g2.setStroke(line2);
 		drawHyperbolaLine2(g2, vField);		
@@ -448,10 +423,10 @@ public class HyperFinder {
 		double rhtRate = rht.analize(traces);
 		
 		g2.setColor(lftRate > thr ? Color.RED : Color.CYAN);
-		drawHHDst(g2, vField, lft);
+		drawHHDst(g2, vField, sgyFile.getOffset(), lft);
 		
 		g2.setColor(rhtRate > thr ? Color.RED : Color.CYAN);
-		drawHHDst(g2, vField, rht);
+		drawHHDst(g2, vField, sgyFile.getOffset(), rht);
 		
 	}
 
@@ -460,10 +435,13 @@ public class HyperFinder {
 		return thr;
 	}
 
-	public void drawHHDst(Graphics2D g2, ProfileField vField, HalfHyperDst lft) {
+	public void drawHHDst(Graphics2D g2, ProfileField vField, VerticalCutPart  offset, HalfHyperDst lft) {
 		Point prev = null;
 		for(int i=0; i<lft.length; i++) {
-			Point lt = vField.traceSampleToScreenCenter(new TraceSample(lft.pinnacle_tr + i * lft.side, lft.smp[i]));
+			
+			int traceIndex = offset.localToGlobal(lft.pinnacle_tr + i * lft.side);
+			
+			Point lt = vField.traceSampleToScreenCenter(new TraceSample(traceIndex, lft.smp[i]));
 			if(prev != null) {
 				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
 			}

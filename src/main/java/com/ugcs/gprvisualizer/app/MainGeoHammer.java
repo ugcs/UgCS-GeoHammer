@@ -32,6 +32,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TabPane.TabClosingPolicy;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
@@ -45,7 +46,7 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application implements SmthChangeListener {
 
-	private static final String TITLE_VERSION = "UgCS GeoHammer v.0.9.9";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.0.0";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
 	private Stage stage;
@@ -176,7 +177,8 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		rightBox.getChildren().clear();
 		
         TabPane tabPane = new TabPane();
-
+        tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
+        
         Tab tab1 = new Tab("Gain", new Label("Show all planes available"));
         Tab tab2 = new Tab("Search"  , new Label("Show all cars available"));
         tabPane.getTabs().add(tab1);

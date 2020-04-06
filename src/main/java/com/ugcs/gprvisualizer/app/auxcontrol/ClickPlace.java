@@ -74,20 +74,11 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField hField) {
 		
-		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
-		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());
-		//g2.setColor(Color.CYAN);
-		//g2.drawLine((int)p1.getX(), (int)p1.getY(), (int)p2.getX(), (int)p2.getY());
-		
 		Rectangle rect = getRect(hField);
-		
-		//g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
-		
 		
 		g2.setColor(flagColor);
 		
 		g2.translate(rect.x , rect.y);
-		//g2.fill(ShapeHolder.flag);
 		
 		g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
 		g2.translate(-rect.x , -(rect.y));
@@ -95,6 +86,8 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		setClip(g2, vField.getClipTopMainRect());
+		
 		
 		Rectangle rect = getRect(vField);
 		

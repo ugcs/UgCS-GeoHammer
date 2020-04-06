@@ -76,6 +76,8 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 		if(!isVisible()) {
 			return;
 		}
+
+		g2.setClip(vField.getClipMainRect().x, vField.getClipMainRect().y, vField.getClipMainRect().width, vField.getClipMainRect().height);
 		
 		Rectangle rect = getRect(vField);
 		if(getImg() == null) {

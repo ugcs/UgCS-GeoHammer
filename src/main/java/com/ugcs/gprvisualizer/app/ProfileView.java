@@ -215,22 +215,44 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	    
 		clearBitmap(bi, g2, field);
 		
-		new VerticalRulerDrawer(model).draw(g2, field);
 		
-		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
+		new VerticalRulerDrawer(model).draw(g2, field);
 
 		
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
+
+		
+		
+		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
+		
 		
 		int startTrace = field.getFirstVisibleTrace();
 		int finishTrace = field.getLastVisibleTrace();		
 		
-		if(model.getFileManager().levelCalculated) {
-			g2.setColor(new Color(210,105,30));
-			g2.setStroke(LEVEL_STROKE);
-			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
-			
-		}
+		Rectangle r = field.getClipMainRect();
+		g2.setClip(r.x, r.y, r.width, r.height);
+		
+		drawGroundLevel(traces, field, g2, startTrace, finishTrace);
+		drawGreenLevel(traces, field, g2, startTrace, finishTrace);
+		drawAmplitudeMapLevels(field, g2);
+		
+		drawAuxElements(field, g2);
+		
+		
+		g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
+		
+		if(model.getSettings().hyperliveview) {
+			hyperFinder.drawHyperbolaLine(g2, field);
+		}		
+		
+		drawFileNames(height, field, g2);
+		
+		g2.dispose();
+		///
+		return bi;
+	}
+
+	public void drawGreenLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
 		if(model.getSettings().showGreenLine) {
 			
 			g2.setColor(Color.GREEN);
@@ -238,19 +260,16 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, true);
 			
 		}
-		
-		drawFileNames(height, field, g2);
+	}
 
-		drawAmplitudeMapLevels(field, g2);
-		
-		drawAuxElements(field, g2);
-		
-		if(model.getSettings().hyperliveview) {
-			hyperFinder.drawHyperbolaLine(g2, field);
+	public void drawGroundLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace,
+			int finishTrace) {
+		if(model.getFileManager().levelCalculated) {
+			g2.setColor(new Color(210,105,30));
+			g2.setStroke(LEVEL_STROKE);
+			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
+			
 		}
-		
-		///
-		return bi;
 	}
 
 	public double getRealContrast() {
@@ -349,6 +368,10 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		int selected_x2 = 0;
 		Point p = null;
 		Point p2 = null;
+		
+		int leftMargin = -getField().getMainRect().width/2;
+		
+		g2.setStroke(AMP_STROKE);
 		for(SgyFile fl : model.getFileManager().getFiles()) {
 
 			p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
@@ -365,7 +388,11 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				g2.setFont(fontP);
 			}
 			///separator
-			g2.drawLine(p.x, 0, p.x, height);
+			if(p.x > -getField().getMainRect().width/2) {
+				g2.drawLine(p.x, 0, p.x, height);
+			}
+			
+			p.x = Math.max(p.x, leftMargin);
 			
 			g2.setClip(p.x, 0, p2.x-p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
 			g2.drawString((fl.isUnsaved() ? "*" : "") + fl.getFile().getName(), p.x + 7, 11);
@@ -379,7 +406,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		if(currentFile != null) {
 			g2.setColor(Color.YELLOW);
 			g2.setStroke(LEVEL_STROKE);
-			g2.drawLine(selected_x1, 0, selected_x1, height);
+			if(selected_x1 >= leftMargin) {
+				g2.drawLine(selected_x1, 0, selected_x1, height);
+			}
 			g2.drawLine(selected_x2, 0, selected_x2, height);
 		}
 	}

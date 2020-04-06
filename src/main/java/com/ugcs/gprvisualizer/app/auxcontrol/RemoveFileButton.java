@@ -63,9 +63,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		
 		if(isPointInside(localPoint, vField)) {
 			
-			
-			Alert alert = new Alert(AlertType.WARNING);
-			alert.setTitle("warning");
+			 
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("Close file");
 			alert.setContentText(
 					(sgyFile.isUnsaved() ? "File is not saved!\n" : "") +
 					"Confirm to close file");
@@ -119,6 +119,7 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		setClip(g2, vField.getClipTopMainRect());
 		
 		Rectangle rect = getRect(vField);
 		

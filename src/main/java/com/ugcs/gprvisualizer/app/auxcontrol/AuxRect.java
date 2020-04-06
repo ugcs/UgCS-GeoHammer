@@ -284,7 +284,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 				
 				clearCut();
 				updateMaskImg();
-				checkdst();
+				//checkdst();
 			}
 			public int getTrace() {
 				return (left.getTrace() + right.getTrace()) / 2;
@@ -314,7 +314,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 				clearCut();
 				updateMaskImg();
 				
-				checkdst();
+				//checkdst();
 			}
 			public int getSample() {
 				return (top.getSample() + bottom.getSample()) / 2;
@@ -487,6 +487,9 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		
+		setClip(g2, vField.getClipMainRect());
+		
 		Rectangle rect = getRect(vField); 
 	
 		if(img != null) {

@@ -78,6 +78,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField hField) {
 		
+		
 		Rectangle rect = getRect(hField);
 
 		g2.setColor(Color.BLACK);
@@ -89,6 +90,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		setClip(g2, vField.getClipTopMainRect());
 		
 		Rectangle rect = getRect(vField);
 		

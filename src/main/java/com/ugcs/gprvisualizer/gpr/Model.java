@@ -278,8 +278,8 @@ public class Model {
 	public boolean stopUnsaved() {
     	if(getFileManager().isUnsavedExists()) {
     		
-			Alert alert = new Alert(AlertType.WARNING);
-			alert.setTitle("warning");
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setTitle("Warning");
 			alert.setContentText("Current files are not saved. Continue?");
 			 
 			Optional<ButtonType> result = alert.showAndWait();

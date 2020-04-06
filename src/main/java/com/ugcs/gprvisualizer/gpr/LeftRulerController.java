@@ -95,6 +95,9 @@ public class LeftRulerController {
 
 		@Override
 		public void drawOnCut(Graphics2D g2, ProfileField vField) {
+			
+			setClip(g2, vField.getClipInfoRect());
+			
 			Rectangle  r = getRect(vField);
 			
 			//g2.fillRect(r.x, r.y, r.width, r.height);

@@ -21,12 +21,18 @@ public class ProfileField {
 	
 	private double aspect = -15;
 	
+	// screen coordinates
 	private Dimension viewDimension = new Dimension();
 	private Rectangle topRuleRect = new Rectangle();
 	private Rectangle leftRuleRect = new Rectangle();
 	private Rectangle mainRectRect = new Rectangle();
 	private Rectangle infoRect = new Rectangle();
-	
+
+	//draw coordinates
+	private Rectangle clipMainRect = new Rectangle();
+	private Rectangle clipLeftMainRect = new Rectangle();
+	private Rectangle clipTopMainRect = new Rectangle();
+	private Rectangle clipInfoRect = new Rectangle();
 	
 	//
 	public int visibleStart;
@@ -54,6 +60,12 @@ public class ProfileField {
 		this.leftRuleRect = copy.leftRuleRect;
 		this.mainRectRect = copy.mainRectRect;
 		this.infoRect = copy.infoRect;
+		
+		this.clipMainRect = copy.clipMainRect ;
+		this.clipLeftMainRect = copy.clipLeftMainRect; 
+		this.clipTopMainRect = copy.clipTopMainRect; 
+		this.clipInfoRect = copy.clipInfoRect; 
+		
 	}
 
 	public void clear() {
@@ -216,6 +228,8 @@ public class ProfileField {
 		mainRectRect = new Rectangle(Model.TOP_MARGIN, Model.TOP_MARGIN, viewDimension.width-Model.TOP_MARGIN, viewDimension.height - Model.TOP_MARGIN);
 		
 		visibleStart = -mainRectRect.x -mainRectRect.width/2;
+		
+		initClipRects();
 	}
 
 	public double getAspect() {
@@ -253,6 +267,45 @@ public class ProfileField {
 	public Rectangle getInfoRect() {
 		return infoRect;
 	}
+
+	public Rectangle getClipMainRect() {
+		return clipMainRect;
+		
+	}
+	
+	public Rectangle getClipLeftMainRect() {
+		return clipLeftMainRect;
+	}
+	
+	public Rectangle getClipTopMainRect() {
+		return clipTopMainRect;
+	}
+	
+	public Rectangle getClipInfoRect() {
+		return clipInfoRect;
+	}
+	
+	public void initClipRects() {
+		clipMainRect = new Rectangle(
+				-getMainRect().width/2, getMainRect().y, 
+				getMainRect().width, getMainRect().height);
+		
+		
+		
+		clipTopMainRect = new Rectangle(
+				-getMainRect().width/2, 0, 
+				getMainRect().width, getMainRect().y + getMainRect().height);
+		clipLeftMainRect = new Rectangle(
+				-getMainRect().x -getMainRect().width/2, getMainRect().y, 
+				getMainRect().x+getMainRect().width, getMainRect().height);
+		clipInfoRect = new Rectangle(
+				-getMainRect().x-getMainRect().width/2, 0, getInfoRect().width, getInfoRect().height);;
+				
+		System.out.println("     Main: " + getClipMainRect().x + " " + getClipMainRect().y+ " " + getClipMainRect().width+ " " + getClipMainRect().height);
+		System.out.println("  TopMain: " + getClipTopMainRect().x + " " + getClipTopMainRect().y+ " " + getClipTopMainRect().width+ " " + getClipTopMainRect().height);
+		System.out.println(" LeftMain: " + getClipLeftMainRect().x + " " + getClipLeftMainRect().y+ " " + getClipLeftMainRect().width+ " " + getClipLeftMainRect().height);
+	}
+
 	
 }
 

@@ -81,9 +81,8 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		//Rectangle r = getRect(vField);
-		//g2.drawRect(r.x, r.y, r.width, r.height);
 		
+		setClip(g2, vField.getClipLeftMainRect());
 		
 		Point p = getCenter(vField);
 

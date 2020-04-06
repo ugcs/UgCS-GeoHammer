@@ -119,7 +119,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		clearBtn.setOnAction(e -> {		
 			
 			Alert alert = new Alert(AlertType.CONFIRMATION);
-			alert.setTitle("warning");
+			alert.setTitle("Remove all additional elements");
 			String s = "Confirm to clear makup";
 			alert.setContentText(s);
 			 

@@ -153,6 +153,9 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		
+		g2.setClip(vField.getClipMainRect().x, vField.getClipMainRect().y, vField.getClipMainRect().width, vField.getClipMainRect().height);
+		
 		drawHyperbola(g2, vField);
 		
 	}

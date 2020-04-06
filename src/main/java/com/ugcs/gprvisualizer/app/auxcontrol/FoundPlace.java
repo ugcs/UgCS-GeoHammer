@@ -125,6 +125,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		
+		g2.setClip(vField.getClipTopMainRect().x, vField.getClipTopMainRect().y, vField.getClipTopMainRect().width, vField.getClipTopMainRect().height);
+		
 		Rectangle rect = getRect(vField);
 		
 		g2.setColor(flagColor);
