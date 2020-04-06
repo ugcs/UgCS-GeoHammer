@@ -64,9 +64,12 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		if(isPointInside(localPoint, vField)) {
 			
 			
-			Alert alert = new Alert(AlertType.CONFIRMATION);
+			Alert alert = new Alert(AlertType.WARNING);
 			alert.setTitle("warning");
-			alert.setContentText("Confirm to close file");
+			alert.setContentText(
+					(sgyFile.isUnsaved() ? "File is not saved!\n" : "") +
+					"Confirm to close file");
+			
 			 
 			Optional<ButtonType> result = alert.showAndWait();
 			 

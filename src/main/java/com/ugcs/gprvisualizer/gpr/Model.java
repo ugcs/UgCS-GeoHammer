@@ -189,6 +189,14 @@ public class Model {
 		
 		this.maxHeightInSamples = maxHeight;
 		getSettings().maxsamples = maxHeightInSamples;
+		
+		
+		if(getSettings().layer + getSettings().hpage > maxHeightInSamples) {
+			
+			getSettings().layer = maxHeightInSamples/4;
+			getSettings().hpage = maxHeightInSamples/4;			
+		}
+		
 	}
 
 	public boolean isLoading() {
@@ -243,6 +251,11 @@ public class Model {
 		
 		this.updateSgyFileOffsets();
 		
+		//
+		
+		
+		//
+		
 		this.updateAuxElements();
 	}
 
@@ -265,7 +278,7 @@ public class Model {
 	public boolean stopUnsaved() {
     	if(getFileManager().isUnsavedExists()) {
     		
-			Alert alert = new Alert(AlertType.CONFIRMATION);
+			Alert alert = new Alert(AlertType.WARNING);
 			alert.setTitle("warning");
 			alert.setContentText("Current files are not saved. Continue?");
 			 
