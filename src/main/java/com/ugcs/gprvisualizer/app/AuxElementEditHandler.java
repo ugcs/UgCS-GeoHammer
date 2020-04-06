@@ -325,6 +325,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 				
 				selectControl(o);
 				
+				mouseInput = getSelected();
+				
 				return true;
 			}
 		}
