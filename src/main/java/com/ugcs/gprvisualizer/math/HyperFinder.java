@@ -55,142 +55,15 @@ public class HyperFinder {
 	}
 	
 	public void deleprocess() {
-//		//clear
-//		for(Trace t: model.getFileManager().getTraces()) {
-//			t.maxindex2 = 0;
-//			t.good = null;			
-//		}
-		
-//		int kf = model.getSettings().hyperkfc;
-//
-//		for(SgyFile sf : model.getFileManager().getFiles()) {
-//			System.out.println("analize file: " + sf.getFile().getName());
-//			processSgyFile(sf, kf/100.0);			
-//		}
-
 		
 		System.out.println("finish");
 		
 		AppContext.notifyAll(new WhatChanged(Change.adjusting));
 	}
 
-//	private int cleversumdst(int[][] good, int tr) {
-//		int margin = 6;
-//		double sum = 0;		
-//		//boolean bothside = false;
-//		//boolean bothsidemax;
-//		double maxsum = 0;
-//		int emptycount =0;
-//		int both = 0;
-//		for(int i=0; i<good[tr].length; i++) {
-//			
-//			// 0 1 2 3
-//			int val = getAtLeastOneGood(good, tr, margin, i);
-//			both = both | val;
-//			if(val != 0) {				
-//				sum += (val < 3 ? 1.0 : 2.0);
-//			}else {
-//				emptycount++;
-//				if(emptycount > 5) {
-//					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-//					both = 0;
-//					sum = 0;
-//					emptycount = 0;					
-//				}
-//			}			
-//		}
-//		
-//		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-//		return (int)(maxsum);//
-//	}
-//	
-//	
-//	private int cleversum(int[] is) {
-//		int sum = 0;
-//		int grpsize=0;
-//		boolean activegrp = false;
-//		for(int i=0; i<is.length; i++) {
-//			
-//			if(is[i] > 0) {
-//				if(!activegrp) {
-//					activegrp = true;
-//					grpsize=0;
-//				}
-//				grpsize+=is[i];
-//			}else{
-//				if(activegrp) {
-//					activegrp=false;
-//					if(grpsize>0) {
-//						sum += grpsize;
-//						grpsize=0;
-//					}
-//				}
-//			}
-//			
-//			//sum += is[i];
-//		}
-//		
-//		return sum;
-//	}
-//
-//	private void filterGood(int height, int[][] good) {
-//		for(int smp=0; smp<height; smp++) { //row
-//			//fill gaps in 1 trace to ignore them
-//			for(int tr =1; tr<good.length-1; tr++) {
-//				if(good[tr+1][smp]>0) {
-//					good[tr-1][smp] = 1;
-//				}
-//			}
-//			
-//			int grpstart = -1;
-//			for(int tr =0; tr<good.length; tr++) {
-//				if(good[tr][smp]>0) {
-//					if(grpstart == -1) {
-//						//start group
-//						grpstart = tr;
-//					}					
-//				}else{
-//					//finish group
-//					if(grpstart != -1) {
-//						if(tr-grpstart > 99) {
-//							//clear row
-//							for(int tri=grpstart; tri<tr; tri++) {
-//								good[tri][smp] = 0;
-//							}							
-//						}
-//						
-//						grpstart = -1;
-//					}					
-//				}
-//			}			
-//		}
-//	}
-//
-//	private void processHyper2(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
-//		
-//		double result = 0;
-//		float example = traces.get(tr).getNormValues()[smp];
-//		
-//		HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
-//		
-//		HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);
-//		
-//		good[tr][smp] = (left.isGood() || right.isGood()) ? (example > 0 ? 1 : -1) : 0; 
-//		
-//		//return result;
-//	}
-//	
-//	private boolean similar(float example, float val) {
-//		
-//		return (example > 0) == (val > 0);
-//	}
-
-	
-	
 	public void setPoint(TraceSample ts) {
 		this.ts = ts;
 	}
-	
 	
 	public void drawHyperbolaLine(Graphics2D g2, ProfileField vField) {
 		
@@ -241,7 +114,8 @@ public class HyperFinder {
 		
 		
 		boolean positive = hh.example>0;
-		int goodside = HalfHyper.getGoodSideSize(hh.pinnacle_smp);
+		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;
+		int goodside = (int)(HalfHyper.getGoodSideSize(hh.pinnacle_smp) / hyperkf);
 		if(hh.length >= goodside ) {
 			
 			if(hh.isGood()) {
@@ -289,13 +163,16 @@ public class HyperFinder {
 		SgyFile sgyFile = AppContext.model.getSgyFileByTrace(tr);
 		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
 		
-		List<Trace> traces = AppContext.model.getFileManager().getTraces();
+		//List<Trace> traces = AppContext.model.getFileManager().getTraces();
+		double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
 		
-		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1);
-		double lftRate = lft.analize(traces);
+		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1, x_factor);
+		double lftRate = lft.analize();
 		
-		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1);
-		double rhtRate = rht.analize(traces);
+		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1, x_factor);
+		double rhtRate = rht.analize();
+		
+		System.out.println( " lftR " + lftRate  + "    " + rhtRate + "  gs " + lft.hypergoodsize);
 		
 		g2.setColor(lftRate > thr ? Color.RED : Color.CYAN);
 		drawHHDst(g2, vField, sgyFile.getOffset(), lft);

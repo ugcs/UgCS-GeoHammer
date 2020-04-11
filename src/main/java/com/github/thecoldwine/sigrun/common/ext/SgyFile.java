@@ -62,6 +62,7 @@ public class SgyFile {
 	
     //horizontal cohesive lines of edges
     public List<HorizontalProfile> profiles;
+    public HorizontalProfile groundProfile;
     
 	
 	private List<BaseObject> auxElements = new ArrayList<>();

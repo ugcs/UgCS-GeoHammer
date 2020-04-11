@@ -365,7 +365,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		Trace trace1 = traces.get(startTrace);
 		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  m2 ? trace1.maxindex2 : trace1.maxindex));
 		int max2 = 0;
-		
+		int prev_max2 = 0;
 		for(int i=startTrace+1; i<finishTrace; i++) {
 			//Trace trace1 = traces.get(i-1);
 			
@@ -375,12 +375,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
 			if(p2.x - p1.x > 2) {
-				if(max2 > 0) {
+				if(max2 > 0 || prev_max2 > 0) {
 					g2.drawLine(p1.x, p1.y, p2.x, p2.y);
 				}
 				trace1 = trace2;
 				p1 = p2;
 				
+				prev_max2 = max2;
 				max2 = 0;
 			}
 			

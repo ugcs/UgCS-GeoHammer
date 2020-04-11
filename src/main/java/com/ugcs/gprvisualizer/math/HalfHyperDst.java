@@ -15,7 +15,10 @@ public class HalfHyperDst {
 	double sampleToCm_air;
 	double sampleToCm_grn;
 	
-	Trace trace;
+	SgyFile sgyFile;
+	
+	//int traceIndex;
+	//Trace trace;
 	double example;
 	int pinnacle_tr;
 	int pinnacle_smp;
@@ -25,16 +28,24 @@ public class HalfHyperDst {
 	
 	int length;
 	int smp[] = new int[300];
+	double hypergoodsize;
 	
-	public boolean isGood(List<Trace> traces, double thr) {
+	boolean defective = false;
+	
+	public boolean isGood(double thr) {
 		
-		double wei = analize(traces);		
+		double wei = analize();		
 		
 		return wei > thr;
 	}
 	
 	
-	public double analize(List<Trace> traces) {
+	public double analize() {
+		if(defective ) {
+			return 0;
+		}
+		
+		List<Trace> traces = sgyFile.getTraces();
 		
 		int sum[] = new int[5];
 		
@@ -52,8 +63,8 @@ public class HalfHyperDst {
 			}
 		}
 		
+		// find max edge count (0 is not edge so don`t take it into account)
 		int max = Arrays.stream(sum, 1, 5).max().getAsInt();
-		
 		
 		
 		return (double)max / (double)length;
@@ -61,7 +72,9 @@ public class HalfHyperDst {
 	
 	public double[] smpToDst(int smp) {
 		
-		double air_smp = Math.min(trace.maxindex, smp);
+		int grnd = sgyFile.groundProfile.deep[pinnacle_tr];
+		
+		double air_smp = Math.min(grnd, smp);
 		double grn_smp = smp - air_smp;
 		
 		double air_dst = air_smp * sampleToCm_air;
@@ -77,7 +90,7 @@ public class HalfHyperDst {
 		double y_cm = r[0] + r[1];
 		
 		
-		return (y_cm * 0.43);
+		return (y_cm * 0.41);
 	}
 	
 
@@ -85,37 +98,35 @@ public class HalfHyperDst {
 //		return sampleInCm * AppContext.model.getSettings().hyperkfc/100.0;
 //	}
 	
-	public static HalfHyperDst getHalfHyper(SgyFile sgyFile, int tr, int org_smp, int side) {
+	public static HalfHyperDst getHalfHyper(SgyFile sgyFile, int tr, int org_smp, int side, double x_factor) {
 		
 		List<Trace> traces = sgyFile.getTraces();
 		Trace trace = traces.get(tr);
 		int maxSamplIndex = trace.getNormValues().length-2;
 		
 		HalfHyperDst hh = new HalfHyperDst();
-		hh.trace = trace;
+		hh.sgyFile = sgyFile;
 		hh.pinnacle_tr = tr;		
 		hh.pinnacle_smp = org_smp;
 		hh.side = side;
 		hh.sampleToCm_air = sgyFile.getSamplesToCmAir();
 		hh.sampleToCm_grn = sgyFile.getSamplesToCmGrn();
+		hh.hypergoodsize = hh.getGoodSideDst(hh.pinnacle_smp) / x_factor;
 		
-		//double kf = hh.samplToCmKf();		
 		int i=0;
 		int index=0;
-		double hypergoodsize = hh.getGoodSideDst(hh.pinnacle_smp);
-		
-		//double y = hh.pinnacle_smp - trace.verticalOffset;
 		double r[] = hh.smpToDst(hh.pinnacle_smp);
 		double y_cm = r[0] + r[1];
 		double x = 0;
 		
-		while(Math.abs(x) < hypergoodsize && i < 300) {
+		while(Math.abs(x) < hh.hypergoodsize && i < 300) {
 			index = tr + side * i;
 			if(index<0 || index>= traces.size() ) {
+				hh.defective = true;
 				break;
 			}
 
-			x += getXStep(side, traces, i, index);
+			x += getXStep(side, traces, i, index) * x_factor;
 			
 			
 			double c_cm = Math.sqrt(x*x + y_cm*y_cm);
@@ -136,11 +147,6 @@ public class HalfHyperDst {
 			
 		}
 		
-//		double x = (index-tr) * kf;
-//		double c = Math.sqrt(x*x+y*y);		
-		//return new TraceSample(index, (int)c);
-		
-		
 		return hh;
 	}
 
@@ -158,25 +164,5 @@ public class HalfHyperDst {
 		return xstep;
 	}
 
-	static private boolean similar(float example, float val) {
-		
-		return (example > 0) == (val > 0);
-	}
-
-	static private int lookingForOpposite(float[] values, int smpstart, double example, int side) {
-		
-		boolean positive = example > 0;
-		
-		for(int smp=1; smp< 3; smp++) {
-			float val = values[smpstart + side*smp];
-			
-			if(val > 0 != positive) {
-				return 1;
-			}			
-		}		
-		return 0;
-	}
-	
-	
 	
 }

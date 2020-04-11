@@ -20,17 +20,19 @@ public class AlgorithmicScan implements Command {
 		}
 		
 		
-		int kf = AppContext.model.getSettings().hyperkfc;
+		//double kf = AppContext.model.getSettings().hyperkfc/100.0;
 		
-		processSgyFile(file, kf/100.0);			
+		processSgyFile(file);			
 		
 	}
 
-	private void processSgyFile(SgyFile sf, double hyperkf) {
+	private void processSgyFile(SgyFile sf) {
 		List<Trace> traces = sf.getTraces();
 		//
 		
-		new EdgeFinder().execute(sf);		
+		new EdgeFinder().execute(sf);
+		
+		new HorizontalGroupScan().execute(sf);
 		
 		new EdgeSubtractGround().execute(sf);
 		
@@ -38,8 +40,13 @@ public class AlgorithmicScan implements Command {
 		int height = traces.get(0).getNormValues().length;
 		int good[][] = new int[traces.size()][height];
 		
+		if(sf.groundProfile == null) {
+			System.out.println("!!!!groundProfile == null");
+			return;
+		}
+		
 		for(int i=0; i<traces.size(); i++) {
-			processTrace(sf, i, good, hyperkf); 
+			processTrace(sf, i, good); 
 		}
 		
 		//filter
@@ -67,13 +74,16 @@ public class AlgorithmicScan implements Command {
 	}
 
 	private int cleversumdst(int[][] good, int tr) {
-		int margin = 6;
+		//TODO: use real distance in meters 
+		int margin = 10;
+		
+		
 		double sum = 0;		
 		//boolean bothside = false;
 		//boolean bothsidemax;
 		double maxsum = 0;
 		int emptycount =0;
-		int both = 0;
+		int both = 0; 
 		for(int i=0; i<good[tr].length; i++) {
 			
 			// 0 1 2 3
@@ -97,47 +107,6 @@ public class AlgorithmicScan implements Command {
 	}
 
 	
-	private int cleversum(int[][] good, int tr) {
-		int margin = 6;
-		double sum = 0;
-		double maxsum = 0;
-		int mult = 0;
-		int prevsign = 0;
-		int onesize=1;
-		
-		int emptycount =0;
-		for(int i=0; i<good[tr].length; i++) {
-			
-			int val = getAtLeastOneGood(good, tr, margin, i);
-			
-			if(val != 0) {				
-				
-				if(val != prevsign) {
-					//reverse amplitude
-					mult++;
-					prevsign = val;
-					onesize=1;
-				}else {
-					onesize++;
-				}
-				
-				sum += 1.0 / (double)onesize;
-			}else {
-				emptycount++;
-				if(emptycount > 7) {
-					maxsum = Math.max(maxsum, sum*mult);
-					sum = 0;
-					emptycount = 0;					
-				}
-			}			
-			if(sum>0) {
-				margin+=0;
-			}
-		}
-		
-		maxsum = Math.max(maxsum, sum*mult);
-		return (int)(maxsum*4);//
-	}
 	
 	private int getAtLeastOneGood(int[][] good, int tr, int margin, int smp) {
 		int r = 0;
@@ -149,17 +118,23 @@ public class AlgorithmicScan implements Command {
 		return r;
 	}
 
-	private double processTrace(SgyFile sgyFile, int tr, int[][] good, double hyperkf) {
+	private double processTrace(SgyFile sgyFile, int tr, int[][] good) {
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
 						AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
 						sgyFile.getTraces().get(tr).getNormValues().length-2
 				);
+		
+		// test all samples to fit hyperbola
+		
 		for(int smp = AppContext.model.getSettings().layer;				
 			smp< maxSmp ; smp++) {
 			
-			processHyper3(sgyFile, tr, smp, hyperkf, good);
+			// reduce x distance for hyperbola calculation
+			for(double x_factor = 0.90; x_factor <=1.5; x_factor += 0.05) {
+				processHyper3(sgyFile, tr, smp, x_factor, good);
+			}
 		}
 		
 		return goodSmpCnt;
@@ -170,22 +145,17 @@ public class AlgorithmicScan implements Command {
 		return thr;
 	}
 	
-	private void processHyper3(SgyFile sgyFile, int tr, int smp, double hyperkf, int[][] good) {
-		
-		
+	private void processHyper3(SgyFile sgyFile, int tr, int smp, double x_factor, int[][] good) {
 		double thr = getThreshold();
+		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1, x_factor);		
 		
-		List<Trace> traces = sgyFile.getTraces();
-				
-		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1);		
+		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, x_factor);
 		
-		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1);
+		good[tr][smp] =
+			good[tr][smp] |
+			(left.isGood(thr) ? 1 : 0) | 
+			(right.isGood(thr) ? 2 : 0); 
 		
-		good[tr][smp] = 
-			(left.isGood(traces, thr) ? 1 : 0) | 
-			(right.isGood(traces, thr) ? 2 : 0); 
-		
-		//return result;
 	}
 
 	

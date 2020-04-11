@@ -85,6 +85,8 @@ public class HorizontalGroupScan implements Command {
 		HorizontalProfile brightestGrn = getBrightest(tmpCurve);
 		brightestGrn.color = Color.RED;
 		
+		file.groundProfile = brightestGrn; 
+		
 		HorizontalProfile bott = new HorizontalProfile(file.getTraces().size());
 		for(int i=0; i<file.getTraces().size(); i++ ) {
 			
@@ -95,9 +97,9 @@ public class HorizontalGroupScan implements Command {
 		bott.color = Color.RED;
 		
 		
-		//result = new ArrayList<>();
-		//result.add(brightestTop);
-		//result.add(brightestGrn);
+		result = new ArrayList<>();
+		result.add(brightestTop);
+		result.add(brightestGrn);
 		result.add(bott);
 		file.profiles = result;
 		

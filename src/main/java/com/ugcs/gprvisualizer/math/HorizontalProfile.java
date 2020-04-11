@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.math;
 import java.awt.Color;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class HorizontalProfile {
@@ -28,6 +29,10 @@ public class HorizontalProfile {
 		
 		double valsum = 0;
 		
+		//smooth
+		smoothLevel();
+		
+		//min, max, avg_val
 		for(int i=0; i<deep.length; i++) {
 			
 			minDeep = Math.min(deep[i], minDeep);
@@ -41,6 +46,43 @@ public class HorizontalProfile {
 		avgval = valsum / deep.length;
 		height = maxDeep - minDeep;
 	}
+	
+	
+	
+	private void smoothLevel() {
+
+		int result[] = new int[deep.length];
+		for(int i=0; i<deep.length; i++) {
+			
+			result[i] = avg(i);
+			
+		}
+
+		deep = result;
+	}
+
+	int R=7;
+	double DR=R;
+	private int avg(int i) {
+		
+		int from = i-R;
+		from = Math.max(0, from);
+		int to = i+R;
+		to = Math.min(to, deep.length-1);
+		double sum = 0;
+		double cnt = 0;
+		
+		for(int j=from; j<= to; j++) {
+			double kfx = (DR+j-i)/ (DR*2);
+			double kf = kfx*kfx*(1-kfx)*(1-kfx); 
+			
+			sum += deep[j] * kf;
+			cnt+= kf;
+		}
+		
+		return (int)Math.round(sum/cnt);
+	}
+	
 	
 	
 }
