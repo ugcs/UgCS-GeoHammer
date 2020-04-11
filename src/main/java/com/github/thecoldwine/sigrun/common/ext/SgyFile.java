@@ -30,6 +30,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ManuilovFilter;
 
 public class SgyFile {
@@ -59,6 +60,9 @@ public class SgyFile {
 	private boolean unsaved = true;
 	
 	
+    //horizontal cohesive lines of edges
+    public List<HorizontalProfile> profiles;
+    
 	
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
@@ -388,5 +392,9 @@ public class SgyFile {
 
 	public void setUnsaved(boolean unsaved) {
 		this.unsaved = unsaved;
+	}
+	
+	public int getMaxSamples() {
+		return getTraces().get(0).getNormValues().length;
 	}
 }

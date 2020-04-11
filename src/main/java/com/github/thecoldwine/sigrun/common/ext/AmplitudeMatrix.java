@@ -103,13 +103,17 @@ public class AmplitudeMatrix {
 	 * * * * * * * * * * * * * * * * * * *
 	 */
 	public void findLevel() {
+		//first col ordered by amp
+		
 		List<Grp> startList = getOrderedDescGrps();
 		List<List<Grp>> selected = new ArrayList<>();
 		
+		//select[X] - cohesive union of groups (row)
 		for(Grp start : startList) {
 			selected.add(findLevelStartingAt(start));
 		}
 		
+		// integer arrays - (top or bottom) border line of band
 		rows = getRows(selected);
 		
 		List<Integer> selrow = findBestPath(rows);
@@ -188,8 +192,26 @@ public class AmplitudeMatrix {
 	
 	private long getIndignation(List<Integer> row) {
 		long res = 0;
+		
+		// continuos number of zero shift
+		int zerocount = 0;
+		int maxzerocount = 0;
 		for(int i = 1; i< row.size(); i++) {
-			res += Math.abs(row.get(i-1)-row.get(i));
+			
+			int diff = Math.abs(row.get(i-1)-row.get(i));
+			res += diff;
+			if(diff == 0) {
+				zerocount++;
+			}else {
+				maxzerocount = Math.max(maxzerocount, zerocount);
+				zerocount = 0;
+			}
+		}
+		maxzerocount = Math.max(maxzerocount, zerocount);
+		
+		if(maxzerocount > row.size()/8) {
+			//it s strait line - can`t be the ground.  Most probable it is background const noise
+			return 10000000;
 		}
 		return res;
 	}
@@ -207,7 +229,7 @@ public class AmplitudeMatrix {
 		
 		
 		//return r.subList(0, r.size());
-		return r.subList(0, Math.min(4, r.size()));
+		return r.subList(0, Math.min(6, r.size()));
 	}
 
 	List<Grp> findLevelStartingAt(Grp start) {
@@ -421,26 +443,24 @@ public class AmplitudeMatrix {
 	}
 	
 	
-	public static void main(String [] args) throws Exception {
-		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed\\2019-07-24-10-43-52-gpr_8.sgy");
-		File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
-		//File file = new File("d:\\georadarData\\Greenland\\2018-06-29-22-36-37-gpr-shift_processed");
-		//File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
-		//File file = new File("d:\\georadarData\\mines\\processed_003");
-		//File file = new File("d:\\georadarData\\sandy soil 1Ghz\\2019-08-30-11-34-28-gpr_processed\\2019-08-30-11-34-28-gpr_5.sgy");
-		
-		if(file.isDirectory()) {
-			File[] lst = file.listFiles(FileManager.filter);
-			int cnt = 0;
-			for(File sfile : lst) {
-				execute(sfile, cnt++);
-			}
-		}else {
-			execute(file, 0);
-		}
-		//File sfile = new File("d:\\georadarData\\Greenland\\2018-06-29-22-08-59-gpr-shift.sgy");		
-		//execute(sfile, 0);
-	}
+//	public static void main(String [] args) throws Exception {
+//		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed\\2019-07-24-10-43-52-gpr_8.sgy");
+//		File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
+//		//File file = new File("d:\\georadarData\\Greenland\\2018-06-29-22-36-37-gpr-shift_processed");
+//		//File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
+//		//File file = new File("d:\\georadarData\\mines\\processed_003");
+//		//File file = new File("d:\\georadarData\\sandy soil 1Ghz\\2019-08-30-11-34-28-gpr_processed\\2019-08-30-11-34-28-gpr_5.sgy");
+//		
+//		if(file.isDirectory()) {
+//			File[] lst = file.listFiles(FileManager.filter);
+//			int cnt = 0;
+//			for(File sfile : lst) {
+//				execute(sfile, cnt++);
+//			}
+//		}else {
+//			execute(file, 0);
+//		}
+//	}
 	
 	public static void execute(File file, int prefix) throws Exception {
 		

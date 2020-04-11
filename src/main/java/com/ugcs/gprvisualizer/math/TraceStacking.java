@@ -6,33 +6,18 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.commands.Command;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class TraceStacking {
+public class TraceStacking implements Command {
 
-	public void process(Model model) {
-		
-		
-		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-			
-			process(sgyFile);
-			
-		}
-		
-		model.getFileManager().clearTraces();
-		
-		model.init();
-		
-		//model.initField();
-		model.getVField().clear();
-		
-		AppContext.notifyAll(new WhatChanged(Change.traceCut));
-	}
+	Model model = AppContext.model;
+	
 
 	
-	private void process(SgyFile sgyFile) {
+	public void execute(SgyFile sgyFile) {
 		
 		double sampleDist = sgyFile.getSamplesToCmGrn();
 		
@@ -115,6 +100,26 @@ public class TraceStacking {
 		}
 		
 		return Math.abs(max) > Math.abs(min) ? max : min;
+	}
+
+
+	@Override
+	public String getButtonText() {
+
+		return "Stacking";
+	}
+
+
+	@Override
+	public Change getChange() {
+
+		model.getFileManager().clearTraces();
+		
+		model.init();
+
+		model.getVField().clear();
+		
+		return Change.traceCut;
 	}
 	
 }

@@ -408,7 +408,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		return false;
 	}
 
-	private BaseObject getSelected() {
+	public BaseObject getSelected() {
 		return selected;
 	}
 

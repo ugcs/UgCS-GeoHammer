@@ -4,7 +4,7 @@ public class MovingAvg {
 
 	double sum;
 	double div;
-	double reduce = 0.93;
+	double reduce = 0.91;
 	public MovingAvg() {
 		
 	}

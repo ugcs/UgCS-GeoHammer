@@ -21,7 +21,7 @@ public class FileManager {
 		}
 	};
 
-	public boolean levelCalculated = false;
+	//public boolean levelCalculated = false;
 	
 	private List<SgyFile> files;
 
@@ -50,7 +50,7 @@ public class FileManager {
 	}
 
 	public void clear() {
-		levelCalculated = false;
+		//levelCalculated = false;
 		traces = null;
 		files = new ArrayList<>();
 		topFolder = null;

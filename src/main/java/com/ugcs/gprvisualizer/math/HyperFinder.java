@@ -13,6 +13,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -53,267 +54,136 @@ public class HyperFinder {
 		this.model = model;
 	}
 	
-	public void process() {
-		//clear
-		for(Trace t: model.getFileManager().getTraces()) {
-			t.maxindex2 = 0;
-			t.good = null;			
-		}
+	public void deleprocess() {
+//		//clear
+//		for(Trace t: model.getFileManager().getTraces()) {
+//			t.maxindex2 = 0;
+//			t.good = null;			
+//		}
 		
-		//for(int kf = 13; kf<36; kf+=2) {
-			
-		int kf = model.getSettings().hyperkfc;
-			for(SgyFile sf : model.getFileManager().getFiles()) {
-				System.out.println("analize file: " + sf.getFile().getName());
-				processSgyFile(sf, kf/100.0);			
-			}
-		//}
+//		int kf = model.getSettings().hyperkfc;
+//
+//		for(SgyFile sf : model.getFileManager().getFiles()) {
+//			System.out.println("analize file: " + sf.getFile().getName());
+//			processSgyFile(sf, kf/100.0);			
+//		}
+
 		
 		System.out.println("finish");
 		
 		AppContext.notifyAll(new WhatChanged(Change.adjusting));
 	}
 
-	private void processSgyFile(SgyFile sf, double hyperkf) {
-		List<Trace> traces = sf.getTraces();
-		//
-		new EdgeFinder().process(model);
-		
-		//
-		int height = traces.get(0).getNormValues().length;
-		int good[][] = new int[traces.size()][height];
-		
-		for(int i=0; i<traces.size(); i++) {
-			processTrace(sf, i, good, hyperkf); 
-		}
-		
-		//filter
-		
-		//filterGood(height, good);
-		
-		//
-		saveResultToTraces(traces, good);
-	}
-
-	private void saveResultToTraces(List<Trace> traces, int[][] good) {
-		for(int i=0; i<traces.size(); i++) {
-			traces.get(i).maxindex2 = Math.max(traces.get(i).maxindex2, cleversumdst(good, i));
-			
-			
-			//put to trace.good
-			if(traces.get(i).good == null) {
-				traces.get(i).good = new int[good[i].length];
-			}
-			for(int z=0;z<good[i].length; z++) {
-				traces.get(i).good[z] = good[i][z];
-			}
-			
-		}
-	}
-
-	
-	private int cleversumdst(int[][] good, int tr) {
-		int margin = 6;
-		double sum = 0;		
-		//boolean bothside = false;
-		//boolean bothsidemax;
-		double maxsum = 0;
-		int emptycount =0;
-		int both = 0;
-		for(int i=0; i<good[tr].length; i++) {
-			
-			// 0 1 2 3
-			int val = getAtLeastOneGood(good, tr, margin, i);
-			both = both | val;
-			if(val != 0) {				
-				sum += (val < 3 ? 1.0 : 2.0);
-			}else {
-				emptycount++;
-				if(emptycount > 5) {
-					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-					both = 0;
-					sum = 0;
-					emptycount = 0;					
-				}
-			}			
-		}
-		
-		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-		return (int)(maxsum);//
-	}
-	
-	
-	private int cleversum(int[][] good, int tr) {
-		int margin = 6;
-		double sum = 0;
-		double maxsum = 0;
-		int mult = 0;
-		int prevsign = 0;
-		int onesize=1;
-		
-		int emptycount =0;
-		for(int i=0; i<good[tr].length; i++) {
-			
-			int val = getAtLeastOneGood(good, tr, margin, i);
-			
-			if(val != 0) {				
-				
-				if(val != prevsign) {
-					//reverse amplitude
-					mult++;
-					prevsign = val;
-					onesize=1;
-				}else {
-					onesize++;
-				}
-				
-				sum += 1.0 / (double)onesize;
-			}else {
-				emptycount++;
-				if(emptycount > 7) {
-					maxsum = Math.max(maxsum, sum*mult);
-					sum = 0;
-					emptycount = 0;					
-				}
-			}			
-			if(sum>0) {
-				margin+=0;
-			}
-		}
-		
-		maxsum = Math.max(maxsum, sum*mult);
-		return (int)(maxsum*4);//
-	}
-	
-	private int getAtLeastOneGood(int[][] good, int tr, int margin, int smp) {
-		int r = 0;
-		
-		for(int chtr = Math.max(0, tr-margin); chtr < Math.min(good.length, tr+margin+1); chtr++) {
-			//if(good[chtr][smp] != 0) {
-				r = r | good[chtr][smp]; //0 1 2 3				
-			//}
-		}
-		
-		return r;
-	}
-
-	private int cleversum(int[] is) {
-		int sum = 0;
-		int grpsize=0;
-		boolean activegrp = false;
-		for(int i=0; i<is.length; i++) {
-			
-			if(is[i] > 0) {
-				if(!activegrp) {
-					activegrp = true;
-					grpsize=0;
-				}
-				grpsize+=is[i];
-			}else{
-				if(activegrp) {
-					activegrp=false;
-					if(grpsize>0) {
-						sum += grpsize;
-						grpsize=0;
-					}
-				}
-			}
-			
-			//sum += is[i];
-		}
-		
-		return sum;
-	}
-
-	private void filterGood(int height, int[][] good) {
-		for(int smp=0; smp<height; smp++) { //row
-			//fill gaps in 1 trace to ignore them
-			for(int tr =1; tr<good.length-1; tr++) {
-				if(good[tr+1][smp]>0) {
-					good[tr-1][smp] = 1;
-				}
-			}
-			
-			int grpstart = -1;
-			for(int tr =0; tr<good.length; tr++) {
-				if(good[tr][smp]>0) {
-					if(grpstart == -1) {
-						//start group
-						grpstart = tr;
-					}					
-				}else{
-					//finish group
-					if(grpstart != -1) {
-						if(tr-grpstart > 99) {
-							//clear row
-							for(int tri=grpstart; tri<tr; tri++) {
-								good[tri][smp] = 0;
-							}							
-						}
-						
-						grpstart = -1;
-					}					
-				}
-			}			
-		}
-	}
-
-	private double processTrace(SgyFile sgyFile, int tr, int[][] good, double hyperkf) {
-		int goodSmpCnt = 0;
-		int maxSmp =
-				Math.min(
-						AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
-						sgyFile.getTraces().get(tr).getNormValues().length-2
-				);
-		for(int smp = AppContext.model.getSettings().layer;				
-			smp< maxSmp ; smp++) {
-			
-			processHyper3(sgyFile, tr, smp, hyperkf, good);
-		}
-		
-		return goodSmpCnt;
-	}
-
-
-	private void processHyper3(SgyFile sgyFile, int tr, int smp, double hyperkf, int[][] good) {
-		
-		
-		double thr = getThreshold();
-		
-		List<Trace> traces = sgyFile.getTraces();
-				
-		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1);		
-		
-		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1);
-		
-		good[tr][smp] = 
-			(left.isGood(traces, thr) ? 1 : 0) | 
-			(right.isGood(traces, thr) ? 2 : 0); 
-		
-		//return result;
-	}
-
-	private void processHyper2(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
-		
-		double result = 0;
-		float example = traces.get(tr).getNormValues()[smp];
-		
-		HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
-		
-		HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);
-		
-		good[tr][smp] = (left.isGood() || right.isGood()) ? (example > 0 ? 1 : -1) : 0; 
-		
-		//return result;
-	}
-		
-		
-
-	
-	private boolean similar(float example, float val) {
-		
-		return (example > 0) == (val > 0);
-	}
+//	private int cleversumdst(int[][] good, int tr) {
+//		int margin = 6;
+//		double sum = 0;		
+//		//boolean bothside = false;
+//		//boolean bothsidemax;
+//		double maxsum = 0;
+//		int emptycount =0;
+//		int both = 0;
+//		for(int i=0; i<good[tr].length; i++) {
+//			
+//			// 0 1 2 3
+//			int val = getAtLeastOneGood(good, tr, margin, i);
+//			both = both | val;
+//			if(val != 0) {				
+//				sum += (val < 3 ? 1.0 : 2.0);
+//			}else {
+//				emptycount++;
+//				if(emptycount > 5) {
+//					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
+//					both = 0;
+//					sum = 0;
+//					emptycount = 0;					
+//				}
+//			}			
+//		}
+//		
+//		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
+//		return (int)(maxsum);//
+//	}
+//	
+//	
+//	private int cleversum(int[] is) {
+//		int sum = 0;
+//		int grpsize=0;
+//		boolean activegrp = false;
+//		for(int i=0; i<is.length; i++) {
+//			
+//			if(is[i] > 0) {
+//				if(!activegrp) {
+//					activegrp = true;
+//					grpsize=0;
+//				}
+//				grpsize+=is[i];
+//			}else{
+//				if(activegrp) {
+//					activegrp=false;
+//					if(grpsize>0) {
+//						sum += grpsize;
+//						grpsize=0;
+//					}
+//				}
+//			}
+//			
+//			//sum += is[i];
+//		}
+//		
+//		return sum;
+//	}
+//
+//	private void filterGood(int height, int[][] good) {
+//		for(int smp=0; smp<height; smp++) { //row
+//			//fill gaps in 1 trace to ignore them
+//			for(int tr =1; tr<good.length-1; tr++) {
+//				if(good[tr+1][smp]>0) {
+//					good[tr-1][smp] = 1;
+//				}
+//			}
+//			
+//			int grpstart = -1;
+//			for(int tr =0; tr<good.length; tr++) {
+//				if(good[tr][smp]>0) {
+//					if(grpstart == -1) {
+//						//start group
+//						grpstart = tr;
+//					}					
+//				}else{
+//					//finish group
+//					if(grpstart != -1) {
+//						if(tr-grpstart > 99) {
+//							//clear row
+//							for(int tri=grpstart; tri<tr; tri++) {
+//								good[tri][smp] = 0;
+//							}							
+//						}
+//						
+//						grpstart = -1;
+//					}					
+//				}
+//			}			
+//		}
+//	}
+//
+//	private void processHyper2(List<Trace> traces, int tr, int smp, double hyperkf, int[][] good) {
+//		
+//		double result = 0;
+//		float example = traces.get(tr).getNormValues()[smp];
+//		
+//		HalfHyper left = HalfHyper.getHalfHyper(traces, tr, smp, example, -1, hyperkf);		
+//		
+//		HalfHyper right = HalfHyper.getHalfHyper(traces, tr, smp, example, +1, hyperkf);
+//		
+//		good[tr][smp] = (left.isGood() || right.isGood()) ? (example > 0 ? 1 : -1) : 0; 
+//		
+//		//return result;
+//	}
+//	
+//	private boolean similar(float example, float val) {
+//		
+//		return (example > 0) == (val > 0);
+//	}
 
 	
 	
@@ -402,6 +272,11 @@ public class HyperFinder {
 	}
 	
 	
+	public double getThreshold() {
+		double thr = (double)AppContext.model.getSettings().hyperSensitivity.intValue() / 100.0;
+		return thr;
+	}
+	
 	
 	public static double THRESHOLD = 0.7;
 	public void drawHyperbolaLine2(Graphics2D g2, ProfileField vField) {
@@ -428,11 +303,6 @@ public class HyperFinder {
 		g2.setColor(rhtRate > thr ? Color.RED : Color.CYAN);
 		drawHHDst(g2, vField, sgyFile.getOffset(), rht);
 		
-	}
-
-	public double getThreshold() {
-		double thr = (double)model.getSettings().hyperSensitivity.intValue() / 100.0;
-		return thr;
 	}
 
 	public void drawHHDst(Graphics2D g2, ProfileField vField, VerticalCutPart  offset, HalfHyperDst lft) {

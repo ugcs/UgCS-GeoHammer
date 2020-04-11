@@ -7,12 +7,16 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
+import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
+import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
+import com.ugcs.gprvisualizer.app.commands.HorizontalGroupScan;
+import com.ugcs.gprvisualizer.app.commands.TraceProfileClear;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
-import com.ugcs.gprvisualizer.math.EdgeFinder;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.TraceDecimator;
@@ -61,7 +65,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	SplitPane sp;
 	
 	MapView layersWindowBuilder;
-	ProfileView cleverImageView;
+	
 	
 	public MainGeoHammer() {
 		
@@ -77,7 +81,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		layersWindowBuilder = new MapView(model);
 		AppContext.smthListener.add(layersWindowBuilder);
 
-		cleverImageView = new ProfileView(model);
+		AppContext.cleverImageView = new ProfileView(model);
 		
 		AppContext.smthListener.add(this);
 	}
@@ -168,7 +172,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		
 		sp.getItems().add(layersWindowBuilder.getCenter());
 		
-		sp.getItems().add(cleverImageView.getCenter());
+		sp.getItems().add(AppContext.cleverImageView.getCenter());
 		
 		sp.getItems().add(getRightPane());
 		
@@ -211,13 +215,9 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
         });        
         
         rightBox.getChildren().addAll(tabPane);
-        rightBox.getChildren().addAll( cleverImageView.getRight());
-		//rightBox.getChildren().addAll();
-		//rightBox.getChildren().addAll(cleverImageView.getRight());
-		
-		/////////
-		
-		////
+        rightBox.getChildren().addAll( AppContext.cleverImageView.getRight());
+
+        ////
 		bPane.setBottom(AppContext.statusBar);
 		
 		
@@ -260,43 +260,30 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	
 	public void prepareTab2(Tab tab2) {
 		VBox t2 = new VBox(10);		
-        t2.getChildren().addAll(cleverImageView.getRightSearch());
+        t2.getChildren().addAll(AppContext.cleverImageView.getRightSearch());
         
-		///		
-		Button buttonHyperFinder = new Button("Start algorithmic search");
-		buttonHyperFinder.setOnAction(e -> {
-			HyperFinder hf = new HyperFinder(model);
-			hf.process();
-		});
+				
 
-		//MutableBoolean
+        Button buttonHyperFinder = CommandRegistry.createButton(new AlgorithmicScan()); 
 		
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
 
-		Button buttonDecimator = new Button("Stacking");
-		buttonDecimator.setTooltip(new Tooltip("reduce number of traces by half"));
-		buttonDecimator.setOnAction(e -> {
-			
-			//new TraceDecimator().process(model);
-			new TraceStacking().process(model);
-		});
-		
+		Button buttonDecimator = CommandRegistry.createButton(new TraceStacking());		
 
-		Button buttonEdgeFinder = new Button("Edge");
-		buttonEdgeFinder.setOnAction(e -> {
-			
-			new EdgeFinder().process(model);
-		});
+		Button buttonEdgeFinder = CommandRegistry.createButton(new EdgeFinder());
 		
 		
 		t2.getChildren().addAll(buttonHyperFinder, hyperLiveViewBtn, buttonDecimator, buttonEdgeFinder,
 				new HBox(
 						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
 						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)
-						)
-				
-				);
+						),
+				new HBox(
+						CommandRegistry.createButton(new HorizontalGroupScan()),
+						CommandRegistry.createButton(new TraceProfileClear())
+					)
+			);
         tab2.setContent(t2);
         
         

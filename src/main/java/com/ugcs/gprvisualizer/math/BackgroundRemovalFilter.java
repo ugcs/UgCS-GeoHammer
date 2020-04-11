@@ -6,17 +6,19 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class BackgroundRemovalFilter {
+	
+
+	
+	
 	public void removeConstantNoise(List<Trace> lst) {
-		float avg[] = new float[lst.get(1).getNormValues().length];
 
-		for (int index = 0; index < lst.size(); index++) {
-			Trace trace = lst.get(index);
+		
+		float[] avg = prepareNoiseProfile(lst, lst.get(1).getNormValues().length);
 
-			ArrayMath.arraySum(avg, trace.getNormValues());
-		}
+		subtractProfile(lst, avg);
+	}
 
-		ArrayMath.arrayDiv(avg, lst.size());
-
+	public void subtractProfile(List<Trace> lst, float[] avg) {
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);
 
@@ -27,4 +29,20 @@ public class BackgroundRemovalFilter {
 		}
 	}
 
+	public float[] prepareNoiseProfile(List<Trace> lst, int deep) {
+		float avg[] = new float[deep];
+
+		for (int index = 0; index < lst.size(); index++) {
+			Trace trace = lst.get(index);
+
+			ArrayMath.arraySum(avg, trace.getNormValues());
+		}
+
+		ArrayMath.arrayDiv(avg, lst.size());
+		return avg;
+	}
+
+	
+
+	
 }

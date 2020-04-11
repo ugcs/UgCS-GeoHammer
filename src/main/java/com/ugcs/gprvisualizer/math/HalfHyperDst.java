@@ -26,7 +26,7 @@ public class HalfHyperDst {
 	int length;
 	int smp[] = new int[300];
 	
-	boolean isGood(List<Trace> traces, double thr) {
+	public boolean isGood(List<Trace> traces, double thr) {
 		
 		double wei = analize(traces);		
 		

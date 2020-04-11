@@ -32,6 +32,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
 
@@ -234,6 +235,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		drawGroundLevel(traces, field, g2, startTrace, finishTrace);
 		drawGreenLevel(traces, field, g2, startTrace, finishTrace);
+		drawFileProfiles(field, g2, startTrace, finishTrace);
+		
 		drawAmplitudeMapLevels(field, g2);
 		
 		drawAuxElements(field, g2);
@@ -262,14 +265,36 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
+	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
+		
+			
+		g2.setColor(new Color(50, 200,  250));
+		g2.setStroke(AMP_STROKE);
+		
+		int f1 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(startTrace));
+		int f2 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(finishTrace));
+		
+		for(int i =f1; i<= f2; i++) {
+			SgyFile f = model.getFileManager().getFiles().get(i);
+			
+			if(f.profiles == null) {
+				continue;					
+			}
+			
+			for(HorizontalProfile pf : f.profiles) {
+				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf);
+			}				
+		}
+	}
+	
 	public void drawGroundLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace,
 			int finishTrace) {
-		if(model.getFileManager().levelCalculated) {
+		//if(model.getFileManager().levelCalculated) {
 			g2.setColor(new Color(210,105,30));
 			g2.setStroke(LEVEL_STROKE);
 			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
 			
-		}
+		//}
 	}
 
 	public double getRealContrast() {
@@ -350,7 +375,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
 			if(p2.x - p1.x > 2) {
-				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+				if(max2 > 0) {
+					g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+				}
 				trace1 = trace2;
 				p1 = p2;
 				
@@ -360,6 +387,29 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
+	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf) {
+		
+		g2.setColor(pf.color);
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  pf.deep[0]));
+		int max2 = 0;
+		
+		for(int i=1; i<pf.deep.length; i++) {
+
+			
+			max2 = Math.max(max2, pf.deep[i]);
+			
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  max2));
+			if(p2.x - p1.x > 2) {
+				
+				g2.drawLine(p1.x, p1.y, p2.x, p2.y);				
+				
+				p1 = p2;				
+				max2 = 0;
+			}
+			
+		}
+	}
+	
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 		
 		SgyFile currentFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
@@ -856,4 +906,9 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		return r3;
 	}
 
+	public AuxElementEditHandler getAuxEditHandler() {
+		return auxEditHandler;
+	}
+	
+	
 }

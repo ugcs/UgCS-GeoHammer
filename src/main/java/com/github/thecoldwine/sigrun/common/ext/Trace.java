@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.TraceHeader;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class Trace {
     
@@ -47,6 +48,8 @@ public class Trace {
         this.originalvalues = originalvalues;
         this.latLon = latLon;
         this.latLonOrigin = latLon;
+        
+        this.good = new int[originalvalues.length];
     }
     
     public TraceHeader getHeader() {

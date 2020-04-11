@@ -301,9 +301,6 @@ public class ProfileField {
 		clipInfoRect = new Rectangle(
 				-getMainRect().x-getMainRect().width/2, 0, getInfoRect().width, getInfoRect().height);;
 				
-		System.out.println("     Main: " + getClipMainRect().x + " " + getClipMainRect().y+ " " + getClipMainRect().width+ " " + getClipMainRect().height);
-		System.out.println("  TopMain: " + getClipTopMainRect().x + " " + getClipTopMainRect().y+ " " + getClipTopMainRect().width+ " " + getClipTopMainRect().height);
-		System.out.println(" LeftMain: " + getClipLeftMainRect().x + " " + getClipLeftMainRect().y+ " " + getClipLeftMainRect().width+ " " + getClipLeftMainRect().height);
 	}
 
 	

@@ -23,6 +23,7 @@ public class AppContext {
 	public static PluginRunner pluginRunner;
 	public static Navigator navigator;
 	public static StatusBar statusBar;
+	public static ProfileView cleverImageView;
 	
 	public static Set<SmthChangeListener> smthListener = new HashSet<>();
 	
