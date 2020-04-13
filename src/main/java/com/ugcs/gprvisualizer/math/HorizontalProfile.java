@@ -15,6 +15,7 @@ public class HorizontalProfile {
 	public int maxDeep;
 	public int height;
 	public double avgval;
+	public int avgdeep;
 	
 	public Color color = new Color(50, 200, 255);
 	
@@ -28,6 +29,7 @@ public class HorizontalProfile {
 		maxDeep = deep[0];
 		
 		double valsum = 0;
+		long deepsum = 0;
 		
 		//smooth
 		smoothLevel();
@@ -41,9 +43,12 @@ public class HorizontalProfile {
 			float[] values = list.get(i).getNormValues();
 			int d = deep[i];
 			valsum+= values[d];
+			
+			deepsum += d;
 		}
 		
 		avgval = valsum / deep.length;
+		avgdeep = (int)(deepsum / deep.length);
 		height = maxDeep - minDeep;
 	}
 	

@@ -6,6 +6,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
+import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.GroundBandRemovalFilter;

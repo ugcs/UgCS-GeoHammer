@@ -315,26 +315,6 @@ public class SgyFile {
 		writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
 	}
 	
-//	public void savePart(String fileName, List<ByteBufferProducer> blocks) throws IOException {
-//		
-//		BlockFile blockFile = BlockFile.open(file);
-//		
-//		FileOutputStream fos = new FileOutputStream(fileName);
-//		FileChannel writechan = fos.getChannel();		
-//		
-//		writechan.write(ByteBuffer.wrap(txtHdrBlock.read(blockFile).array()));
-//		writechan.write(ByteBuffer.wrap(binHdrBlock.read(blockFile).array()));		
-//
-//		for(ByteBufferProducer block : blocks) {
-//			writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
-//		}		
-//		
-//		writechan.close();
-//		fos.close();		
-//		
-//		blockFile.close();
-//	}
-
 	public List<Trace> getTraces() {
 		return traces;
 	}

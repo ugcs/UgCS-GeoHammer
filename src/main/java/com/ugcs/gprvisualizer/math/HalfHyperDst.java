@@ -72,7 +72,7 @@ public class HalfHyperDst {
 	
 	public double[] smpToDst(int smp) {
 		
-		int grnd = sgyFile.groundProfile.deep[pinnacle_tr];
+		int grnd = sgyFile.groundProfile != null ? sgyFile.groundProfile.deep[pinnacle_tr] : 0;
 		
 		double air_smp = Math.min(grnd, smp);
 		double grn_smp = smp - air_smp;
@@ -111,7 +111,10 @@ public class HalfHyperDst {
 		hh.side = side;
 		hh.sampleToCm_air = sgyFile.getSamplesToCmAir();
 		hh.sampleToCm_grn = sgyFile.getSamplesToCmGrn();
-		hh.hypergoodsize = hh.getGoodSideDst(hh.pinnacle_smp) / x_factor;
+		
+		//reduce size not so intensive 
+		double goodsizefactor = ( 1+(x_factor-1)/2  );
+		hh.hypergoodsize = hh.getGoodSideDst(hh.pinnacle_smp) / goodsizefactor;
 		
 		int i=0;
 		int index=0;

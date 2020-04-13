@@ -30,11 +30,11 @@ public class AlgorithmicScan implements Command {
 		List<Trace> traces = sf.getTraces();
 		//
 		
-		new EdgeFinder().execute(sf);
+		//new EdgeFinder().execute(sf);
 		
-		new HorizontalGroupScan().execute(sf);
+		//new HorizontalGroupScan().execute(sf);
 		
-		new EdgeSubtractGround().execute(sf);
+		//new EdgeSubtractGround().execute(sf);
 		
 		//
 		int height = traces.get(0).getNormValues().length;
@@ -132,7 +132,7 @@ public class AlgorithmicScan implements Command {
 			smp< maxSmp ; smp++) {
 			
 			// reduce x distance for hyperbola calculation
-			for(double x_factor = 0.90; x_factor <=1.5; x_factor += 0.05) {
+			for(double x_factor = 0.90; x_factor <=1.3; x_factor += 0.05) {
 				processHyper3(sgyFile, tr, smp, x_factor, good);
 			}
 		}

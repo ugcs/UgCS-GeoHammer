@@ -9,7 +9,10 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
+import com.ugcs.gprvisualizer.app.commands.ComplexScan;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
+import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
+import com.ugcs.gprvisualizer.app.commands.HorizontalGroupFilter;
 import com.ugcs.gprvisualizer.app.commands.HorizontalGroupScan;
 import com.ugcs.gprvisualizer.app.commands.TraceProfileClear;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -281,8 +284,11 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 						),
 				new HBox(
 						CommandRegistry.createButton(new HorizontalGroupScan()),
-						CommandRegistry.createButton(new TraceProfileClear())
-					)
+						CommandRegistry.createButton(new HorizontalGroupFilter()),						
+						CommandRegistry.createButton(new EdgeSubtractGround())
+					),
+				CommandRegistry.createButton(new ComplexScan())				
+				
 			);
         tab2.setContent(t2);
         

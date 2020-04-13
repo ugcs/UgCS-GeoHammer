@@ -27,9 +27,9 @@ public class PrismDrawer {
 	int color_red3 = (235<<16) + (0 << 8 ) + 0;
 	int color_blu4 = (0<<16) + (0 << 8 ) + 235;
 	
-	int geencolorp = (0<<16) + (235 << 8 ) + 96;
-	int geencolorm = (96<<16) + (235 << 8 ) + 0;
-	int geencolorb = (96<<16) + (255 << 8 ) + 96;
+	int geencolorp = (0<<16) + (235 << 8 ) + 128;
+	int geencolorm = (128<<16) + (235 << 8 ) + 0;
+	int geencolorb = (66<<16) + (255 << 8 ) + 66;
 	
 	private static int goodcolors[] = new int[100];
 	static {
