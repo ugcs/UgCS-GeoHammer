@@ -32,33 +32,38 @@ public class HalfHyperDst {
 	
 	boolean defective = false;
 	
-	public boolean isGood(double thr) {
+	public double analize(int percent) {
+
+		if(sgyFile.getTraces().get(0).edge == null) {
+			System.out.println("!!!! edge not prepared");
+			return 0;
+		}
+
 		
-		double wei = analize();		
-		
-		return wei > thr;
+		return Math.max(analize(percent, true), analize(percent, false));
 	}
 	
-	
-	public double analize() {
+	public double analize(int percent, boolean higher) {
 		if(defective ) {
 			return 0;
 		}
+		//
+		int from = higher ? -1 : 0;
+		int to = higher ? 0 : 1;
 		
+		//
 		List<Trace> traces = sgyFile.getTraces();
 		
 		int sum[] = new int[5];
 		
-		for(int i=0; i< length;i++) {
+		int checked_length = length * percent / 100;
+		for(int i=0; i< checked_length;i++) {
 			int index = pinnacle_tr + side * i;
 			Trace trace = traces.get(index);
 			
 			int s = smp[i];
 
-			if(trace.edge == null) {
-				continue;
-			}
-			for(int j=s-1; j<=s+1; j++) {
+			for(int j=s-from; j<=s+to; j++) {
 				sum[trace.edge[j]]++;
 			}
 		}
@@ -67,7 +72,7 @@ public class HalfHyperDst {
 		int max = Arrays.stream(sum, 1, 5).max().getAsInt();
 		
 		
-		return (double)max / (double)length;
+		return (double)max / (double)checked_length;
 	}
 	
 	public double[] smpToDst(int smp) {

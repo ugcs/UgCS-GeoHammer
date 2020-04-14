@@ -62,7 +62,7 @@ public class EdgeSubtractGround implements Command {
 				for(EdgeCoord ec : queue) {
 					if(ec.index >= removeFromIndex) {
 						
-						list.get(ec.index).edge[ec.smp] = 0;
+						//list.get(ec.index).edge[ec.smp] = 0;
 						list.get(ec.index).good[ec.smp] = 1;
 					}					
 				}
@@ -111,6 +111,18 @@ public class EdgeSubtractGround implements Command {
 				processDeep(file, hp,  deep);
 			}
 		}
+		
+		//real clear
+		for(Trace trace : file.getTraces()){
+			for(int smp=0; smp<trace.good.length; smp++) {
+			
+				if(trace.good[smp] == 1) {
+					trace.edge[smp] = 0;
+				}				
+			}
+		}
+		
+		
 	}
 
 	public int getMaxGroundSmp(SgyFile file) {

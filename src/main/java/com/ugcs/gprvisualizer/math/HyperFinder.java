@@ -167,10 +167,10 @@ public class HyperFinder {
 		double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
 		
 		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1, x_factor);
-		double lftRate = lft.analize();
+		double lftRate = lft.analize(100);
 		
 		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1, x_factor);
-		double rhtRate = rht.analize();
+		double rhtRate = rht.analize(100);
 		
 		System.out.println( " lftR " + lftRate  + "    " + rhtRate + "  gs " + lft.hypergoodsize);
 		

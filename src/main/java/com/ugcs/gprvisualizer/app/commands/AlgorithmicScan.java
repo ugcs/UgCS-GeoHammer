@@ -10,6 +10,10 @@ import com.ugcs.gprvisualizer.math.HalfHyperDst;
 
 public class AlgorithmicScan implements Command {
 
+	private static final double X_FACTOR_FROM = 0.90;
+	private static final double X_FACTOR_TO = 1.7;
+	private static final double X_FACTOR_STEP = 0.1;
+	
 	@Override
 	public void execute(SgyFile file) {
 		
@@ -132,7 +136,7 @@ public class AlgorithmicScan implements Command {
 			smp< maxSmp ; smp++) {
 			
 			// reduce x distance for hyperbola calculation
-			for(double x_factor = 0.90; x_factor <=1.3; x_factor += 0.05) {
+			for(double x_factor = X_FACTOR_FROM; x_factor <= X_FACTOR_TO; x_factor += X_FACTOR_STEP) {
 				processHyper3(sgyFile, tr, smp, x_factor, good);
 			}
 		}
@@ -151,10 +155,18 @@ public class AlgorithmicScan implements Command {
 		
 		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, x_factor);
 		
+		double left100 = left.analize(100); 
+		double left20 = left.analize(20);
+		double right100 = right.analize(100);
+		double right20 = right.analize(20);
+		 		
+		
 		good[tr][smp] =
-			good[tr][smp] |
-			(left.isGood(thr) ? 1 : 0) | 
-			(right.isGood(thr) ? 2 : 0); 
+			good[tr][smp] 
+				|
+			(left100 > thr && right20 > thr ? 1 : 0) 
+				| 
+			(right100 > thr && left20 > thr ? 2 : 0); 
 		
 	}
 
