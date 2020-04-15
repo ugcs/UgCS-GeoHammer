@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app.commands;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +15,7 @@ public class ComplexScan implements Command {
 	@Override
 	public void execute(SgyFile file) {
 
+		
 		// find edges
 		new EdgeFinder().execute(file);
 		
@@ -52,6 +54,7 @@ public class ComplexScan implements Command {
 		// select best curve !
 		HorizontalProfile grnd = HorizontalGroupFilter.getBrightest(lines2);
 		grnd.finish(file.getTraces());
+		grnd.color = new Color(200, 100, 100);
 		
 		// create sum HP
 		HorizontalProfile mirr = HorizontalGroupFilter.createMirroredLine(file, top, grnd);

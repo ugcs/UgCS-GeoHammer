@@ -28,6 +28,7 @@ import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
@@ -321,6 +322,10 @@ public class SgyFile {
 
 	public void setTraces(List<Trace> traces) {
 		this.traces = traces;
+		
+		
+		new EdgeFinder().execute(this);
+		
 	}
 
 	public File getFile() {

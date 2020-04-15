@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app.commands;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -89,22 +90,27 @@ public class EdgeSubtractGround implements Command {
 	public void execute(SgyFile file) {
 		System.out.println("subtact profiles for " + file.getFile().getName());
 		
-		int maxGroundDeep = getMaxGroundSmp(file);
+		//int maxGroundDeep = getMaxGroundSmp(file);
 		
-		
-		//int maxDeep = model.getMaxHeightInSamples()-maxGroundDeep-1;
-		if(file.profiles== null) {
-			System.out.println("notprofiles");
+		if(file.groundProfile == null) {
+			System.out.println("!!!!!!!!!!!!!1 file.groundProfile == null");
 			return;
 		}
 		
-		for(HorizontalProfile hp : file.profiles) {
+		List<HorizontalProfile> hplist = new ArrayList<>();
+		//straight horizontal line
+		hplist.add(getHorizontal(file.getTraces().size()));
 		
+		// ground profile
+		hplist.add(file.groundProfile);
+		
+		// ground profile * 2
+		hplist.add(multTwice(file.groundProfile));
+		
+		for(HorizontalProfile hp : hplist) {
 			
 			int from = -hp.minDeep+MARGIN;
 			int to = file.getMaxSamples()-hp.maxDeep-MARGIN;
-			
-			System.out.println(" from " + from + "  to " + to);
 			
 			for(int deep=from; deep < to; deep++) {			
 				
@@ -123,6 +129,27 @@ public class EdgeSubtractGround implements Command {
 		}
 		
 		
+	}
+
+	private HorizontalProfile multTwice(HorizontalProfile groundProfile) {
+		HorizontalProfile hp = new HorizontalProfile(groundProfile.deep.length);
+		
+		for(int i=0; i< groundProfile.deep.length; i++) {
+			hp.deep[i] = groundProfile.deep[i]*2;
+		}
+		
+		hp.finish(null);
+		
+		return hp;
+	}
+
+	private HorizontalProfile getHorizontal(int size) {
+
+		HorizontalProfile hp = new HorizontalProfile(size);
+		
+		hp.finish(null);
+		
+		return hp;
 	}
 
 	public int getMaxGroundSmp(SgyFile file) {
@@ -178,7 +205,7 @@ public class EdgeSubtractGround implements Command {
 	@Override
 	public String getButtonText() {
 
-		return "Filter edges by ground";
+		return "Filter edges";
 	}
 
 	@Override

@@ -50,6 +50,7 @@ public class Trace {
         this.latLonOrigin = latLon;
         
         this.good = new int[originalvalues.length];
+        this.edge = new int[originalvalues.length];
     }
     
     public TraceHeader getHeader() {

@@ -5,6 +5,9 @@ import java.util.function.Function;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
+import com.ugcs.gprvisualizer.app.ProgressTask;
+import com.ugcs.gprvisualizer.app.TaskRunner;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 
@@ -14,14 +17,70 @@ import javafx.scene.control.Button;
 
 public class CommandRegistry {
 	
-
-	public static void runForFiles(Command command) {
+	private static final ProgressListener emptyListener = new ProgressListener() {
 		
-		for(SgyFile sgyFile : AppContext.model.getFileManager().getFiles()) {
-			command.execute(sgyFile);
+		@Override
+		public void progressPercent(int percent) {
+			
 		}
 		
+		@Override
+		public void progressMsg(String msg) {
+			
+		}
+	} ;
+	
+	public static void runForFiles(Command command) {
+		
+		runForFiles(command, emptyListener);
 	}
+	
+	public static void runForFiles(Command command, ProgressListener listener) {
+		System.out.println("runForFiles command " + command.getButtonText() );
+		
+		for(SgyFile sgyFile : AppContext.model.getFileManager().getFiles()) {
+			
+			try {
+				listener.progressMsg("process file '" + sgyFile.getFile().getName() + "'");
+				
+				command.execute(sgyFile);
+				
+			}catch(Exception e) {
+				e.printStackTrace();
+				
+				listener.progressMsg("error");
+			}
+		}
+		
+		listener.progressMsg("process finished '" + command.getButtonText() + "'");
+		
+		System.out.println("finished command " + command.getButtonText() );
+	}
+	
+	
+	public static Button createAsinqTaskButton(Command command) {
+		
+		Button button = new Button(command.getButtonText());
+		
+		ProgressTask task = new ProgressTask() {
+			
+			@Override
+			public void run(ProgressListener listener) {
+				runForFiles(command, listener);				
+			}
+		};
+		
+		button.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+				
+				new TaskRunner(null, task).start();
+		    	
+		    }
+		});
+		
+		return button;
+	}
+	
 
 	public static Button createButton(Command command) {
 		return createButton(command, null);

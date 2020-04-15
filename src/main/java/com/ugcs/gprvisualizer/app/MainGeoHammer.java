@@ -267,7 +267,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
         
 				
 
-        Button buttonHyperFinder = CommandRegistry.createButton(new AlgorithmicScan()); 
+         
 		
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
@@ -277,7 +277,9 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		Button buttonEdgeFinder = CommandRegistry.createButton(new EdgeFinder());
 		
 		
-		t2.getChildren().addAll(buttonHyperFinder, hyperLiveViewBtn, buttonDecimator, buttonEdgeFinder,
+		t2.getChildren().addAll(
+				CommandRegistry.createAsinqTaskButton(new AlgorithmicScan()),				
+				hyperLiveViewBtn, buttonDecimator, buttonEdgeFinder,
 				new HBox(
 						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
 						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)

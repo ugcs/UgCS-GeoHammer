@@ -209,7 +209,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
 		
 		for(Trace trace : model.getFileManager().getTraces()) {
-			double alpha = calcAlpha(trace.getNormValues(), start, finish);
+			double alpha = calcAlpha(trace.getNormValues(), trace.edge, start, finish);
 			
 			trace.maxindex2 = (int)alpha;
 		}
@@ -269,7 +269,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		return da.toImg();
 	}
 	
-	private double calcAlpha(float[] values, int start, int finish) {
+	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
 		double mx = 0;
 		double threshold = scaleArray[0][start];
 		double factor = scaleArray[1][start];
@@ -278,8 +278,9 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		finish = norm(finish, 0, values.length);
 		
 		for (int i = start; i < finish; i++) {
-
-			mx = Math.max(mx, Math.abs(values[i]));
+			if(edge[i] != 0 ) {
+				mx = Math.max(mx, Math.abs(values[i]));
+			}
 		}
 
 		double val = Math.max(0, mx - threshold) * factor;

@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.sun.scenario.effect.impl.state.HVSeparableKernel;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.math.BackgroundRemovalFilter;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.MovingAvg;
 
@@ -24,7 +25,7 @@ public class AmplitudeMatrix {
 
 	float[][] matrix;
 	float maxamp;
-	List<Trace> trace;
+	List<Trace> traces;
 
 	List<Grp> avgrow = new ArrayList<>();
 	List<List<Grp>> colls = new ArrayList<>();
@@ -33,9 +34,9 @@ public class AmplitudeMatrix {
 	MovingAvg startAvg = new MovingAvg();
 	MovingAvg finishAvg = new MovingAvg();
 	List<List<Integer>> rows;
-	int level[];
+	//int level[];
 	
-	public void init(List<Trace> trace) {
+	public void init(List<Trace> traces) {
 		
 		avgrow = new ArrayList<>();
 		colls = new ArrayList<>();
@@ -43,13 +44,13 @@ public class AmplitudeMatrix {
 		foundgroups = new ArrayList<>();
 		startAvg = new MovingAvg();
 		finishAvg = new MovingAvg();
-		level = null;
+		//level = null;
 		
 		
-		this.trace = trace;
-		matrix = new float[trace.size()][];
-		for(int i=0; i< trace.size(); i++) {
-			matrix[i] = getAmpVector(trace.get(i).getNormValues());
+		this.traces = traces;
+		matrix = new float[traces.size()][];
+		for(int i=0; i< traces.size(); i++) {
+			matrix[i] = getAmpVector(traces.get(i).getNormValues());
 		}		
 	}
 
@@ -102,7 +103,7 @@ public class AmplitudeMatrix {
 	/**
 	 * * * * * * * * * * * * * * * * * * *
 	 */
-	public void findLevel() {
+	public HorizontalProfile findLevel() {
 		//first col ordered by amp
 		
 		List<Grp> startList = getOrderedDescGrps();
@@ -122,18 +123,29 @@ public class AmplitudeMatrix {
 		this.selected.addAll(selected);
 		
 		
-		prepareLevel(selrow);
+		return prepareLevel(selrow);
 	}
 
-	private void prepareLevel(List<Integer> selrow) {
-		level = new int[selrow.size()];
+	private HorizontalProfile prepareLevel(List<Integer> selrow) {
 		
-		for(int i=0; i< level.length; i++) {
+		HorizontalProfile hp = new HorizontalProfile(selrow.size());
+		
+		//level = new int[selrow.size()];
+		
+		for(int i=0; i< selrow.size(); i++) {
 			 int r = calcAvgHeight(selrow, i);
-			 level[i] = r;
-			 trace.get(i).maxindex = r;
-			 trace.get(i).maxindex2 = r;
+			 
+			 hp.deep[i] = r;
+			 //level[i] = r;
+			 //trace.get(i).maxindex = r;
+			 //trace.get(i).maxindex2 = r;
 		}
+		
+		hp.finish(traces);
+		
+		hp.color = Color.red;
+		
+		return hp;
 	}
 
 	private List<List<Integer>> getRows(List<List<Grp>> selected) {
@@ -427,12 +439,12 @@ public class AmplitudeMatrix {
 		    }
 	    }
     	
-	    if(level != null) {
-	    	for(int x=0; x <level.length; x++) {
-	    		buffer[getIndex(x, level[x], 1)] = red;    		
-	    		buffer[getIndex(x, level[x], 3)] = red;
-	    	}
-	    }
+//	    if(level != null) {
+//	    	for(int x=0; x <level.length; x++) {
+//	    		buffer[getIndex(x, level[x], 1)] = red;    		
+//	    		buffer[getIndex(x, level[x], 3)] = red;
+//	    	}
+//	    }
 	    
 	    return image;
 		

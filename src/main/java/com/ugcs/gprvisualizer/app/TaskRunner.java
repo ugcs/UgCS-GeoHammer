@@ -79,7 +79,7 @@ public class TaskRunner implements ProgressListener {
 	}
 	
 	protected void closePopup() {
-		//dialog.close();
+		dialog.close();
 		
 		//primaryStage.getScene().setCursor(Cursor.DEFAULT);
 	}
@@ -88,9 +88,9 @@ public class TaskRunner implements ProgressListener {
 		 
 		
 		//primaryStage.getScene().setCursor(Cursor.WAIT);
-        //Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
-        //dialog.setScene(dialogScene);
-        //dialog.show();		
+        Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
+        dialog.setScene(dialogScene);
+        dialog.show();		
 	}
 
 	@Override

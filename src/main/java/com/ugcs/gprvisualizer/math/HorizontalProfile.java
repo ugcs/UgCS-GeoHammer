@@ -40,10 +40,13 @@ public class HorizontalProfile {
 			minDeep = Math.min(deep[i], minDeep);
 			maxDeep = Math.max(deep[i], maxDeep);
 			
-			float[] values = list.get(i).getNormValues();
 			int d = deep[i];
-			valsum+= values[d];
 			
+			if(list != null) {
+				float[] values = list.get(i).getNormValues();
+				valsum+= values[d];
+			}			
+						
 			deepsum += d;
 		}
 		

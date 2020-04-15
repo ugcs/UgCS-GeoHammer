@@ -8,15 +8,21 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
+
+/**
+ * find ground profile from file.profiles 
+ *
+ */
 public class HorizontalGroupFilter implements Command {
 
 	@Override
 	public void execute(SgyFile file) {
+		System.out.println("  -- -HorizontalGroupFilter- " + file.getFile().getName());
 		
 		List<HorizontalProfile> tmpStraight = new ArrayList<>();
 		List<HorizontalProfile> tmpCurve = new ArrayList<>();
 		for(HorizontalProfile hp : file.profiles) {
-			if(hp.height <= 3) {
+			if(hp.height <= 4) {
 				tmpStraight.add(hp);
 			}else {
 				tmpCurve.add(hp);
@@ -36,35 +42,39 @@ public class HorizontalGroupFilter implements Command {
 		
 		file.groundProfile = brightestGrn; 
 		
-		HorizontalProfile bott = createMirroredLine(file, brightestTop, brightestGrn);
+//		HorizontalProfile bott = createMirroredLine(file, brightestTop, brightestGrn);
 		
 		
-		List<HorizontalProfile> result = new ArrayList<>();
-		result.add(brightestTop);
-		result.add(brightestGrn);
-		result.add(bott);
-		file.profiles = result;
+//		List<HorizontalProfile> result = new ArrayList<>();
+//		result.add(brightestTop);
+//		result.add(brightestGrn);
+//		result.add(bott);
+//		file.profiles = result;
 		
 		
 	}
 
 	public static HorizontalProfile createMirroredLine(SgyFile file, HorizontalProfile brightestTop,
 			HorizontalProfile brightestGrn) {
+		
+		int maxsmp = file.getMaxSamples()-1;
 		HorizontalProfile bott = new HorizontalProfile(brightestTop.deep.length);
 		for(int i=0; i<brightestTop.deep.length; i++ ) {
 			
-			bott.deep[i] = Math.max(0, brightestGrn.deep[i] + (brightestGrn.deep[i] - (int)brightestTop.avgdeep));// deep[i]
+			bott.deep[i] = 
+					Math.min(maxsmp,
+					Math.max(0, brightestGrn.deep[i] + (brightestGrn.deep[i] - (int)brightestTop.avgdeep)));// deep[i]
 			
 		}
 		bott.finish(file.getTraces());
-		bott.color = Color.RED;
+		bott.color = new Color(150, 70, 70);
 		return bott;
 	}
 
 	@Override
 	public String getButtonText() {
 
-		return "filter";
+		return "Ground from profiles";
 	}
 
 	@Override

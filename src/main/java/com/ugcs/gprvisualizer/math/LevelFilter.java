@@ -92,7 +92,7 @@ public class LevelFilter implements ToolProducer {
 			
 			CommandRegistry.createButton(new EdgeSubtractGround()),
 			
-			CommandRegistry.createButton(new AlgorithmicScan())
+			CommandRegistry.createAsinqTaskButton(new AlgorithmicScan())
 		);				
 					
 			

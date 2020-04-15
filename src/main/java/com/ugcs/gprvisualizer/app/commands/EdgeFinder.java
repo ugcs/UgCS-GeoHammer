@@ -17,7 +17,6 @@ public class EdgeFinder implements Command {
 	
 	
 	public void execute(SgyFile sgyFile) {
-		int hypermiddleamp = model.getSettings().hypermiddleamp;
 		
 		List<Trace> traces = sgyFile.getTraces();
 		
@@ -29,16 +28,16 @@ public class EdgeFinder implements Command {
 			int mxind = 0;
 			for(int s=1; s<values.length; s++) {
 				
-				int s1 = (int)Math.signum(values[s-1]-hypermiddleamp);
-				int s2 = (int)Math.signum(values[s]-hypermiddleamp);
+				int s1 = (int)Math.signum(values[s-1]);
+				int s2 = (int)Math.signum(values[s]);
 				
 				if(s1 != s2) {
 					trace.edge[s] = s1 > s2 ? 1 : 2;
-					trace.edge[mxind] = (values[mxind]-hypermiddleamp) < 0 ? 3 : 4;
+					trace.edge[mxind] = (values[mxind]) < 0 ? 3 : 4;
 					mxind = s;
 				}
 				
-				if(Math.abs(values[mxind]-hypermiddleamp) < Math.abs(values[s]-hypermiddleamp) ) {
+				if(Math.abs(values[mxind]) < Math.abs(values[s]) ) {
 					mxind = s;
 				}
 				

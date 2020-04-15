@@ -233,7 +233,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		Rectangle r = field.getClipMainRect();
 		g2.setClip(r.x, r.y, r.width, r.height);
 		
-		drawGroundLevel(traces, field, g2, startTrace, finishTrace);
+		//drawGroundLevel(traces, field, g2, startTrace, finishTrace);
 		drawGreenLevel(traces, field, g2, startTrace, finishTrace);
 		drawFileProfiles(field, g2, startTrace, finishTrace);
 		
@@ -268,8 +268,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
 		
 			
-		g2.setColor(new Color(50, 200,  250));
-		g2.setStroke(AMP_STROKE);
 		
 		int f1 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(startTrace));
 		int f2 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(finishTrace));
@@ -277,25 +275,33 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		for(int i =f1; i<= f2; i++) {
 			SgyFile f = model.getFileManager().getFiles().get(i);
 			
-			if(f.profiles == null) {
-				continue;					
+			if(f.profiles != null) {
+				//pf
+				g2.setColor(new Color(50, 200,  250));
+				g2.setStroke(AMP_STROKE);
+				for(HorizontalProfile pf : f.profiles) {
+					drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf);
+				}				
 			}
 			
-			for(HorizontalProfile pf : f.profiles) {
-				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf);
-			}				
+			// ground
+			if(f.groundProfile != null) {
+				g2.setColor(new Color(210,105,30));
+				g2.setStroke(LEVEL_STROKE);
+				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile);
+			}
 		}
 	}
 	
-	public void drawGroundLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace,
-			int finishTrace) {
-		//if(model.getFileManager().levelCalculated) {
-			g2.setColor(new Color(210,105,30));
-			g2.setStroke(LEVEL_STROKE);
-			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
-			
-		//}
-	}
+//	public void drawGroundLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace,
+//			int finishTrace) {
+//		//if(model.getFileManager().levelCalculated) {
+//			g2.setColor(new Color(210,105,30));
+//			g2.setStroke(LEVEL_STROKE);
+//			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
+//			
+//		//}
+//	}
 
 	public double getRealContrast() {
 		double contr = Math.pow(1.08, 140-contrast);

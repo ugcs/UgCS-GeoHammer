@@ -11,7 +11,7 @@ import com.ugcs.gprvisualizer.math.HalfHyperDst;
 public class AlgorithmicScan implements Command {
 
 	private static final double X_FACTOR_FROM = 0.90;
-	private static final double X_FACTOR_TO = 1.7;
+	private static final double X_FACTOR_TO = 1.71;
 	private static final double X_FACTOR_STEP = 0.1;
 	
 	@Override
