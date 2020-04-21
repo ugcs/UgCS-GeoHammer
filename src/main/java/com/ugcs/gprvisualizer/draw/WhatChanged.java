@@ -4,6 +4,10 @@ public class WhatChanged {
 
 	private Change change;
 	
+	public String toString() {
+		return change.name();
+	}
+	
 	public WhatChanged(Change change) {
 		this.change = change;
 	}

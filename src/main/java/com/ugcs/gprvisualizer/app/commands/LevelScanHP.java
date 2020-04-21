@@ -10,7 +10,11 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
-public class ComplexScan implements Command {
+/**
+ * find ground level 2 (from HorizontalProfile) 
+ *
+ */
+public class LevelScanHP implements Command {
 
 	@Override
 	public void execute(SgyFile file) {
@@ -33,7 +37,7 @@ public class ComplexScan implements Command {
 		HorizontalProfile top = HorizontalGroupFilter.getBrightest(lines);
 		
 		// copy sgyfile
-		SgyFile file2 = copy(file); 
+		SgyFile file2 = file.copy(); 
 		
 		// remove noise
 		new BackgroundNoiseRemover().execute(file2);
@@ -57,37 +61,16 @@ public class ComplexScan implements Command {
 		grnd.color = new Color(200, 100, 100);
 		
 		// create sum HP
-		HorizontalProfile mirr = HorizontalGroupFilter.createMirroredLine(file, top, grnd);
+		//HorizontalProfile mirr = HorizontalGroupFilter.createMirroredLine(file, top, grnd);
 		
 		// copy to HP to original
 		List<HorizontalProfile> result = new ArrayList<>();
 		result.add(top);
 		result.add(grnd);
-		result.add(mirr);
+		//result.add(mirr);
 		file.profiles= result;
 		file.groundProfile = grnd;
 		
-	}
-
-	private SgyFile copy(SgyFile file) {
-		
-		SgyFile file2 = new SgyFile();
-		
-		file2.setFile(file.getFile());
-		
-		List<Trace> traces = new ArrayList<>();
-		for(Trace org : file.getTraces()){
-			
-			float[] values = Arrays.copyOf(org.getNormValues(), org.getNormValues().length);
-			
-			Trace tr = new Trace(org.getBinHeader(), org.getHeader(), values, org.getLatLon());
-			traces.add(tr);
-		}
-		
-		
-		file2.setTraces(traces);
-		
-		return file2;
 	}
 
 	public List<HorizontalProfile> findStraightLines(SgyFile file) {
@@ -115,7 +98,7 @@ public class ComplexScan implements Command {
 	@Override
 	public String getButtonText() {
 		
-		return "Complex scan";
+		return "Ground level scan v.2";
 	}
 
 	@Override

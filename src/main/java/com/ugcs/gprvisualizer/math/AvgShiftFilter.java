@@ -6,6 +6,11 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+/*
+ * поиск уровня земли по среднему профилю, путем подставления его наразные высоты и выбор наименьшего расхождения
+ * 
+ *  не исопльзуется
+ */
 public class AvgShiftFilter {
 
 	Model model;
@@ -82,7 +87,7 @@ public class AvgShiftFilter {
 			cnt++;
 			
 			tr.maxindex = shift;
-			tr.maxindex2 = shift + START+RANGE; 
+			//tr.maxindex2 = shift + START+RANGE; 
 		}
 		
 		

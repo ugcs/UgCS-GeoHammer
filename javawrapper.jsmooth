@@ -9,7 +9,7 @@
 <arguments></arguments>
 <currentDirectory>${EXECUTABLEPATH}</currentDirectory>
 <embeddedJar>true</embeddedJar>
-<executableName>geohammer.exe</executableName>
+<executableName>target\geohammer.exe</executableName>
 <initialMemoryHeap>-1</initialMemoryHeap>
 <jarLocation>target\geohammer-jar-with-dependencies.jar</jarLocation>
 <mainClassName>com.ugcs.gprvisualizer.app.MainGeoHammer</mainClassName>

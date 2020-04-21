@@ -10,6 +10,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ManuilovFilter;
+import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public class SgyFile {
 	
@@ -64,6 +66,12 @@ public class SgyFile {
     //horizontal cohesive lines of edges
     public List<HorizontalProfile> profiles;
     public HorizontalProfile groundProfile;
+    
+    // hyperbola probability calculated by AlgoritmicScan
+    public ScanProfile algoScan;
+    
+    // amplitude
+    public ScanProfile amplScan;
     
 	
 	private List<BaseObject> auxElements = new ArrayList<>();
@@ -382,5 +390,31 @@ public class SgyFile {
 	
 	public int getMaxSamples() {
 		return getTraces().get(0).getNormValues().length;
+	}
+
+	public SgyFile copy() {
+
+		
+		SgyFile file2 = new SgyFile();
+		
+		file2.setFile(this.getFile());
+		
+		List<Trace> traces = new ArrayList<>();
+		for(Trace org : this.getTraces()){
+			
+			float[] values = Arrays.copyOf(org.getNormValues(), org.getNormValues().length);
+			
+			Trace tr = new Trace(org.getBinHeader(), org.getHeader(), values, org.getLatLon());
+			traces.add(tr);
+		}
+		
+		
+		file2.setTraces(traces);
+		
+		return file2;
+	}
+
+	public int size() {
+		return getTraces().size();
 	}
 }

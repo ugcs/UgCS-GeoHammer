@@ -34,6 +34,7 @@ import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HyperFinder;
+import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
 
 import javafx.application.Platform;
@@ -161,6 +162,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		
 		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
+		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
 		showGreenLineBtn.setOnAction(e -> {
 			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
@@ -234,7 +236,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		g2.setClip(r.x, r.y, r.width, r.height);
 		
 		//drawGroundLevel(traces, field, g2, startTrace, finishTrace);
-		drawGreenLevel(traces, field, g2, startTrace, finishTrace);
+		//drawGreenLevel(traces, field, g2, startTrace, finishTrace);
 		drawFileProfiles(field, g2, startTrace, finishTrace);
 		
 		drawAmplitudeMapLevels(field, g2);
@@ -255,15 +257,15 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		return bi;
 	}
 
-	public void drawGreenLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
-		if(model.getSettings().showGreenLine) {
-			
-			g2.setColor(Color.GREEN);
-			g2.setStroke(AMP_STROKE);
-			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, true);
-			
-		}
-	}
+//	public void drawGreenLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
+//		if(model.getSettings().showGreenLine) {
+//			
+//			g2.setColor(Color.GREEN);
+//			g2.setStroke(AMP_STROKE);
+//			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, true);
+//			
+//		}
+//	}
 
 	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
 		
@@ -290,6 +292,15 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				g2.setStroke(LEVEL_STROKE);
 				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile);
 			}
+			
+			if(model.getSettings().showGreenLine) {
+				
+				g2.setColor(Color.GREEN);
+				g2.setStroke(AMP_STROKE);
+				
+				drawScanProfile(field, g2, f.getOffset().getStartTrace(), f.algoScan);
+			}
+			
 		}
 	}
 	
@@ -365,34 +376,34 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 	}
 
-	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace, boolean m2) {
-		
-		
-		Trace trace1 = traces.get(startTrace);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  m2 ? trace1.maxindex2 : trace1.maxindex));
-		int max2 = 0;
-		int prev_max2 = 0;
-		for(int i=startTrace+1; i<finishTrace; i++) {
-			//Trace trace1 = traces.get(i-1);
-			
-			Trace trace2 = traces.get(i);
-			
-			max2 = Math.max(max2, m2 ? trace2.maxindex2 : trace2.maxindex);
-			
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
-			if(p2.x - p1.x > 2) {
-				if(max2 > 0 || prev_max2 > 0) {
-					g2.drawLine(p1.x, p1.y, p2.x, p2.y);
-				}
-				trace1 = trace2;
-				p1 = p2;
-				
-				prev_max2 = max2;
-				max2 = 0;
-			}
-			
-		}
-	}
+//	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace, boolean m2) {
+//		
+//		
+//		Trace trace1 = traces.get(startTrace);
+//		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  m2 ? trace1.maxindex2 : trace1.maxindex));
+//		int max2 = 0;
+//		int prev_max2 = 0;
+//		for(int i=startTrace+1; i<finishTrace; i++) {
+//			//Trace trace1 = traces.get(i-1);
+//			
+//			Trace trace2 = traces.get(i);
+//			
+//			max2 = Math.max(max2, m2 ? trace2.maxindex2 : trace2.maxindex);
+//			
+//			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
+//			if(p2.x - p1.x > 2) {
+//				if(max2 > 0 || prev_max2 > 0) {
+//					g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+//				}
+//				trace1 = trace2;
+//				p1 = p2;
+//				
+//				prev_max2 = max2;
+//				max2 = 0;
+//			}
+//			
+//		}
+//	}
 
 	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf) {
 		
@@ -406,6 +417,30 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			max2 = Math.max(max2, pf.deep[i]);
 			
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  max2));
+			if(p2.x - p1.x > 2) {
+				
+				g2.drawLine(p1.x, p1.y, p2.x, p2.y);				
+				
+				p1 = p2;				
+				max2 = 0;
+			}
+			
+		}
+	}
+
+	private void drawScanProfile(ProfileField field, Graphics2D g2, int startTraceIndex, ScanProfile pf) {
+		
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  0));
+		int max2 = 0;
+		
+		for(int i=1; i<pf.intensity.length; i++) {
+
+			
+			max2 = Math.max(max2, (int)pf.intensity[i]);
+			
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  0));
+			p2.y = max2; 
+			
 			if(p2.x - p1.x > 2) {
 				
 				g2.drawLine(p1.x, p1.y, p2.x, p2.y);				

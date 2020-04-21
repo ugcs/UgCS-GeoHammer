@@ -12,7 +12,9 @@ import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.GroundBandRemovalFilter;
 import com.ugcs.gprvisualizer.app.commands.LevelClear;
 import com.ugcs.gprvisualizer.app.commands.LevelGround;
+import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
+import com.ugcs.gprvisualizer.app.commands.RemoveGroundLevel;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -86,13 +88,19 @@ public class LevelFilter implements ToolProducer {
 						levelCalculated = true; 
 						updateButtons(); 
 					}),
-				buttonRemoveLevel, buttonLevelGround, 
+			CommandRegistry.createButton(new LevelScanHP(), 
+					e->{ 
+						levelCalculated = true; 
+						updateButtons(); 
+					}),
+			
+				buttonRemoveLevel, buttonLevelGround 
 		
-			CommandRegistry.createButton(new GroundBandRemovalFilter()),
+			//CommandRegistry.createButton(new GroundBandRemovalFilter()),
 			
-			CommandRegistry.createButton(new EdgeSubtractGround()),
+			//CommandRegistry.createButton(new EdgeSubtractGround()),
 			
-			CommandRegistry.createAsinqTaskButton(new AlgorithmicScan())
+			
 		);				
 					
 			

@@ -16,7 +16,8 @@ public class DblArray {
 	
 	private double array[][];
 	
-	private int[] palette = new PaletteBuilder().build();
+	public static int[] paletteAmp = new PaletteBuilder().build();
+	public static int[] paletteAlg = new PaletteBuilder().build2();
 	
 	public DblArray(int width, int height){
 		
@@ -50,14 +51,10 @@ public class DblArray {
 			int x1 = normX(x-dx);
 			int x2 = normX(x+dx);
 			
-			//drawLine(x1, x2, x, r, v,  Math.abs((s * (double)(r-dy) / (double)r)));			
-			//drawLine(x1, x2, x, r, v,  s);
-			
 			for(int i=x1;i<x2; i++){
 				int curx = Math.abs(i-x);
 				
 				int curr2 = curx*curx + dy*dy;
-				//array[i][y] += Math.abs((s * (r-dx) / r  ));
 				array[i][vy] = Math.max(array[i][vy], s * (r2 - curr2 ) / r2);
 			}		
 			
@@ -92,7 +89,7 @@ public class DblArray {
 		}		
 	}
 	
-	public BufferedImage toImg(){
+	public BufferedImage toImg(int[] palette){
 		
 	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	    
@@ -100,17 +97,11 @@ public class DblArray {
 	    
 	    for(int x=0; x<width; x++){
 	    	for(int y=0; y<height; y++){
-	    	
 	    		if(array[x][y] > 4) {
-	    			buffer[x + y * width] = palette[(int)(array[x][y])];// | (255<<24);
-	    		}
-	    	
+	    			buffer[x + y * width] = palette[(int)(array[x][y])];
+	    		}	    	
 	    	}
 	    }
-	    
-	    
-	    //((DataBufferByte)image.getRaster().getDataBuffer()).se
-	    //image.getRaster().getDataBuffer().se
 	    
 	    return image;
 	}
@@ -137,7 +128,7 @@ public class DblArray {
 			
 		}
 		
-		BufferedImage img = da.toImg();
+		BufferedImage img = da.toImg(paletteAlg);
 		
 		da.saveImg(img, "fff.png");
 		

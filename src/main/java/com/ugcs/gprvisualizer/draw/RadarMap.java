@@ -17,6 +17,8 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
+import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.DblArray;
@@ -24,7 +26,9 @@ import com.ugcs.gprvisualizer.gpr.MedianScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.ScaleArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 import com.ugcs.gprvisualizer.math.HyperFinder;
+import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.AutoGainCheckbox;
 import com.ugcs.gprvisualizer.ui.BaseCheckBox;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
@@ -83,7 +87,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	
 	VBox vBox = new VBox();
 	
-	private double[][] scaleArray;
+	//private double[][] scaleArray;
 	private ArrayBuilder scaleArrayBuilder;
 	private ArrayBuilder autoArrayBuilder;
 	
@@ -145,6 +149,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		vBox.setStyle(cssLayout);		
 	}
 	
+	//draw on the map window prepared image
 	@Override
 	public void draw(Graphics2D g2) {
 		
@@ -191,103 +196,93 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 				changed.isMapscroll() || 
 				changed.isWindowresized()) {
 			
+			System.out.println("RadarMap start asinq");
 			executor.submit(t);
 		}		
 	}
-	
-	
-	private void calcMaxindexMath(){
-		
-		//do nothing
-		//new HyperFinder(model).process();
-		
-	}
-	
-	private void calcMaxindexAmpl(){
-		
-		int start = norm(model.getSettings().layer, 0, model.getMaxHeightInSamples());
-		int finish = norm(model.getSettings().layer + model.getSettings().hpage, 0, model.getMaxHeightInSamples());
-		
-		for(Trace trace : model.getFileManager().getTraces()) {
-			double alpha = calcAlpha(trace.getNormValues(), trace.edge, start, finish);
-			
-			trace.maxindex2 = (int)alpha;
-		}
-	}
-	
-	
+
+	// prepare image in thread
 	private BufferedImage createHiRes() {
-		
-		
+		System.out.println("hires start");
 		
 		MapField field = new MapField(model.getField());
 		
 		imgLatLon = field.getSceneCenter();
 		
 		DblArray da = new DblArray(parentDimension.width, parentDimension.height);
-		
 
-		switch(model.getSettings().radarMapMode) {
-			case AMPLITUDE:
+		
+		int[] palette;
+		if(model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
 				
-				scaleArray = getArrayBuilder().build();
-				calcMaxindexAmpl();
-				
-				break;
-			case SEARCH:
-				calcMaxindexMath();		
-				break;
+			// fill file.amplScan
+			CommandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
+			
+			palette = DblArray.paletteAmp;
+		}else {
+			palette = DblArray.paletteAlg;
 		}
-		//
-		
 
-		for(Trace trace : model.getFileManager().getTraces()) {
+		drawCircles(field, da);
+		return da.toImg(palette);
+	}
 
+	public void drawCircles(MapField field, DblArray da) {
+		for(SgyFile file : model.getFileManager().getFiles()) {
+			
+			ScanProfile profile = getFileScanProfile(file);
+			
+			List<Trace> traces = file.getTraces();
+			if(profile != null) {
+				drawFileCircles(field, da, file, profile, traces);
+			}
+		}
+	}
+
+	public ScanProfile getFileScanProfile(SgyFile file) {
+		ScanProfile profile;
+		if(model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
+			profile = file.amplScan;
+		}else {
+			profile = file.algoScan;
+		}
+		return profile;
+	}
+
+	public void drawFileCircles(MapField field, DblArray da, SgyFile file, ScanProfile profile, List<Trace> traces) {
+		for(int i=0; i<file.size(); i++) {
+			Trace trace = traces.get(i);
+			
 			Point2D p = field.latLonToScreen(trace.getLatLon());
 			
-			//double alpha = calcAlpha(trace.getNormValues(), start, finish);
-			double alpha = trace.maxindex2;
+			double alpha = profile.intensity[i];
 			
 			da.drawCircle(
 				(int)p.getX() + parentDimension.width/2, 
 				(int)p.getY() + parentDimension.height/2, 
 				model.getSettings().radius, alpha);
-			
-			
-			//// origin point
-//			p = field.latLonToScreen(trace.getLatLonOrigin());			
-//			alpha = 500;
-//			
-//			da.drawCircle(
-//				(int)p.getX() + parentDimension.width/2, 
-//				(int)p.getY() + parentDimension.height/2, 
-//				2, 500);
-			
-			
 		}
-		
-		return da.toImg();
 	}
 	
-	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
-		double mx = 0;
-		double threshold = scaleArray[0][start];
-		double factor = scaleArray[1][start];
-
-		start = norm(start, 0, values.length);
-		finish = norm(finish, 0, values.length);
-		
-		for (int i = start; i < finish; i++) {
-			if(edge[i] != 0 ) {
-				mx = Math.max(mx, Math.abs(values[i]));
-			}
-		}
-
-		double val = Math.max(0, mx - threshold) * factor;
-
-		return Math.max(0, Math.min(val, 200));
-
-	}
+//	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
+//		double mx = 0;
+//		double threshold = scaleArray[0][start];
+//		double factor = scaleArray[1][start];
+//
+//		start = norm(start, 0, values.length);
+//		finish = norm(finish, 0, values.length);
+//		
+//		for (int i = start; i < finish; i++) {
+//			if(edge[i] != 0 ) {
+//				mx = Math.max(mx, Math.abs(values[i]));
+//			}
+//		}
+//
+//		double val = Math.max(0, mx - threshold) * factor;
+//
+//		return Math.max(0, Math.min(val, 200));
+//
+//	}
 
 	private int norm(int i, int min, int max) {
 

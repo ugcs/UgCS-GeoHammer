@@ -94,7 +94,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 	
 	public List<Node> getRightPanelTools() {
-		return Arrays.asList(addBtn, addHypBtn, addSurfaceBtn, addFoundBtn, getSpacer(), delBtn, clearBtn);	
+		return Arrays.asList(addBtn, addHypBtn, /*addSurfaceBtn,*/ addFoundBtn, getSpacer(), delBtn, clearBtn);	
 	}
 	
 	private Region getSpacer() {
@@ -193,23 +193,23 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		}
 	);
 		
-		addSurfaceBtn.setOnAction(e -> {				
-			
-			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-			if(sf == null) {
-				return;
-			}
-				
-			AuxRect rect = createSurfaceRect(sf);
-				
-			
-			sf.getAuxElements().add(rect);
-			sf.setUnsaved(true);
-			
-			model.updateAuxElements();
-			
-			profileView.repaintEvent();
-		});
+//		addSurfaceBtn.setOnAction(e -> {				
+//			
+//			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
+//			if(sf == null) {
+//				return;
+//			}
+//				
+//			AuxRect rect = createSurfaceRect(sf);
+//				
+//			
+//			sf.getAuxElements().add(rect);
+//			sf.setUnsaved(true);
+//			
+//			model.updateAuxElements();
+//			
+//			profileView.repaintEvent();
+//		});
 		
 		addFoundBtn.setOnAction(e -> {				
 			
@@ -264,46 +264,47 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
-	private AuxRect createSurfaceRect(SgyFile sf) {
-		Trace tr1 = sf.getTraces().get(0);
-		Trace tr2 = sf.getTraces().get(sf.getTraces().size()-1);
-
-		int minGrnd = tr1.maxindex2;
-		int maxGrnd = tr1.maxindex2;
-		for(Trace trace : sf.getTraces()){
-			minGrnd = Math.min(minGrnd, trace.maxindex2);
-			maxGrnd = Math.max(maxGrnd, trace.maxindex2);
-		}
-		int topMarg = 10;
-		int botMarg = 15;
-
-		int topStart = minGrnd-topMarg;
-		int botFinish = maxGrnd+botMarg;
-		
-		AuxRect rect = new AuxRect(
-			tr1.indexInSet, tr2.indexInSet,
-			topStart, botFinish, 
-			sf.getOffset());
-		
-		rect.setType(AreaType.Surface);
-
-		int width = tr2.indexInSet - tr1.indexInSet +1;
-		
-		int[] topCut = new int[width];
-		int[] botCut = new int[width];
-		
-		for(int i=0; i<width; i++) {
-			Trace t = sf.getTraces().get(i);
-			topCut[i] = Math.max(0, t.maxindex2-topMarg-topStart);
-			botCut[i] = Math.min(botFinish-topStart, t.maxindex2+botMarg-topStart);
-		
-		}
-		
-		rect.setTopCut(topCut);
-		rect.setBotCut(botCut);
-		rect.updateMaskImg();
-		return rect;
-	}
+//	private AuxRect createSurfaceRect(SgyFile sf) {
+//		
+//		Trace tr1 = sf.getTraces().get(0);
+//		Trace tr2 = sf.getTraces().get(sf.getTraces().size()-1);
+//
+//		int minGrnd = tr1.maxindex2;
+//		int maxGrnd = tr1.maxindex2;
+//		for(Trace trace : sf.getTraces()){
+//			minGrnd = Math.min(minGrnd, trace.maxindex2);
+//			maxGrnd = Math.max(maxGrnd, trace.maxindex2);
+//		}
+//		int topMarg = 10;
+//		int botMarg = 15;
+//
+//		int topStart = minGrnd-topMarg;
+//		int botFinish = maxGrnd+botMarg;
+//		
+//		AuxRect rect = new AuxRect(
+//			tr1.indexInSet, tr2.indexInSet,
+//			topStart, botFinish, 
+//			sf.getOffset());
+//		
+//		rect.setType(AreaType.Surface);
+//
+//		int width = tr2.indexInSet - tr1.indexInSet +1;
+//		
+//		int[] topCut = new int[width];
+//		int[] botCut = new int[width];
+//		
+//		for(int i=0; i<width; i++) {
+//			Trace t = sf.getTraces().get(i);
+//			topCut[i] = Math.max(0, t.maxindex2-topMarg-topStart);
+//			botCut[i] = Math.min(botFinish-topStart, t.maxindex2+botMarg-topStart);
+//		
+//		}
+//		
+//		rect.setTopCut(topCut);
+//		rect.setBotCut(botCut);
+//		rect.updateMaskImg();
+//		return rect;
+//	}
 
 	private boolean processPress(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
 		for(BaseObject o : controls2) {

@@ -29,7 +29,7 @@ public class Trace {
     private double prevDist = 100000;
     
     public int maxindex;
-    public int maxindex2;
+    //public int maxindex2;
     public int verticalOffset;
     
     public int indexInFile;

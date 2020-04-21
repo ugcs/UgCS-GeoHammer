@@ -52,13 +52,18 @@ public class CommandRegistry {
 			}
 		}
 		
+		Change ch = command.getChange();
+		if(ch != null) {
+			AppContext.notifyAll(new WhatChanged(ch));
+		}
+		
 		listener.progressMsg("process finished '" + command.getButtonText() + "'");
 		
 		System.out.println("finished command " + command.getButtonText() );
 	}
 	
 	
-	public static Button createAsinqTaskButton(Command command) {
+	public static Button createAsinqTaskButton(AsinqCommand command) {
 		
 		Button button = new Button(command.getButtonText());
 		
@@ -96,7 +101,7 @@ public class CommandRegistry {
 				finish.accept(null);
 			}
 			
-			AppContext.notifyAll(new WhatChanged(command.getChange()));			
+						
 			
 		});
 		

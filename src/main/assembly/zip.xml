@@ -11,6 +11,7 @@
         <file>
             <source> ${project.build.directory}/${project.artifactId}-jar-with-dependencies.jar</source>
             <outputDirectory>/</outputDirectory>
+            <fileMode>777</fileMode>
         </file>
         <file>
             <source> ${project.basedir}/start.cmd</source>
@@ -19,6 +20,7 @@
         <file>
             <source> ${project.basedir}/start.sh</source>
             <outputDirectory>/</outputDirectory>
+            <fileMode>777</fileMode>
         </file>
     </files>
 </assembly>

@@ -28,6 +28,11 @@ public class AppContext {
 	public static Set<SmthChangeListener> smthListener = new HashSet<>();
 	
 	public static void notifyAll(WhatChanged changed) {
+		
+		if(!changed.isJustdraw()) {
+			//System.out.println("[notification]" + changed.toString());
+		}
+		
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run() {

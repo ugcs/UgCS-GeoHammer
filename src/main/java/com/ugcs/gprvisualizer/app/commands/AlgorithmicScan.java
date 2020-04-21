@@ -7,8 +7,10 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HalfHyperDst;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
+import com.ugcs.gprvisualizer.math.ScanProfile;
 
-public class AlgorithmicScan implements Command {
+public class AlgorithmicScan implements AsinqCommand {
 
 	private static final double X_FACTOR_FROM = 0.90;
 	private static final double X_FACTOR_TO = 1.71;
@@ -19,7 +21,7 @@ public class AlgorithmicScan implements Command {
 		
 		//clear
 		for(Trace t: file.getTraces()) {
-			t.maxindex2 = 0;
+			
 			t.good = new int[t.getNormValues().length];			
 		}
 		
@@ -32,15 +34,6 @@ public class AlgorithmicScan implements Command {
 
 	private void processSgyFile(SgyFile sf) {
 		List<Trace> traces = sf.getTraces();
-		//
-		
-		//new EdgeFinder().execute(sf);
-		
-		//new HorizontalGroupScan().execute(sf);
-		
-		//new EdgeSubtractGround().execute(sf);
-		
-		//
 		int height = traces.get(0).getNormValues().length;
 		int good[][] = new int[traces.size()][height];
 		
@@ -53,17 +46,15 @@ public class AlgorithmicScan implements Command {
 			processTrace(sf, i, good); 
 		}
 		
-		//filter
-		
-		//filterGood(height, good);
-		
-		//
-		saveResultToTraces(traces, good);
+		sf.algoScan = saveResultToTraces(traces, good);
 	}
 
-	private void saveResultToTraces(List<Trace> traces, int[][] good) {
+	private ScanProfile saveResultToTraces(List<Trace> traces, int[][] good) {
+		
+		ScanProfile hp = new ScanProfile(traces.size()); 
+		
 		for(int i=0; i<traces.size(); i++) {
-			traces.get(i).maxindex2 = Math.max(traces.get(i).maxindex2, cleversumdst(good, i));
+			hp.intensity[i] = cleversumdst(good, i);// Math.max(hp.deep[i], cleversumdst(good, i));
 			
 			
 			//put to trace.good
@@ -75,6 +66,9 @@ public class AlgorithmicScan implements Command {
 			}
 			
 		}
+		hp.finish();
+		
+		return hp;
 	}
 
 	private int cleversumdst(int[][] good, int tr) {
@@ -176,7 +170,7 @@ public class AlgorithmicScan implements Command {
 	@Override
 	public String getButtonText() {
 	
-		return "Algorithmic scan";
+		return "internal algorithmic scan";
 	}
 
 	public Change getChange() {

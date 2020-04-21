@@ -34,5 +34,25 @@ public class PaletteBuilder {
 		return palette;
 	}
 
+	public int[] build2() {
+		
+		int[] palette = new int[15000];
+		
+		for(int i=0; i< palette.length; i++){
+			
+			double t= ((double)i+start) / delit;
+			
+			int r = ((int)((Math.sin(t*1.00)+1)/2 * 255.0 ) ) & 0xff;
+			int g = ((int)((Math.cos(t*1.43)+1)/2 * 255.0 ) ) & 0xff;
+			int b = ((int)((Math.cos(t*0.78)+1)/2 * 255.0 ) ) & 0xff;
+			int alpha = (int) (i<30.0 ? i/30.0 * 180.0 : 180.0);
+			
+			palette[i] = r + (g << 8) + (b << 16) + (alpha << 24);
+		}
+		
+		
+		return palette;
+	}
+
 	
 }

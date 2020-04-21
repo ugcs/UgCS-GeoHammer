@@ -8,8 +8,9 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
+import com.ugcs.gprvisualizer.app.commands.AlgorithmicScanFull;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
-import com.ugcs.gprvisualizer.app.commands.ComplexScan;
+import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.HorizontalGroupFilter;
@@ -193,7 +194,6 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
         
         VBox t1 = new VBox();
         t1.getChildren().addAll(layersWindowBuilder.getRight());
-        //t1.getChildren().addAll();
         tab1.setContent(t1);
 
         prepareTab2(tab2);
@@ -289,7 +289,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 						CommandRegistry.createButton(new HorizontalGroupFilter()),						
 						CommandRegistry.createButton(new EdgeSubtractGround())
 					),
-				CommandRegistry.createButton(new ComplexScan())				
+				CommandRegistry.createButton(new LevelScanHP())				
 				
 			);
         tab2.setContent(t2);
@@ -317,11 +317,9 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		
 		toolBar.getItems().add(getSpacer());
 
-		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
+		toolBar.getItems().addAll(CommandRegistry.createAsinqTaskButton(new AlgorithmicScanFull()));
 		
-		//toolBar.getItems().add(getSpacer());
-		//toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
-		///
+		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
 		
 		return toolBar;
 	}

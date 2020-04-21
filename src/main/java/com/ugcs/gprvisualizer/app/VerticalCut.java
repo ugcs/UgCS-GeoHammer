@@ -32,6 +32,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * 
+ * not used
+ *
+ */
 public class VerticalCut implements ModeFactory, SmthChangeListener {
 
 	private Model model;
@@ -170,9 +175,9 @@ public class VerticalCut implements ModeFactory, SmthChangeListener {
     					rad*2, rad*2);
     		}
     		g2.setColor(Color.GREEN);    		
-    		g2.drawOval(startx - rad, 
-    			(int)((trace.maxindex2-model.getSettings().heightStart) * getHZoom()), 
-    			rad*2, rad*2);
+//    		g2.drawOval(startx - rad, 
+//    			(int)((trace.maxindex2-model.getSettings().heightStart) * getHZoom()), 
+//    			rad*2, rad*2);
     		
 	    }
 
