@@ -293,7 +293,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile);
 			}
 			
-			if(model.getSettings().showGreenLine) {
+			if(model.getSettings().showGreenLine && f.algoScan != null) {
 				
 				g2.setColor(Color.GREEN);
 				g2.setStroke(AMP_STROKE);

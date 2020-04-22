@@ -88,9 +88,7 @@ public class EdgeSubtractGround implements Command {
 	static final int MARGIN = 5;
 	@Override
 	public void execute(SgyFile file) {
-		System.out.println("subtact profiles for " + file.getFile().getName());
 		
-		//int maxGroundDeep = getMaxGroundSmp(file);
 		
 		if(file.groundProfile == null) {
 			System.out.println("!!!!!!!!!!!!!1 file.groundProfile == null");
@@ -211,7 +209,7 @@ public class EdgeSubtractGround implements Command {
 	@Override
 	public Change getChange() {
 
-		return Change.justdraw;
+		return Change.traceValues;
 	}
 	
 }

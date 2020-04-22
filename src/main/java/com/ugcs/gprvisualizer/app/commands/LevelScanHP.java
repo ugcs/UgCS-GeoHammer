@@ -27,14 +27,14 @@ public class LevelScanHP implements Command {
 		new HorizontalGroupScan().execute(file);
 		
 		// lines  
-		List<HorizontalProfile> lines = findStraightLines(file);
-		
-		if(lines.isEmpty()) {
-			System.out.println("no top line :(");
-			return;
-		}
-		// select top straight line !
-		HorizontalProfile top = HorizontalGroupFilter.getBrightest(lines);
+//		List<HorizontalProfile> lines = findStraightLines(file);
+//		
+//		if(lines.isEmpty()) {
+//			System.out.println("no top line :(");
+//			return;
+//		}
+//		// select top straight line !
+//		HorizontalProfile top = HorizontalGroupFilter.getBrightest(lines);
 		
 		// copy sgyfile
 		SgyFile file2 = file.copy(); 
@@ -65,11 +65,16 @@ public class LevelScanHP implements Command {
 		
 		// copy to HP to original
 		List<HorizontalProfile> result = new ArrayList<>();
-		result.add(top);
+//		result.add(top);
 		result.add(grnd);
 		//result.add(mirr);
 		file.profiles= result;
 		file.groundProfile = grnd;
+		
+		
+		//aux tasks 
+		new EdgeFinder().execute(file);
+		new EdgeSubtractGround().execute(file);		
 		
 	}
 
@@ -98,13 +103,13 @@ public class LevelScanHP implements Command {
 	@Override
 	public String getButtonText() {
 		
-		return "Ground level scan v.2";
+		return "Find ground level v2";
 	}
 
 	@Override
 	public Change getChange() {
 
-		return Change.justdraw;
+		return Change.traceValues;
 	}
 	
 	

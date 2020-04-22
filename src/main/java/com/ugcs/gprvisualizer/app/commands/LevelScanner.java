@@ -30,6 +30,12 @@ public class LevelScanner implements Command {
 		AmplitudeMatrix am = new AmplitudeMatrix();
 		am.init(lst);
 		file.groundProfile = am.findLevel();
+		
+		
+		//aux tasks 
+		new EdgeFinder().execute(file);
+		new EdgeSubtractGround().execute(file);		
+		
 	}
 
 	@Override

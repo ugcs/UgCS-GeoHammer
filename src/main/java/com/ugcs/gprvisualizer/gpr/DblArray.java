@@ -102,6 +102,15 @@ public class DblArray {
 	    		}	    	
 	    	}
 	    }
+
+	    //tmp show palette
+	    for(int x=0; x<width; x++){
+	    	for(int y=30; y<50; y++){
+	    		
+	    		buffer[x + y * width] = palette[(int)( x*200/width )];
+	    		
+	    	}
+	    }
 	    
 	    return image;
 	}

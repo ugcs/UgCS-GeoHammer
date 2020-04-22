@@ -36,7 +36,7 @@ public class CommandRegistry {
 	}
 	
 	public static void runForFiles(Command command, ProgressListener listener) {
-		System.out.println("runForFiles command " + command.getButtonText() );
+		//System.out.println("runForFiles command " + command.getButtonText() );
 		
 		for(SgyFile sgyFile : AppContext.model.getFileManager().getFiles()) {
 			
@@ -59,11 +59,15 @@ public class CommandRegistry {
 		
 		listener.progressMsg("process finished '" + command.getButtonText() + "'");
 		
-		System.out.println("finished command " + command.getButtonText() );
+		//System.out.println("finished command " + command.getButtonText() );
 	}
 	
 	
 	public static Button createAsinqTaskButton(AsinqCommand command) {
+		return createAsinqTaskButton(command, null);
+	}
+	
+	public static Button createAsinqTaskButton(AsinqCommand command, Consumer finish) {
 		
 		Button button = new Button(command.getButtonText());
 		
@@ -72,6 +76,10 @@ public class CommandRegistry {
 			@Override
 			public void run(ProgressListener listener) {
 				runForFiles(command, listener);				
+				
+				if(finish != null) {
+					finish.accept(null);
+				}
 			}
 		};
 		

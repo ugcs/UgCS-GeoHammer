@@ -48,21 +48,25 @@ public class RadarMapScan implements Command{
 
 	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
 		double mx = 0;
-		double threshold = scaleArray[0][start];
-		double factor = scaleArray[1][start];
 
 		start = GHUtils.norm(start, 0, values.length);
 		finish = GHUtils.norm(finish, 0, values.length);
 		
 		for (int i = start; i < finish; i++) {
+			double threshold = scaleArray[0][i];
+			double factor = scaleArray[1][i];
+			
+			
 			if(edge[i] != 0 ) {
-				mx = Math.max(mx, Math.abs(values[i]));
+				double val = Math.max(0, Math.abs(values[i]) - threshold) * factor;
+				
+				mx = Math.max(mx, val);
 			}
 		}
 
-		double val = Math.max(0, mx - threshold) * factor;
+		
 
-		return Math.max(0, Math.min(val, 200));
+		return GHUtils.norm(mx, 0.0, 200.0);
 
 	}
 

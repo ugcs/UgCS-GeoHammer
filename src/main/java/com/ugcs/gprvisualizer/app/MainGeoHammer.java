@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
@@ -70,6 +71,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	
 	MapView layersWindowBuilder;
 	
+	TabPane tabPane;
 	
 	public MainGeoHammer() {
 		
@@ -184,38 +186,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		
 		rightBox.getChildren().clear();
 		
-        TabPane tabPane = new TabPane();
-        tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
-        
-        Tab tab1 = new Tab("Gain", new Label("Show all planes available"));
-        Tab tab2 = new Tab("Search"  , new Label("Show all cars available"));
-        tabPane.getTabs().add(tab1);
-        tabPane.getTabs().add(tab2);
-        
-        VBox t1 = new VBox();
-        t1.getChildren().addAll(layersWindowBuilder.getRight());
-        tab1.setContent(t1);
-
-        prepareTab2(tab2);
-        
-        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() { 
-            @Override 
-            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
-                if(newTab.equals (tab1)) {            
-                    
-                    model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
-                    model.getSettings().hyperliveview = false;
-                    
-                    //todo toggle btn
-                    
-                }else if(newTab.equals (tab2)) {
-                	
-                	model.getSettings().radarMapMode = RadarMapMode.SEARCH;
-                }
-                AppContext.notifyAll(new WhatChanged(Change.adjusting));
-            }
-
-        });        
+        tabPane = prepareTabPane();        
         
         rightBox.getChildren().addAll(tabPane);
         rightBox.getChildren().addAll( AppContext.cleverImageView.getRight());
@@ -230,6 +201,49 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		
 		
 		return scene;
+	}
+
+	public TabPane prepareTabPane() {
+		TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
+        
+        Tab tab1 = new Tab("Gain", new Label("Show all planes available"));
+        Tab tab2 = new Tab("Search"  , new Label("Show all cars available"));
+        tabPane.getTabs().add(tab1);
+        tabPane.getTabs().add(tab2);
+        
+        prepareTab1(tab1);
+
+        prepareTab2(tab2);
+        
+        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() { 
+            @Override 
+            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
+            	
+            	Sout.p("tab changed");
+            	
+                if(newTab.equals (tab1)) {            
+                    
+                    model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
+                    model.getSettings().hyperliveview = false;
+                    
+                    //todo toggle btn
+                    
+                }else if(newTab.equals (tab2)) {
+                	
+                	model.getSettings().radarMapMode = RadarMapMode.SEARCH;
+                }
+                AppContext.notifyAll(new WhatChanged(Change.adjusting));
+            }
+
+        });
+		return tabPane;
+	}
+
+	public void prepareTab1(Tab tab1) {
+		VBox t1 = new VBox();
+        t1.getChildren().addAll(layersWindowBuilder.getRight());
+        tab1.setContent(t1);
 	}
 
 	ToggleButton prepareToggleButton(String title, String imageName, MutableBoolean bool, Change change) {
@@ -265,10 +279,6 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		VBox t2 = new VBox(10);		
         t2.getChildren().addAll(AppContext.cleverImageView.getRightSearch());
         
-				
-
-         
-		
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
 
@@ -288,21 +298,10 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 						CommandRegistry.createButton(new HorizontalGroupScan()),
 						CommandRegistry.createButton(new HorizontalGroupFilter()),						
 						CommandRegistry.createButton(new EdgeSubtractGround())
-					),
-				CommandRegistry.createButton(new LevelScanHP())				
+					)				
 				
 			);
         tab2.setContent(t2);
-        
-        
-	
-	
-	
-    	
-
-
-        
-        
 	}
 
 
@@ -317,7 +316,14 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		
 		toolBar.getItems().add(getSpacer());
 
-		toolBar.getItems().addAll(CommandRegistry.createAsinqTaskButton(new AlgorithmicScanFull()));
+		toolBar.getItems().addAll(CommandRegistry.createAsinqTaskButton(
+				new AlgorithmicScanFull(),
+				e->{ 
+					
+					Sout.p("select1");
+					tabPane.getSelectionModel().select(1);
+					 
+				}));
 		
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
 		

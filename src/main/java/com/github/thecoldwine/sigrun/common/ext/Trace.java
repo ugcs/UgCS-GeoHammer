@@ -36,6 +36,16 @@ public class Trace {
     public int indexInSet;
     
     public int[] good;
+    
+    
+    /*
+     * 0
+     * 1 - 0 ('+' -> '-')
+     * 2 - 0 ('-' -> '+')
+     * 3 - min
+     * 4 - max
+     *  
+     */
     public int[] edge;
     
     public Set<Integer> max = new HashSet<>();

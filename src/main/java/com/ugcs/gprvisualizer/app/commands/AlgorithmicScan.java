@@ -174,7 +174,7 @@ public class AlgorithmicScan implements AsinqCommand {
 	}
 
 	public Change getChange() {
-		return Change.adjusting;
+		return Change.traceValues;
 	}
 	
 }

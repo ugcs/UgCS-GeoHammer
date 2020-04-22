@@ -28,7 +28,7 @@ public class AlgorithmicScanFull implements AsinqCommand {
 	@Override
 	public Change getChange() {
 
-		return Change.adjusting;
+		return Change.traceValues;
 	}
 
 }

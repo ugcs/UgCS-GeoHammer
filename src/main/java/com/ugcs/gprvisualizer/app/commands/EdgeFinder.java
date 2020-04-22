@@ -60,7 +60,7 @@ public class EdgeFinder implements Command {
 	@Override
 	public Change getChange() {
 
-		return Change.justdraw;
+		return Change.traceValues;
 	}
 
 

@@ -8,4 +8,13 @@ public class GHUtils {
 		return Math.min(Math.max(i, min), max - 1);
 	}
 	
+	public static double norm(double i, double min, double max) {
+
+		return Math.min(Math.max(i, min), max);
+	}
+
+	public static float norm(float i, float min, float max) {
+
+		return Math.min(Math.max(i, min), max);
+	}
 }

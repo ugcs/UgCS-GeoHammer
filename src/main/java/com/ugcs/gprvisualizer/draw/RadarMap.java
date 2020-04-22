@@ -17,6 +17,7 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
@@ -179,12 +180,13 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isTraceCut() || changed.isTraceValues()) {
+		if(changed.isFileopened() || changed.isTraceCut() || changed.isTraceValues() || changed.isTraceValues()) {
 			autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
 		
 		if(changed.isAdjusting()) {
+			//autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
 		
@@ -196,14 +198,14 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 				changed.isMapscroll() || 
 				changed.isWindowresized()) {
 			
-			System.out.println("RadarMap start asinq");
+			//System.out.println("RadarMap start asinq");
 			executor.submit(t);
 		}		
 	}
 
 	// prepare image in thread
 	private BufferedImage createHiRes() {
-		System.out.println("hires start");
+		//Sout.p("hires start");
 		
 		MapField field = new MapField(model.getField());
 		
@@ -224,6 +226,8 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		}
 
 		drawCircles(field, da);
+		
+		//Sout.p("hires fin");
 		return da.toImg(palette);
 	}
 

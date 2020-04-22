@@ -89,7 +89,6 @@ public class HorizontalGroupFilter implements Command {
 		for(int i=0; i< tmpStraight.size(); i++) {
 			
 			HorizontalProfile hpi = tmpStraight.get(i);
-			System.out.println("  avg of curve " + hpi.avgval);
 			
 			if(hpi.avgval > tmpStraight.get(maxi).avgval) {
 				maxi = i;
@@ -100,11 +99,8 @@ public class HorizontalGroupFilter implements Command {
 		}
 		int mid = (maxi+mini)/2;
 		
-		System.out.println(mini + " <-min " + mid + " max->  " + maxi);
-		
 		HorizontalProfile brightest = tmpStraight.get(mid);
 		return brightest;
 	}
-
 	
 }

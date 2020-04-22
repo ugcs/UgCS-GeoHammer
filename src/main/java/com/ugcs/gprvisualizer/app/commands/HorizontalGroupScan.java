@@ -22,7 +22,6 @@ public class HorizontalGroupScan implements Command {
 	
 	@Override
 	public void execute(SgyFile file) {
-		System.out.println("  -HorizontalGroupScan- " + file.getFile().getName());
 		List<HorizontalProfile> result = new ArrayList<>();
 		
 		Trace trace = file.getTraces().get(0);
