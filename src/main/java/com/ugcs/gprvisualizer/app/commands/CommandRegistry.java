@@ -86,7 +86,7 @@ public class CommandRegistry {
 		button.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 				
-				new TaskRunner(null, task).start();
+				new TaskRunner(AppContext.stage, task).start();
 		    	
 		    }
 		});

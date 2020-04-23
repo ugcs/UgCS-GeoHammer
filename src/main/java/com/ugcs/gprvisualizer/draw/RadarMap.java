@@ -46,6 +46,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
@@ -67,9 +68,19 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		@Override
 		public void handle(ActionEvent event) {
 
-			setActive(showMapButton.isSelected());
+			setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
 			vBox.setDisable(!isActive());
 			
+			
+			if(showMapButtonAlg.isSelected()) {
+				model.getSettings().radarMapMode = RadarMapMode.SEARCH;
+			}
+			if(showMapButtonAmp.isSelected()) {
+                model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
+                model.getSettings().hyperliveview = false;
+			}
+			
+			//AppContext.notifyAll(new WhatChanged(Change.adjusting));			
 			if(isActive()) {
 				executor.submit(t);
 			}else {
@@ -79,11 +90,26 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		}
 	};
 	
-	private ToggleButton showMapButton = new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
+	ToggleGroup group = new ToggleGroup();
+	private ToggleButton showMapButtonAmp = new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
 	{
-		showMapButton.setTooltip(new Tooltip("Toggle amplitude map layer"));
-		showMapButton.setSelected(true);
-		showMapButton.setOnAction(showMapListener);
+		showMapButtonAmp.setTooltip(new Tooltip("Toggle amplitude map layer"));
+		showMapButtonAmp.setSelected(true);
+		showMapButtonAmp.setOnAction(showMapListener);
+		showMapButtonAmp.setToggleGroup(group);
+	}
+	private ToggleButton showMapButtonAlg = new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
+	{
+		showMapButtonAlg.setTooltip(new Tooltip("Toggle algorithm search layer"));
+		showMapButtonAlg.setSelected(false);
+		showMapButtonAlg.setOnAction(showMapListener);
+		showMapButtonAlg.setToggleGroup(group);
+	}
+	
+	public void selectAlgMode() {
+		showMapButtonAlg.setSelected(true);
+		
+		showMapListener.handle(null);
 	}
 	
 	VBox vBox = new VBox();
@@ -268,56 +294,6 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		}
 	}
 	
-//	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
-//		double mx = 0;
-//		double threshold = scaleArray[0][start];
-//		double factor = scaleArray[1][start];
-//
-//		start = norm(start, 0, values.length);
-//		finish = norm(finish, 0, values.length);
-//		
-//		for (int i = start; i < finish; i++) {
-//			if(edge[i] != 0 ) {
-//				mx = Math.max(mx, Math.abs(values[i]));
-//			}
-//		}
-//
-//		double val = Math.max(0, mx - threshold) * factor;
-//
-//		return Math.max(0, Math.min(val, 200));
-//
-//	}
-
-	private int norm(int i, int min, int max) {
-
-		return Math.min(Math.max(i, min), max - 1);
-	}
-	
-	int r = 5;
-	private BufferedImage createLowRes() {
-		BufferedImage img = new BufferedImage(parentDimension.width, parentDimension.height, BufferedImage.TYPE_INT_ARGB);
-		
-		
-		Graphics2D g2 = (Graphics2D)img.getGraphics();
-		g2.translate(parentDimension.width/2, parentDimension.height/2);
-		g2.setColor(new Color((float)Math.random(), (float)Math.random(), (float)Math.random()));
-		for(SgyFile sf : model.getFileManager().getFiles()) {
-			
-			
-			drawTrace(g2, sf.getTraces().get(0));
-			
-			drawTrace(g2, sf.getTraces().get(sf.getTraces().size()-1));
-		}
-		
-		return img;
-	}
-
-	private void drawTrace(Graphics2D g2, Trace trace) {
-		Point2D p = model.getField().latLonToScreen(trace.getLatLon());
-		g2.fillOval((int)p.getX() - r, (int)p.getY()-r, 2*r, 2*r);
-	}
-	
-	
 	Thread t = new Thread() {
 		public void run() {
 			try {
@@ -382,7 +358,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 
 		
 		return Arrays.asList(
-			showMapButton);	
+			showMapButtonAmp, showMapButtonAlg);	
 		
 	}
 

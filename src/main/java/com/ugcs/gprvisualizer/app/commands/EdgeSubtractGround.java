@@ -9,35 +9,40 @@ import java.util.Queue;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.HalfHyperDst;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class EdgeSubtractGround implements Command {
 
 	Model model = AppContext.model;
-	//List<Trace> list;
+
 	
 	int etsum[] = new int [5];
 	
 	static class EdgeCoord{
 		int index;
 		int smp;
+		double dist;
 		
-		public EdgeCoord(int index, int smp) {
+		public EdgeCoord(int index, int smp, double dist) {
 			this.index = index;
 			this.smp = smp;
+			this.dist = dist;
 		}
 	}
 	
 	class EdgeQueue {
-		final int MAX_SIZE = 60;
-		final int ENOUGH_SIZE = 45;
+		//final int MAX_SIZE = 60;
+		//final int ENOUGH_SIZE = 45;
 		
 		private final List<Trace> list;
 		private final int edgeType;
 		
 		private int foundCount=0;
+		private double foundDst=0;
 		private int lastRemoved = -1;
 		private Queue<EdgeCoord> queue = new LinkedList<EdgeCoord>();
 		
@@ -46,40 +51,49 @@ public class EdgeSubtractGround implements Command {
 			this.list = list;
 		}
 		
-		void in(int index, int smp) {
-			queue.add(new EdgeCoord(index, smp));
+		void in(int index, int smp, double dist) {
+			queue.add(new EdgeCoord(index, smp, dist));
 			foundCount++;			
-		}
-
-		public void clearGroup(int index) {
+			foundDst += dist;
+		}		
+		
+		public void clearGroup(int index, double minDst, int tailIndex) {
+			
+			
 			
 			//			
-			int tailLimit = index-MAX_SIZE;
-			if(foundCount > ENOUGH_SIZE) {
-				int removeFromIndex = Math.max(lastRemoved+1, tailLimit);
+			//int tailLimit = index-MAX_SIZE;
+			//if(foundCount > ENOUGH_SIZE) {
+			
+			
+			if(foundDst > minDst*0.90) {
+				int removeFromIndex = Math.max(lastRemoved+1, tailIndex);
 				
 				//clear edges from removeFromIndex to index
-				//for(int i=removeFromIndex; i<=index; i++) {
 				for(EdgeCoord ec : queue) {
 					if(ec.index >= removeFromIndex) {
-						
-						//list.get(ec.index).edge[ec.smp] = 0;
+						//mark to delete
 						list.get(ec.index).good[ec.smp] = 1;
-					}					
+					}
 				}
 				
 				lastRemoved = index;
 			}			
 		}
 		
-		public void out(int index) {
-			int tailLimit = index-MAX_SIZE;
-			while(!queue.isEmpty() && queue.peek().index < tailLimit) {
-				queue.remove();
+		public void out(int tailIndex) {
+			//int tailLimit = index-MAX_SIZE;
+			while(!queue.isEmpty() && queue.peek().index < tailIndex) {
+				EdgeCoord e = queue.remove();
 				foundCount--;
+				foundDst -= e.dist;
 			}
 		}				
 	}	
+	
+	
+		
+	
 	
 	public EdgeSubtractGround () {
 
@@ -102,6 +116,7 @@ public class EdgeSubtractGround implements Command {
 		// ground profile
 		hplist.add(file.groundProfile);
 		
+		
 		// ground profile * 2
 		hplist.add(multTwice(file.groundProfile));
 		
@@ -112,7 +127,14 @@ public class EdgeSubtractGround implements Command {
 			
 			for(int deep=from; deep < to; deep++) {			
 				
-				processDeep(file, hp,  deep);
+				// minimal length of curve which must be similar to hp (cm) -> meters
+				double minDst = HalfHyperDst.getGoodSideDst(file, deep + hp.avgdeep, file.groundProfile.avgdeep) * 4  / 100.0;
+				
+				if(deep % 7 == 0) {
+					Sout.p("d "+ deep + " rd " + (deep + hp.avgdeep) + " minDst (meters) " + minDst);
+				}
+				
+				processDeep(file, hp,  deep, minDst);
 			}
 		}
 		
@@ -158,34 +180,45 @@ public class EdgeSubtractGround implements Command {
 		return maxGroundDeep;
 	}
 
-	private void processDeep(SgyFile file, HorizontalProfile hp, int shift) {
+	private void processDeep(SgyFile file, HorizontalProfile hp, int shift, double minDst) {
 		List<Trace> list = file.getTraces();
 		
 		EdgeQueue[] edges = createQueuesForEdgeType(list);
 		
+		double currentTail = 0;
+		int tailIndex = 0;
 		for(int i=0; i<list.size(); i++) {
 			
 			Trace trace = list.get(i);
+			
+			currentTail += trace.getPrevDist();
+			
 			int smp = hp.deep[i] + shift;
 			
-			// 1 2 3 4 / check range from 1 above to 1 below
+			// 1 2 3 4 / check range from 0 above to 1 below
 			
-			for(int r=0; r<=1; r++) {
+			for(int r=-1; r<=1; r++) {
 				int realsmp = smp+r;
 				int edv = trace.edge[realsmp];
 				
-				edges[edv].in(i, realsmp);
+				edges[edv].in(i, realsmp, trace.getPrevDist());
 			}
 			
-			/// remove
+			/// mark edges to remove
 			for(int et=1; et<=4; et++) {
-				edges[et].clearGroup(i);
+				edges[et].clearGroup(i, minDst, tailIndex);
 			}
 			
-			//types of edge
-			for(int et=1; et<=4; et++) {
+			/// clean queue tail
+			while(currentTail > minDst) {
+				currentTail -= list.get(tailIndex).getPrevDist();
 				
-				edges[et].out(i);
+				//types of edge
+				for(int et=1; et<=4; et++) {
+					edges[et].out(tailIndex);
+				}
+				
+				tailIndex++;
 			}
 		}		
 	}

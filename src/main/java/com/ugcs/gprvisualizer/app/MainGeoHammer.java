@@ -2,12 +2,16 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
+import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScanFull;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
@@ -102,7 +106,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	public void start(Stage stage) throws Exception {
 
 		this.stage = stage;
-		
+		AppContext.stage = stage;
 		AppContext.saver = new Saver(model, stage);
 
 		stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
@@ -216,27 +220,6 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
         prepareTab2(tab2);
         
-        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() { 
-            @Override 
-            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
-            	
-            	Sout.p("tab changed");
-            	
-                if(newTab.equals (tab1)) {            
-                    
-                    model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
-                    model.getSettings().hyperliveview = false;
-                    
-                    //todo toggle btn
-                    
-                }else if(newTab.equals (tab2)) {
-                	
-                	model.getSettings().radarMapMode = RadarMapMode.SEARCH;
-                }
-                AppContext.notifyAll(new WhatChanged(Change.adjusting));
-            }
-
-        });
 		return tabPane;
 	}
 
@@ -284,21 +267,21 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
 		Button buttonDecimator = CommandRegistry.createButton(new TraceStacking());		
 
-		Button buttonEdgeFinder = CommandRegistry.createButton(new EdgeFinder());
-		
-		
 		t2.getChildren().addAll(
 				CommandRegistry.createAsinqTaskButton(new AlgorithmicScan()),				
-				hyperLiveViewBtn, buttonDecimator, buttonEdgeFinder,
+				hyperLiveViewBtn, buttonDecimator, 
+				new HBox(
+						CommandRegistry.createButton(new EdgeFinder()),
+						CommandRegistry.createButton(new EdgeSubtractGround())
+						),
 				new HBox(
 						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
 						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)
-						),
-				new HBox(
-						CommandRegistry.createButton(new HorizontalGroupScan()),
-						CommandRegistry.createButton(new HorizontalGroupFilter()),						
-						CommandRegistry.createButton(new EdgeSubtractGround())
-					)				
+						)
+				//,new HBox(
+				//		CommandRegistry.createButton(new HorizontalGroupScan()),
+				//		CommandRegistry.createButton(new HorizontalGroupFilter())
+				//	)				
 				
 			);
         tab2.setContent(t2);
@@ -321,7 +304,8 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 				e->{ 
 					
 					Sout.p("select1");
-					tabPane.getSelectionModel().select(1);
+					//tabPane.getSelectionModel().select(1);
+					layersWindowBuilder.radarMap.selectAlgMode();
 					 
 				}));
 		

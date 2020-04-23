@@ -41,7 +41,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 	TraceCutter traceCutter;
 	ToolBar toolBar = new ToolBar();
 	
-	RadarMap radarMap;
+	public RadarMap radarMap;
 	Dimension windowSize = new Dimension();
 	
 	public MapView(Model model) {
@@ -155,15 +155,9 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 	@Override
 	public Node getCenter() {
 		
-		//VBox vBox = new VBox();
-		
-		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
-		
 		toolBar.getItems().addAll(getToolNodes());
-		
-		//vBox.getChildren().add(toolBar);
 		
 		Pane sp1 = new Pane();
 		

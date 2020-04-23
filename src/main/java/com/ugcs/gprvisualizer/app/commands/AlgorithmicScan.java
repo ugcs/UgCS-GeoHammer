@@ -77,6 +77,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		
 		
 		double sum = 0;		
+		double grpcount = 1;
 		//boolean bothside = false;
 		//boolean bothsidemax;
 		double maxsum = 0;
@@ -87,21 +88,23 @@ public class AlgorithmicScan implements AsinqCommand {
 			// 0 1 2 3
 			int val = getAtLeastOneGood(good, tr, margin, i);
 			both = both | val;
-			if(val != 0) {				
-				sum += (val < 3 ? 1.0 : 2.0);
+			if(val != 0) {
+				grpcount++;
+				sum += (val < 3 ? 1.0 : 2.0) / grpcount;
 			}else {
 				emptycount++;
 				if(emptycount > 5) {
 					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
 					both = 0;
 					sum = 0;
-					emptycount = 0;					
+					emptycount = 0;
+					grpcount = 1;
 				}
 			}			
 		}
 		
 		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-		return (int)(maxsum);//
+		return (int)(maxsum*4);//
 	}
 
 	

@@ -47,30 +47,23 @@ public class TaskRunner implements ProgressListener {
 	
 	public void start() {
 		
+		//primaryStage.getScene().setCursor(Cursor.WAIT);
+		showPopup();
+		
 		new Thread() {
 			public void run() {
 				
-				Platform.runLater(new Runnable(){
-					@Override
-					public void run() {
-						showPopup();
-					}
-				});
 				
 				try {
 					task.run(TaskRunner.this);
 
-					//progressMsg("");
-					Platform.runLater(new Runnable(){
-						@Override
-						public void run() {
-							closePopup();
-						}
-					});
 				}catch(Exception e) {
 					e.printStackTrace();
 					progressMsg("Error: " + e.getMessage());
 				}
+
+
+				closePopup();
 				
 				
 			}
@@ -79,18 +72,33 @@ public class TaskRunner implements ProgressListener {
 	}
 	
 	protected void closePopup() {
-		dialog.close();
+		//dialog.close();
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				primaryStage.getScene().setCursor(Cursor.DEFAULT);
+			}
+		});
 		
-		//primaryStage.getScene().setCursor(Cursor.DEFAULT);
+		
 	}
 	
 	protected void showPopup() {
 		 
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				Sout.p(" showPopup() ");
+				
+				primaryStage.getScene().setCursor(Cursor.WAIT);
+			}
+		});
 		
-		//primaryStage.getScene().setCursor(Cursor.WAIT);
-        Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
-        dialog.setScene(dialogScene);
-        dialog.show();		
+		
+		
+        //Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
+        //dialog.setScene(dialogScene);
+        //dialog.show();		
 	}
 
 	@Override

@@ -158,7 +158,7 @@ public class PluginRunner implements ToolProducer {
 	{
 		buttonRunNeuralNetwork.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-				new TaskRunner(null, neuralNetworkTask).start();
+				new TaskRunner(AppContext.stage, neuralNetworkTask).start();
 		    	
 		    }
 		});

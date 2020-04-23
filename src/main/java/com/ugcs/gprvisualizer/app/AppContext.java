@@ -1,20 +1,19 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Platform;
+import javafx.stage.Stage;
 
 public class AppContext {
 
+	public static Stage stage;
 	
 	public static Model model;
 	public static Loader loader;

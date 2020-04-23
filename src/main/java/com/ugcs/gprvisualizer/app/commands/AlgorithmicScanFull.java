@@ -9,7 +9,8 @@ public class AlgorithmicScanFull implements AsinqCommand {
 	public void execute(SgyFile file) {
 
 		if(file.groundProfile == null) {
-			new LevelScanHP().execute(file);
+			//new LevelScanHP().execute(file);
+			new LevelScanner().execute(file);
 		}
 		
 		new EdgeFinder().execute(file);

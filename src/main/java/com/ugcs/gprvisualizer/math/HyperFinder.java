@@ -172,7 +172,7 @@ public class HyperFinder {
 		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1, x_factor);
 		double rhtRate = rht.analize(100);
 		
-		System.out.println( " lftR " + lftRate  + "    " + rhtRate + "  gs " + lft.hypergoodsize);
+		//System.out.println( " lftR " + lftRate  + "    " + rhtRate + "  gs " + lft.hypergoodsize);
 		
 		g2.setColor(lftRate > thr ? Color.RED : Color.CYAN);
 		drawHHDst(g2, vField, sgyFile.getOffset(), lft);

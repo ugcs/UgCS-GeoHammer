@@ -11,9 +11,12 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -24,6 +27,8 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
+import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -36,6 +41,7 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
+import com.ugcs.gprvisualizer.ui.SliderFactory;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -186,6 +192,26 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		toolBar.getItems().add(showGreenLineBtn);
 		
+		
+		
+		toolBar.getItems().add(CommandRegistry.createButton("Ruler", e-> {
+			
+			
+			//model.getSettings().selectedScanIndex;
+			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
+			
+			RulerTool fp = new RulerTool(file);
+			fp.setSelected(true);
+			//model.setControls(Arrays.asList(fp));
+			List lst = new ArrayList<>();
+			lst.addAll(fp.getControls());
+			lst.add(fp);
+			model.setControls(lst);
+			
+			repaintEvent();
+			
+		}));
+		
 		//toolBar.getItems().add(hyperLiveViewBtn);
 	}
 	
@@ -282,7 +308,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				g2.setColor(new Color(50, 200,  250));
 				g2.setStroke(AMP_STROKE);
 				for(HorizontalProfile pf : f.profiles) {
-					drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf);
+					drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf, 0);
 				}				
 			}
 			
@@ -290,7 +316,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			if(f.groundProfile != null) {
 				g2.setColor(new Color(210,105,30));
 				g2.setStroke(LEVEL_STROKE);
-				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile);
+				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile, shiftGround.intValue());
 			}
 			
 			if(model.getSettings().showGreenLine && f.algoScan != null) {
@@ -327,7 +353,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	                        10.0f, dash1, 0.0f);
 	
 	private void drawAmplitudeMapLevels(ProfileField field, Graphics2D g2) {
-		if(model.getSettings().isRadarMapVisible) {
+		//if(model.getSettings().isRadarMapVisible) {
 		
 			g2.setColor(Color.MAGENTA);
 			g2.setStroke(dashed);			
@@ -338,7 +364,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
 			g2.drawLine(-width/2, y2, width/2, y2);
 
-		}		
+		//}		
 	}
 	
 	private void drawAuxElements(ProfileField field, Graphics2D g2) {
@@ -405,16 +431,16 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 //		}
 //	}
 
-	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf) {
+	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf, int voffset) {
 		
 		g2.setColor(pf.color);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  pf.deep[0]));
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  pf.deep[0] + voffset ));
 		int max2 = 0;
 		
 		for(int i=1; i<pf.deep.length; i++) {
 
 			
-			max2 = Math.max(max2, pf.deep[i]);
+			max2 = Math.max(max2, pf.deep[i] + voffset);
 			
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  max2));
 			if(p2.x - p1.x > 2) {
@@ -432,6 +458,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  0));
 		int max2 = 0;
+		int offsety = field.getMainRect().y;
 		
 		for(int i=1; i<pf.intensity.length; i++) {
 
@@ -443,7 +470,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			
 			if(p2.x - p1.x > 2) {
 				
-				g2.drawLine(p1.x, p1.y, p2.x, p2.y);				
+				g2.drawLine(p1.x, offsety+p1.y, p2.x, offsety+p2.y);				
 				
 				p1 = p2;				
 				max2 = 0;
@@ -539,12 +566,25 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			);
 	}
 
+	
+	MutableInt shiftGround = new MutableInt(0);
+	
 	public List<Node> getRightSearch() {
+		
 		
 		return Arrays.asList(
 				hyperbolaSlider.produce(),
 				hyperGoodSizeSlider.produce(),
-				middleAmplitudeSlider.produce()
+				middleAmplitudeSlider.produce(),
+				
+				SliderFactory.create("shift ground", shiftGround, -20, 50, new ChangeListener<Number>() {
+					
+					@Override
+					public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+						repaintEvent();
+						
+					}
+				}, 20)
 			);
 	}
 

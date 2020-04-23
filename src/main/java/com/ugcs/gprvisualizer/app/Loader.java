@@ -111,7 +111,7 @@ public class Loader {
 
         	};
         	
-			new TaskRunner(null, loadTask).start();
+			new TaskRunner(AppContext.stage, loadTask).start();
         	System.out.println("start completed");
         	
             event.setDropCompleted(true);

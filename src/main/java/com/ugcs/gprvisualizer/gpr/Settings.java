@@ -52,6 +52,8 @@ public class Settings {
 	public int threshold = 0;
     
 	public int distBetweenTraces = 10;
+	
+	//TODO: unused
 	public int selectedScanIndex = 1;
 	public double kf;
 	public double stx;

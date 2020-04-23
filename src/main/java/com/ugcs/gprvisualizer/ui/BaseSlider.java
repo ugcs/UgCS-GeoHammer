@@ -29,9 +29,9 @@ public abstract class BaseSlider {
     };
 	
 	public BaseSlider(Settings settings, ChangeListener<Number> listenerExt) {
-		if(settings == null) {
-			throw new RuntimeException("settings == null");
-		}
+//		if(settings == null) {
+//			throw new RuntimeException("settings == null");
+//		}
 		this.settings = settings;
 		this.listenerExt = listenerExt;
 	}
