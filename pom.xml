@@ -70,13 +70,35 @@
 	                </execution>
 	            </executions>
 	        </plugin>
+	        
+        	<!-- exe -->
+			<plugin>
+			  <artifactId>exec-maven-plugin</artifactId>
+			  <groupId>org.codehaus.mojo</groupId>
+			  <executions>
+			    <execution><!-- Run our version calculation script -->
+			      <id>Version Calculation</id>
+			      <phase>package</phase>
+			      <goals>
+			        <goal>exec</goal>
+			      </goals>
+			      <configuration>
+  					<arguments> 
+              			<argument>${project.basedir}/javawrapper.jsmooth</argument>
+              		</arguments>			      
+			        <executable>"c:\Program Files (x86)\JSmooth 0.9.9-7\jsmoothcmd.exe"</executable>			        
+			      </configuration>
+			    </execution>
+			  </executions>
+			</plugin>        			
+	        
 	        <!-- zip -->
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -91,27 +113,6 @@
                 </executions>
             </plugin>        
         			
-        	<!-- exe -->
-			<plugin>
-			  <artifactId>exec-maven-plugin</artifactId>
-			  <groupId>org.codehaus.mojo</groupId>
-			  <executions>
-			    <execution><!-- Run our version calculation script -->
-			      <id>Version Calculation</id>
-			      <phase>package</phase>
-			      <goals>
-			        <goal>exec</goal>
-			      </goals>
-			      <configuration>
-  					<arguments> <!--  d:\work\ugcs-gpr-data-viewer\ -->
-              		<argument>${project.basedir}/javawrapper.jsmooth</argument>
-              		</arguments>			      
-			        <executable>"c:\Program Files (x86)\JSmooth 0.9.9-7\jsmoothcmd.exe"</executable>
-			        
-			      </configuration>
-			    </execution>
-			  </executions>
-			</plugin>        			
         			
       </plugins>
     </build>

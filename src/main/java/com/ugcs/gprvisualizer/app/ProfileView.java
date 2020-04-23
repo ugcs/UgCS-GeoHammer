@@ -577,7 +577,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 				hyperGoodSizeSlider.produce(),
 				middleAmplitudeSlider.produce(),
 				
-				SliderFactory.create("shift ground", shiftGround, -20, 50, new ChangeListener<Number>() {
+				SliderFactory.create("shift ground", shiftGround, 0, 100, new ChangeListener<Number>() {
 					
 					@Override
 					public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {

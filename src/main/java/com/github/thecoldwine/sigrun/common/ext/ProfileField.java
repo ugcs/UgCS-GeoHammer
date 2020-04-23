@@ -90,7 +90,7 @@ public class ProfileField {
 	
 	public TraceSample screenToTraceSample(Point point) {
 	
-		int trace = getSelectedTrace() + (int)((point.getX() )/getHScale()); 
+		int trace = getSelectedTrace() + (int)(-1+(point.getX() )/getHScale()); 
 		int sample = getStartSample() + (int)((point.getY() - getTopMargin())/getVScale());
 		
 		return new TraceSample(trace, sample);

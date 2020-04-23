@@ -130,9 +130,9 @@ public class EdgeSubtractGround implements Command {
 				// minimal length of curve which must be similar to hp (cm) -> meters
 				double minDst = HalfHyperDst.getGoodSideDst(file, deep + hp.avgdeep, file.groundProfile.avgdeep) * 4  / 100.0;
 				
-				if(deep % 7 == 0) {
-					Sout.p("d "+ deep + " rd " + (deep + hp.avgdeep) + " minDst (meters) " + minDst);
-				}
+				//if(deep % 7 == 0) {
+				//	Sout.p("d "+ deep + " rd " + (deep + hp.avgdeep) + " minDst (meters) " + minDst);
+				//}
 				
 				processDeep(file, hp,  deep, minDst);
 			}
@@ -197,7 +197,7 @@ public class EdgeSubtractGround implements Command {
 			
 			// 1 2 3 4 / check range from 0 above to 1 below
 			
-			for(int r=-1; r<=1; r++) {
+			for(int r=0; r<=1; r++) {
 				int realsmp = smp+r;
 				int edv = trace.edge[realsmp];
 				

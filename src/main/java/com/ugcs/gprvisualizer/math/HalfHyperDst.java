@@ -54,22 +54,39 @@ public class HalfHyperDst {
 		//
 		List<Trace> traces = sgyFile.getTraces();
 		
-		int sum[] = new int[5];
+		// sum[0] - above
+		// sum[1] - same
+		// sum[2] - below		
+		int sum[][] = new int[3][5];
 		
 		int checked_length = length * percent / 100;
-		for(int i=0; i< checked_length;i++) {
-			int index = pinnacle_tr + side * i;
-			Trace trace = traces.get(index);
+		
+		for(int j=from; j<=to; j++) {
 			
-			int s = smp[i];
-
-			for(int j=s-from; j<=s+to; j++) {
-				sum[trace.edge[j]]++;
+			for(int i=0; i< checked_length;i++) {
+				int index = pinnacle_tr + side * i;
+				Trace trace = traces.get(index);
+				
+				int s = smp[i];
+				
+				sum[j+1][trace.edge[s+j]]++;
 			}
 		}
 		
-		// find max edge count (0 is not edge so don`t take it into account)
-		int max = Arrays.stream(sum, 1, 5).max().getAsInt();
+		int ressum[] = new int[5];
+		
+		for(int i=1; i<5; i++) {
+			
+			int all = sum[0][i] + sum[1][i] + sum[2][i];
+			//most points must be at the same line
+			if(all/2 < sum[1][i]) {
+				ressum[i] = all;
+			}
+			
+		}
+		
+		// find max edge count 
+		int max = Arrays.stream(ressum).max().getAsInt();
 		
 		
 		return (double)max / (double)checked_length;

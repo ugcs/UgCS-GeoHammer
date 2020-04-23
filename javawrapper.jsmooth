@@ -10,6 +10,7 @@
 <currentDirectory>${EXECUTABLEPATH}</currentDirectory>
 <embeddedJar>true</embeddedJar>
 <executableName>target\geohammer.exe</executableName>
+<iconLocation>src\main\resources\logo24.png</iconLocation>
 <initialMemoryHeap>-1</initialMemoryHeap>
 <jarLocation>target\geohammer-jar-with-dependencies.jar</jarLocation>
 <mainClassName>com.ugcs.gprvisualizer.app.MainGeoHammer</mainClassName>

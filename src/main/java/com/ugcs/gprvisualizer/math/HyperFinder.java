@@ -13,6 +13,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -36,9 +37,9 @@ public class HyperFinder {
 	final static BasicStroke line1 =
 	        new BasicStroke(1.0f);
 	
-	final static BasicStroke line =
-	        new BasicStroke(2.0f);
 	final static BasicStroke line2 =
+	        new BasicStroke(2.0f);
+	final static BasicStroke line4 =
 	        new BasicStroke(4.0f);
 	
 	Color plusBest = new Color(100, 255, 100);
@@ -78,35 +79,36 @@ public class HyperFinder {
 			return;
 		}
 		
-		float [] values = traces.get(tr).getNormValues();
+		Trace extr = traces.get(tr);
+		
+		float [] values = extr.getNormValues();
 		if(ts.getSample() < 0 || ts.getSample() >= values.length) {
 			return;
 		}
+		
 		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;		
+		float example2 = values[ts.getSample()];
+		HalfHyper left2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, -1, hyperkf);		
+		HalfHyper right2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, +1, hyperkf);		
+		
 		Point lt = vField.traceSampleToScreen(ts);
+
+		///draw
 		
 		g2.setColor(Color.LIGHT_GRAY);
 		g2.fillRect(lt.x-100, lt.y - 60, 200, 40);
 		g2.setColor(Color.RED);
-		
-		
-		float example2 = traces.get(tr).getNormValues()[ts.getSample()];
-		HalfHyper left2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, -1, hyperkf);		
-		HalfHyper right2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, +1, hyperkf);		
-		
-		
-		
-		Trace ex = traces.get(tr);
-		g2.drawString("" + ts.getTrace() + " (" + ex.indexInFile + ") " + ts.getSample() + " (" + fl(example2) + ")   ofst: " + ex.verticalOffset,
+
+		g2.drawString("" + ts.getTrace() + " (" + extr.indexInFile + ") " + ts.getSample() + " (" + fl(example2) + ")   ofst: " + extr.verticalOffset,
 				lt.x-100, lt.y - 40);
 		
 		g2.drawString(" l: " + fl(left2.oppositeAbovePerc) + " " + fl(left2.oppositeBelowPerc) + " <-|-> " +  
 				" r: " +  fl(right2.oppositeAbovePerc) + " " + fl(right2.oppositeBelowPerc),				
 				lt.x-100, lt.y - 30);
-
 		
 		g2.setColor(Color.CYAN);
-		g2.setStroke(line2);
+		g2.setStroke(line4);
+		
 		drawHyperbolaLine2(g2, vField);		
 	}
 	
@@ -119,10 +121,10 @@ public class HyperFinder {
 		if(hh.length >= goodside ) {
 			
 			if(hh.isGood()) {
-				g2.setStroke(line2);
+				g2.setStroke(line4);
 				g2.setColor(positive ? plusBest : minusBest);
 			}else {
-				g2.setStroke(line);
+				g2.setStroke(line2);
 				g2.setColor(positive ? plusGood : minusGood);
 			}
 			
@@ -164,22 +166,34 @@ public class HyperFinder {
 		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
 		
 		//List<Trace> traces = AppContext.model.getFileManager().getTraces();
-		double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
+		//double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
 		
+		for(double x_factor = AlgorithmicScan.X_FACTOR_FROM; x_factor <= AlgorithmicScan.X_FACTOR_TO; x_factor += AlgorithmicScan.X_FACTOR_STEP) {
+			drawHyperSingleLine(g2, vField, thr, smp, sgyFile, traceInFile, x_factor);
+		}
+		
+		
+	}
+
+	public void drawHyperSingleLine(Graphics2D g2, ProfileField vField, double thr, int smp, SgyFile sgyFile,
+			int traceInFile, double x_factor) {
 		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1, x_factor);
 		double lftRate = lft.analize(100);
 		
 		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1, x_factor);
 		double rhtRate = rht.analize(100);
 		
-		//System.out.println( " lftR " + lftRate  + "    " + rhtRate + "  gs " + lft.hypergoodsize);
+				
+		boolean lftGood = lftRate > thr;		
+		g2.setColor(lftGood ? Color.RED : Color.CYAN);
+		g2.setStroke(lftGood ? line2 : line1);
 		
-		g2.setColor(lftRate > thr ? Color.RED : Color.CYAN);
 		drawHHDst(g2, vField, sgyFile.getOffset(), lft);
 		
-		g2.setColor(rhtRate > thr ? Color.RED : Color.CYAN);
+		boolean rhtGood = rhtRate > thr;		
+		g2.setColor(rhtGood ? Color.RED : Color.CYAN);
+		g2.setStroke(rhtGood ? line2 : line1);
 		drawHHDst(g2, vField, sgyFile.getOffset(), rht);
-		
 	}
 
 	public void drawHHDst(Graphics2D g2, ProfileField vField, VerticalCutPart  offset, HalfHyperDst lft) {

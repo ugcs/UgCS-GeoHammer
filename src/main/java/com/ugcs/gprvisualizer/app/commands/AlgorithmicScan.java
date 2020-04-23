@@ -12,9 +12,11 @@ import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public class AlgorithmicScan implements AsinqCommand {
 
-	private static final double X_FACTOR_FROM = 0.90;
-	private static final double X_FACTOR_TO = 1.71;
-	private static final double X_FACTOR_STEP = 0.1;
+	public static final double X_FACTOR_FROM = 0.90;
+	public static final double X_FACTOR_TO = 1.71;
+	public static final double X_FACTOR_STEP = 0.1;
+	public static final int MARGIN = 3;
+	
 	
 	@Override
 	public void execute(SgyFile file) {
@@ -54,13 +56,13 @@ public class AlgorithmicScan implements AsinqCommand {
 		ScanProfile hp = new ScanProfile(traces.size()); 
 		
 		for(int i=0; i<traces.size(); i++) {
-			hp.intensity[i] = cleversumdst(good, i);// Math.max(hp.deep[i], cleversumdst(good, i));
+			hp.intensity[i] = cleversumdst(good, i);
 			
-			
-			//put to trace.good
 			if(traces.get(i).good == null) {
 				traces.get(i).good = new int[good[i].length];
 			}
+			
+			//put to trace.good
 			for(int z=0;z<good[i].length; z++) {
 				traces.get(i).good[z] = good[i][z];
 			}
@@ -73,38 +75,46 @@ public class AlgorithmicScan implements AsinqCommand {
 
 	private int cleversumdst(int[][] good, int tr) {
 		//TODO: use real distance in meters 
-		int margin = 10;
+		
 		
 		
 		double sum = 0;		
-		double grpcount = 1;
-		//boolean bothside = false;
-		//boolean bothsidemax;
+		
 		double maxsum = 0;
-		int emptycount =0;
-		int both = 0; 
+		int emptycount = 0;
+		double bothCount = 1;
+		double singleCount = 1; 
 		for(int i=0; i<good[tr].length; i++) {
 			
-			// 0 1 2 3
-			int val = getAtLeastOneGood(good, tr, margin, i);
-			both = both | val;
+			// 0 1-left 2-right   3-both
+			int val = getAtLeastOneGood(good, tr, MARGIN, i);
+			
+			
 			if(val != 0) {
-				grpcount++;
-				sum += (val < 3 ? 1.0 : 2.0) / grpcount;
+				emptycount = 0;
+
+				if(val == 3) {
+					bothCount++;
+					sum += 20.0 / bothCount;
+				}else {
+					singleCount++;
+					sum += 2.0 / singleCount;
+				}
 			}else {
 				emptycount++;
 				if(emptycount > 5) {
-					maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-					both = 0;
+					maxsum = Math.max(maxsum, sum);
+					bothCount = 1;
+					singleCount = 1;
 					sum = 0;
 					emptycount = 0;
-					grpcount = 1;
+		
 				}
 			}			
 		}
 		
-		maxsum = Math.max(maxsum, sum * (both == 3 ? 10 : 1));
-		return (int)(maxsum*4);//
+		maxsum = Math.max(maxsum, sum);
+		return (int)(maxsum*5);//
 	}
 
 	
@@ -120,6 +130,9 @@ public class AlgorithmicScan implements AsinqCommand {
 	}
 
 	private double processTrace(SgyFile sgyFile, int tr, int[][] good) {
+		
+		double thr = getThreshold();
+		
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
@@ -132,13 +145,23 @@ public class AlgorithmicScan implements AsinqCommand {
 		for(int smp = AppContext.model.getSettings().layer;				
 			smp< maxSmp ; smp++) {
 			
-			// reduce x distance for hyperbola calculation
-			for(double x_factor = X_FACTOR_FROM; x_factor <= X_FACTOR_TO; x_factor += X_FACTOR_STEP) {
-				processHyper3(sgyFile, tr, smp, x_factor, good);
-			}
+			
+			int exists = checkAllVariantsForPoint(sgyFile, tr, thr, smp);
+			
+			good[tr][smp] = good[tr][smp] | exists;
 		}
 		
 		return goodSmpCnt;
+	}
+
+	public static int checkAllVariantsForPoint(SgyFile sgyFile, int tr, double thr, int smp) {
+		int exists = 0;
+		// reduce x distance for hyperbola calculation
+		for(double x_factor = X_FACTOR_FROM; x_factor <= X_FACTOR_TO; x_factor += X_FACTOR_STEP) {
+
+			exists = exists | processHyper3(sgyFile, tr, smp, x_factor, thr);
+		}
+		return exists;
 	}
 
 	public double getThreshold() {
@@ -146,24 +169,21 @@ public class AlgorithmicScan implements AsinqCommand {
 		return thr;
 	}
 	
-	private void processHyper3(SgyFile sgyFile, int tr, int smp, double x_factor, int[][] good) {
-		double thr = getThreshold();
+	public static int processHyper3(SgyFile sgyFile, int tr, int smp, double x_factor, double thr) {
+		
 		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1, x_factor);		
 		
 		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, x_factor);
 		
 		double left100 = left.analize(100); 
-		double left20 = left.analize(20);
+		double left20 = left.analize(40);
 		double right100 = right.analize(100);
-		double right20 = right.analize(20);
-		 		
+		double right20 = right.analize(40);
 		
-		good[tr][smp] =
-			good[tr][smp] 
-				|
+		return 
 			(left100 > thr && right20 > thr ? 1 : 0) 
 				| 
-			(right100 > thr && left20 > thr ? 2 : 0); 
+			(right100 > thr && left20 > thr ? 2 : 0);
 		
 	}
 
