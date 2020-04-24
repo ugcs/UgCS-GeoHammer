@@ -220,8 +220,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			return null;
 		}		
 		
-		List<Trace> traces = model.getFileManager().getTraces();
-
 		ProfileField field = new ProfileField(getField());
 		
 		BufferedImage bi ;
@@ -240,8 +238,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	    g2.setRenderingHints(rh);		
 		
 	    
-	    
-	    
 		clearBitmap(bi, g2, field);
 		
 		
@@ -250,48 +246,49 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
 
-		
+		if(controller.isEnquiued()) {
+			return bi;
+		}
 		
 		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 		
+		drawAuxGraphics1(field, g2);
 		
+		if(controller.isEnquiued()) {
+			return bi;
+		}		
+		
+		g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
+		
+		drawHyperliveView(field, g2);		
+		
+		drawFileNames(height, field, g2);
+		
+		//
+		g2.dispose();
+		///
+		return bi;
+	}
+
+	public void drawHyperliveView(ProfileField field, Graphics2D g2) {
+		if(model.getSettings().hyperliveview) {
+			hyperFinder.drawHyperbolaLine(g2, field);
+		}
+	}
+
+	public void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
 		int startTrace = field.getFirstVisibleTrace();
 		int finishTrace = field.getLastVisibleTrace();		
 		
 		Rectangle r = field.getClipMainRect();
 		g2.setClip(r.x, r.y, r.width, r.height);
 		
-		//drawGroundLevel(traces, field, g2, startTrace, finishTrace);
-		//drawGreenLevel(traces, field, g2, startTrace, finishTrace);
 		drawFileProfiles(field, g2, startTrace, finishTrace);
-		
+
 		drawAmplitudeMapLevels(field, g2);
 		
 		drawAuxElements(field, g2);
-		
-		
-		g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
-		
-		if(model.getSettings().hyperliveview) {
-			hyperFinder.drawHyperbolaLine(g2, field);
-		}		
-		
-		drawFileNames(height, field, g2);
-		
-		g2.dispose();
-		///
-		return bi;
 	}
-
-//	public void drawGreenLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
-//		if(model.getSettings().showGreenLine) {
-//			
-//			g2.setColor(Color.GREEN);
-//			g2.setStroke(AMP_STROKE);
-//			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, true);
-//			
-//		}
-//	}
 
 	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
 		
@@ -330,16 +327,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	}
 	
-//	public void drawGroundLevel(List<Trace> traces, ProfileField field, Graphics2D g2, int startTrace,
-//			int finishTrace) {
-//		//if(model.getFileManager().levelCalculated) {
-//			g2.setColor(new Color(210,105,30));
-//			g2.setStroke(LEVEL_STROKE);
-//			drawGroundLevel(field, g2, traces,  startTrace, finishTrace, false);
-//			
-//		//}
-//	}
-
 	public double getRealContrast() {
 		double contr = Math.pow(1.08, 140-contrast);
 		return contr;
@@ -401,35 +388,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		
 	}
-
-//	private void drawGroundLevel(ProfileField field, Graphics2D g2, List<Trace> traces, int startTrace, int finishTrace, boolean m2) {
-//		
-//		
-//		Trace trace1 = traces.get(startTrace);
-//		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTrace,  m2 ? trace1.maxindex2 : trace1.maxindex));
-//		int max2 = 0;
-//		int prev_max2 = 0;
-//		for(int i=startTrace+1; i<finishTrace; i++) {
-//			//Trace trace1 = traces.get(i-1);
-//			
-//			Trace trace2 = traces.get(i);
-//			
-//			max2 = Math.max(max2, m2 ? trace2.maxindex2 : trace2.maxindex);
-//			
-//			Point p2 = field.traceSampleToScreenCenter(new TraceSample(i,  max2));
-//			if(p2.x - p1.x > 2) {
-//				if(max2 > 0 || prev_max2 > 0) {
-//					g2.drawLine(p1.x, p1.y, p2.x, p2.y);
-//				}
-//				trace1 = trace2;
-//				p1 = p2;
-//				
-//				prev_max2 = max2;
-//				max2 = 0;
-//			}
-//			
-//		}
-//	}
 
 	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf, int voffset) {
 		
@@ -779,12 +737,12 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	
 	protected void repaintEvent() {
 		if(!model.isLoading()) {
-			controller.render(null);
+			controller.render(RecalculationLevel.BUFFERED_IMAGE);
 		}
 	}
 	
 	protected void repaint() {
-
+		
 		img = draw(width, height);
 		if(img != null) {
 			i = SwingFXUtils.toFXImage(img, null);
@@ -829,17 +787,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 		
 		profileScroll.recalc();
-		
-//		scrollBar.setMin(0);
-//		scrollBar.setMax(model.getFileManager().getTraces().size());
-//		
-//		int am = getField().getVisibleNumberOfTrace(width);
-//		scrollBar.setVisibleAmount(am);
-//		scrollBar.setUnitIncrement(am/4);
-//		scrollBar.setBlockIncrement(am);
-//		scrollBar.setValue(getField().getSelectedTrace());
 	}
-	
 
 	private RecalculationController controller = new RecalculationController(new Consumer<RecalculationLevel>() {
 

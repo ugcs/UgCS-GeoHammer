@@ -61,6 +61,10 @@ public class RecalculationController {
 		
 	}
 
+	public boolean isEnquiued() {
+		return refLevel.get() != null;
+	}
+	
 	private RecalculationLevel max(RecalculationLevel recalculationLevel, RecalculationLevel level) {
 		
 		if(recalculationLevel == null) {

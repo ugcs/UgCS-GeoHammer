@@ -98,7 +98,7 @@ public class AlgorithmicScan implements AsinqCommand {
 					sum += 20.0 / bothCount;
 				}else {
 					singleCount++;
-					sum += 2.0 / singleCount;
+					sum += 1.0 / singleCount;
 				}
 			}else {
 				emptycount++;
@@ -160,6 +160,9 @@ public class AlgorithmicScan implements AsinqCommand {
 		for(double x_factor = X_FACTOR_FROM; x_factor <= X_FACTOR_TO; x_factor += X_FACTOR_STEP) {
 
 			exists = exists | processHyper3(sgyFile, tr, smp, x_factor, thr);
+			if(exists == 3) {
+				break;
+			}
 		}
 		return exists;
 	}
@@ -176,14 +179,17 @@ public class AlgorithmicScan implements AsinqCommand {
 		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, x_factor);
 		
 		double left100 = left.analize(100); 
-		double left20 = left.analize(40);
+		//double left20 = left.analize(40);
 		double right100 = right.analize(100);
-		double right20 = right.analize(40);
+		//double right20 = right.analize(40);
 		
 		return 
-			(left100 > thr && right20 > thr ? 1 : 0) 
+			(left100 > thr ? 1 : 0) 
 				| 
-			(right100 > thr && left20 > thr ? 2 : 0);
+			(right100 > thr ? 2 : 0);
+//		(left100 > thr && right20 > thr ? 1 : 0) 
+//		| 
+//		(right100 > thr && left20 > thr ? 2 : 0);
 		
 	}
 

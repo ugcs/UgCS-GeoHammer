@@ -132,7 +132,9 @@ public class HalfHyperDst {
 		Trace trace = traces.get(tr);
 		int maxSamplIndex = trace.getNormValues().length-2;
 		
-		HalfHyperDst hh = new HalfHyperDst();
+		//HalfHyperDst hh = new HalfHyperDst();
+		HalfHyperDst hh = new HHAnalizer();
+		
 		hh.sgyFile = sgyFile;
 		hh.pinnacle_tr = tr;		
 		hh.pinnacle_smp = org_smp;

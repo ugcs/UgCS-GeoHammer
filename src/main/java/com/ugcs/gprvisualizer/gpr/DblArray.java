@@ -107,16 +107,20 @@ public class DblArray {
 
 	    //tmp show palette
 	    if(Sout.developMode) {
-		    for(int x=0; x<width; x++){
-		    	for(int y=30; y<50; y++){
-		    		
-		    		buffer[x + y * width] = palette[(int)( x*200/width )];
-		    		
-		    	}
-		    }
+		    showGradientPalatte(palette, buffer);
 	    }
 	    
 	    return image;
+	}
+
+	public void showGradientPalatte(int[] palette, int[] buffer) {
+		for(int x=0; x<width; x++){
+			for(int y=30; y<50; y++){
+				
+				buffer[x + y * width] = palette[(int)( x*200/width )];
+				
+			}
+		}
 	}
 	
 	private void saveImg(BufferedImage bufferedImage, String fname) {

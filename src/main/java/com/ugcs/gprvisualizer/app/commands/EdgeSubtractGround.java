@@ -66,7 +66,7 @@ public class EdgeSubtractGround implements Command {
 			//if(foundCount > ENOUGH_SIZE) {
 			
 			
-			if(foundDst > minDst*0.90) {
+			if(foundDst > minDst*0.94) {
 				int removeFromIndex = Math.max(lastRemoved+1, tailIndex);
 				
 				//clear edges from removeFromIndex to index
