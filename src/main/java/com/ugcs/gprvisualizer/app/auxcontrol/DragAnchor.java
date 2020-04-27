@@ -80,12 +80,16 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 		g2.setClip(vField.getClipMainRect().x, vField.getClipMainRect().y, vField.getClipMainRect().width, vField.getClipMainRect().height);
 		
 		Rectangle rect = getRect(vField);
+		realDraw(g2, rect);		
+	}
+
+	protected void realDraw(Graphics2D g2, Rectangle rect) {
 		if(getImg() == null) {
 			g2.setColor(Color.MAGENTA);
 			g2.fillOval(rect.x, rect.y, rect.width, rect.height);
 		}else {
 			g2.drawImage(getImg(), rect.x, rect.y, null);
-		}		
+		}
 	}
 
 	public Rectangle getRect(ProfileField vField) {

@@ -153,10 +153,6 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		profileScroll.widthProperty().bind(
 				topPane.widthProperty());
-		//profileScroll.heightProperty().bind(
-         //       stackPane.heightProperty());		
-		
-		
 		
 		zoomInBtn.setOnAction(e -> {
 			zoom(1, width/2, height/2, false);
@@ -187,22 +183,17 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().add(getSpacer());
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
-		toolBar.getItems().add(getSpacer());
-		
-		
-		toolBar.getItems().add(showGreenLineBtn);
-		
-		
+		toolBar.getItems().add(getSpacer());		
+		toolBar.getItems().add(showGreenLineBtn);		
 		
 		toolBar.getItems().add(CommandRegistry.createButton("Ruler", e-> {
 			
-			
-			//model.getSettings().selectedScanIndex;
 			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
 			
-			RulerTool fp = new RulerTool(file);
+			RulerTool fp = RulerTool.createRulerTool( getField(), file);
+			
 			fp.setSelected(true);
-			//model.setControls(Arrays.asList(fp));
+
 			List lst = new ArrayList<>();
 			lst.addAll(fp.getControls());
 			lst.add(fp);
@@ -211,10 +202,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			repaintEvent();
 			
 		}));
-		
-		//toolBar.getItems().add(hyperLiveViewBtn);
 	}
-	
+
 	protected BufferedImage draw(int width,	int height) {
 		if(width <= 0 || height <= 0 || !model.isActive()) {
 			return null;
@@ -246,23 +235,24 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
 
-		if(controller.isEnquiued()) {
-			return bi;
-		}
-		
 		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
 		
-		drawAuxGraphics1(field, g2);
+		if(!controller.isEnquiued()) {
+			//skip if another recalculation coming			
+			drawAuxGraphics1(field, g2);		
+		}
 		
-		if(controller.isEnquiued()) {
-			return bi;
-		}		
+		drawAuxElements(field, g2);
 		
-		g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
+		if(!controller.isEnquiued()) {
+			//skip if another recalculation coming
 		
-		drawHyperliveView(field, g2);		
-		
-		drawFileNames(height, field, g2);
+			g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
+			
+			drawHyperliveView(field, g2);		
+			
+			drawFileNames(height, field, g2);
+		}
 		
 		//
 		g2.dispose();
@@ -285,9 +275,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		
 		drawFileProfiles(field, g2, startTrace, finishTrace);
 
-		drawAmplitudeMapLevels(field, g2);
-		
-		drawAuxElements(field, g2);
+		drawAmplitudeMapLevels(field, g2);		
 	}
 
 	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
@@ -355,8 +343,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 	
 	private void drawAuxElements(ProfileField field, Graphics2D g2) {
+		
+		boolean full = !controller.isEnquiued(); 
+		
 		for(BaseObject bo : model.getAuxElements()) {
-			bo.drawOnCut(g2, field);
+			if(full || bo.isSelected()) {
+				bo.drawOnCut(g2, field);
+			}
 		}
 		if(model.getControls() != null) {
 			for(BaseObject bo : model.getControls()) {

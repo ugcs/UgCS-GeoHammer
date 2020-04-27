@@ -2,39 +2,26 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScanFull;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
-import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
-import com.ugcs.gprvisualizer.app.commands.HorizontalGroupFilter;
-import com.ugcs.gprvisualizer.app.commands.HorizontalGroupScan;
-import com.ugcs.gprvisualizer.app.commands.TraceProfileClear;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
-import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.LevelFilter;
-import com.ugcs.gprvisualizer.math.TraceDecimator;
 import com.ugcs.gprvisualizer.math.TraceStacking;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -62,11 +49,9 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.0.1";
 	private static final int RIGHT_BOX_WIDTH = 330;
 	private Scene scene;
-	private Stage stage;
 	private BorderPane bPane;
 	private ModeFactory modeFactory;
 	private VBox rightBox = new VBox();
-	//private VBox centerBox = new VBox();
 	private Model model = new Model();
 	private ToolBar toolBar = new ToolBar();
 
@@ -105,7 +90,6 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 	@Override
 	public void start(Stage stage) throws Exception {
 
-		this.stage = stage;
 		AppContext.stage = stage;
 		AppContext.saver = new Saver(model, stage);
 

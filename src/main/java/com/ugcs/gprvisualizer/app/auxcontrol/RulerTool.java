@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
@@ -33,31 +34,73 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 	VerticalCutPart offset;
 	SgyFile file;
 	
-	public RulerTool(SgyFile file) {
+	
+	public static RulerTool createRulerTool(ProfileField field, SgyFile file) {
+		int fvt = field.getFirstVisibleTrace(); 
+		int file_start = file.getOffset().getStartTrace();
+		int startTrace = Math.max(0, fvt - file_start);
+		
+		int lvt = field.getLastVisibleTrace();
+		//int file_finish = file.getOffset().getFinishTrace();
+		
+		int finishTrace = Math.min(file.size()-1, lvt - file.getOffset().getStartTrace());		
+		int wd = finishTrace - startTrace;			
+		
+		int smp_start = field.getStartSample();
+		int smp_finish = Math.min(file.getMaxSamples(), field.getLastVisibleSample(field.getMainRect().height));
+		int ht = smp_finish - smp_start; 
+		
+		RulerTool fp = new RulerTool(file, startTrace + wd/3, startTrace + wd*2/3 , smp_start+ht/3, smp_start+ht*2/3);
+		return fp;
+	}
+	
+	
+	class RulerAnchor extends DragAnchor {
+		
+		public RulerAnchor(Image img, AlignRect alignRect, VerticalCutPart offset) {
+			super(img, alignRect, offset);
+		}
+
+		protected void realDraw(Graphics2D g2, Rectangle rect) {
+		
+			g2.setColor(Color.BLACK);
+			g2.fillOval(rect.x, rect.y, rect.width, rect.height);
+
+			g2.setColor(Color.YELLOW);
+			g2.drawOval(rect.x, rect.y, rect.width, rect.height);
+		
+		}
+	}
+	
+	public RulerTool(SgyFile file, int s, int f, int smp_s, int smp_f) {
 		this.file = file;
 		offset = file.getOffset();
 		
 		
-		anch1 = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		anch1 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				anch1.setTrace(
 					NumberUtils.norm(anch1.getTrace() , 0, file.size()-1));
+				anch1.setSample(
+						NumberUtils.norm(anch1.getSample() , 0, file.getMaxSamples()));
 
 			}
 		};
 		
-		anch2 = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		anch2 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				anch2.setTrace(
 						NumberUtils.norm(anch2.getTrace() , 0, file.size()-1));
+				anch2.setSample(
+						NumberUtils.norm(anch2.getSample() , 0, file.getMaxSamples()));
 				
 			}
 		};		
 		
-		anch1.setTrace(file.size()/3);
-		anch1.setSample(10);
-		anch2.setTrace(file.size()*2/3);
-		anch2.setSample(100);
+		anch1.setTrace(s);
+		anch1.setSample(smp_s);
+		anch2.setTrace(f);
+		anch2.setSample(smp_f);
 		
 	}
 
@@ -103,20 +146,24 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 		
 	}
 	
+	private static final double MARGIN = 1.0;
 	private void drawText(Graphics2D g2, int x, int y, String str) {
         FontMetrics fm = g2.getFontMetrics();
         Rectangle2D rect = fm.getStringBounds(str, g2);
 
+        rect = new Rectangle2D.Double(rect.getX()-MARGIN-2, rect.getY()-MARGIN, rect.getWidth()+2*MARGIN+3, rect.getHeight()+2*MARGIN);
+        
         g2.setColor(Color.BLACK);
-        g2.fillRoundRect(x,
-                   y - fm.getAscent(),
+        
+        g2.fillRoundRect(x+(int)rect.getX(),
+        			y + (int)(rect.getY()), //- fm.getAscent() 
                    (int) rect.getWidth(),
                    (int) rect.getHeight(), 
                    5, 5);
         
         g2.setColor(Color.YELLOW.darker());
-        g2.drawRoundRect(x,
-                y - fm.getAscent(),
+        g2.drawRoundRect(x+(int)rect.getX(),
+    			y  + (int)(rect.getY()), //- fm.getAscent()
                 (int) rect.getWidth(),
                 (int) rect.getHeight(), 
                 5, 5);
@@ -126,8 +173,8 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 	}
 	
 	private double dist() {
-		int s = Math.min(anch1.getTrace(), anch2.getTrace());
-		int f = Math.max(anch1.getTrace(), anch2.getTrace());
+		int s = Math.max(0, Math.min(anch1.getTrace(), anch2.getTrace()));
+		int f = Math.min(file.size()-1 , Math.max(anch1.getTrace(), anch2.getTrace()));
 		
 		
 		List<Trace> traces = file.getTraces();
