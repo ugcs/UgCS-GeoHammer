@@ -105,10 +105,12 @@ public class Trace {
 		this.end = end;
 	}
 
+	// in cm
 	public double getPrevDist() {
 		return prevDist;
 	}
 
+	// in cm
 	public void setPrevDist(double prevDist) {
 		this.prevDist = prevDist;
 	}

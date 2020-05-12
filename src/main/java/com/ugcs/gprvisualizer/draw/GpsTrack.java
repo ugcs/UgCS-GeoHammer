@@ -74,7 +74,7 @@ public class GpsTrack extends BaseLayer{
 		double sumdist = 0;
 		double threshold =
 				model.getField().getSceneCenter().getDistance(
-				model.getField().screenTolatLon(new Point2D.Double(0, 5)));// meter
+						model.getField().screenTolatLon(new Point2D.Double(0, 5))) * 100.0;// meter to cm
 		
 		//
 		g2.setColor(Color.RED);

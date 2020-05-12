@@ -6,6 +6,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 
 public class HalfHyperDst {
 	
@@ -111,12 +112,16 @@ public class HalfHyperDst {
 	}
 	
 	public double getGoodSideDst(int smp) {
-		int grndSmp = sgyFile.groundProfile != null ? sgyFile.groundProfile.deep[pinnacle_tr] : 0;
-		
-		return getGoodSideDst(sgyFile, smp, grndSmp);
+		return getGoodSideDstPin(sgyFile, pinnacle_smp, smp);
 	}
 	
-	public static double getGoodSideDst(SgyFile sgyFile, int smp, int grndSmp) {
+	public static double getGoodSideDstPin(SgyFile file, int pinnacle_tr, int smp) {
+		int grndSmp = file.groundProfile != null ? file.groundProfile.deep[pinnacle_tr] : 0;
+		
+		return getGoodSideDstGrnd(file, smp, grndSmp);
+	}
+	
+	public static double getGoodSideDstGrnd(SgyFile sgyFile, int smp, int grndSmp) {
 		
 		//int grndSmp = sgyFile.groundProfile != null ? sgyFile.groundProfile.deep[pinnacle_tr] : 0;
 		
@@ -126,18 +131,18 @@ public class HalfHyperDst {
 		return (y_cm * 0.41);
 	}
 
-	public static HalfHyperDst getHalfHyper(SgyFile sgyFile, int tr, int org_smp, int side, double x_factor) {
+	public static HalfHyperDst getHalfHyper(SgyFile sgyFile, int pncl_tr, int pncl_smp, int side, double x_factor) {
 		
 		List<Trace> traces = sgyFile.getTraces();
-		Trace trace = traces.get(tr);
+		Trace trace = traces.get(pncl_tr);
 		int maxSamplIndex = trace.getNormValues().length-2;
 		
 		//HalfHyperDst hh = new HalfHyperDst();
 		HalfHyperDst hh = new HHAnalizer();
 		
 		hh.sgyFile = sgyFile;
-		hh.pinnacle_tr = tr;		
-		hh.pinnacle_smp = org_smp;
+		hh.pinnacle_tr = pncl_tr;		
+		hh.pinnacle_smp = pncl_smp;
 		hh.side = side;
 		//hh.sampleToCm_air = sgyFile.getSamplesToCmAir();
 		//hh.sampleToCm_grn = sgyFile.getSamplesToCmGrn();
@@ -148,12 +153,12 @@ public class HalfHyperDst {
 		
 		int i=0;
 		int index=0;
-		double r[] = hh.smpToDst(hh.pinnacle_smp);
-		double y_cm = r[0] + r[1];
+		//double r[] = hh.smpToDst(hh.pinnacle_smp);
+		double y_cm = RulerTool.distanceCm(sgyFile, pncl_tr, pncl_tr, 0, hh.pinnacle_smp);//  r[0] + r[1];
 		double x = 0;
 		
 		while(Math.abs(x) < hh.hypergoodsize && i < 300) {
-			index = tr + side * i;
+			index = pncl_tr + side * i;
 			if(index<0 || index>= traces.size() ) {
 				hh.defective = true;
 				break;
@@ -164,13 +169,13 @@ public class HalfHyperDst {
 			
 			double c_cm = Math.sqrt(x*x + y_cm*y_cm);
 			//
-			double f = r[0] / y_cm;
-			double c_air_cm = c_cm * f; 
-			double c_grn_cm = c_cm * (1-f);
+			//double f = r[0] / y_cm;
+			//double c_air_cm = c_cm * f; 
+			//double c_grn_cm = c_cm * (1-f);
 			//
-			double  c = c_air_cm / sgyFile.getSamplesToCmAir() + c_grn_cm / sgyFile.getSamplesToCmGrn();
+			//double  c = c_air_cm / sgyFile.getSamplesToCmAir() + c_grn_cm / sgyFile.getSamplesToCmGrn();
 			
-			int smp = (int)c;
+			int smp = RulerTool.diagonalToSmp(sgyFile, pncl_tr, pncl_smp, c_cm);
 			if(smp >= maxSamplIndex) {
 				break;
 			}
@@ -192,9 +197,9 @@ public class HalfHyperDst {
 		if(i>0) {
 			if(side > 0) {
 				//dist to cm
-				xstep = traces.get(index).getPrevDist() * 100;
+				xstep = traces.get(index).getPrevDist();
 			}else {
-				xstep = traces.get(index+1).getPrevDist()* 100;
+				xstep = traces.get(index+1).getPrevDist();
 			}
 		}
 		return xstep;

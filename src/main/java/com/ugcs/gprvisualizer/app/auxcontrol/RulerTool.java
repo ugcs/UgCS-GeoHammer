@@ -23,6 +23,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.MouseHandler;
+import com.ugcs.gprvisualizer.math.GHUtils;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandler {
@@ -173,9 +174,31 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 	}
 	
 	private double dist() {
-		int s = Math.max(0, Math.min(anch1.getTrace(), anch2.getTrace()));
-		int f = Math.min(file.size()-1 , Math.max(anch1.getTrace(), anch2.getTrace()));
 		
+		
+		int tr1 = anch1.getTrace();
+		int tr2 = anch2.getTrace();
+		int smp1 = anch1.getSample();
+		int smp2 = anch2.getSample();
+		
+		
+		
+		double diag = distanceCm(file, tr1, tr2, smp1, smp2);
+		
+		
+		return diag;
+	}
+
+	
+
+	public static double distanceCm(SgyFile file, int tr1, int tr2, double smp1, double smp2) {
+		double grndLevel = 0;
+		if(file.groundProfile != null) {
+			grndLevel = file.groundProfile.deep[(tr1 + tr2)/2];
+		}
+
+		int s = Math.max(0, Math.min(tr1, tr2));
+		int f = Math.min(file.size()-1 , Math.max(tr1, tr2));
 		
 		List<Trace> traces = file.getTraces();
 		
@@ -184,30 +207,44 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 			dst += traces.get(i).getPrevDist();
 		}
 		
-		double h_dst_cm = dst*100;
+		double h_dst_cm = dst;
 		
 		
-		double h = (double)Math.abs(anch1.getSample() - anch1.getSample());
-		double grndLevel = 0;
-		if(file.groundProfile != null) {
-			grndLevel = file.groundProfile.deep[(anch2.getTrace() + anch1.getTrace())/2];
-		}
 		
-		double h1 = Math.min(anch1.getSample(), anch2.getSample()); 
-		double h2 = Math.max(anch1.getSample(), anch2.getSample());
+		double h1 = Math.min(smp1, smp2); 
+		double h2 = Math.max(smp1, smp2);
 		
 		double hair = Math.max(0,  Math.min(grndLevel, h2) - h1); 
 		double hgrn = h2-h1 - hair;
 		
-		
 		double v_dst_cm =  file.getSamplesToCmAir() * hair + file.getSamplesToCmGrn() * hgrn;
 		
 		double diag = Math.sqrt(h_dst_cm*h_dst_cm + v_dst_cm*v_dst_cm);
-		
-		
 		return diag;
 	}
 
+	
+	public static int diagonalToSmp(SgyFile file, int tr, int smp, double c) {
+		
+		int grn = file.groundProfile.deep[tr];
+		
+		//part of air
+		
+		double full_cm = distanceCm(file, tr, tr, 0, smp);
+		double grn_cm = distanceCm(file, tr, tr, 0, grn);
+		double f = grn_cm / full_cm;
+		
+		f = GHUtils.norm(f, 0, 1);
+		
+		double c_air = c * f;
+		double c_grn = c * (1-f);
+		
+		double smp_air = c_air / file.getSamplesToCmAir();
+		double smp_grn = c_grn / file.getSamplesToCmGrn();
+		
+		return (int)(smp_air + smp_grn);
+	}
+	
 	
 	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField vField) {

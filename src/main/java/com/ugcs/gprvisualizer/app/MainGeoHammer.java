@@ -16,6 +16,7 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.TraceStacking;
 
@@ -99,7 +100,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
 		stage.setTitle(TITLE_VERSION);
 		stage.setScene(scene);
-		stage.setMaximized(true);
+		//stage.setMaximized(true);
 		stage.show();
 
 		model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
@@ -286,12 +287,13 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		toolBar.getItems().addAll(CommandRegistry.createAsinqTaskButton(
 				new AlgorithmicScanFull(),
 				e->{ 
-					
-					Sout.p("select1");
-					//tabPane.getSelectionModel().select(1);
 					layersWindowBuilder.radarMap.selectAlgMode();
 					 
-				}));
+				}),
+				CommandRegistry.createAsinqTaskButton(
+						new HoughScan(),
+						e->{})				
+				);
 		
 		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
 		

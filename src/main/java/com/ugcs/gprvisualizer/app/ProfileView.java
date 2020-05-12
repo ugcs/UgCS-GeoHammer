@@ -38,6 +38,7 @@ import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
+import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
@@ -72,62 +73,62 @@ import javafx.scene.layout.VBox;
 public class ProfileView implements SmthChangeListener, ModeFactory {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
-	
-	protected PrismDrawer prismDrawer;	
+
+	protected PrismDrawer prismDrawer;
 	protected Model model;
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
 	protected Pane topPane = new Pane();
-	
+
 	protected BufferedImage img;
-	protected Image i ;
+	protected Image i;
 	protected int width;
 	protected int height;
-	
-	protected double contrast = 50;	
-	
+
+	protected double contrast = 50;
+
 	private ContrastSlider contrastSlider;
 	private HyperbolaSlider hyperbolaSlider;
 	private HyperGoodSizeSlider hyperGoodSizeSlider;
 	private MiddleAmplitudeSlider middleAmplitudeSlider;
-	
+
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
-	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png" ));
+	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png"));
 	private Button zoomOutBtn = new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
 	private ToggleButton showGreenLineBtn = new ToggleButton("", ResourceImageHolder.getImageView("level.png"));
-	
-	private MouseHandler selectedMouseHandler;   
+
+	private MouseHandler selectedMouseHandler;
 	private MouseHandler scrollHandler;
 	private AuxElementEditHandler auxEditHandler;
-	
-	private HyperFinder hyperFinder; 
+
+	private HyperFinder hyperFinder;
 	public ProfileScroll profileScroll = new ProfileScroll();
-	
+
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
-	
+
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
-		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {			
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 			repaintEvent();
 		}
 	};
 	private ChangeListener<Number> aspectSliderListener = new ChangeListener<Number>() {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-			//updateAspect();
+			// updateAspect();
 			updateScroll();
 			repaintEvent();
 		}
 	};
-	
+
 	public ProfileView(Model model) {
 		this.model = model;
-		
+
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
-		
+
 		hyperFinder = new HyperFinder(model);
 		prismDrawer = new PrismDrawer(model);
 		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
@@ -135,41 +136,38 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
 		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), sliderListener);
 		initImageView();
-		
+
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov,
-                    Number old_val, Number new_val) {
-                repaintEvent();                
-            }
-        });
+			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
+				repaintEvent();
+			}
+		});
 
 		scrollHandler = new CleverViewScrollHandler(this);
 		auxEditHandler = new AuxElementEditHandler(this);
-		
+
 		prepareToolbar();
-		
+
 		profileScroll.recalc();
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView/*,  scrollBar*/);
-		
-		profileScroll.widthProperty().bind(
-				topPane.widthProperty());
-		
+		vbox.getChildren().addAll(toolBar, profileScroll, imageView/* , scrollBar */);
+
+		profileScroll.widthProperty().bind(topPane.widthProperty());
+
 		zoomInBtn.setOnAction(e -> {
-			zoom(1, width/2, height/2, false);
+			zoom(1, width / 2, height / 2, false);
 
 		});
 		zoomOutBtn.setOnAction(e -> {
-			zoom(-1, width/2, height/2, false);
+			zoom(-1, width / 2, height / 2, false);
 		});
-		
-		
+
 		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
 		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
 		showGreenLineBtn.setOnAction(e -> {
 			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		});
-		
+
 		AppContext.smthListener.add(this);
 	}
 
@@ -177,83 +175,80 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
-		
+
 		toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
-		
+
 		toolBar.getItems().add(getSpacer());
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
-		toolBar.getItems().add(getSpacer());		
-		toolBar.getItems().add(showGreenLineBtn);		
-		
-		toolBar.getItems().add(CommandRegistry.createButton("Ruler", e-> {
-			
+		toolBar.getItems().add(getSpacer());
+		toolBar.getItems().add(showGreenLineBtn);
+
+		toolBar.getItems().add(CommandRegistry.createButton("Ruler", e -> {
+
 			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
-			
-			RulerTool fp = RulerTool.createRulerTool( getField(), file);
-			
+
+			RulerTool fp = RulerTool.createRulerTool(getField(), file);
+
 			fp.setSelected(true);
 
 			List lst = new ArrayList<>();
 			lst.addAll(fp.getControls());
 			lst.add(fp);
 			model.setControls(lst);
-			
+
 			repaintEvent();
-			
+
 		}));
 	}
 
-	protected BufferedImage draw(int width,	int height) {
-		if(width <= 0 || height <= 0 || !model.isActive()) {
+	protected BufferedImage draw(int width, int height) {
+		if (width <= 0 || height <= 0 || !model.isActive()) {
 			return null;
-		}		
-		
+		}
+
 		ProfileField field = new ProfileField(getField());
-		
-		BufferedImage bi ;
-		if(img != null && img.getWidth() == width && img.getHeight() == height) {
+
+		BufferedImage bi;
+		if (img != null && img.getWidth() == width && img.getHeight() == height) {
 			bi = img;
-		}else {
+		} else {
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		}
-		int[] buffer = ((DataBufferInt)bi.getRaster().getDataBuffer()).getData() ;
-		
-		Graphics2D g2 = (Graphics2D)bi.getGraphics();
-		
-		RenderingHints rh = new RenderingHints(
-	             RenderingHints.KEY_TEXT_ANTIALIASING,
-	             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-	    g2.setRenderingHints(rh);		
-		
-	    
+		int[] buffer = ((DataBufferInt) bi.getRaster().getDataBuffer()).getData();
+
+		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+
+		RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2.setRenderingHints(rh);
+
 		clearBitmap(bi, g2, field);
-		
-		
+
 		new VerticalRulerDrawer(model).draw(g2, field);
 
-		
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
 
-		g2.translate(field.getMainRect().x + field.getMainRect().width/2, 0);
-		
-		if(!controller.isEnquiued()) {
-			//skip if another recalculation coming			
-			drawAuxGraphics1(field, g2);		
+		g2.translate(field.getMainRect().x + field.getMainRect().width / 2, 0);
+
+		if (!controller.isEnquiued()) {
+			// skip if another recalculation coming
+			drawAuxGraphics1(field, g2);
 		}
-		
+
 		drawAuxElements(field, g2);
-		
-		if(!controller.isEnquiued()) {
-			//skip if another recalculation coming
-		
-			g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width, field.getClipTopMainRect().height);
-			
-			drawHyperliveView(field, g2);		
-			
+
+		if (!controller.isEnquiued()) {
+			// skip if another recalculation coming
+
+			g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width,
+					field.getClipTopMainRect().height);
+
+			drawHyperliveView(field, g2);
+
 			drawFileNames(height, field, g2);
 		}
-		
+
 		//
 		g2.dispose();
 		///
@@ -261,222 +256,217 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 
 	public void drawHyperliveView(ProfileField field, Graphics2D g2) {
-		if(model.getSettings().hyperliveview) {
+		if (model.getSettings().hyperliveview) {
 			hyperFinder.drawHyperbolaLine(g2, field);
 		}
 	}
 
 	public void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
 		int startTrace = field.getFirstVisibleTrace();
-		int finishTrace = field.getLastVisibleTrace();		
-		
+		int finishTrace = field.getLastVisibleTrace();
+
 		Rectangle r = field.getClipMainRect();
 		g2.setClip(r.x, r.y, r.width, r.height);
-		
+
 		drawFileProfiles(field, g2, startTrace, finishTrace);
 
-		drawAmplitudeMapLevels(field, g2);		
+		drawAmplitudeMapLevels(field, g2);
 	}
 
 	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
-		
-			
-		
+
 		int f1 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(startTrace));
 		int f2 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(finishTrace));
-		
-		for(int i =f1; i<= f2; i++) {
+
+		for (int i = f1; i <= f2; i++) {
 			SgyFile f = model.getFileManager().getFiles().get(i);
-			
-			if(f.profiles != null) {
-				//pf
-				g2.setColor(new Color(50, 200,  250));
+
+			if (f.profiles != null) {
+				// pf
+				g2.setColor(new Color(50, 200, 250));
 				g2.setStroke(AMP_STROKE);
-				for(HorizontalProfile pf : f.profiles) {
+				for (HorizontalProfile pf : f.profiles) {
 					drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf, 0);
-				}				
+				}
 			}
-			
+
 			// ground
-			if(f.groundProfile != null) {
-				g2.setColor(new Color(210,105,30));
+			if (f.groundProfile != null) {
+				g2.setColor(new Color(210, 105, 30));
 				g2.setStroke(LEVEL_STROKE);
-				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile, shiftGround.intValue());
+				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile,
+						shiftGround.intValue());
 			}
-			
-			if(model.getSettings().showGreenLine && f.algoScan != null) {
-				
+
+			if (model.getSettings().showGreenLine && f.algoScan != null) {
+
 				g2.setColor(Color.GREEN);
 				g2.setStroke(AMP_STROKE);
-				
+
 				drawScanProfile(field, g2, f.getOffset().getStartTrace(), f.algoScan);
 			}
-			
+
 		}
 	}
-	
+
 	public double getRealContrast() {
-		double contr = Math.pow(1.08, 140-contrast);
+		double contr = Math.pow(1.08, 140 - contrast);
 		return contr;
 	}
 
-	final static float dash1[] = {5.0f};
-	final static BasicStroke dashed =
-	        new BasicStroke(1.0f,
-	                        BasicStroke.CAP_BUTT,
-	                        BasicStroke.JOIN_MITER,
-	                        10.0f, dash1, 0.0f);
-	
+	final static float dash1[] = { 5.0f };
+	final static BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1,
+			0.0f);
+
 	private void drawAmplitudeMapLevels(ProfileField field, Graphics2D g2) {
-		//if(model.getSettings().isRadarMapVisible) {
-		
-			g2.setColor(Color.MAGENTA);
-			g2.setStroke(dashed);			
-			
-			int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
-			g2.drawLine(-width/2, y, width/2, y);
+		// if(model.getSettings().isRadarMapVisible) {
 
-			int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
-			g2.drawLine(-width/2, y2, width/2, y2);
+		g2.setColor(Color.MAGENTA);
+		g2.setStroke(dashed);
 
-		//}		
+		int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
+		g2.drawLine(-width / 2, y, width / 2, y);
+
+		int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
+		g2.drawLine(-width / 2, y2, width / 2, y2);
+
+		// }
 	}
-	
+
 	private void drawAuxElements(ProfileField field, Graphics2D g2) {
-		
-		boolean full = !controller.isEnquiued(); 
-		
-		for(BaseObject bo : model.getAuxElements()) {
-			if(full || bo.isSelected()) {
+
+		boolean full = !controller.isEnquiued();
+
+		for (BaseObject bo : model.getAuxElements()) {
+			if (full || bo.isSelected()) {
 				bo.drawOnCut(g2, field);
 			}
 		}
-		if(model.getControls() != null) {
-			for(BaseObject bo : model.getControls()) {
+		if (model.getControls() != null) {
+			for (BaseObject bo : model.getControls()) {
 				bo.drawOnCut(g2, field);
 			}
 		}
 	}
 
 	private void clearBitmap(BufferedImage bi, Graphics2D g2, ProfileField field) {
-		
-		
+
 		Rectangle mainRectRect = field.getMainRect();
 		Rectangle topRuleRect = field.getTopRuleRect();
 		Rectangle leftRuleRect = field.getLeftRuleRect();
-		
-		g2.setPaint ( Color.DARK_GRAY );
+
+		g2.setPaint(Color.DARK_GRAY);
 		g2.fillRect(mainRectRect.x, mainRectRect.y, mainRectRect.width, mainRectRect.height);
-		
-		g2.setPaint (new Color(45, 60, 100));
+
+		g2.setPaint(new Color(45, 60, 100));
 		g2.fillRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
-		g2.setPaint (Color.white);
-		g2.drawLine(topRuleRect.x, topRuleRect.y+topRuleRect.height, topRuleRect.x + topRuleRect.width, topRuleRect.y+topRuleRect.height);
-		
-		g2.setPaint (new Color(45, 60, 100));
+		g2.setPaint(Color.white);
+		g2.drawLine(topRuleRect.x, topRuleRect.y + topRuleRect.height, topRuleRect.x + topRuleRect.width,
+				topRuleRect.y + topRuleRect.height);
+
+		g2.setPaint(new Color(45, 60, 100));
 		g2.fillRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
-		g2.setPaint (Color.white);
-		g2.drawLine(leftRuleRect.x+leftRuleRect.width, leftRuleRect.y, 
-				leftRuleRect.x+leftRuleRect.width, leftRuleRect.y+leftRuleRect.height);
-		
-		
+		g2.setPaint(Color.white);
+		g2.drawLine(leftRuleRect.x + leftRuleRect.width, leftRuleRect.y, leftRuleRect.x + leftRuleRect.width,
+				leftRuleRect.y + leftRuleRect.height);
+
 	}
 
-	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf, int voffset) {
-		
-		g2.setColor(pf.color);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  pf.deep[0] + voffset ));
-		int max2 = 0;
-		
-		for(int i=1; i<pf.deep.length; i++) {
+	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf,
+			int voffset) {
 
-			
+		g2.setColor(pf.color);
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex, pf.deep[0] + voffset));
+		int max2 = 0;
+
+		for (int i = 1; i < pf.deep.length; i++) {
+
 			max2 = Math.max(max2, pf.deep[i] + voffset);
-			
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  max2));
-			if(p2.x - p1.x > 2) {
-				
-				g2.drawLine(p1.x, p1.y, p2.x, p2.y);				
-				
-				p1 = p2;				
+
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex + i, max2));
+			if (p2.x - p1.x > 2) {
+
+				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+
+				p1 = p2;
 				max2 = 0;
 			}
-			
+
 		}
 	}
 
 	private void drawScanProfile(ProfileField field, Graphics2D g2, int startTraceIndex, ScanProfile pf) {
-		
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex,  0));
+
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex, 0));
 		int max2 = 0;
 		int offsety = field.getMainRect().y;
-		
-		for(int i=1; i<pf.intensity.length; i++) {
 
-			
-			max2 = Math.max(max2, (int)pf.intensity[i]);
-			
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex+i,  0));
-			p2.y = max2; 
-			
-			if(p2.x - p1.x > 2) {
-				
-				g2.drawLine(p1.x, offsety+p1.y, p2.x, offsety+p2.y);				
-				
-				p1 = p2;				
+		for (int i = 1; i < pf.intensity.length; i++) {
+
+			max2 = Math.max(max2, (int) pf.intensity[i]);
+
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex + i, 0));
+			p2.y = max2;
+
+			if (p2.x - p1.x > 2) {
+
+				g2.drawLine(p1.x, offsety + p1.y, p2.x, offsety + p2.y);
+
+				p1 = p2;
 				max2 = 0;
 			}
-			
+
 		}
 	}
-	
+
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
-		
+
 		SgyFile currentFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
-		
+
 		int selected_x1 = 0;
 		int selected_x2 = 0;
 		Point p = null;
 		Point p2 = null;
-		
-		int leftMargin = -getField().getMainRect().width/2;
-		
+
+		int leftMargin = -getField().getMainRect().width / 2;
+
 		g2.setStroke(AMP_STROKE);
-		for(SgyFile fl : model.getFileManager().getFiles()) {
+		for (SgyFile fl : model.getFileManager().getFiles()) {
 
 			p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
-			p2 = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(fl.getTraces().size()-1).indexInSet, 0));
+			p2 = field
+					.traceSampleToScreen(new TraceSample(fl.getTraces().get(fl.getTraces().size() - 1).indexInSet, 0));
 
-			if(currentFile == fl) {
+			if (currentFile == fl) {
 				g2.setColor(Color.YELLOW);
 				g2.setFont(fontB);
-				
+
 				selected_x1 = p.x;
 				selected_x2 = p2.x;
-			}else {
+			} else {
 				g2.setColor(Color.WHITE);
 				g2.setFont(fontP);
 			}
-			///separator
-			if(p.x > -getField().getMainRect().width/2) {
+			/// separator
+			if (p.x > -getField().getMainRect().width / 2) {
 				g2.drawLine(p.x, 0, p.x, height);
 			}
-			
+
 			p.x = Math.max(p.x, leftMargin);
-			
-			g2.setClip(p.x, 0, p2.x-p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
+
+			g2.setClip(p.x, 0, p2.x - p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
 			g2.drawString((fl.isUnsaved() ? "*" : "") + fl.getFile().getName(), p.x + 7, 11);
 			g2.setClip(null);
 		}
-		
-		if(p2 != null) {
+
+		if (p2 != null) {
 			g2.drawLine(p2.x, 0, p2.x, height);
 		}
-		
-		if(currentFile != null) {
+
+		if (currentFile != null) {
 			g2.setColor(Color.YELLOW);
 			g2.setStroke(LEVEL_STROKE);
-			if(selected_x1 >= leftMargin) {
+			if (selected_x1 >= leftMargin) {
 				g2.drawLine(selected_x1, 0, selected_x1, height);
 			}
 			g2.drawLine(selected_x2, 0, selected_x2, height);
@@ -485,300 +475,297 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 	@Override
 	public void show() {
-	
+
 		updateScroll();
 		repaintEvent();
 	}
 
 	@Override
 	public Node getCenter() {
-		
-		
+
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
 			this.setSize((int) (topPane.getWidth()), (int) (topPane.getHeight()));
 		};
 		topPane.widthProperty().addListener(sp2SizeListener);
 		topPane.heightProperty().addListener(sp2SizeListener);
-		
+
 		topPane.getChildren().add(vbox);
-		
-		//sp2.getChildren().add(toolBar);
-		
+
+		// sp2.getChildren().add(toolBar);
+
 		return topPane;
 	}
 
-	
 	@Override
 	public List<Node> getRight() {
-		
+
 		return Arrays.asList(
-				//new HBox( zoomInBtn, zoomOutBtn),
-				contrastSlider.produce()  
-			);
+				// new HBox( zoomInBtn, zoomOutBtn),
+				contrastSlider.produce());
 	}
 
-	
 	MutableInt shiftGround = new MutableInt(0);
-	
+
 	public List<Node> getRightSearch() {
-		
-		
-		return Arrays.asList(
-				hyperbolaSlider.produce(),
-				hyperGoodSizeSlider.produce(),
-				middleAmplitudeSlider.produce(),
-				
+
+		return Arrays.asList(hyperbolaSlider.produce(), hyperGoodSizeSlider.produce(), middleAmplitudeSlider.produce(),
+
 				SliderFactory.create("shift ground", shiftGround, 0, 100, new ChangeListener<Number>() {
-					
+
 					@Override
-					public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
+							Number newValue) {
 						repaintEvent();
-						
+
 					}
-				}, 20)
-			);
+				}, 20),
+				
+				SliderFactory.create("printHoughAindex", model.getSettings().printHoughAindex, 0, HoughScan.DISCRET_SIZE-1, new ChangeListener<Number>() {
+					@Override
+					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
+							Number newValue) {
+						repaintEvent();
+					}
+				}, 5)
+				);
 	}
 
 	int z = 0;
+
 	protected void initImageView() {
 		imageView.setOnScroll(event -> {
-	    	//model.getField().setZoom( .getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
-			int ch = (event.getDeltaY() > 0 ? 1 : -1 );
-			
+			// model.getField().setZoom( .getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
+			int ch = (event.getDeltaY() > 0 ? 1 : -1);
+
 			double ex = event.getSceneX();
 			double ey = event.getSceneY();
-			
-			
-			
+
 			zoom(ch, ex, ey, event.isControlDown());
-	    } );
-		
+		});
+
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
 		imageView.setOnMouseMoved(mouseMoveHandler);
 		imageView.setOnMouseClicked(mouseClickHandler);
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
-		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);		
+		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);
 	}
 
 	private void zoom(int ch, double ex, double ey, boolean justHorizont) {
 		Point t = getLocalCoords(ex, ey);
-		
+
 		TraceSample ts = getField().screenToTraceSample(t);
-		
+
 		z = z + ch;
-		
+
 		/////
-		
-		if(justHorizont) {
-			
-			double realAspect = getField().getAspectReal() * (ch > 0 ? ProfileField.ASPECT_A : 1/ProfileField.ASPECT_A);
-					//h / model.getVField().getVScale();
+
+		if (justHorizont) {
+
+			double realAspect = getField().getAspectReal()
+					* (ch > 0 ? ProfileField.ASPECT_A : 1 / ProfileField.ASPECT_A);
+			// h / model.getVField().getVScale();
 
 			getField().setAspectReal(realAspect);
 
-		}else{
-			getField().setZoom(getField().getZoom()+ch);
-		}		
-		
-		
+		} else {
+			getField().setZoom(getField().getZoom() + ch);
+		}
+
 		////
-		
+
 		Point t2 = getLocalCoords(ex, ey);
 		TraceSample ts2 = getField().screenToTraceSample(t2);
-		
+
 		getField().setSelectedTrace(getField().getSelectedTrace() - (ts2.getTrace() - ts.getTrace()));
-		
-		
+
 		int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
 		getField().setStartSample(starts);
-		
-		
+
 		updateScroll();
 		repaintEvent();
-	
+
 	}
 
 	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
-	    @Override
-	    public void handle(MouseEvent mouseEvent) {
-
-	    	imageView.startFullDrag();
-	    	
-	    	imageView.setCursor(Cursor.CLOSED_HAND);
-	    }
-	};
-	
-	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
-        @Override
-        public void handle(MouseDragEvent event) {
-
-        	Point p = getLocalCoords(event);
-        	
-        	if(selectedMouseHandler != null) {
-        		selectedMouseHandler.mouseReleaseHandle(p, getField());
-        		selectedMouseHandler = null;
-        	}
-        	
-        	imageView.setCursor(Cursor.DEFAULT);
-        	
-        	event.consume();
-        }
-	};
-	
-	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
-        
 		@Override
-        public void handle(MouseEvent event) {
-			
-        	Point p = getLocalCoords(event);
-        	
-        	if(model.getSettings().hyperliveview) {
-        		TraceSample ts = getField().screenToTraceSample(p);
-        		hyperFinder.setPoint(ts);        	
-        		repaintEvent();
-        	}else {
-        		
-        		if(selectedMouseHandler != null) {
+		public void handle(MouseEvent mouseEvent) {
 
-        			selectedMouseHandler.mouseMoveHandle(p, getField());
-        		}else{
-	        		if(!auxEditHandler.mouseMoveHandle(p, getField())) {
+			imageView.startFullDrag();
 
-	        		}
-        		}
-        	}
-        }
+			imageView.setCursor(Cursor.CLOSED_HAND);
+		}
 	};
-	
+
+	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
+		@Override
+		public void handle(MouseDragEvent event) {
+
+			Point p = getLocalCoords(event);
+
+			if (selectedMouseHandler != null) {
+				selectedMouseHandler.mouseReleaseHandle(p, getField());
+				selectedMouseHandler = null;
+			}
+
+			imageView.setCursor(Cursor.DEFAULT);
+
+			event.consume();
+		}
+	};
+
+	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
+
+		@Override
+		public void handle(MouseEvent event) {
+
+			Point p = getLocalCoords(event);
+
+			if (model.getSettings().hyperliveview) {
+				TraceSample ts = getField().screenToTraceSample(p);
+				hyperFinder.setPoint(ts);
+				repaintEvent();
+			} else {
+
+				if (selectedMouseHandler != null) {
+
+					selectedMouseHandler.mouseMoveHandle(p, getField());
+				} else {
+					if (!auxEditHandler.mouseMoveHandle(p, getField())) {
+
+					}
+				}
+			}
+		}
+	};
+
 	private Point getLocalCoords(MouseEvent event) {
-		
+
 		return getLocalCoords(event.getSceneX(), event.getSceneY());
-	
+
 	}
+
 	protected Point getLocalCoords(double x, double y) {
-		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
-    	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
-    	Point p = new Point(
-    			(int)(imgCoord.getX() - getField().getMainRect().x - getField().getMainRect().width/2), 
-    			(int)(imgCoord.getY() ));
+		javafx.geometry.Point2D sceneCoords = new javafx.geometry.Point2D(x, y);
+		javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
+		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x - getField().getMainRect().width / 2),
+				(int) (imgCoord.getY()));
 		return p;
 	}
 
 	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
+		@Override
+		public void handle(MouseEvent event) {
 
-        	if(event.getClickCount() == 2) {
-        		//add tmp flag
-        		Point p = getLocalCoords(event);
-        		
-        		int trace = getField().screenToTraceSample(p).getTrace();
-        		
-        		if(trace>=0 && trace < model.getTracesCount()) {
-        		
-        			//	select in MapView
-        			model.getField().setSceneCenter(model.getFileManager().getTraces().get(trace).getLatLon());
-        		
-        			createTempPlace(model, trace);
-        			
-        			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
-        		}
-        	}
-        }
-     };
+			if (event.getClickCount() == 2) {
+				// add tmp flag
+				Point p = getLocalCoords(event);
+
+				int trace = getField().screenToTraceSample(p).getTrace();
+
+				if (trace >= 0 && trace < model.getTracesCount()) {
+
+					// select in MapView
+					model.getField().setSceneCenter(model.getFileManager().getTraces().get(trace).getLatLon());
+
+					createTempPlace(model, trace);
+
+					AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+				}
+			}
+		}
+	};
 
 	public static void createTempPlace(Model model, int trace) {
-		
+
 		ClickPlace fp = new ClickPlace(trace);
 		fp.setSelected(true);
 		model.setControls(Arrays.asList(fp));
 	}
-     
+
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-        	
-        	
-        	Point p = getLocalCoords(event);
-        	if(auxEditHandler.mousePressHandle(p, getField())) {
-        		selectedMouseHandler = auxEditHandler; 
-        	}else if(scrollHandler.mousePressHandle(p, getField())) {
-        		selectedMouseHandler = scrollHandler;        		
-        	}else {
-        		selectedMouseHandler = null;
-        	}
-        	
-        	imageView.setCursor(Cursor.CLOSED_HAND);
-        }
+		@Override
+		public void handle(MouseEvent event) {
+
+			Point p = getLocalCoords(event);
+			if (auxEditHandler.mousePressHandle(p, getField())) {
+				selectedMouseHandler = auxEditHandler;
+			} else if (scrollHandler.mousePressHandle(p, getField())) {
+				selectedMouseHandler = scrollHandler;
+			} else {
+				selectedMouseHandler = null;
+			}
+
+			imageView.setCursor(Cursor.CLOSED_HAND);
+		}
 	};
 
 	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {        	
-        	
-        	Point p = getLocalCoords(event);
-        	
-        	if(selectedMouseHandler != null) {
-        		selectedMouseHandler.mouseReleaseHandle(p, getField());
-        		
-        		selectedMouseHandler = null;
-        	}        	
-        }
+		@Override
+		public void handle(MouseEvent event) {
+
+			Point p = getLocalCoords(event);
+
+			if (selectedMouseHandler != null) {
+				selectedMouseHandler.mouseReleaseHandle(p, getField());
+
+				selectedMouseHandler = null;
+			}
+		}
 	};
-	
+
 	protected void repaintEvent() {
-		if(!model.isLoading()) {
+		if (!model.isLoading()) {
 			controller.render(RecalculationLevel.BUFFERED_IMAGE);
 		}
 	}
-	
+
 	protected void repaint() {
-		
+
 		img = draw(width, height);
-		if(img != null) {
+		if (img != null) {
 			i = SwingFXUtils.toFXImage(img, null);
-		}else {
+		} else {
 			i = null;
 		}
 		updateWindow();
 	}
-	
+
 	protected void updateWindow() {
 		Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
+			@Override
+			public void run() {
 //            	if(i == null) {
 //            		return;
 //            	}
-			    
-			    imageView.setImage(i);
-            }
-          });
+
+				imageView.setImage(i);
+			}
+		});
 	}
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-		if(changed.isFileopened()) {
+		if (changed.isFileopened()) {
 			profileScroll.setVisible(model.isActive());
 			toolBar.setDisable(!model.isActive());
 		}
-		
-		if(changed.isAuxOnMapSelected()) {
+
+		if (changed.isAuxOnMapSelected()) {
 
 		}
-		
+
 		repaintEvent();
 		updateScroll();
 	}
 
 	private void updateScroll() {
-		if(!model.isActive()) {
+		if (!model.isActive()) {
 			return;
 		}
-		
+
 		profileScroll.recalc();
 	}
 
@@ -788,13 +775,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		public void accept(RecalculationLevel level) {
 
 			repaint();
-			
+
 		}
-		
+
 	});
-	
+
 	public class ContrastSlider extends BaseSlider {
-		
+
 		public ContrastSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Contrast";
@@ -807,15 +794,15 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			slider.setMin(0);
 			slider.setValue(contrast);
 		}
-		
+
 		public int updateModel() {
-			contrast = (int)slider.getValue();
-			return (int)contrast;
+			contrast = (int) slider.getValue();
+			return (int) contrast;
 		}
 	}
 
 	public class AspectSlider extends BaseSlider {
-		
+
 		public AspectSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Aspect";
@@ -828,14 +815,15 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			slider.setMin(-30);
 			slider.setValue(getField().getAspect());
 		}
-		
+
 		public int updateModel() {
-			getField().setAspect((int)slider.getValue());
-			return (int)getField().getAspect();
+			getField().setAspect((int) slider.getValue());
+			return (int) getField().getAspect();
 		}
 	}
+
 	public class HyperbolaSlider extends BaseSlider {
-		
+
 		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Hyperbola";
@@ -848,19 +836,19 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			slider.setMin(2);
 			slider.setValue(settings.hyperkfc);
 		}
-		
+
 		public int updateModel() {
-			settings.hyperkfc = (int)slider.getValue();
-			return (int)settings.hyperkfc;
+			settings.hyperkfc = (int) slider.getValue();
+			return (int) settings.hyperkfc;
 		}
 	}
 
 	public class HyperGoodSizeSlider extends BaseSlider {
-		
+
 		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Sensitivity";
-			units = "";
+			units = "%";
 			tickUnits = 10;
 		}
 
@@ -869,15 +857,15 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			slider.setMin(0);
 			slider.setValue(settings.hyperSensitivity.intValue());
 		}
-		
+
 		public int updateModel() {
-			settings.hyperSensitivity.setValue((int)slider.getValue());
-			return (int)settings.hyperSensitivity.intValue();
+			settings.hyperSensitivity.setValue((int) slider.getValue());
+			return (int) settings.hyperSensitivity.intValue();
 		}
 	}
 
 	public class MiddleAmplitudeSlider extends BaseSlider {
-		
+
 		public MiddleAmplitudeSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Middle amp";
@@ -890,27 +878,26 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 			slider.setMin(-1000);
 			slider.setValue(settings.hypermiddleamp);
 		}
-		
+
 		public int updateModel() {
-			settings.hypermiddleamp = (int)slider.getValue();
-			return (int)settings.hypermiddleamp;
+			settings.hypermiddleamp = (int) slider.getValue();
+			return (int) settings.hypermiddleamp;
 		}
 	}
-	
+
 	public void setSize(int width, int height) {
-		
+
 		this.width = width;
 		this.height = height;
 		getField().setViewDimension(new Dimension(this.width, this.height));
-		
-		
-		repaintEvent();		
+
+		repaintEvent();
 	}
 
 	MouseHandler getMouseHandler() {
-		if(auxModeBtn.isSelected()) {
+		if (auxModeBtn.isSelected()) {
 			return auxEditHandler;
-		}else {
+		} else {
 			return scrollHandler;
 		}
 	}
@@ -932,6 +919,5 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	public AuxElementEditHandler getAuxEditHandler() {
 		return auxEditHandler;
 	}
-	
-	
+
 }

@@ -86,6 +86,18 @@ public class HyperFinder {
 			return;
 		}
 		
+		////
+		SgyFile file = AppContext.model.getSgyFileByTrace(tr);
+		HoughScan hs = new HoughScan();
+		hs.print_log = true;
+		hs.scan(file, tr-file.getOffset().getStartTrace(), ts.getSample());
+		
+		
+		hs.hd.drawOnCut(g2, vField);
+		//hs.printForPoint(tr-file.getOffset().getStartTrace(), ts.getSample());
+		
+		////
+		
 		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;		
 		float example2 = values[ts.getSample()];
 		HalfHyper left2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, -1, hyperkf);		
@@ -109,7 +121,7 @@ public class HyperFinder {
 		g2.setColor(Color.CYAN);
 		g2.setStroke(line4);
 		
-		drawHyperbolaLine2(g2, vField);		
+		//drawHyperbolaLine2(g2, vField);		
 	}
 	
 	public void drawHalfHyperLine(Graphics2D g2, ProfileField vField, HalfHyper hh, int voffst) {

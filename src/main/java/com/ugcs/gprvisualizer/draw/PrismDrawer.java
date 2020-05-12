@@ -23,7 +23,7 @@ public class PrismDrawer {
 	
 	
 	int goodcolor1 = (250<<16) + (250 << 8 ) + 32;
-	int goodcolor2 = (70<<16) + (255 << 8 ) + 177;
+	int goodcolor2 = (70<<16) + (235 << 8 ) + 197;
 	
 	int color_red3 = (120<<16) + (0 << 8 ) + 0;
 	int color_blu4 = (255<<16) + (130 << 8 ) + 130;

@@ -22,7 +22,7 @@ public class TraceStacking implements Command {
 		double sampleDist = sgyFile.getSamplesToCmGrn();
 		
 		// to meters
-		double STACK_DIST = sampleDist/100.0;		
+		double STACK_DIST = sampleDist;		
 		System.out.println(" sample length: " + STACK_DIST);
 		
 		

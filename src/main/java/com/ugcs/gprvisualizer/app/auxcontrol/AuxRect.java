@@ -118,12 +118,11 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		SgyFile file = AppContext.model.getFileManager().getFiles().get(0);
 		List<Trace> traces = file.getTraces();
 		
-		double dst = 0;
+		double h_dst_cm = 0;
 		for(int i=s+1; i<=f; i++) {
-			dst += traces.get(i).getPrevDist();
+			h_dst_cm += traces.get(i).getPrevDist();
 		}
 		
-		double h_dst_cm = dst*100;
 		double v_dst_cm = file.getSamplesToCmGrn() * (double)(bottom.getSample() - top.getSample());
 		
 		double diag = Math.sqrt(h_dst_cm*h_dst_cm + v_dst_cm*v_dst_cm);

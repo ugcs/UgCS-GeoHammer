@@ -35,7 +35,8 @@ public class Settings {
 	
 	public boolean hyperliveview = false;
 	public int hyperkfc = 100; 
-	public MutableInt hyperSensitivity = new MutableInt(75);
+	public MutableInt hyperSensitivity = new MutableInt(40);
+	public MutableInt printHoughAindex = new MutableInt(0);
 	public int hypermiddleamp = 0;
 	
 	public MutableBoolean showEdge = new MutableBoolean(); 

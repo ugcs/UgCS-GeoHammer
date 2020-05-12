@@ -97,6 +97,8 @@ public class SgyFile {
 		
 		
 		System.out.println("SamplesPerDataTrace " + binaryHeader.getSamplesPerDataTrace());
+		
+		//naryHeader.get
 		//System.out.println("SamplesPerDataTraceOfOFR " + binaryHeader.getSamplesPerDataTraceOfOFR());
 		
 		//System.out.println("SweepLength " + binaryHeader.getSweepLength());
@@ -108,6 +110,8 @@ public class SgyFile {
 		//sampleIntervalInMcs
 		Trace t = getTraces().get(getTraces().size()/2);
 		System.out.println("SampleIntervalInMcs: " + t.getHeader().getSampleIntervalInMcs());
+		
+		//t.getHeader().get
 		
 		System.out.println( " sgyFile.SamplesToCmAir: " + getSamplesToCmAir());
 		System.out.println( " sgyFile.SamplesToCmGrn: " + getSamplesToCmGrn());
@@ -200,7 +204,8 @@ public class SgyFile {
 	}
 
 	public void updateInternalDist() {
-		traces.get(0).setPrevDist(0);		
+		traces.get(0).setPrevDist(0);
+				
 		for(int i=1; i<traces.size(); i++) {
 			Trace tracePrev = traces.get(i-1);
 			Trace trace 	= traces.get(i);
@@ -209,10 +214,32 @@ public class SgyFile {
 				tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
 				trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
 			
-			trace.setPrevDist(dist);
+			//to cm
+			trace.setPrevDist(dist*100.0);
 		}		
 		
 	}
+
+//	public void updateInternalDistSmooth() {
+//		
+//		double 
+//		
+//		
+//		traces.get(0).setPrevDist(0);
+//				
+//		for(int i=1; i<traces.size(); i++) {
+//			Trace tracePrev = traces.get(i-1);
+//			Trace trace 	= traces.get(i);
+//			
+//			double dist = CoordinatesMath.measure(
+//				tracePrev.getLatLon().getLatDgr(), tracePrev.getLatLon().getLonDgr(), 
+//				trace.getLatLon().getLatDgr(), trace.getLatLon().getLonDgr());
+//			
+//			//to cm
+//			trace.setPrevDist(dist*100.0);
+//		}		
+//		
+//	}
 	
 	int ctrace= 0;
 	public Trace next(BinTrace binTrace) throws IOException {
@@ -416,5 +443,35 @@ public class SgyFile {
 
 	public int size() {
 		return getTraces().size();
+	}
+	
+	public int getLeftDistTraceIndex(int traceIndex, double dist_cm) {
+		
+		double sumDist = 0;
+		
+		//sumDist += getTraces().get(traceIndex).getPrevDist();
+		
+		while(traceIndex > 0 && sumDist < dist_cm) {
+			
+			sumDist += getTraces().get(traceIndex).getPrevDist();
+			traceIndex--;
+			
+			
+		}
+		
+		return traceIndex;
+	}
+
+	public int getRightDistTraceIndex(int traceIndex, double dist_cm) {
+		
+		double sumDist = 0;
+		
+		while(traceIndex < size()-1 && sumDist < dist_cm) {
+			traceIndex++;
+			sumDist += getTraces().get(traceIndex).getPrevDist();
+			
+		}
+		
+		return traceIndex;
 	}
 }

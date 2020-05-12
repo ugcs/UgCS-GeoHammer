@@ -127,8 +127,8 @@ public class EdgeSubtractGround implements Command {
 			
 			for(int deep=from; deep < to; deep++) {			
 				
-				// minimal length of curve which must be similar to hp (cm) -> meters
-				double minDst = HalfHyperDst.getGoodSideDst(file, deep + hp.avgdeep, file.groundProfile.avgdeep) * 4  / 100.0;
+				// minimal length of curve which must be similar to hp (cm) 
+				double minDst = HalfHyperDst.getGoodSideDstGrnd(file, deep + hp.avgdeep, file.groundProfile.avgdeep) * 4;
 				
 				//if(deep % 7 == 0) {
 				//	Sout.p("d "+ deep + " rd " + (deep + hp.avgdeep) + " minDst (meters) " + minDst);
