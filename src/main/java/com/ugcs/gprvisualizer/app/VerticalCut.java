@@ -77,7 +77,7 @@ public class VerticalCut implements ModeFactory, SmthChangeListener {
 		selectedTraceSlider = new SelectedTraceSlider(model.getSettings(), sliderListener);
 		distBetweenTracesSlider = new DistBetweenTracesSlider(model.getSettings(), sliderListener);
 		
-		AppContext.smthListener.add(this);
+		//AppContext.smthListener.add(this);
 	}
 	
 	public void recalc() {
@@ -85,8 +85,8 @@ public class VerticalCut implements ModeFactory, SmthChangeListener {
 	}
 
 	public void show() {
-		this.width = model.getSettings().center_box_width; 
-		this.height = model.getSettings().center_box_height;
+		//this.width = model.getSettings().center_box_width; 
+		//this.height = model.getSettings().center_box_height;
 		
 		recalc();
 		//verticalCutStage.show();		

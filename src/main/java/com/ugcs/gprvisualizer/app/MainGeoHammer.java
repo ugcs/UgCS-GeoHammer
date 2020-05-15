@@ -44,55 +44,68 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class MainGeoHammer extends Application implements SmthChangeListener {
+
+public class MainGeoHammer extends Application {
 
 	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.0.1";
 	private static final int RIGHT_BOX_WIDTH = 330;
+	
 	private Scene scene;
 	private BorderPane bPane;
 	private ModeFactory modeFactory;
-	private VBox rightBox = new VBox();
-	private Model model = new Model();
-	private ToolBar toolBar = new ToolBar();
+	
+	private Model model;
+	
 
+	private RootControls rootControls;
 	
-	SplitPane sp;
+	//view controls
+	private TabPane tabPane;
 	
-	MapView layersWindowBuilder;
-	
-	TabPane tabPane;
+	ApplicationContext context; 
 	
 	public MainGeoHammer() {
 		
-		AppContext.model = model;
-		AppContext.levelFilter = new LevelFilter(model);
-		AppContext.loader = new Loader(model);
-		
-		AppContext.pluginRunner = new PluginRunner(model);		
-		AppContext.navigator = new Navigator(model);
-		
-		AppContext.statusBar = new StatusBar(model);
-		
-		layersWindowBuilder = new MapView(model);
-		AppContext.smthListener.add(layersWindowBuilder);
-
-		AppContext.cleverImageView = new ProfileView(model);
-		
-		AppContext.smthListener.add(this);
 	}
 	
 	public static void main(String args[]) {
 		launch(args);
-		
-		
 	}
+	
+	@Override
+    public void init() {
+		 context = new ClassPathXmlApplicationContext("spring.xml");
+		 
+		 model = context.getBean(Model.class);
+		 
+		 
+		 
+		  
+		 rootControls = context.getBean(RootControls.class);
+		
+		 //layersWindowBuilder = context.getBean(MapView.class);		 
+//		 cleverImageView = context.getBean(ProfileView.class);
+//		 loader = context.getBean(Loader.class);
+//		 saver = context.getBean(Saver.class);
+//		 statusBar = context.getBean(StatusBar.class);
+		 
+//		 broadcast = context.getBean(Broadcast.class);
+		 
+		 
+//		 levelFilter = context.getBean(LevelFilter.class);
+		 
+		
+    }	
 
 	@Override
 	public void start(Stage stage) throws Exception {
 
 		AppContext.stage = stage;
-		AppContext.saver = new Saver(model, stage);
+		
+		
 
 		stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
 		
@@ -103,8 +116,8 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		//stage.setMaximized(true);
 		stage.show();
 
-		model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
-		model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
+//		model.getSettings().center_box_width = (int) (bPane.getWidth() - rightBox.getWidth()); 
+//		model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
 		
 		
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -122,25 +135,18 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		});		
 		
 		
-		if(getParameters().getRaw().size() > 0) {
+		if(!getParameters().getRaw().isEmpty()) {
 			String name = getParameters().getRaw().get(0);
 			System.out.println("args " + name);
 			
 			List<File> f = new ArrayList<>();
 			f.add(new File(name));
-			AppContext.loader.loadWithNotify(f, new ProgressListener() {
+			rootControls.getLoader().loadWithNotify(f, new ProgressListener() {
+				@Override
+				public void progressPercent(int percent) {}
 				
 				@Override
-				public void progressPercent(int percent) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				@Override
-				public void progressMsg(String msg) {
-					// TODO Auto-generated method stub
-					
-				}
+				public void progressMsg(String msg) {}
 			});
 		}
 	}
@@ -149,50 +155,37 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
 		bPane = new BorderPane();
 
-		bPane.setOnDragOver(AppContext.loader.getDragHandler());
-		bPane.setOnDragDropped(AppContext.loader.getDropHandler());
+		bPane.setOnDragOver(rootControls.getLoader().getDragHandler());
+		bPane.setOnDragDropped(rootControls.getLoader().getDropHandler());
 
-		bPane.setTop(getToolBar());
-
-		ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-			model.getSettings().center_box_width = (int) (bPane.getWidth() - RIGHT_BOX_WIDTH); 
-			model.getSettings().center_box_height = (int) (bPane.getHeight() - toolBar.getHeight());
-		};
-		bPane.widthProperty().addListener(stageSizeListener);
-		bPane.heightProperty().addListener(stageSizeListener);
-
-		sp = new SplitPane();
-		sp.setDividerPositions(0.15f, 0.65f, 0.2f);
+		bPane.setTop(rootControls.getToolBar());
+		bPane.setCenter(createSplitPane());
 		
-		
-		sp.getItems().add(layersWindowBuilder.getCenter());
-		
-		sp.getItems().add(AppContext.cleverImageView.getCenter());
-		
-		sp.getItems().add(getRightPane());
-		
-		bPane.setCenter(sp);
-		
-		rightBox.getChildren().clear();
-		
-        tabPane = prepareTabPane();        
-        
-        rightBox.getChildren().addAll(tabPane);
-        rightBox.getChildren().addAll( AppContext.cleverImageView.getRight());
-
         ////
-		bPane.setBottom(AppContext.statusBar);
-		
-		
+		bPane.setBottom(rootControls.getStatusBar());
 		
 		scene = new Scene(bPane, 1280, 768);
-		
-		
 		
 		return scene;
 	}
 
-	public TabPane prepareTabPane() {
+	public SplitPane createSplitPane() {
+		SplitPane sp = new SplitPane();
+		sp.setDividerPositions(0.15f, 0.65f, 0.2f);
+		
+		//map view
+		sp.getItems().add(rootControls.getLayersWindowBuilder().getCenter());
+		
+		//profile view
+		sp.getItems().add(rootControls.getProfileView().getCenter());
+		
+		//options tabs
+		sp.getItems().add(getRightPane());
+		
+		return sp;
+	}
+
+	private TabPane prepareTabPane() {
 		TabPane tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         
@@ -210,11 +203,11 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 
 	public void prepareTab1(Tab tab1) {
 		VBox t1 = new VBox();
-        t1.getChildren().addAll(layersWindowBuilder.getRight());
+        t1.getChildren().addAll(rootControls.getLayersWindowBuilder().getRight());
         tab1.setContent(t1);
 	}
 
-	ToggleButton prepareToggleButton(String title, String imageName, MutableBoolean bool, Change change) {
+	private ToggleButton prepareToggleButton(String title, String imageName, MutableBoolean bool, Change change) {
 		ToggleButton btn = new ToggleButton(title, ResourceImageHolder.getImageView(imageName));
 		
 		btn.setSelected(bool.booleanValue());
@@ -226,7 +219,7 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 				
 				bool.setValue(btn.isSelected());
 				
-				AppContext.notifyAll(new WhatChanged(change));
+				rootControls.getBroadcast().notifyAll(new WhatChanged(change));
 			}
 		});
 		
@@ -238,117 +231,50 @@ public class MainGeoHammer extends Application implements SmthChangeListener {
 		@Override
 		public void handle(ActionEvent event) {
 			model.getSettings().hyperliveview = hyperLiveViewBtn.isSelected();
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			//repaintEvent();
+			rootControls.getBroadcast().notifyAll(new WhatChanged(Change.justdraw));
+
 		}
 	};
 	
-	public void prepareTab2(Tab tab2) {
+	private void prepareTab2(Tab tab2) {
 		VBox t2 = new VBox(10);		
-        t2.getChildren().addAll(AppContext.cleverImageView.getRightSearch());
+        t2.getChildren().addAll(rootControls.getProfileView().getRightSearch());
         
 		hyperLiveViewBtn.setTooltip(new Tooltip("Hyperbola view mode"));
 		hyperLiveViewBtn.setOnAction(showMapListener);
 
-		Button buttonDecimator = CommandRegistry.createButton(new TraceStacking());		
+		Button buttonDecimator = rootControls.getCommandRegistry().createButton(new TraceStacking());		
 
 		t2.getChildren().addAll(
-				CommandRegistry.createAsinqTaskButton(new AlgorithmicScan()),				
+				rootControls.getCommandRegistry().createAsinqTaskButton(new AlgorithmicScan()),				
 				hyperLiveViewBtn, buttonDecimator, 
 				new HBox(
-						CommandRegistry.createButton(new EdgeFinder()),
-						CommandRegistry.createButton(new EdgeSubtractGround())
+						rootControls.getCommandRegistry().createButton(new EdgeFinder()),
+						rootControls.getCommandRegistry().createButton(new EdgeSubtractGround())
 						),
 				new HBox(
 						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
 						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)
 						)
-				//,new HBox(
-				//		CommandRegistry.createButton(new HorizontalGroupScan()),
-				//		CommandRegistry.createButton(new HorizontalGroupFilter())
-				//	)				
 				
 			);
         tab2.setContent(t2);
 	}
 
-
-	private Node getToolBar() {
-		toolBar.setDisable(true);
-		
-		toolBar.getItems().addAll(AppContext.saver.getToolNodes());
-		
-		toolBar.getItems().add(getSpacer());
-		
-		toolBar.getItems().addAll(AppContext.levelFilter.getToolNodes());
-		
-		toolBar.getItems().add(getSpacer());
-
-		toolBar.getItems().addAll(CommandRegistry.createAsinqTaskButton(
-				new AlgorithmicScanFull(),
-				e->{ 
-					layersWindowBuilder.radarMap.selectAlgMode();
-					 
-				}),
-				CommandRegistry.createAsinqTaskButton(
-						new HoughScan(),
-						e->{})				
-				);
-		
-		toolBar.getItems().addAll(AppContext.pluginRunner.getToolNodes());
-		
-		return toolBar;
-	}
-
-	private Region getSpacer() {
-		Region r3 = new Region();
-		r3.setPrefWidth(10);
-		return r3;
-	}
-
-	public ModeFactory getModeFactory() {
-		return modeFactory;
-	}
-
-	public void setModeFactory(ModeFactory modeFactory) {
-		this.modeFactory = modeFactory;
-
-		
-		//centerBox.getChildren().clear();
-		//centerBox.getChildren().add(getModeFactory().getCenter());
-
-
-		showCenter();
-	}
-
-	private void showCenter() {
-		if(getModeFactory() != null) {
-			getModeFactory().show();
-		}
-	}
-
 	private Node getRightPane() {
-		rightBox = new VBox();
+		VBox rightBox = new VBox();
+		
 		rightBox.setPadding(new Insets(3, 13, 3, 3));
 		rightBox.setPrefWidth(RIGHT_BOX_WIDTH);
 		rightBox.setMinWidth(RIGHT_BOX_WIDTH);
 		rightBox.setMaxWidth(RIGHT_BOX_WIDTH);
 		
-		return rightBox;
-	}
+        tabPane = prepareTabPane();        
+        rightBox.getChildren().addAll(tabPane);
+        rightBox.getChildren().addAll(rootControls.getProfileView().getRight());
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-
-
-		if(changed.isFileopened()) {
-			toolBar.setDisable(!model.isActive());
-			
-			AppContext.levelFilter.clearForNewFile();
-			//gpsMode.setSelected(true);
-			//setModeFactory(modeMap.get(gpsMode));			
-		}
 		
+		return rightBox;
 	}
 
 }

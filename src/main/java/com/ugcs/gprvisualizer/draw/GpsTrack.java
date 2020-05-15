@@ -29,6 +29,8 @@ public class GpsTrack extends BaseLayer{
 
 	private RepaintListener listener;
 	
+	private Model model;
+	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
@@ -49,8 +51,8 @@ public class GpsTrack extends BaseLayer{
 	
 	public GpsTrack(Dimension parentDimension, Model model, RepaintListener listener) {
 		
-		super(parentDimension, model);
-		
+		super();
+		this.model = model;
 		this.listener = listener;		
 	}
 	

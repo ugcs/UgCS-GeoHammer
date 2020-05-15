@@ -2,20 +2,16 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Dimension;
 
-import com.ugcs.gprvisualizer.gpr.Model;
-
 public abstract class BaseLayer implements Layer {
 	private boolean active = true;
+	
+	private Dimension parentDimension;
+	
+	private RepaintListener listener;
 
-	protected Dimension parentDimension;
 	
-	protected Model model; 
-	
-	protected BaseLayer(Dimension parentDimension, Model model){
-		this.parentDimension = parentDimension;
-		this.model = model;
+	protected BaseLayer(){
 	}
-
 	
 	public boolean isActive() {
 		return active;
@@ -24,5 +20,21 @@ public abstract class BaseLayer implements Layer {
 	public void setActive(boolean active) {
 		this.active = active;
 	}
+
+	public void setDimension(Dimension parentDimension) {
+		this.parentDimension = parentDimension;
+	}
+
+	public Dimension getDimension() {
+		return parentDimension;
+	}
+	
+	public void setRepaintListener(RepaintListener listener) {
+		this.listener = listener;
+	}
+	
+	public RepaintListener getRepaintListener() {
+		return listener;
+	}	
 	
 }

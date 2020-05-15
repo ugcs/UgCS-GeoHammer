@@ -1,7 +1,11 @@
 package com.ugcs.gprvisualizer.app;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
@@ -11,22 +15,18 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-public class StatusBar extends GridPane {
-	private Model model;
+@Component
+public class StatusBar extends GridPane implements Status{
 	
 	private Label first = new Label();
+	
 	private TextField textField = new TextField();
 	{
 		textField.setEditable(false);
 		textField.setStyle("-fx-focus-color: transparent;");
 	}
 	
-	public StatusBar(Model model) {
-		this.model = model;
-		
-	
-	
-		
+	public StatusBar() {
 		this.getColumnConstraints().add(new ColumnConstraints(140));
         ColumnConstraints column2 = new ColumnConstraints(150,150,Double.MAX_VALUE);
         column2.setHgrow(Priority.ALWAYS);
@@ -45,6 +45,8 @@ public class StatusBar extends GridPane {
 		this.add(textField, 1, 0);
 		this.add(new Label(""), 2, 0);
 		
+		
+		AppContext.status = this;
 	}
 	
 	public void showProgressText(String txt) {
@@ -56,10 +58,5 @@ public class StatusBar extends GridPane {
 		});
 	}
 	
-	public void showGPSPoint(LatLon click) {
-		
-		showProgressText(click.toString());
-		
-	}
 
 }

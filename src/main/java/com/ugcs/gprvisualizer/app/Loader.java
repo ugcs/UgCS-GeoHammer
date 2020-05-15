@@ -4,12 +4,16 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -27,13 +31,20 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 
+@Component
 public class Loader {
 
+	@Autowired
 	private Model model;
 	
-	public Loader(Model model) {
+	@Autowired
+	private Status status; 
+	
+	@Autowired
+	private Broadcast broadcast;
+	
+	public Loader() {		
 		
-		this.model = model;
 	}
 	
 	public EventHandler<DragEvent> getDragHandler(){
@@ -105,7 +116,7 @@ public class Loader {
 						model.getVField().clear();
 						
 						
-						AppContext.notifyAll(new WhatChanged(Change.fileopened));
+						broadcast.notifyAll(new WhatChanged(Change.fileopened));
 					}
 				}
 
@@ -125,7 +136,7 @@ public class Loader {
 		
 		model.getVField().clear();
 		
-		AppContext.notifyAll(new WhatChanged(Change.fileopened));
+		broadcast.notifyAll(new WhatChanged(Change.fileopened));
 	}
 
     
@@ -141,7 +152,7 @@ public class Loader {
 		}
 		
 		
-		AppContext.statusBar.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
+		status.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
 	}        		
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {

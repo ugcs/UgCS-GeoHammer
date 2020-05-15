@@ -1,60 +1,57 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Broadcast;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.gpr.Scan;
-import com.ugcs.gprvisualizer.gpr.Settings;
-import com.ugcs.gprvisualizer.ui.BaseCheckBox;
-import com.ugcs.gprvisualizer.ui.LayerVisibilityCheckbox;
 
 import de.pentabyte.googlemaps.Location;
 import de.pentabyte.googlemaps.StaticMap;
 import de.pentabyte.googlemaps.StaticMap.Maptype;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
 
+@Component
 public class SatelliteMap extends BaseLayer {
 
-	private RepaintListener listener;
+	
+	
+	@Autowired
+	protected Model model; 
+	
+	@Autowired
+	private Status status;
+	
+	@Autowired
+	private Broadcast broadcast;
+	
 	
 	private BufferedImage img;
 	private LatLon imgLatLon;
 	private int imgZoom;
 
-	private Random rand = new Random();
-	private Color color = new Color(rand.nextInt(16777215));
-	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
@@ -62,7 +59,7 @@ public class SatelliteMap extends BaseLayer {
 			if(isActive()) {
 				loadMap();
 			}else {
-				listener.repaint();
+				getRepaintListener().repaint();
 			}
 				
 		}
@@ -94,11 +91,8 @@ public class SatelliteMap extends BaseLayer {
 	
 	private LatLon click;
 	
-	public SatelliteMap(Dimension parentDimension, Model model,  RepaintListener listener) {
-		super(parentDimension, model);
-		
-		this.listener = listener;
-		
+	public SatelliteMap() {
+		super();		
 	}
 	
 	@Override
@@ -200,7 +194,7 @@ public class SatelliteMap extends BaseLayer {
 		
 			loadimg();
 			
-			listener.repaint();
+			getRepaintListener().repaint();
 		}
 	}
 
@@ -217,10 +211,11 @@ public class SatelliteMap extends BaseLayer {
 		
 		click = model.getField().screenTolatLon(point);
 		
-		AppContext.statusBar.showGPSPoint(click);
+		
+		status.showProgressText(click.toString());
 		
 		//System.out.println("sat map mousePressed " + click.toString());
-		listener.repaint();
+		getRepaintListener().repaint();
 		
 		return true;
 	}
@@ -231,7 +226,7 @@ public class SatelliteMap extends BaseLayer {
 		dragField = null;
 		click = null;
 		
-		AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+		broadcast.notifyAll(new WhatChanged(Change.mapscroll));
 		
 		return true;
 	}
@@ -249,7 +244,7 @@ public class SatelliteMap extends BaseLayer {
 		
 		model.getField().setSceneCenter(new LatLon(lat, lon));
 		
-		listener.repaint();
+		getRepaintListener().repaint();
 		
 		return true;
 	};

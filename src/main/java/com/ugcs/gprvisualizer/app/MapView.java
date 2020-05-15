@@ -7,14 +7,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceCutter;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
+import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -36,28 +42,64 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+@Component
 public class MapView extends Work implements SmthChangeListener, ModeFactory {
 	
-	TraceCutter traceCutter;
-	ToolBar toolBar = new ToolBar();
+	@Autowired
+	private TraceCutter traceCutter;
 	
-	public RadarMap radarMap;
-	Dimension windowSize = new Dimension();
+	@Autowired
+	private Model model;
 	
-	public MapView(Model model) {
-		super(model);
+	@Autowired
+	private Status status;
+
+	@Autowired
+	private Broadcast broadcast;
+	
+	@Autowired
+	private SatelliteMap satelliteMap;
+
+	@Autowired
+	private RadarMap radarMap;	
+
+	private ToolBar toolBar = new ToolBar();
+	private Dimension windowSize = new Dimension();
+	
+	
+	public MapView() {
+		super();		
+	}
+	
+	protected RepaintListener listener = new RepaintListener() {
+		@Override
+		public void repaint() {
+			repaintEvent();
+		}
+	};
+	
+	@PostConstruct
+	public void init() {
 		
-		radarMap = new RadarMap(windowSize, model, listener);
+		//radarMap = new RadarMap(windowSize, model, listener);
+		radarMap.setDimension(windowSize);
+		radarMap.setRepaintListener(listener);
 		
-		getLayers().add(new SatelliteMap(windowSize, model, listener));
+		satelliteMap.setDimension(windowSize);
+		satelliteMap.setRepaintListener(listener);
+
+		getLayers().add(satelliteMap);
 		getLayers().add(radarMap);
 		getLayers().add(new GpsTrack(windowSize, model, listener));
 		getLayers().add(new FoundTracesLayer(model));
 		
-		traceCutter = new TraceCutter(model, listener);
+		//TODO: bad
+		traceCutter.setListener(listener);		
 		getLayers().add(traceCutter);
 
 		initImageView();
+		
+		//AppContext.smthListener.add(this);
 	}
 	
 	public void somethingChanged(WhatChanged changed) {
@@ -83,14 +125,12 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 	    	LatLon sceneCenter = model.getField().screenTolatLon(pdist);			
 			model.getField().setSceneCenter(sceneCenter);
 	    	
-			AppContext.notifyAll(new WhatChanged(Change.mapzoom));
+			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 	    } );		
 	
 		imageView.setOnMouseClicked(mouseClickHandler);
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
-		//imageView.setOnMouseMoved(mouseMoveHandler);
-
 		
 		imageView.addEventFilter(MouseEvent.DRAG_DETECTED , new EventHandler<MouseEvent>() {
 		    @Override
@@ -109,7 +149,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		});		
 	}
 	
-	protected EventHandler mouseClickHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
         	if(event.getClickCount() == 2) {
@@ -220,7 +260,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		
 		//repaintEvent();
 		
-		AppContext.notifyAll(new WhatChanged(Change.windowresized));
+		broadcast.notifyAll(new WhatChanged(Change.windowresized));
 		
 	}
 

@@ -1,16 +1,16 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.github.thecoldwine.sigrun.common.ext.ByteBufferHolder;
-import com.github.thecoldwine.sigrun.common.ext.ByteBufferProducer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -18,18 +18,28 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 
+@Component
 public class Saver implements ToolProducer {
 
 	private Button buttonSave = new Button("Save");
 	private Button buttonSaveTo = new Button("Save to");
+	
+	@Autowired
 	private Model model;
-	private Stage stage;
+	
+	@Autowired
+	private Loader loader;
+	
+	@Autowired
+	private Status status;
+
+	@Autowired
+	private Broadcast broadcast;
+	
 	private File folder;
 	
 	private ProgressTask saveTask = new ProgressTask() {
@@ -43,15 +53,15 @@ public class Saver implements ToolProducer {
 			
 			listener.progressMsg("load now");			
 			try {
-				AppContext.loader.load(newfiles, listener);
+				loader.load(newfiles, listener);
 				
 			}catch(Exception e) {
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 		    	
-	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+	    	broadcast.notifyAll(new WhatChanged(Change.fileopened));
 		    	
-		    AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
+		    status.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -65,16 +75,16 @@ public class Saver implements ToolProducer {
 			listener.progressMsg("load now");
 			
 			try {
-				AppContext.loader.load(newfiles, listener);
+				loader.load(newfiles, listener);
 			}catch(Exception e) {
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 				
 				
 	    	
-	    	AppContext.notifyAll(new WhatChanged(Change.fileopened));
+			broadcast.notifyAll(new WhatChanged(Change.fileopened));
 	    	
-	    	AppContext.statusBar.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
+	    	status.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -93,21 +103,17 @@ public class Saver implements ToolProducer {
 		    	if(!model.getFileManager().getFiles().isEmpty()) {
 		    		dir_chooser.setInitialDirectory(model.getFileManager().getFiles().get(0).getFile().getParentFile());
 		    	}
-		    	folder = dir_chooser.showDialog(stage); 
+		    	folder = dir_chooser.showDialog(AppContext.stage); 
 		    	  
                 if(folder != null) { 
                 	new TaskRunner(AppContext.stage, saveAsTask).start();
                 } 		    	
-		    	
-		    	
-		    	
 		    }
 		});
 	}
 	
-	public Saver(Model model, Stage stage) {
-		this.model = model;
-		this.stage = stage;
+	public Saver(Model model) {
+		this.model = model;		
 	}
 	
 	@Override
@@ -220,5 +226,10 @@ public class Saver implements ToolProducer {
 			oldFile = null;
 		}
 		return oldFile;
+	}
+
+	public void setLoader(Loader loader2) {
+		this.loader = loader2;
+		
 	}
 }

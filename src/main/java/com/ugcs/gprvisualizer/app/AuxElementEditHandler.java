@@ -6,6 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -33,12 +38,19 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+@Component
 public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 
+	@Autowired
 	private Model model;
-	private ProfileView profileView;
-	private ProfileField field;
 	
+	@Autowired
+	private ProfileView profileView;
+	
+	@Autowired
+	private Broadcast broadcast;
+	
+	private ProfileField field;	
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
@@ -50,14 +62,15 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	private Button delBtn = new Button("", ResourceImageHolder.getImageView("delete-20.png"));
 	private Button clearBtn = new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
 	
-	public AuxElementEditHandler(ProfileView cleverView) {
-		this.profileView = cleverView;
-		this.model = this.profileView.model;
-		field = cleverView.getField();
+	public AuxElementEditHandler() {
 		
-		initButtons();
+	}
+
+	@PostConstruct
+	public void init() {
+		field = profileView.getField();
 		
-		AppContext.smthListener.add(this);
+		initButtons();		
 	}
 
 	@Override
@@ -149,7 +162,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 			
 			profileView.repaintEvent();
 			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 		
 		addBtn.setOnAction(e -> {				
@@ -242,7 +255,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	
 	protected void updateViews() {
 		//profileView.repaintEvent();
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));		
+		broadcast.notifyAll(new WhatChanged(Change.justdraw));		
 	}
 
 	private void clearAuxElements() {
@@ -261,50 +274,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		
 		profileView.repaintEvent();
 		
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		broadcast.notifyAll(new WhatChanged(Change.justdraw));
 	}
-
-//	private AuxRect createSurfaceRect(SgyFile sf) {
-//		
-//		Trace tr1 = sf.getTraces().get(0);
-//		Trace tr2 = sf.getTraces().get(sf.getTraces().size()-1);
-//
-//		int minGrnd = tr1.maxindex2;
-//		int maxGrnd = tr1.maxindex2;
-//		for(Trace trace : sf.getTraces()){
-//			minGrnd = Math.min(minGrnd, trace.maxindex2);
-//			maxGrnd = Math.max(maxGrnd, trace.maxindex2);
-//		}
-//		int topMarg = 10;
-//		int botMarg = 15;
-//
-//		int topStart = minGrnd-topMarg;
-//		int botFinish = maxGrnd+botMarg;
-//		
-//		AuxRect rect = new AuxRect(
-//			tr1.indexInSet, tr2.indexInSet,
-//			topStart, botFinish, 
-//			sf.getOffset());
-//		
-//		rect.setType(AreaType.Surface);
-//
-//		int width = tr2.indexInSet - tr1.indexInSet +1;
-//		
-//		int[] topCut = new int[width];
-//		int[] botCut = new int[width];
-//		
-//		for(int i=0; i<width; i++) {
-//			Trace t = sf.getTraces().get(i);
-//			topCut[i] = Math.max(0, t.maxindex2-topMarg-topStart);
-//			botCut[i] = Math.min(botFinish-topStart, t.maxindex2+botMarg-topStart);
-//		
-//		}
-//		
-//		rect.setTopCut(topCut);
-//		rect.setBotCut(botCut);
-//		rect.updateMaskImg();
-//		return rect;
-//	}
 
 	private boolean processPress(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
 		for(BaseObject o : controls2) {

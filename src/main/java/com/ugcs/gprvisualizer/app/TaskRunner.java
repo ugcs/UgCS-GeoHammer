@@ -107,7 +107,7 @@ public class TaskRunner implements ProgressListener {
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run() {
-				AppContext.statusBar.showProgressText(msg);
+				AppContext.status.showProgressText(msg);
 			}
 		});
 	}

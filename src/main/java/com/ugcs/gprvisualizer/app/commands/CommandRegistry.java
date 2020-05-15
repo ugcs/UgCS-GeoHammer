@@ -3,19 +3,31 @@ package com.ugcs.gprvisualizer.app.commands;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.ProgressTask;
 import com.ugcs.gprvisualizer.app.TaskRunner;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 
+@Component
 public class CommandRegistry {
+	
+	@Autowired
+	private Model model;
+
+	@Autowired
+	private Broadcast broadcast;
 	
 	private static final ProgressListener emptyListener = new ProgressListener() {
 		
@@ -30,15 +42,14 @@ public class CommandRegistry {
 		}
 	} ;
 	
-	public static void runForFiles(Command command) {
+	public void runForFiles(Command command) {
 		
 		runForFiles(command, emptyListener);
 	}
 	
-	public static void runForFiles(Command command, ProgressListener listener) {
-		//System.out.println("runForFiles command " + command.getButtonText() );
-		
-		for(SgyFile sgyFile : AppContext.model.getFileManager().getFiles()) {
+	public void runForFiles(Command command, ProgressListener listener) {
+	
+		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
 			
 			try {
 				listener.progressMsg("process file '" + sgyFile.getFile().getName() + "'");
@@ -63,11 +74,11 @@ public class CommandRegistry {
 	}
 	
 	
-	public static Button createAsinqTaskButton(AsinqCommand command) {
+	public Button createAsinqTaskButton(AsinqCommand command) {
 		return createAsinqTaskButton(command, null);
 	}
 	
-	public static Button createAsinqTaskButton(AsinqCommand command, Consumer finish) {
+	public Button createAsinqTaskButton(AsinqCommand command, Consumer finish) {
 		
 		Button button = new Button(command.getButtonText());
 		
@@ -93,13 +104,56 @@ public class CommandRegistry {
 		
 		return button;
 	}
+
+	public Button createAsinqTaskButton(SingleCommand command, Consumer finish) {
+		
+		Button button = new Button(command.getButtonText());
+		
+		ProgressTask task = new ProgressTask() {
+			
+			@Override
+			public void run(ProgressListener listener) {
+				try {
+					listener.progressMsg("start processing");
+					
+					command.execute(AppContext.model.getFileManager().getFiles(), listener);
+					
+				}catch(Exception e) {
+					e.printStackTrace();
+					
+					listener.progressMsg("error");
+				}
+				
+				Change ch = command.getChange();
+				if(ch != null) {
+					broadcast.notifyAll(new WhatChanged(ch));
+				}
+				
+				listener.progressMsg("process finished '" + command.getButtonText() + "'");
+					
+				if(finish != null) {
+					finish.accept(null);
+				}
+			}
+		};
+		
+		button.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+				
+				new TaskRunner(AppContext.stage, task).start();
+		    	
+		    }
+		});
+		
+		return button;
+	}
 	
 
-	public static Button createButton(Command command) {
+	public Button createButton(Command command) {
 		return createButton(command, null);
 	}
 	
-	public static Button createButton(Command command, Consumer finish) {
+	public Button createButton(Command command, Consumer finish) {
 		Button button = new Button(command.getButtonText());
 		
 		button.setOnAction(e -> {
@@ -108,9 +162,6 @@ public class CommandRegistry {
 			if(finish != null) {
 				finish.accept(null);
 			}
-			
-						
-			
 		});
 		
 		return button;

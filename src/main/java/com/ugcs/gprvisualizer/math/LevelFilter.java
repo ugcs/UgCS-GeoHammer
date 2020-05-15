@@ -3,8 +3,12 @@ package com.ugcs.gprvisualizer.math;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
@@ -15,65 +19,73 @@ import com.ugcs.gprvisualizer.app.commands.LevelGround;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
 import com.ugcs.gprvisualizer.app.commands.RemoveGroundLevel;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 
-public class LevelFilter implements ToolProducer { 
 
-	Button buttonRemoveLevel;
-	Button buttonLevelGround;
+@Component
+public class LevelFilter implements ToolProducer, SmthChangeListener { 
 
-	Model model;
+	@Autowired
+	private Model model;
 
-	public LevelFilter(Model model) {
-		this.model = model;
+	@Autowired
+	private CommandRegistry commandRegistry;
+	
+	private Button buttonRemoveLevel;
+	private Button buttonLevelGround;
+
+
+	public LevelFilter() {
 	}
 
-	public void smoothLevel() {
-		for(SgyFile sf : model.getFileManager().getFiles()) {
-			
-			int result[] = new int[sf.getTraces().size()];
-			for(int i = 0; i < sf.getTraces().size(); i++) {							
-				result[i] = avg(sf.getTraces(), i);				
-			}
-			
-			for(int i = 0; i < sf.getTraces().size(); i++) {
-				Trace tr = sf.getTraces().get(i);
-				tr.maxindex = result[i];				
-			}			
-		}
-	}
+//	public void smoothLevel() {
+//		for(SgyFile sf : model.getFileManager().getFiles()) {
+//			
+//			int result[] = new int[sf.getTraces().size()];
+//			for(int i = 0; i < sf.getTraces().size(); i++) {							
+//				result[i] = avg(sf.getTraces(), i);				
+//			}
+//			
+//			for(int i = 0; i < sf.getTraces().size(); i++) {
+//				Trace tr = sf.getTraces().get(i);
+//				tr.maxindex = result[i];				
+//			}			
+//		}
+//	}
 
-	int R=8;
-	private int avg(List<Trace> traces, int i) {
-		
-		int from = i-R;
-		from = Math.max(0, from);
-		int to = i+R;
-		to = Math.min(to, traces.size()-1);
-		int sum = 0;
-		int cnt = 0;
-		for(int j=from; j<= to; j++) {
-			sum += traces.get(j).maxindex;
-			cnt++;
-		}
-		return sum/cnt;
-	}
+//	int R=8;
+//	private int avg(List<Trace> traces, int i) {
+//		
+//		int from = i-R;
+//		from = Math.max(0, from);
+//		int to = i+R;
+//		to = Math.min(to, traces.size()-1);
+//		int sum = 0;
+//		int cnt = 0;
+//		for(int j=from; j<= to; j++) {
+//			sum += traces.get(j).maxindex;
+//			cnt++;
+//		}
+//		return sum/cnt;
+//	}
 
 	@Override
 	public List<Node> getToolNodes() {
 		
 
-		buttonRemoveLevel = CommandRegistry.createButton(new LevelClear(),
+		buttonRemoveLevel = commandRegistry.createButton(new LevelClear(),
 			e->{ 
 				levelCalculated = false; 
 				updateButtons(); 
 			});
 			
-		buttonLevelGround = CommandRegistry.createButton(new LevelGround(), 
+		buttonLevelGround = commandRegistry.createButton(new LevelGround(), 
 			e -> {				
 				levelCalculated = false;
 				updateButtons();
@@ -81,14 +93,14 @@ public class LevelFilter implements ToolProducer {
 
 
 		return Arrays.asList(
-			CommandRegistry.createButton(new BackgroundNoiseRemover()), 
+			commandRegistry.createButton(new BackgroundNoiseRemover()), 
 		
-			CommandRegistry.createButton(new LevelScanner(), 
+			commandRegistry.createButton(new LevelScanner(), 
 					e->{ 
 						levelCalculated = true; 
 						updateButtons(); 
 					}),
-			CommandRegistry.createButton(new LevelScanHP(), 
+			commandRegistry.createButton(new LevelScanHP(), 
 					e->{ 
 						levelCalculated = true; 
 						updateButtons(); 
@@ -115,14 +127,19 @@ public class LevelFilter implements ToolProducer {
 	
 	public void clearForNewFile() {
 		
-//		buttonFindLevel.setGraphic(null);
-//		buttonLevelGround.setGraphic(null);
-		//buttonRemoveBandNoise.setGraphic(null);
-
 		levelCalculated = false; 
 		updateButtons(); 
-		
-		updateButtons();
 	}
+	
+	@Override
+	public void somethingChanged(WhatChanged changed) {
+
+		if(changed.isFileopened()) {
+			
+			clearForNewFile();
+		}
+		
+	}
+
 
 }

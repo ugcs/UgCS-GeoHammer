@@ -22,8 +22,8 @@ public class Settings {
 	
 	public boolean isRadarMapVisible = true;
 	
-	public int center_box_width; 
-	public int center_box_height;
+//	public int center_box_width; 
+//	public int center_box_height;
 	
 	public int maxsamples = 400;
 	

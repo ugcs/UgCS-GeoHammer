@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Navigator;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class ProfileField {
@@ -15,6 +16,9 @@ public class ProfileField {
 	
 
 	private Model model;
+	
+	//private Navigator navigator;
+	
 	private int selectedTrace=0;
 	private int startSample=0;
 	private int zoom = 1;
@@ -44,6 +48,10 @@ public class ProfileField {
 		
 	}
 
+//	public void setNavigator(Navigator navigator) {
+//		this.navigator = navigator;
+//	}
+	
 	public ProfileField(ProfileField copy){
 		this.model  = copy.model;
 		this.selectedTrace = copy.selectedTrace;
@@ -73,9 +81,7 @@ public class ProfileField {
 		aspect = -15;		
 		startSample = 0;
 		if(model.isActive()) {
-			//selectedTrace = model.getFileManager().getFiles().get(0).getTraces().size()/3;
-			
-			AppContext.navigator.fitFull();
+			new Navigator(model).fitFull();
 		}
 
 	}

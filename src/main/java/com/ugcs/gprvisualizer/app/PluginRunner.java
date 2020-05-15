@@ -18,6 +18,8 @@ import org.json.simple.parser.ParseException;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.commands.AsinqCommand;
+import com.ugcs.gprvisualizer.app.commands.SingleCommand;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -32,51 +34,47 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 
-public class PluginRunner implements ToolProducer {
+public class PluginRunner implements SingleCommand {
 
 	private static final String NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW = "Neural network is not available now";
 
 	private static final String FOUND_ANOMALIES = "Found anomalies: ";
 
-	private Button buttonRunNeuralNetwork = new Button("Find anomalies");
+	//private Button buttonRunNeuralNetwork = new Button("Find anomalies");
 
 	private Model model;
 
-	private void processSgyFile(ProgressListener listener, SgyFile sgf) {
-		try {
-
-			String sgyprocPath = System.getenv().get("SGYPROC");
-			System.out.println(sgyprocPath);
-
-			String line;
-			String filePath = sgf.getFile().getAbsolutePath();
-			String cmd = "python \"" + sgyprocPath + "/main.py\" " + "\"" + filePath + "\" " + "--model \""
-					+ sgyprocPath + "\\model.pb\" --no_progressbar";
-			System.out.println(cmd);
-			Process p = Runtime.getRuntime().exec(cmd);
-			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			while ((line = input.readLine()) != null) {
-
-				System.out.println(line);
-
-				// processV2(sgf, line);
-
-				listener.progressMsg(line);
-
-			}
-			input.close();
-		} catch (Exception err) {
-			err.printStackTrace();
-			
-			
-			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW, "");			
-			
-		}
-	}
-
-
-
-
+//	private void processSgyFile(ProgressListener listener, SgyFile sgf) {
+//		try {
+//
+//			String sgyprocPath = System.getenv().get("SGYPROC");
+//			System.out.println(sgyprocPath);
+//
+//			String line;
+//			String filePath = sgf.getFile().getAbsolutePath();
+//			String cmd = "python \"" + sgyprocPath + "/main.py\" " + "\"" + filePath + "\" " + "--model \""
+//					+ sgyprocPath + "\\model.pb\" --no_progressbar";
+//			System.out.println(cmd);
+//			Process p = Runtime.getRuntime().exec(cmd);
+//			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//			while ((line = input.readLine()) != null) {
+//
+//				System.out.println(line);
+//
+//				// processV2(sgf, line);
+//
+//				listener.progressMsg(line);
+//
+//			}
+//			input.close();
+//		} catch (Exception err) {
+//			err.printStackTrace();
+//			
+//			
+//			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW, "");			
+//			
+//		}
+//	}
 	
 	private void processSgyFiles(ProgressListener listener, List<SgyFile> sgfl) {
 		try {
@@ -137,42 +135,42 @@ public class PluginRunner implements ToolProducer {
 		}
 	}
 	
-	private ProgressTask neuralNetworkTask = new ProgressTask() {
-		@Override
-		public void run(ProgressListener listener) {
-			listener.progressMsg("searching start now");
-			
-			//model.getFoundTrace().clear();
-			//for(SgyFile sgf : model.getFileManager().getFiles()) {
-			//	processSgyFile(listener, sgf);
-				
-			//}
-			processSgyFiles(listener, model.getFileManager().getFiles());
-			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-		}
-	};
+//	private ProgressTask neuralNetworkTask = new ProgressTask() {
+//		@Override
+//		public void run(ProgressListener listener) {
+//			listener.progressMsg("searching start now");
+//			
+//			//model.getFoundTrace().clear();
+//			//for(SgyFile sgf : model.getFileManager().getFiles()) {
+//			//	processSgyFile(listener, sgf);
+//				
+//			//}
+//			processSgyFiles(listener, model.getFileManager().getFiles());
+//			
+//			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+//			
+//		}
+//	};
 		
 		
-	{
-		buttonRunNeuralNetwork.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-				new TaskRunner(AppContext.stage, neuralNetworkTask).start();
-		    	
-		    }
-		});
-	}
+//	{
+//		buttonRunNeuralNetwork.setOnAction(new EventHandler<ActionEvent>() {
+//		    @Override public void handle(ActionEvent e) {
+//				new TaskRunner(AppContext.stage, neuralNetworkTask).start();
+//		    	
+//		    }
+//		});
+//	}
 
 	public PluginRunner(Model model) {
 		this.model = model;
 	}
 
-	@Override
-	public List<Node> getToolNodes() {
-		
-		return Arrays.asList(buttonRunNeuralNetwork);
-	}
+//	@Override
+//	public List<Node> getToolNodes() {
+//		
+//		return Arrays.asList(buttonRunNeuralNetwork);
+//	}
 
 	// {"filename":
 	// "D:\\georadarData\\poligonnewRadar\\processed_001\\DAT_0047_CH_1_001.sgy",
@@ -235,6 +233,25 @@ public class PluginRunner implements ToolProducer {
 			// model.getFoundIndexes().put(file, lst);
 		}
 
+	}
+
+
+	@Override
+	public String getButtonText() {
+
+		return "Neural network scan";
+	}
+
+	@Override
+	public Change getChange() {		
+		return Change.justdraw;
+	}
+
+	@Override
+	public void execute(List<SgyFile> files, ProgressListener listener) {
+		
+		processSgyFiles(listener, model.getFileManager().getFiles());
+		
 	}
 
 }

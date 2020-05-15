@@ -22,20 +22,12 @@ import javafx.scene.input.MouseEvent;
 public class Work {
 
 	private List<Layer> layers = new ArrayList<>();
-	protected Model model;
+	
 	protected ImageView imageView = new ImageView();
 	protected BufferedImage img;
 	//protected int width;
 	//protected int height;
 	
-	
-	protected RepaintListener listener = new RepaintListener() {
-
-		@Override
-		public void repaint() {
-			repaintEvent();
-		}
-	};
 	
 	protected void repaintEvent() {
 		
@@ -46,14 +38,11 @@ public class Work {
 			return null;
 		}
 		
-		
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		
 		Graphics2D g2 = (Graphics2D)bi.getGraphics();
 		g2.setPaint ( Color.DARK_GRAY );
 		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );		
-		
-		
 		
 		g2.translate(width/2, height/2);
 		
@@ -61,7 +50,6 @@ public class Work {
 			try {
 				l.draw(g2);
 			}catch(Exception e) {
-				//System.err.println(e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -69,8 +57,8 @@ public class Work {
 		return bi;
 	}
 	
-	public Work(Model model) {
-		this.model = model;
+	public Work() {
+
 	}
 
 	public List<Layer> getLayers() {
@@ -95,7 +83,7 @@ public class Work {
           });
 	}
 
-	protected EventHandler mousePressHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
         	Point2D p = getLocalCoords(event);
@@ -112,11 +100,9 @@ public class Work {
         		}
         	}
         }
-
 	};
 
-
-	protected EventHandler mouseReleaseHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {        	
         	Point2D p = getLocalCoords(event);
@@ -132,7 +118,7 @@ public class Work {
         }
 	};
 	
-	protected EventHandler mouseMoveHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
         	Point2D p = getLocalCoords(event);
@@ -144,15 +130,14 @@ public class Work {
         			return;
         		}        		
         	}        	
-        	
         }
 	};
 
 	public Point2D getLocalCoords(MouseEvent event) {
 		
 		return getLocalCoords(event.getSceneX(), event.getSceneY());
-	
 	}
+	
 	protected Point2D getLocalCoords(double x, double y) {
 		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
     	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
@@ -170,10 +155,7 @@ public class Work {
 
 		if(changed.isJustdraw()) {
 			repaintEvent();
-		}
-		
+		}		
 	}
-
-
 	
 }

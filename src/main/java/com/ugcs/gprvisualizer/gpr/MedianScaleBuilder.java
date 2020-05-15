@@ -39,11 +39,7 @@ public class MedianScaleBuilder implements ArrayBuilder {
 			return scale;
 		}
 		
-		Sout.p("||||||||||||||||||update autogain scale array");
-		
 		double[][] underconstruction = new double[2][model.getMaxHeightInSamples()];
-		
-		
 		
 		for(int smp=0; smp<model.getMaxHeightInSamples(); smp++) {
 

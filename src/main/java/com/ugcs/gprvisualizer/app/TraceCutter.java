@@ -1,4 +1,4 @@
-package com.github.thecoldwine.sigrun.common.ext;
+package com.ugcs.gprvisualizer.app;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -11,9 +11,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.github.thecoldwine.sigrun.common.ext.TraceCutInitializer;
 import com.sun.javafx.cursor.CursorType;
-import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.Loader;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -35,13 +44,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 
+@Component
 public class TraceCutter implements Layer, SmthChangeListener {
 
 	private MapField field;
 	private List<LatLon> points;
 	private final int RADIUS = 5;
 	private Integer active = null;
+	
+	@Autowired
 	private Model model;
+	
+	@Autowired
+	private Broadcast broadcast;
+	
 	private RepaintListener listener;
 	
 	private ToggleButton buttonCutMode = new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
@@ -49,12 +65,12 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	private Button buttonUndo = new Button("Undo Crop", ResourceImageHolder.getImageView("clear20.png"));
 	
 	
-	public TraceCutter(Model model, RepaintListener listener) {
-		this.model = model; 
-		this.listener = listener;
+	public TraceCutter() {
+	}
+	
+	@PostConstruct
+	public void init2ndConstuct() {
 		this.field = model.getField();
-		
-		AppContext.smthListener.add(this);
 	}
 	
 	public void clear() {
@@ -87,7 +103,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 			Point2D p = border.get(i);
 			if(point.distance(p) < RADIUS) {
 				active = i;
-				listener.repaint();
+				getListener().repaint();
 				return true;
 			}			
 		}
@@ -101,7 +117,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		}
 		
 		if(active != null) {
-			listener.repaint();
+			getListener().repaint();
 			active = null;
 		
 			return true;
@@ -119,7 +135,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		}
 		
 		points.get(active).from(field.screenTolatLon(point));
-		listener.repaint();		
+		getListener().repaint();		
 		return true;
 	}
 	
@@ -367,7 +383,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	    	buttonUndo.setDisable(false);
 
 	    	
-	    	AppContext.notifyAll(new WhatChanged(Change.traceCut));
+	    	broadcast.notifyAll(new WhatChanged(Change.traceCut));
 	    	
 		});
 		
@@ -379,7 +395,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 	    	updateCutMode();
 	    	buttonUndo.setDisable(true);
 
-	    	AppContext.notifyAll(new WhatChanged(Change.traceCut));
+	    	broadcast.notifyAll(new WhatChanged(Change.traceCut));
 	    	
 		});
 		
@@ -403,13 +419,21 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		
 		
 		
-    	listener.repaint();
+    	getListener().repaint();
 	}
 
 	private Region getSpacer() {
 		Region r3 = new Region();
 		r3.setPrefWidth(7);
 		return r3;
+	}
+
+	public RepaintListener getListener() {
+		return listener;
+	}
+
+	public void setListener(RepaintListener listener) {
+		this.listener = listener;
 	}
 	
 }

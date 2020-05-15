@@ -13,7 +13,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
@@ -26,6 +29,8 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.AlignRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
@@ -43,6 +48,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Alert.AlertType;
 
+@Component
 public class Model {
 
 	public static final int TOP_MARGIN = 50;
@@ -68,6 +74,15 @@ public class Model {
 	
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
+	
+	public Model(){
+		Sout.p("create model");
+	}
+	
+	@PostConstruct
+	public void postConstruct() {
+		AppContext.model = this;
+	}
 	
 	public int getTracesCount() {
 		return getFileManager().getTraces().size();

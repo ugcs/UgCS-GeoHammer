@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -11,30 +9,30 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.github.thecoldwine.sigrun.common.ext.MapField;
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.Sout;
+import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
-import com.ugcs.gprvisualizer.gpr.AutomaticScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.DblArray;
 import com.ugcs.gprvisualizer.gpr.MedianScaleBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.ScaleArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
-import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.AutoGainCheckbox;
 import com.ugcs.gprvisualizer.ui.BaseCheckBox;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
-import com.ugcs.gprvisualizer.ui.DepthSlider;
-import com.ugcs.gprvisualizer.ui.DepthWindowSlider;
 import com.ugcs.gprvisualizer.ui.GainBottomSlider;
 import com.ugcs.gprvisualizer.ui.GainTopSlider;
 import com.ugcs.gprvisualizer.ui.RadiusSlider;
@@ -50,9 +48,18 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
-public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
+@Component
+public class RadarMap extends BaseLayer {
 
-	private RepaintListener listener;
+	@Autowired
+	private Model model;
+	
+	@Autowired
+	private Broadcast broadcast;
+	
+	@Autowired
+	private CommandRegistry commandRegistry;
+	
 	private BufferedImage img;
 	private LatLon imgLatLon;
 	
@@ -80,11 +87,10 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
                 model.getSettings().hyperliveview = false;
 			}
 			
-			//AppContext.notifyAll(new WhatChanged(Change.adjusting));			
 			if(isActive()) {
 				executor.submit(t);
 			}else {
-				listener.repaint();
+				getRepaintListener().repaint();
 			}
 			
 		}
@@ -128,7 +134,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 			
 			executor.submit(t);
 			
-			AppContext.notifyAll(new WhatChanged(Change.adjusting));
+			broadcast.notifyAll(new WhatChanged(Change.adjusting));
 		}
 	};
 	
@@ -152,10 +158,13 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 	};
 	
 	
-	public RadarMap(Dimension parentDimension, Model model, RepaintListener listener) {
-		super(parentDimension, model);
+	public RadarMap() {
+		super();
+	}
+	
+	@PostConstruct
+	public void init() {
 		
-		this.listener = listener;
 		
 		autoArrayBuilder = new MedianScaleBuilder(model);
 		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
@@ -237,14 +246,14 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 		
 		imgLatLon = field.getSceneCenter();
 		
-		DblArray da = new DblArray(parentDimension.width, parentDimension.height);
+		DblArray da = new DblArray(getDimension().width, getDimension().height);
 
 		
 		int[] palette;
 		if(model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
 				
 			// fill file.amplScan
-			CommandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
+			commandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
 			
 			palette = DblArray.paletteAmp;
 		}else {
@@ -288,8 +297,8 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 			double alpha = profile.intensity[i];
 			
 			da.drawCircle(
-				(int)p.getX() + parentDimension.width/2, 
-				(int)p.getY() + parentDimension.height/2, 
+				(int)p.getX() + getDimension().width/2, 
+				(int)p.getY() + getDimension().height/2, 
 				model.getSettings().radius, alpha);
 		}
 	}
@@ -308,7 +317,7 @@ public class RadarMap extends BaseLayer /*implements SmthChangeListener*/{
 				img = createHiRes();
 				
 				
-				listener.repaint();
+				getRepaintListener().repaint();
 							
 
 			}catch(Exception e) {

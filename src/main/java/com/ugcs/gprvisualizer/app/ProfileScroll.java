@@ -20,7 +20,7 @@ import javafx.scene.shape.Rectangle;
 
 public class ProfileScroll extends Canvas{
 
-	Model model = AppContext.model;
+	private Model model;
 	static final int HEIGHT = 24;
 	static final int SIDE_WIDTH = 20;
 	static final int CENTER_MARGIN = 5; 
@@ -127,7 +127,9 @@ public class ProfileScroll extends Canvas{
 	Set<MouseSInput> bars = ImmutableSet.of(centerInput, leftInput, rightInput); 
 			//ImmutableSet.<MouseSInput>Builder().add(leftInput).build(); 
 	
-	public ProfileScroll(){
+	public ProfileScroll(Model model){
+		this.model = model;
+		
 		setWidth(400);
 		setHeight(HEIGHT);		
 		

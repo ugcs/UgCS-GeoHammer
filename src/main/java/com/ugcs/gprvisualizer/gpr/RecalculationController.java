@@ -1,12 +1,7 @@
 package com.ugcs.gprvisualizer.gpr;
 
-import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import com.ugcs.gprvisualizer.app.MainJavafx;
 
 public class RecalculationController {
 	//private int renderCounter = 0;

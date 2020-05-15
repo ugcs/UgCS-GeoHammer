@@ -9,6 +9,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -27,20 +31,29 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+@Component
+@Scope(value="prototype")
 public class HoughScan implements AsinqCommand {
 
 	public static final int DISCRET_SIZE = 22;
 	private static final double DISCRET_FROM = 0.5;
 	private static final double DISCRET_TO = 1.5;
 
-	static int statcount = 0;
-	static int statmax = 0;
 	public boolean print_log = false;
 
-	Model model = AppContext.model;
+	@Autowired
+	private Model model;
 
 	HoughDraw hd = null;
 
+	public HoughScan() {
+		
+	}
+
+	public HoughScan(Model model) {
+		this.model = model;
+	}
+	
 	@Override
 	public void execute(SgyFile file) {
 
@@ -291,12 +304,12 @@ public class HoughScan implements AsinqCommand {
 
 
 	static double FACTOR[] = new double[DISCRET_SIZE];
-	static {
-		for(int i=0; i<DISCRET_SIZE; i++){
-			FACTOR[i] = (DISCRET_FROM + (double) i / (double) DISCRET_SIZE * (DISCRET_TO - DISCRET_FROM));
-			Sout.p("f " + i + " = " + FACTOR[i]);
-		}
-	}
+//	static {
+//		for(int i=0; i<DISCRET_SIZE; i++){
+//			FACTOR[i] = (DISCRET_FROM + (double) i / (double) DISCRET_SIZE * (DISCRET_TO - DISCRET_FROM));
+//			Sout.p("f " + i + " = " + FACTOR[i]);
+//		}
+//	}
 
 	class Store {
 		double a[] = new double[DISCRET_SIZE];

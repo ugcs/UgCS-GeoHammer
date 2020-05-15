@@ -16,7 +16,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -70,12 +74,26 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+@Component
 public class ProfileView implements SmthChangeListener, ModeFactory {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
-	protected PrismDrawer prismDrawer;
+	@Autowired
 	protected Model model;
+	
+	@Autowired
+	protected Broadcast broadcast;
+
+	@Autowired
+	private AuxElementEditHandler auxEditHandler;
+
+	@Autowired
+	private Navigator navigator;
+
+
+	protected PrismDrawer prismDrawer;	
+	
 	protected ImageView imageView = new ImageView();
 	protected VBox vbox = new VBox();
 	protected Pane topPane = new Pane();
@@ -100,11 +118,10 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 	private MouseHandler selectedMouseHandler;
 	private MouseHandler scrollHandler;
-	private AuxElementEditHandler auxEditHandler;
-
+	
 	private HyperFinder hyperFinder;
-	public ProfileScroll profileScroll = new ProfileScroll();
-
+	public ProfileScroll profileScroll;
+	
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
 
@@ -123,9 +140,12 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	};
 
-	public ProfileView(Model model) {
-		this.model = model;
+	public ProfileView() {
 
+	}
+	
+	@PostConstruct
+	public void init(){
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 
@@ -137,6 +157,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), sliderListener);
 		initImageView();
 
+		profileScroll = new ProfileScroll(model);
+		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
 				repaintEvent();
@@ -144,11 +166,11 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		});
 
 		scrollHandler = new CleverViewScrollHandler(this);
-		auxEditHandler = new AuxElementEditHandler(this);
+		//auxEditHandler = new AuxElementEditHandler(this);
 
 		prepareToolbar();
 
-		profileScroll.recalc();
+//		profileScroll.recalc();
 		vbox.getChildren().addAll(toolBar, profileScroll, imageView/* , scrollBar */);
 
 		profileScroll.widthProperty().bind(topPane.widthProperty());
@@ -165,10 +187,13 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
 		showGreenLineBtn.setOnAction(e -> {
 			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			//AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			
+			
+			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
-		AppContext.smthListener.add(this);
+		
 	}
 
 	public void prepareToolbar() {
@@ -176,7 +201,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
 
-		toolBar.getItems().addAll(AppContext.navigator.getToolNodes());
+		toolBar.getItems().addAll(navigator.getToolNodes());
 
 		toolBar.getItems().add(getSpacer());
 		toolBar.getItems().add(zoomInBtn);
@@ -671,7 +696,8 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 					createTempPlace(model, trace);
 
-					AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+					//AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+					broadcast.notifyAll(new WhatChanged(Change.mapscroll));
 				}
 			}
 		}

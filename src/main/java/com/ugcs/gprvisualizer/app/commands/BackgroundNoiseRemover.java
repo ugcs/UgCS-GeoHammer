@@ -24,7 +24,7 @@ public class BackgroundNoiseRemover implements Command {
 	public void execute(SgyFile file) {
 		BackgroundRemovalFilter brf = new BackgroundRemovalFilter();
 		
-		float[] profile = getAvgProfileByAuxRect(brf);
+		//float[] profile = getAvgProfileByAuxRect(brf);
 		
 		
 		List<Trace> lst = file.getTraces();
@@ -33,13 +33,13 @@ public class BackgroundNoiseRemover implements Command {
 				
 		if(lst.size() > 1) {
 			//brf.removeConstantNoise(lst);
-			if(profile != null) {
-				subteProfile = profile;
-			}else {
+			//if(profile != null) {
+			//	subteProfile = profile;
+			//}else {
 				// remove noise only on the top layers
 				int deep = model.getSettings().layer + model.getSettings().hpage;
 				subteProfile = brf.prepareNoiseProfile(lst, deep);
-			}
+			//}
 			
 			brf.subtractProfile(lst, subteProfile);
 		}
@@ -48,26 +48,26 @@ public class BackgroundNoiseRemover implements Command {
 		
 	}
 
-	public float[] getAvgProfileByAuxRect(BackgroundRemovalFilter brf) {
-		BaseObject obj = AppContext.cleverImageView.getAuxEditHandler().getSelected();
-		
-		float[] profile = null;
-		
-		if(obj != null && obj instanceof AuxRect ) {
-			
-			AuxRect ar = (AuxRect)obj;
-			
-			List<Trace> tr = new ArrayList<>();
-			for(int i= ar.getTraceStartGlobal(); i< ar.getTraceFinishGlobal(); i++) {
-				tr.add(model.getFileManager().getTraces().get(i));
-			}			
-			
-			profile = brf.prepareNoiseProfile(tr, ar.getSampleFinish());
-			
-			System.out.println(" use aux rect for profile ");
-		}
-		return profile;
-	}
+//	public float[] getAvgProfileByAuxRect(BackgroundRemovalFilter brf) {
+//		BaseObject obj = AppContext.cleverImageView.getAuxEditHandler().getSelected();
+//		
+//		float[] profile = null;
+//		
+//		if(obj != null && obj instanceof AuxRect ) {
+//			
+//			AuxRect ar = (AuxRect)obj;
+//			
+//			List<Trace> tr = new ArrayList<>();
+//			for(int i= ar.getTraceStartGlobal(); i< ar.getTraceFinishGlobal(); i++) {
+//				tr.add(model.getFileManager().getTraces().get(i));
+//			}			
+//			
+//			profile = brf.prepareNoiseProfile(tr, ar.getSampleFinish());
+//			
+//			System.out.println(" use aux rect for profile ");
+//		}
+//		return profile;
+//	}
 
 	@Override
 	public String getButtonText() {

@@ -55,13 +55,6 @@ public class HyperFinder {
 		this.model = model;
 	}
 	
-	public void deleprocess() {
-		
-		System.out.println("finish");
-		
-		AppContext.notifyAll(new WhatChanged(Change.adjusting));
-	}
-
 	public void setPoint(TraceSample ts) {
 		this.ts = ts;
 	}
@@ -73,7 +66,7 @@ public class HyperFinder {
 		}
 		
 		int tr = ts.getTrace();
-		List<Trace> traces = AppContext.model.getFileManager().getTraces();
+		List<Trace> traces = model.getFileManager().getTraces();
 		
 		if(tr <0 || tr >= traces.size() || ts.getSample() < 0) {
 			return;
@@ -87,8 +80,8 @@ public class HyperFinder {
 		}
 		
 		////
-		SgyFile file = AppContext.model.getSgyFileByTrace(tr);
-		HoughScan hs = new HoughScan();
+		SgyFile file = model.getSgyFileByTrace(tr);
+		HoughScan hs = new HoughScan(model);
 		hs.print_log = true;
 		hs.scan(file, tr-file.getOffset().getStartTrace(), ts.getSample());
 		
@@ -98,7 +91,7 @@ public class HyperFinder {
 		
 		////
 		
-		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;		
+		double hyperkf = model.getSettings().hyperkfc / 100.0;		
 		float example2 = values[ts.getSample()];
 		HalfHyper left2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, -1, hyperkf);		
 		HalfHyper right2 = HalfHyper.getHalfHyper(traces, tr, ts.getSample(), example2, +1, hyperkf);		
@@ -128,7 +121,7 @@ public class HyperFinder {
 		
 		
 		boolean positive = hh.example>0;
-		double hyperkf = AppContext.model.getSettings().hyperkfc / 100.0;
+		double hyperkf = model.getSettings().hyperkfc / 100.0;
 		int goodside = (int)(HalfHyper.getGoodSideSize(hh.pinnacle_smp) / hyperkf);
 		if(hh.length >= goodside ) {
 			
@@ -161,7 +154,7 @@ public class HyperFinder {
 	
 	
 	public double getThreshold() {
-		double thr = (double)AppContext.model.getSettings().hyperSensitivity.intValue() / 100.0;
+		double thr = (double)model.getSettings().hyperSensitivity.intValue() / 100.0;
 		return thr;
 	}
 	
@@ -174,7 +167,7 @@ public class HyperFinder {
 		int tr = ts.getTrace();
 		int smp = ts.getSample();
 		
-		SgyFile sgyFile = AppContext.model.getSgyFileByTrace(tr);
+		SgyFile sgyFile = model.getSgyFileByTrace(tr);
 		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
 		
 		//List<Trace> traces = AppContext.model.getFileManager().getTraces();
@@ -232,7 +225,7 @@ public class HyperFinder {
 		
 		Point prev = null;
 		
-		double kf = AppContext.model.getSettings().hyperkfc/100.0;
+		double kf = model.getSettings().hyperkfc/100.0;
 		
 		int tr = ts.getTrace();
 		int s = lft;

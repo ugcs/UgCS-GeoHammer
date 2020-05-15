@@ -3,6 +3,9 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -16,50 +19,73 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 
+@Component
 public class Navigator implements ToolProducer {
 
+	@Autowired
 	private Model model;
 	
-	private Button backBtn = new Button("", ResourceImageHolder.getImageView("arrow_left_20.png"));
-	private Button fitBtn = new Button("", ResourceImageHolder.getImageView("fit_20.png"));		
-	private Button nextBtn = new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
+	@Autowired
+	private Broadcast broadcast;
 	
+	public Navigator() {
+		
+	}
 	
 	public Navigator(Model model) {
-		this.model = model;
+		this.model = model;		
+	}
+
+	@Override
+	public List<Node> getToolNodes() {
+		Button backBtn = new Button("", ResourceImageHolder.getImageView("arrow_left_20.png"));
+		Button fitBtn = new Button("", ResourceImageHolder.getImageView("fit_20.png"));		
+		Button nextBtn = new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
 		
 		backBtn.setTooltip(new Tooltip("Fit previous SGY file to window"));
 		fitBtn.setTooltip(new Tooltip("Fit current SGY file to window"));
 		nextBtn.setTooltip(new Tooltip("Fit next SGY file to window"));
-
 		
 		fitBtn.setOnAction(e -> {
-			
-			SgyFile sgyFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
-			
-			fitFile(sgyFile);
+			fitCurrent();
 		});
 
 		backBtn.setOnAction(e -> {
 			
-			int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
-			
-			index = Math.max(0, index - 1);
-			SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
-					
-			fitFile(sgyFile);
+			fitBack();
 		});
 
 		nextBtn.setOnAction(e -> {
 			
-			int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
-			
-			index = Math.min(model.getFileManager().getFiles().size()-1, index + 1);
-			SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
-					
-			fitFile(sgyFile);
+			fitNext();
 		});
 		
+		return Arrays.asList(backBtn, fitBtn, nextBtn);
+	}
+	
+
+	public void fitNext() {
+		int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
+		
+		index = Math.min(model.getFileManager().getFiles().size()-1, index + 1);
+		SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
+				
+		fitFile(sgyFile);
+	}
+
+	public void fitBack() {
+		int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
+		
+		index = Math.max(0, index - 1);
+		SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
+				
+		fitFile(sgyFile);
+	}
+
+	public void fitCurrent() {
+		SgyFile sgyFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
+		
+		fitFile(sgyFile);
 	}
 
 	private void fitFile(SgyFile sgyFile) {
@@ -74,7 +100,7 @@ public class Navigator implements ToolProducer {
 		
 		fit(maxSamples, tracesCount);
 		
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		broadcast.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
 	public void fit(int maxSamples, int tracesCount) {
@@ -103,11 +129,6 @@ public class Navigator implements ToolProducer {
 		fit(maxSamples*2, model.getTracesCount());
 	}
 	
-	@Override
-	public List<Node> getToolNodes() {
-	
-		return Arrays.asList(backBtn, fitBtn, nextBtn);
-	}
 
 	
 
