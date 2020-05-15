@@ -12,6 +12,7 @@ import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.ProgressTask;
 import com.ugcs.gprvisualizer.app.TaskRunner;
+import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -28,6 +29,9 @@ public class CommandRegistry {
 
 	@Autowired
 	private Broadcast broadcast;
+	
+	@Autowired
+	private Status status; 
 	
 	private static final ProgressListener emptyListener = new ProgressListener() {
 		
@@ -97,7 +101,7 @@ public class CommandRegistry {
 		button.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 				
-				new TaskRunner(AppContext.stage, task).start();
+				new TaskRunner(status, task).start();
 		    	
 		    }
 		});
@@ -140,7 +144,7 @@ public class CommandRegistry {
 		button.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 				
-				new TaskRunner(AppContext.stage, task).start();
+				new TaskRunner(status, task).start();
 		    	
 		    }
 		});

@@ -122,7 +122,7 @@ public class Loader {
 
         	};
         	
-			new TaskRunner(AppContext.stage, loadTask).start();
+			new TaskRunner(status, loadTask).start();
         	System.out.println("start completed");
         	
             event.setDropCompleted(true);

@@ -84,7 +84,7 @@ public class RadarMap extends BaseLayer {
 			}
 			if(showMapButtonAmp.isSelected()) {
                 model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
-                model.getSettings().hyperliveview = false;
+                model.getSettings().getHyperliveview().setFalse();
 			}
 			
 			if(isActive()) {

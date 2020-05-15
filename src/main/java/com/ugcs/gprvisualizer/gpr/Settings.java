@@ -33,7 +33,7 @@ public class Settings {
 	public int hpage = 47;
 	public int layer = 80; 
 	
-	public boolean hyperliveview = false;
+	
 	public int hyperkfc = 100; 
 	public MutableInt hyperSensitivity = new MutableInt(40);
 	public MutableInt printHoughAindex = new MutableInt(0);
@@ -41,6 +41,7 @@ public class Settings {
 	
 	public MutableBoolean showEdge = new MutableBoolean(); 
 	public MutableBoolean showGood = new MutableBoolean();
+	private MutableBoolean hyperliveview = new MutableBoolean();
 	
 	public int topscale = 200;
 	public int bottomscale = 250;
@@ -70,6 +71,9 @@ public class Settings {
 	}
 	public int getHeight() {
 		return (int)(height * zoom / 100.0);
+	}
+	public MutableBoolean getHyperliveview() {
+		return hyperliveview;
 	}
 	
 }

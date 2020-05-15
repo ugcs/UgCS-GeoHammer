@@ -11,7 +11,7 @@ import com.ugcs.gprvisualizer.math.LevelFilter;
 public class RootControls {
 
 	@Autowired
-	private MapView layersWindowBuilder;
+	private MapView mapView;
 	
 	@Autowired
 	private RadarMap radarMap;
@@ -40,83 +40,59 @@ public class RootControls {
 	@Autowired
 	private CommandRegistry commandRegistry;
 	
-	public MapView getLayersWindowBuilder() {
-		return layersWindowBuilder;
-	}
-
-	public void setLayersWindowBuilder(MapView layersWindowBuilder) {
-		this.layersWindowBuilder = layersWindowBuilder;
+	@Autowired
+	private GHSceneContent sceneContent;
+	
+	@Autowired
+	private OptionPane optionPane;
+	
+	
+	public MapView getMapView() {
+		return mapView;
 	}
 
 	public RadarMap getRadarMap() {
 		return radarMap;
 	}
 
-	public void setRadarMap(RadarMap radarMap) {
-		this.radarMap = radarMap;
-	}
-
 	public ProfileView getProfileView() {
 		return profileView;
-	}
-
-	public void setProfileView(ProfileView profileView) {
-		this.profileView = profileView;
 	}
 
 	public Loader getLoader() {
 		return loader;
 	}
 
-	public void setLoader(Loader loader) {
-		this.loader = loader;
-	}
-
 	public Saver getSaver() {
 		return saver;
-	}
-
-	public void setSaver(Saver saver) {
-		this.saver = saver;
 	}
 
 	public LevelFilter getLevelFilter() {
 		return levelFilter;
 	}
 
-	public void setLevelFilter(LevelFilter levelFilter) {
-		this.levelFilter = levelFilter;
-	}
-
 	public StatusBar getStatusBar() {
 		return statusBar;
-	}
-
-	public void setStatusBar(StatusBar statusBar) {
-		this.statusBar = statusBar;
 	}
 
 	public GHToolbar getToolBar() {
 		return toolBar;
 	}
 
-	public void setToolBar(GHToolbar toolBar) {
-		this.toolBar = toolBar;
-	}
-
 	public Broadcast getBroadcast() {
 		return broadcast;
-	}
-
-	public void setBroadcast(Broadcast broadcast) {
-		this.broadcast = broadcast;
 	}
 
 	public CommandRegistry getCommandRegistry() {
 		return commandRegistry;
 	}
 
-	public void setCommandRegistry(CommandRegistry commandRegistry) {
-		this.commandRegistry = commandRegistry;
-	}	
+	public OptionPane getOptionPane() {
+		return optionPane;
+	}
+
+	public GHSceneContent getSceneContent() {
+		return sceneContent;
+	}
+
 }

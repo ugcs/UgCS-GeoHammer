@@ -27,7 +27,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.VBox;
 
-public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
+public class MatrixModeFactory implements SmthChangeListener {
 
 	private Model model;
 	private ImageView imageView = new ImageView();	
@@ -60,7 +60,7 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 		
 	}
 	
-	@Override
+	//@Override
 	public Node getCenter() {
 
 		imageView.setSmooth(false);
@@ -88,7 +88,7 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 		return scrollPane;
 	}
 
-	@Override
+	//@Override
 	public List<Node> getRight() {
 		
 		return Arrays.asList(initBtn, findGrnd, list);
@@ -127,7 +127,7 @@ public class MatrixModeFactory implements ModeFactory, SmthChangeListener {
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
-	@Override
+	//@Override
 	public void show() {
 
 		//am.init(model.getFileManager().getFiles().get(0).getTraces());

@@ -91,7 +91,7 @@ public class Saver implements ToolProducer {
 	{
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
-				new TaskRunner(AppContext.stage, saveTask).start();
+				new TaskRunner(status, saveTask).start();
 		    	
 		    }
 		});
@@ -106,7 +106,7 @@ public class Saver implements ToolProducer {
 		    	folder = dir_chooser.showDialog(AppContext.stage); 
 		    	  
                 if(folder != null) { 
-                	new TaskRunner(AppContext.stage, saveAsTask).start();
+                	new TaskRunner(status, saveAsTask).start();
                 } 		    	
 		    }
 		});

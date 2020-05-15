@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.intf.Status;
 
 import javafx.animation.Animation;
 import javafx.application.Platform;
@@ -16,7 +17,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 public class TaskRunner implements ProgressListener {
-	private Stage primaryStage;
+	
+	
+	private Status status;
+	private Stage primaryStage = AppContext.stage;
 	private Stage dialog = new Stage();
 	private ImageView loadingView = ResourceImageHolder.getImageView("loading.gif");
 	private ProgressTask task;
@@ -25,8 +29,9 @@ public class TaskRunner implements ProgressListener {
 	
 	private Button closeButton = new Button("Close");
 	
-	public TaskRunner(Stage primaryStage, ProgressTask task) {
-		this.primaryStage = primaryStage;
+	public TaskRunner(Status status, ProgressTask task) {
+		this.status = status;
+		
 		this.task = task;
 		
 		
@@ -107,7 +112,7 @@ public class TaskRunner implements ProgressListener {
 		Platform.runLater(new Runnable(){
 			@Override
 			public void run() {
-				AppContext.status.showProgressText(msg);
+				status.showProgressText(msg);
 			}
 		});
 	}

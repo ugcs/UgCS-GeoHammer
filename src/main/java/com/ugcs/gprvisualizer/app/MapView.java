@@ -43,7 +43,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 @Component
-public class MapView extends Work implements SmthChangeListener, ModeFactory {
+public class MapView extends Work implements SmthChangeListener {
 	
 	@Autowired
 	private TraceCutter traceCutter;
@@ -192,7 +192,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 
 	};
 	
-	@Override
+	//@Override
 	public Node getCenter() {
 		
 		toolBar.setDisable(true);
@@ -219,7 +219,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		return sp1;
 	}
 
-	@Override
+	//@Override
 	public List<Node> getRight() {
 		return radarMap.getControlNodes();//Arrays.asList();
 	}
@@ -247,7 +247,7 @@ public class MapView extends Work implements SmthChangeListener, ModeFactory {
 		updateWindow();
 	}
 
-	@Override
+	//@Override
 	public void show() {
 
 		repaintEvent();

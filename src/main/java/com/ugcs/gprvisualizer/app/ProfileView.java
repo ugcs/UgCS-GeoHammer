@@ -75,7 +75,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class ProfileView implements SmthChangeListener, ModeFactory {
+public class ProfileView implements SmthChangeListener {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
@@ -281,7 +281,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 	}
 
 	public void drawHyperliveView(ProfileField field, Graphics2D g2) {
-		if (model.getSettings().hyperliveview) {
+		if (model.getSettings().getHyperliveview().booleanValue()) {
 			hyperFinder.drawHyperbolaLine(g2, field);
 		}
 	}
@@ -498,14 +498,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		}
 	}
 
-	@Override
-	public void show() {
 
-		updateScroll();
-		repaintEvent();
-	}
-
-	@Override
 	public Node getCenter() {
 
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
@@ -521,7 +514,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 		return topPane;
 	}
 
-	@Override
+
 	public List<Node> getRight() {
 
 		return Arrays.asList(
@@ -647,7 +640,7 @@ public class ProfileView implements SmthChangeListener, ModeFactory {
 
 			Point p = getLocalCoords(event);
 
-			if (model.getSettings().hyperliveview) {
+			if (model.getSettings().getHyperliveview().booleanValue()) {
 				TraceSample ts = getField().screenToTraceSample(p);
 				hyperFinder.setPoint(ts);
 				repaintEvent();

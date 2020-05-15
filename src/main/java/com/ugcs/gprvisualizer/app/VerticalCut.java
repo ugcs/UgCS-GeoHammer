@@ -37,7 +37,7 @@ import javafx.stage.Stage;
  * not used
  *
  */
-public class VerticalCut implements ModeFactory, SmthChangeListener {
+public class VerticalCut implements SmthChangeListener {
 
 	private Model model;
 	private ImageView imageView = new ImageView();
@@ -330,14 +330,14 @@ public class VerticalCut implements ModeFactory, SmthChangeListener {
 		}
 	}
 
-	@Override
+
 	public Node getCenter() {
 		
 		
 		return vbox;
 	}
 
-	@Override
+
 	public List<Node> getRight() {
 
 		return Arrays.asList(
