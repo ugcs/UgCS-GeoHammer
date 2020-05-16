@@ -2,9 +2,7 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Dimension;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -27,20 +25,13 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 @Component
 public class MapView extends Work implements SmthChangeListener {
@@ -105,7 +96,7 @@ public class MapView extends Work implements SmthChangeListener {
 	public void somethingChanged(WhatChanged changed) {
 		super.somethingChanged(changed);
 		
-		if(changed.isFileopened()) {
+		if (changed.isFileopened()) {
 			toolBar.setDisable(!model.isActive());
 		}
 		
@@ -117,22 +108,23 @@ public class MapView extends Work implements SmthChangeListener {
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
 			LatLon ll = model.getField().screenTolatLon(p);
 			
-	    	model.getField().setZoom( model.getField().getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
+	    	int zoom = model.getField().getZoom() + (event.getDeltaY() > 0 ? 1 : -1);
+			model.getField().setZoom(zoom);
 	    	
 	    	Point2D p2 = model.getField().latLonToScreen(ll);
-	    	Point2D pdist = new Point2D.Double(p2.getX()-p.getX(), p2.getY()-p.getY());
+	    	Point2D pdist = new Point2D.Double(p2.getX() - p.getX(), p2.getY() - p.getY());
 	    	
 	    	LatLon sceneCenter = model.getField().screenTolatLon(pdist);			
 			model.getField().setSceneCenter(sceneCenter);
 	    	
 			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
-	    } );		
+	    });		
 	
 		imageView.setOnMouseClicked(mouseClickHandler);
 		imageView.setOnMousePressed(mousePressHandler);
 		imageView.setOnMouseReleased(mouseReleaseHandler);
 		
-		imageView.addEventFilter(MouseEvent.DRAG_DETECTED , new EventHandler<MouseEvent>() {
+		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
 		    @Override
 		    public void handle(MouseEvent mouseEvent) {
 		    	
@@ -140,25 +132,27 @@ public class MapView extends Work implements SmthChangeListener {
 		    }
 		});		
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
-		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, new EventHandler<MouseDragEvent>() {
-            @Override
-            public void handle(MouseDragEvent event) {
-            	
-            	event.consume();
-            }
-		});		
+		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, 
+				new EventHandler<MouseDragEvent>() {
+			@Override
+			public void handle(MouseDragEvent event) {
+
+				event.consume();
+			}
+		});
 	}
 	
 	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-        	if(event.getClickCount() == 2) {
+        	if (event.getClickCount() == 2) {
         		
         		Point2D p = getLocalCoords(event);
         		
         		LatLon ll = model.getField().screenTolatLon(p);
         		
-        		int traceIndex = findNearestTraceIndex(model.getFileManager().getTraces(), ll);
+        		int traceIndex = findNearestTraceIndex(
+        				model.getFileManager().getTraces(), ll);
         		
         		model.getVField().setSelectedTrace(traceIndex);
         		
@@ -176,10 +170,10 @@ public class MapView extends Work implements SmthChangeListener {
 			int resultIndex = 0;
 			double mindst = ll.getDistance(traces.get(0).getLatLon());
 			
-			for(int i=0; i<traces.size(); i++) {
+			for (int i = 0; i < traces.size(); i++) {
 				
 				double dst = ll.getDistance(traces.get(i).getLatLon());
-				if(dst < mindst) {
+				if (dst < mindst) {
 					resultIndex = i;
 					
 					mindst = dst;
@@ -192,7 +186,6 @@ public class MapView extends Work implements SmthChangeListener {
 
 	};
 	
-	//@Override
 	public Node getCenter() {
 		
 		toolBar.setDisable(true);
@@ -213,25 +206,20 @@ public class MapView extends Work implements SmthChangeListener {
 		sp1.widthProperty().addListener(sp1SizeListener);
 		sp1.heightProperty().addListener(sp1SizeListener);
 		
-		//vBox.getChildren().add(sp1);
-		
-		
 		return sp1;
 	}
 
-	//@Override
 	public List<Node> getRight() {
-		return radarMap.getControlNodes();//Arrays.asList();
+		return radarMap.getControlNodes();
 	}
 		
 	public List<Node> getToolNodes() {
 		
 		List<Node> lst = new ArrayList<>();
 		
-		for(Layer layer : getLayers()) {
+		for (Layer layer : getLayers()) {
 			List<Node> l = layer.getToolNodes();
-			if(!l.isEmpty()) {
-				
+			if (!l.isEmpty()) {				
 				lst.addAll(l);
 			}
 		}

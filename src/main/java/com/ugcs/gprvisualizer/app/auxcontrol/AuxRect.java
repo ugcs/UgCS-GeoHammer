@@ -17,13 +17,10 @@ import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 import javafx.scene.control.ChoiceDialog;
@@ -60,14 +57,14 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		json.put("locked", locked);
 		
 		JSONArray arr = new JSONArray();
-		for(int i : topCut) {
+		for (int i : topCut) {
 			arr.add(i);
 		}		
 		json.put("topCut", arr);
 		
 		
 		JSONArray arr2 = new JSONArray();
-		for(int i : botCut) {
+		for (int i : botCut) {
 			arr2.add(i);
 		}		
 		json.put("botCut", arr2);
@@ -84,6 +81,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		bottom.setSample(sampleFinish);
 		//this.sampleFinish = sampleFinish;
 	}
+	
 	public int getSampleStart() {
 		return top.getSample();
 
@@ -109,28 +107,6 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		right.setTrace(traceStart);
 	}
 	
-	
-	public void checkdst() {
-		
-		int s = left.getTrace();
-		int f = right.getTrace();
-		
-		SgyFile file = AppContext.model.getFileManager().getFiles().get(0);
-		List<Trace> traces = file.getTraces();
-		
-		double h_dst_cm = 0;
-		for(int i=s+1; i<=f; i++) {
-			h_dst_cm += traces.get(i).getPrevDist();
-		}
-		
-		double v_dst_cm = file.getSamplesToCmGrn() * (double)(bottom.getSample() - top.getSample());
-		
-		double diag = Math.sqrt(h_dst_cm*h_dst_cm + v_dst_cm*v_dst_cm);
-		
-		System.out.println("auxrect hor dst : " + h_dst_cm + "   ver dst: " + v_dst_cm + "  diagonal: " + diag);
-	}
-	
-
 	public int getTraceFinishLocal() {
 		return right.getTrace();
 	}
@@ -145,7 +121,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 			int sampleStart,
 			int sampleFinish,
 			VerticalCutPart offset) {
-		//this.vField = vField;
+
 		this.offset = offset;
 		initDragAnchors();
 		
@@ -160,8 +136,7 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	}
 	
 	public AuxRect(int traceCenter, int sampleCenter, VerticalCutPart offset) {
-		this(		
-			traceCenter - TRACE_W,
+		this(traceCenter - TRACE_W,
 			traceCenter + TRACE_W,
 			sampleCenter - SAMPLE_W,
 			sampleCenter + SAMPLE_W,
@@ -174,37 +149,37 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		this.offset = offset;
 		initDragAnchors();
 		
-		setTraceStart((int)(long)(Long)json.get("traceStart"));
-		setTraceFinish((int)(long)(Long)json.get("traceFinish"));
-		setSampleStart((int)(long)(Long)json.get("sampleStart"));
-		setSampleFinish((int)(long)(Long)json.get("sampleFinish"));
+		setTraceStart((int) (long) (Long) json.get("traceStart"));
+		setTraceFinish((int) (long) (Long) json.get("traceFinish"));
+		setSampleStart((int) (long) (Long) json.get("sampleStart"));
+		setSampleFinish((int) (long) (Long) json.get("sampleFinish"));
 		
-		setType(AreaType.valueOf((String)json.get("type")));
-		if(json.containsKey("locked")) {
-			locked = (Boolean)json.get("locked");
+		setType(AreaType.valueOf((String) json.get("type")));
+		if (json.containsKey("locked")) {
+			locked = (Boolean) json.get("locked");
 			updateAnchorVisibility();
 			lock.setSelected(locked);
 		}
 		
-		if(json.containsKey("topCut")) {
-			JSONArray ar = (JSONArray)json.get("topCut");
+		if (json.containsKey("topCut")) {
+			JSONArray ar = (JSONArray) json.get("topCut");
 	
 			topCut = new int[ar.size()];
-			for(int i=0; i<ar.size(); i++) {
+			for (int i = 0; i < ar.size(); i++) {
 				
-				topCut[i] = (int)(long)(Long)ar.get(i);
+				topCut[i] = (int) (long) (Long) ar.get(i);
 			}
 		}
 
-		if(json.containsKey("botCut")) {
-			JSONArray ar = (JSONArray)json.get("botCut");
+		if (json.containsKey("botCut")) {
+			JSONArray ar = (JSONArray) json.get("botCut");
 			botCut = new int[ar.size()];
-			for(int i=0; i<ar.size(); i++) {
-				botCut[i] = (int)(long)(Long)ar.get(i);
+			for (int i = 0; i < ar.size(); i++) {
+				botCut[i] = (int) (long) (Long) ar.get(i);
 			}
 		}
 		
-		if(botCut == null || topCut == null) {
+		if (botCut == null || topCut == null) {
 			clearCut();
 		}
 		
@@ -215,56 +190,53 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	
 
 	private void initDragAnchors() {
-		selectType = new ToggleButton( 
-				ResourceImageHolder.IMG_CHOOSE,
+		selectType = new ToggleButton(ResourceImageHolder.IMG_CHOOSE,
 				ResourceImageHolder.IMG_CHOOSE,
 				new AlignRect(-1, -1), offset, false) {
 
 			public void signal(Object obj) {
-		        ChoiceDialog<AreaType> dialog = new ChoiceDialog<AreaType>(getType(), AreaType.values()); 
+		        ChoiceDialog<AreaType> dialog = 
+		        		new ChoiceDialog<AreaType>(getType(), AreaType.values()); 
 		        Optional<AreaType> result = dialog.showAndWait();
 		        result.ifPresent(book -> {
 		            setType(book);
 		        });				
-			}			
-			public int getTrace() {
-				return (left.getTrace()) ;
 			}
+			
+			public int getTrace() {
+				return (left.getTrace());
+			}
+			
 			public int getSample() {
-				return (top.getSample()) ;
+				return (top.getSample());
 			}
 		};
 		
-		lock = new ToggleButton( 
-				ResourceImageHolder.IMG_LOCK,
+		lock = new ToggleButton(ResourceImageHolder.IMG_LOCK,
 				ResourceImageHolder.IMG_UNLOCK,
 				new AlignRect(-1, -1), offset, locked) {
 
 			public void signal(Object obj) {
-				locked = (Boolean)obj;
+				locked = (Boolean) obj;
 				
 				updateAnchorVisibility();
-				
 			}
+			
 			public int getTrace() {
 				return (right.getTrace());
 			}
+			
 			public int getSample() {
-				return (top.getSample()) ;
-			}
-			
+				return (top.getSample());
+			}			
 		};
 		
-		top = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		top = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, 
+				AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				//sampleStart = top.getSample();
 				
-				
-				
-				top.setSample(
-						NumberUtils.norm(top.getSample(), 0, bottom.getSample()-2));
-						
-						//Math.min(sampleStart.getValue(), sampleFinish.getValue()-2));
+				top.setSample(NumberUtils.norm(
+						top.getSample(), 0, bottom.getSample() - 2));
 				
 				clearCut();
 				updateMaskImg();
@@ -275,46 +247,50 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 			}
 		};
 		
-		bottom = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		bottom = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, 
+				AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				//sampleFinish = bottom.getSample();
-				bottom.setSample( 
-					NumberUtils.norm(bottom.getSample(), top.getSample()+2, offset.getMaxSamples()));
+
+				bottom.setSample(NumberUtils.norm(bottom.getSample(), 
+					top.getSample() + 2, offset.getMaxSamples()));
 				
 				clearCut();
 				updateMaskImg();
-				//checkdst();
 			}
+			
 			public int getTrace() {
 				return (left.getTrace() + right.getTrace()) / 2;
 			}
 		};
-		left = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		
+		left = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, 
+				AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				//traceStart = left.getTrace();
-				left.setTrace( 
-						NumberUtils.norm(left.getTrace(), 0, right.getTrace()-2));
+
+				left.setTrace(NumberUtils.norm(left.getTrace(), 
+						0, right.getTrace() - 2));
 				
 				clearCut();
 				updateMaskImg();
 			}
+			
 			public int getSample() {
 				return (top.getSample() + bottom.getSample()) / 2;
 			}
 		};
 		
-		right = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		right = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, 
+				AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				//traceFinish = right.getTrace();
-				right.setTrace( 
-						NumberUtils.norm(right.getTrace(), left.getTrace()+2, offset.getTraces()));
-						//Math.max(traceFinish.getValue(), ));
+
+				right.setTrace(
+						NumberUtils.norm(right.getTrace(), 
+							left.getTrace() + 2, offset.getTraces()));
 				
 				clearCut();
-				updateMaskImg();
-				
-				//checkdst();
+				updateMaskImg();				
 			}
+			
 			public int getSample() {
 				return (top.getSample() + bottom.getSample()) / 2;
 			}
@@ -328,59 +304,51 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		int width = getTraceFinishLocal() - getTraceStartLocal();
 		int height = getSampleHeight();
 		
-		//if(img == null || width != img.getWidth() || height != img.getHeight()) {
+		img = new BufferedImage(Math.max(1, width), Math.max(1, height), 
+				BufferedImage.TYPE_4BYTE_ABGR);
 		
-			img = new BufferedImage(Math.max(1, width), Math.max(1, height), BufferedImage.TYPE_4BYTE_ABGR);
+		Graphics2D g2 = (Graphics2D) img.getGraphics();
+		
+		for (int x = 0; x < topCut.length; x++) {
 			
-			Graphics2D g2 = (Graphics2D)img.getGraphics();
-			//g2.drawLine(0,0,width, height);
+			g2.setColor(maskColor);
+			g2.drawLine(x, 0, x, topCut[x]);
+			g2.drawLine(x, img.getHeight(), x, botCut[x]);
 			
-			for(int x=0; x<topCut.length; x++) {
-				
-				g2.setColor(maskColor);
-				g2.drawLine(x, 0, x, topCut[x]);
-				g2.drawLine(x, img.getHeight(), x, botCut[x]);
-				
-			}
-		//}
+		}
 	}
 
 	private void clearCut() {
 		
 		int width = Math.max(1, getTraceFinishLocal() - getTraceStartLocal());
 		int height = getSampleHeight();
-		//if(topCut == null || topCut.length != width) {
-			topCut = new int[width];
-		//}
-		//if(botCut == null || botCut.length != width) {
-			botCut = new int[width];
-			Arrays.fill(botCut, height);
-		//}
+
+		topCut = new int[width];
+		botCut = new int[width];
+		Arrays.fill(botCut, height);
 	}
 	
-	public List<BaseObject> getControls(){
+	public List<BaseObject> getControls() {
 		
-		return //locked ? 
-			//Arrays.asList(lock) :
+		return 
 			Arrays.asList(left, top, right, bottom, lock, selectType); 
 				
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 
-		if(isPointInside(localPoint, vField)){
-			
+		if (isPointInside(localPoint, profField)) {			
 		
-			TraceSample ts = vField.screenToTraceSample(localPoint, offset);
+			TraceSample ts = profField.screenToTraceSample(localPoint, offset);
 			int x = ts.getTrace() - getTraceStartLocal();
 			int y = ts.getSample() - getSampleStart();
-			if(x>=0 && x < topCut.length) {
+			if (x >= 0 && x < topCut.length) {
 				
-				int top_dst = Math.abs(topCut[x] - y);
-				int bot_dst = Math.abs(botCut[x] - y);
+				int topDst = Math.abs(topCut[x] - y);
+				int botDst = Math.abs(botCut[x] - y);
 
-				sideTop = top_dst < bot_dst;
+				sideTop = topDst < botDst;
 				lastX = -1;
 			}
 			return true;
@@ -388,37 +356,46 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		
 		return false;
 	}
+	
+	@Override
+	public boolean mousePressHandle(Point2D point, MapField field) {
+		return false;
+	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 
 		return false;
 	}
 
-	int lastX=-1;
+	private int lastX = -1;
+	
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 
-		if(img == null) {
+		if (img == null) {
 			return false;
 		}
 		
-		TraceSample ts = vField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point, offset);
 		
-		if(locked) {		
+		if (locked) {		
 			drawCutOnImg(ts);
-		}else {
+		} else {
 			
-			int half_width = (getTraceFinishLocal() - getTraceStartLocal())/2;
-			int half_height = getSampleHeight()/2;
+			int halfWidth = (getTraceFinishLocal() - getTraceStartLocal()) / 2;
+			int halfHeight = getSampleHeight() / 2;
 			
-			int tr = NumberUtils.norm(ts.getTrace(), half_width, offset.getTraces()-half_width);
-			int sm = NumberUtils.norm(ts.getSample(), half_height, offset.getMaxSamples()-half_height);
+			int tr = NumberUtils.norm(ts.getTrace(), 
+					halfWidth, offset.getTraces() - halfWidth);
 			
-			setTraceStart(tr - half_width);
-			setTraceFinish(tr + half_width);
-			setSampleStart(sm - half_height);
-			setSampleFinish(sm + half_height);
+			int sm = NumberUtils.norm(ts.getSample(), 
+					halfHeight, offset.getMaxSamples() - halfHeight);
+			
+			setTraceStart(tr - halfWidth);
+			setTraceFinish(tr + halfWidth);
+			setSampleStart(sm - halfHeight);
+			setSampleFinish(sm + halfHeight);
 			
 		}
 		
@@ -432,15 +409,14 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 		int height = getSampleHeight();
 		y = Math.max(Math.min(y, height), 0);
 		
-		if(x>=0 && x < topCut.length) {
-			if(lastX == -1 || Math.abs(lastX-x) > 12) {
+		if (x >= 0 && x < topCut.length) {
+			if (lastX == -1 || Math.abs(lastX - x) > 12) {
 				lastX = x;
 			}
 			
-			for(int i=Math.min(lastX, x); i<=Math.max(lastX, x); i++) {
+			for (int i = Math.min(lastX, x); i <= Math.max(lastX, x); i++) {
 				
 				drawColumn(i, y);
-				
 			}
 			
 			lastX = x;
@@ -452,13 +428,13 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	}
 
 	private void drawColumn(int x, int y) {
-		if(sideTop) {
+		if (sideTop) {
 			topCut[x] = y;
-		}else{
+		} else {
 			botCut[x] = y;
 		}
 
-		Graphics2D g2 = (Graphics2D)img.getGraphics();
+		Graphics2D g2 = (Graphics2D) img.getGraphics();
 		
 		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR));
 		g2.setColor(new Color(0, 0, 0, 0));
@@ -471,51 +447,49 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
-		// TODO Auto-generated method stub
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
 	}
 
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
-		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), getSampleStart()));
-		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), getSampleFinish()));
+		Point lt = profField.traceSampleToScreen(
+				new TraceSample(getTraceStartGlobal(), getSampleStart()));
+		
+		Point rb = profField.traceSampleToScreen(
+				new TraceSample(getTraceFinishGlobal(), getSampleFinish()));
 		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 		
 	}
 	
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		setClip(g2, vField.getClipMainRect());
+		setClip(g2, profField.getClipMainRect());
 		
-		Rectangle rect = getRect(vField); 
+		Rectangle rect = getRect(profField); 
 	
-		if(img != null) {
+		if (img != null) {
 			g2.drawImage(img, rect.x, rect.y, rect.width, rect.height, null);
-			
 		}
 		
 		g2.setColor(Color.RED);
 		g2.drawRect(rect.x, rect.y, rect.width, rect.height);
 		
 		g2.setColor(Color.WHITE);
-		g2.drawString(getType().getName(), rect.x, rect.y-5);
-		
-		
+		g2.drawString(getType().getName(), rect.x, rect.y - 5);
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
 
 	@Override
 	public void signal(Object obj) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -525,12 +499,6 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 
 	public void setType(AreaType type) {
 		this.type = type;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	public void setTopCut(int[] topCut) {
@@ -550,7 +518,12 @@ public class AuxRect extends BaseObjectImpl implements BaseObject {
 
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		AuxRect result = new AuxRect(getTraceStartLocal()-traceoffset, getTraceFinishLocal()-traceoffset, getSampleStart(), getSampleFinish(), verticalCutPart); 
+		AuxRect result = new AuxRect(
+				getTraceStartLocal() - traceoffset, 
+				getTraceFinishLocal() - traceoffset, 
+				getSampleStart(), 
+				getSampleFinish(), 
+				verticalCutPart); 
 		
 		result.topCut = Arrays.copyOf(topCut, topCut.length); 
 		result.botCut = Arrays.copyOf(botCut, botCut.length);

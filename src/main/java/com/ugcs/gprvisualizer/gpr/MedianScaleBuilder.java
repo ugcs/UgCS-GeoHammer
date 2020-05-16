@@ -1,12 +1,10 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.Sout;
 
 public class MedianScaleBuilder implements ArrayBuilder {
 

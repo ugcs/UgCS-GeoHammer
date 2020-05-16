@@ -10,7 +10,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 
 @Component
-public class GHSceneContent extends BorderPane{
+public class SceneContent extends BorderPane {
 
 	@Autowired
 	private Loader loader;
@@ -19,7 +19,7 @@ public class GHSceneContent extends BorderPane{
 	private StatusBar statusBar;
 	
 	@Autowired
-	private GHToolbar toolBar;
+	private GeoHammerToolbar toolBar;
 
 	@Autowired
 	private MapView mapView;
@@ -31,12 +31,12 @@ public class GHSceneContent extends BorderPane{
 	private OptionPane optionPane;
 	
 	
-	public GHSceneContent() {
+	public SceneContent() {
 		
 	}
 	
 	@PostConstruct
-	public void postConstruct(){
+	public void postConstruct() {
 		this.setOnDragOver(loader.getDragHandler());
 		this.setOnDragDropped(loader.getDropHandler());
 

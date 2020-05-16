@@ -2,8 +2,6 @@ package com.ugcs.gprvisualizer.ui;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 
-import com.ugcs.gprvisualizer.gpr.Settings;
-
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 

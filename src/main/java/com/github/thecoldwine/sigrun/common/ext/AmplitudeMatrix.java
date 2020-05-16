@@ -14,11 +14,9 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.sun.scenario.effect.impl.state.HVSeparableKernel;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.math.BackgroundRemovalFilter;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
-import com.ugcs.gprvisualizer.math.LevelFilter;
 import com.ugcs.gprvisualizer.math.MovingAvg;
 
 public class AmplitudeMatrix {
@@ -229,7 +227,7 @@ public class AmplitudeMatrix {
 	}
 
 	private List<Grp> getOrderedDescGrps() {
-		List<Grp> r = new ArrayList(colls.get(0));
+		List<Grp> r = new ArrayList<Grp>(colls.get(0));
 		Collections.sort(r, new Comparator<Grp>() {
 
 			@Override

@@ -22,15 +22,12 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -52,16 +49,10 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
@@ -69,7 +60,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -79,6 +69,13 @@ public class ProfileView implements SmthChangeListener {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
+	private static final float dash1[] = { 5.0f };
+	private static final BasicStroke dashed = 
+			new BasicStroke(1.0f, 
+					BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 
+					10.0f, dash1, 0.0f);
+
+	
 	@Autowired
 	protected Model model;
 	
@@ -99,7 +96,7 @@ public class ProfileView implements SmthChangeListener {
 	protected Pane topPane = new Pane();
 
 	protected BufferedImage img;
-	protected Image i;
+	protected Image image;
 	protected int width;
 	protected int height;
 
@@ -112,9 +109,15 @@ public class ProfileView implements SmthChangeListener {
 
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
-	private Button zoomInBtn = new Button("", ResourceImageHolder.getImageView("zoom-in_20.png"));
-	private Button zoomOutBtn = new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
-	private ToggleButton showGreenLineBtn = new ToggleButton("", ResourceImageHolder.getImageView("level.png"));
+	
+	private Button zoomInBtn = new Button("", 
+			ResourceImageHolder.getImageView("zoom-in_20.png"));
+	
+	private Button zoomOutBtn = new Button("", 
+			ResourceImageHolder.getImageView("zoom-out_20.png"));
+	
+	private ToggleButton showGreenLineBtn = new ToggleButton("", 
+			ResourceImageHolder.getImageView("level.png"));
 
 	private MouseHandler selectedMouseHandler;
 	private MouseHandler scrollHandler;
@@ -125,16 +128,19 @@ public class ProfileView implements SmthChangeListener {
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
 
-	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
+	private ChangeListener<Number> sliderListener 
+		= new ChangeListener<Number>() {
 		@Override
-		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+		public void changed(ObservableValue<? extends Number> observable, 
+				Number oldValue, Number newValue) {
 			repaintEvent();
 		}
 	};
-	private ChangeListener<Number> aspectSliderListener = new ChangeListener<Number>() {
+	private ChangeListener<Number> aspectSliderListener 
+		= new ChangeListener<Number>() {
 		@Override
-		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-			// updateAspect();
+		public void changed(ObservableValue<? extends Number> observable, 
+				Number oldValue, Number newValue) {
 			updateScroll();
 			repaintEvent();
 		}
@@ -145,33 +151,40 @@ public class ProfileView implements SmthChangeListener {
 	}
 	
 	@PostConstruct
-	public void init(){
+	public void init() {
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 
 		hyperFinder = new HyperFinder(model);
 		prismDrawer = new PrismDrawer(model);
-		contrastSlider = new ContrastSlider(model.getSettings(), sliderListener);
-		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), aspectSliderListener);
-		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), sliderListener);
-		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), sliderListener);
+		contrastSlider = new ContrastSlider(model.getSettings(), 
+				sliderListener);
+		
+		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
+				aspectSliderListener);
+		
+		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
+				sliderListener);
+		
+		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
+				sliderListener);
+		
 		initImageView();
 
 		profileScroll = new ProfileScroll(model);
 		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
-			public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
+			public void changed(ObservableValue<? extends Number> ov, 
+					Number oldVal, Number newVal) {
 				repaintEvent();
 			}
 		});
 
 		scrollHandler = new CleverViewScrollHandler(this);
-		//auxEditHandler = new AuxElementEditHandler(this);
 
 		prepareToolbar();
 
-//		profileScroll.recalc();
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView/* , scrollBar */);
+		vbox.getChildren().addAll(toolBar, profileScroll, imageView);
 
 		profileScroll.widthProperty().bind(topPane.widthProperty());
 
@@ -217,7 +230,7 @@ public class ProfileView implements SmthChangeListener {
 
 			fp.setSelected(true);
 
-			List lst = new ArrayList<>();
+			List<BaseObject> lst = new ArrayList<>();
 			lst.addAll(fp.getControls());
 			lst.add(fp);
 			model.setControls(lst);
@@ -266,7 +279,9 @@ public class ProfileView implements SmthChangeListener {
 		if (!controller.isEnquiued()) {
 			// skip if another recalculation coming
 
-			g2.setClip(field.getClipTopMainRect().x, field.getClipTopMainRect().y, field.getClipTopMainRect().width,
+			g2.setClip(field.getClipTopMainRect().x, 
+					field.getClipTopMainRect().y, 
+					field.getClipTopMainRect().width,
 					field.getClipTopMainRect().height);
 
 			drawHyperliveView(field, g2);
@@ -298,10 +313,14 @@ public class ProfileView implements SmthChangeListener {
 		drawAmplitudeMapLevels(field, g2);
 	}
 
-	public void drawFileProfiles(ProfileField field, Graphics2D g2, int startTrace, int finishTrace) {
+	public void drawFileProfiles(ProfileField field, Graphics2D g2, 
+			int startTrace, int finishTrace) {
 
-		int f1 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(startTrace));
-		int f2 = model.getFileManager().getFiles().indexOf(model.getSgyFileByTrace(finishTrace));
+		int f1 = model.getFileManager().getFiles().indexOf(
+				model.getSgyFileByTrace(startTrace));
+		
+		int f2 = model.getFileManager().getFiles().indexOf(
+				model.getSgyFileByTrace(finishTrace));
 
 		for (int i = f1; i <= f2; i++) {
 			SgyFile f = model.getFileManager().getFiles().get(i);
@@ -339,13 +358,7 @@ public class ProfileView implements SmthChangeListener {
 		return contr;
 	}
 
-	final static float dash1[] = { 5.0f };
-	final static BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1,
-			0.0f);
-
 	private void drawAmplitudeMapLevels(ProfileField field, Graphics2D g2) {
-		// if(model.getSettings().isRadarMapVisible) {
-
 		g2.setColor(Color.MAGENTA);
 		g2.setStroke(dashed);
 
@@ -355,7 +368,6 @@ public class ProfileView implements SmthChangeListener {
 		int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
 		g2.drawLine(-width / 2, y2, width / 2, y2);
 
-		// }
 	}
 
 	private void drawAuxElements(ProfileField field, Graphics2D g2) {
@@ -448,8 +460,8 @@ public class ProfileView implements SmthChangeListener {
 
 		SgyFile currentFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
 
-		int selected_x1 = 0;
-		int selected_x2 = 0;
+		int selectedX1 = 0;
+		int selectedX2 = 0;
 		Point p = null;
 		Point p2 = null;
 
@@ -466,8 +478,8 @@ public class ProfileView implements SmthChangeListener {
 				g2.setColor(Color.YELLOW);
 				g2.setFont(fontB);
 
-				selected_x1 = p.x;
-				selected_x2 = p2.x;
+				selectedX1 = p.x;
+				selectedX2 = p2.x;
 			} else {
 				g2.setColor(Color.WHITE);
 				g2.setFont(fontP);
@@ -491,10 +503,10 @@ public class ProfileView implements SmthChangeListener {
 		if (currentFile != null) {
 			g2.setColor(Color.YELLOW);
 			g2.setStroke(LEVEL_STROKE);
-			if (selected_x1 >= leftMargin) {
-				g2.drawLine(selected_x1, 0, selected_x1, height);
+			if (selectedX1 >= leftMargin) {
+				g2.drawLine(selectedX1, 0, selectedX1, height);
 			}
-			g2.drawLine(selected_x2, 0, selected_x2, height);
+			g2.drawLine(selectedX2, 0, selectedX2, height);
 		}
 	}
 
@@ -548,8 +560,6 @@ public class ProfileView implements SmthChangeListener {
 				);
 	}
 
-	int z = 0;
-
 	protected void initImageView() {
 		imageView.setOnScroll(event -> {
 			// model.getField().setZoom( .getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
@@ -574,10 +584,6 @@ public class ProfileView implements SmthChangeListener {
 		Point t = getLocalCoords(ex, ey);
 
 		TraceSample ts = getField().screenToTraceSample(t);
-
-		z = z + ch;
-
-		/////
 
 		if (justHorizont) {
 
@@ -606,7 +612,7 @@ public class ProfileView implements SmthChangeListener {
 
 	}
 
-	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> dragDetectedHandler = new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent mouseEvent) {
 
@@ -616,7 +622,7 @@ public class ProfileView implements SmthChangeListener {
 		}
 	};
 
-	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
+	protected EventHandler<MouseDragEvent> dragReleaseHandler = new EventHandler<MouseDragEvent>() {
 		@Override
 		public void handle(MouseDragEvent event) {
 
@@ -744,9 +750,9 @@ public class ProfileView implements SmthChangeListener {
 
 		img = draw(width, height);
 		if (img != null) {
-			i = SwingFXUtils.toFXImage(img, null);
+			image = SwingFXUtils.toFXImage(img, null);
 		} else {
-			i = null;
+			image = null;
 		}
 		updateWindow();
 	}
@@ -755,11 +761,7 @@ public class ProfileView implements SmthChangeListener {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-//            	if(i == null) {
-//            		return;
-//            	}
-
-				imageView.setImage(i);
+				imageView.setImage(image);
 			}
 		});
 	}
@@ -770,10 +772,6 @@ public class ProfileView implements SmthChangeListener {
 		if (changed.isFileopened()) {
 			profileScroll.setVisible(model.isActive());
 			toolBar.setDisable(!model.isActive());
-		}
-
-		if (changed.isAuxOnMapSelected()) {
-
 		}
 
 		repaintEvent();

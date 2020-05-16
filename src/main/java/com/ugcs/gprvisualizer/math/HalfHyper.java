@@ -46,7 +46,7 @@ public class HalfHyper {
 	
 	public static HalfHyper getHalfHyper(List<Trace> traces, int tr, int org_smp, float example, int side, double hyperkf) {
 		
-		Trace trace = traces.get(tr);
+		
 		
 		HalfHyper hh = new HalfHyper();
 		hh.pinnacle_tr = tr;
@@ -59,6 +59,8 @@ public class HalfHyper {
 		int i=0;
 		double bad = 0;
 		int index=0;
+		
+		Trace trace = traces.get(tr);
 		int hypergoodsize = getGoodSideSize(hh.pinnacle_smp - trace.verticalOffset);//model.getSettings().hypergoodsize;
 		double y = hh.pinnacle_smp - trace.verticalOffset;
 		

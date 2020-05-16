@@ -22,8 +22,8 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandler {
 
-	int HOR_M;
-	int VER_M;
+	int horM;
+	int verM;
 	int offsetX;
 	int offsetY;
 	
@@ -33,16 +33,15 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	public DepthStart(Shape shape){
 		this.shape = shape;
-		HOR_M = shape.getBounds().width;
-		VER_M = shape.getBounds().height;
+		horM = shape.getBounds().width;
+		verM = shape.getBounds().height;
 		offsetX = shape.getBounds().x;
 		offsetY = shape.getBounds().y;
-		//System.out.println(" offsetX " + offsetX + "  offsetY " + offsetY  + "  " + HOR_M + " " + VER_M );
 	}
 	
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
-		if(isPointInside(localPoint, vField)) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+		if(isPointInside(localPoint, profField)) {
 			return true;
 		}
 		
@@ -51,7 +50,6 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -69,13 +67,10 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	public void controlToSettings(TraceSample ts) {
 		int max = model.getMaxHeightInSamples();
 		model.getSettings().layer = Math.min( max-model.getSettings().hpage, Math.max(0, ts.getSample()));
-		
-		//AppContext.notifyAll(new WhatChanged(Change.));
 	}
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField hField) {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -98,9 +93,6 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		}
 		
 		g2.translate(-p.x , -p.y);
-		
-		
-		
 	}
 
 	@Override
@@ -109,14 +101,12 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		return rect.contains(localPoint);
 	}
-
-	
 	
 	@Override
 	public Rectangle getRect(ProfileField vField) {
 		
 		Point scr = getCenter(vField);
-		Rectangle rect = new Rectangle(scr.x+offsetX, scr.y+offsetY, HOR_M, VER_M);
+		Rectangle rect = new Rectangle(scr.x+offsetX, scr.y+offsetY, horM, verM);
 		return rect;
 	}
 
@@ -128,37 +118,34 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void signal(Object obj) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public List<BaseObject> getControls() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean saveTo(JSONObject json) {
 		return false;
-		
 	}
 
 	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
-		// TODO Auto-generated method stub
+
 		return false;
 	}
 
 	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		// TODO Auto-generated method stub
+
 		return false;
 	}
 

@@ -9,7 +9,7 @@ public class Attitude {
 	//рыскание
 	public double yaw; 	
 	
-	public Attitude(double roll, double tangage, double yaw){
+	public Attitude(double roll, double tangage, double yaw) {
 		this.roll = roll;
 		this.tangage = tangage;
 		this.yaw = yaw;		

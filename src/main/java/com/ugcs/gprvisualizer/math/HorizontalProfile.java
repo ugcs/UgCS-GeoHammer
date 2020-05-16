@@ -3,7 +3,6 @@ package com.ugcs.gprvisualizer.math;
 import java.awt.Color;
 import java.util.List;
 
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class HorizontalProfile {

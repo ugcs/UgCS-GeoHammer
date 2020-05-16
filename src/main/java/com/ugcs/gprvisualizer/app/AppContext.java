@@ -7,7 +7,6 @@ import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.LevelFilter;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;

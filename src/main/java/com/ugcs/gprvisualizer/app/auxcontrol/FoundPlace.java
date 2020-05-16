@@ -3,7 +3,6 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -13,14 +12,13 @@ import java.util.List;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.ProfileView;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
@@ -36,8 +34,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
-	final static float dash1[] = {7.0f, 2.0f};
-	static Stroke VERTICAL_STROKE = 	
+	private static final float[] dash1 = {7.0f, 2.0f};
+	private static final Stroke VERTICAL_STROKE = 	
 			new BasicStroke(1.0f,
                 BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER,
@@ -52,7 +50,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	public static FoundPlace loadFromJson(JSONObject json, SgyFile sgyFile) {
-		int traceNum = (int)(long)(Long)json.get("trace");		
+		int traceNum = (int) (long) (Long) json.get("trace");		
 		return new FoundPlace(traceNum, sgyFile.getOffset());
 	}
 	
@@ -65,7 +63,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
 		
-		if(isPointInside(localPoint, vField)) {
+		if (isPointInside(localPoint, vField)) {
 				
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
@@ -78,15 +76,14 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 		
-		TraceSample ts = vField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point, offset);
 		
 		traceInFile = Math.min( offset.getTraces()-1, Math.max(0, ts.getTrace()));
 		
@@ -100,20 +97,11 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField hField) {
 		
-		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
-		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());
-		//g2.setColor(Color.CYAN);
-		//g2.drawLine((int)p1.getX(), (int)p1.getY(), (int)p2.getX(), (int)p2.getY());
-		
 		Rectangle rect = getRect(hField);
-		
-		//g2.drawImage(ResourceImageHolder.IMG_SHOVEL, rect.x , rect.y, null);
-		
 		
 		g2.setColor(flagColor);
 		
 		g2.translate(rect.x , rect.y+rect.height);
-		
 		
 		g2.fill(ShapeHolder.flag);
 		
@@ -123,18 +111,18 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		g2.setClip(vField.getClipTopMainRect().x, vField.getClipTopMainRect().y, vField.getClipTopMainRect().width, vField.getClipTopMainRect().height);
+		g2.setClip(profField.getClipTopMainRect().x, profField.getClipTopMainRect().y, profField.getClipTopMainRect().width, profField.getClipTopMainRect().height);
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		g2.setColor(flagColor);
 		
 		g2.translate(rect.x , rect.y+rect.height);
 		g2.fill(ShapeHolder.flag);
 		
-		if(isSelected()) {
+		if (isSelected()) {
 			g2.setColor(Color.green);
 			g2.setStroke(SELECTED_STROKE);
 			g2.draw(ShapeHolder.flag);
@@ -142,7 +130,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 			g2.setStroke(VERTICAL_STROKE);
 			g2.setColor(Color.blue);
 			g2.setXORMode(Color.gray);
-			g2.drawLine(0 , 0, 0 , vField.sampleToScreen(offset.getMaxSamples()) - Model.TOP_MARGIN );
+			g2.drawLine(0 , 0, 0 , profField.sampleToScreen(offset.getMaxSamples()) - Model.TOP_MARGIN );
 			g2.setPaintMode();
 		}
 		
@@ -150,22 +138,15 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 	}
 	
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
-		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
+		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
 				
-		Rectangle rect = new Rectangle(x, Model.TOP_MARGIN-R_VER_M*2, R_HOR_M*2, R_VER_M*2);
+		Rectangle rect = new Rectangle(x, Model.TOP_MARGIN-R_VER_M * 2, R_HOR_M * 2, R_VER_M * 2);
 		return rect;
 	}
 	
 	public Rectangle getRect(MapField hField) {
-		
-		//Point2D p1 = hField.latLonToScreen(trace.getLatLon());
-		//Point2D p2 = hField.latLonToScreen(trace2.getLatLon());		
-		//Point2D p = new Point2D.Double((p1.getX()+p2.getX())/2, (p1.getY()+p2.getY())/2);
-		
-		
-		
 		Trace tr = getTrace();		
 		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
 		
@@ -187,19 +168,16 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void signal(Object obj) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public List<BaseObject> getControls() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		//json.put("trace", traceInFile);
 		return false;
 	}
 
@@ -229,7 +207,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public boolean isFit(int begin, int end) {
 		
-		return traceInFile >= begin && traceInFile <=end;
+		return traceInFile >= begin && traceInFile <= end;
 	}
 
 }

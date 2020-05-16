@@ -4,17 +4,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.gpr.Settings;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -25,26 +20,23 @@ public class Work {
 	
 	protected ImageView imageView = new ImageView();
 	protected BufferedImage img;
-	//protected int width;
-	//protected int height;
-	
 	
 	protected void repaintEvent() {
 		
 	}
 	
 	protected BufferedImage draw(int width,	int height) {
-		if(width <= 0 || height <= 0) {
+		if (width <= 0 || height <= 0) {
 			return null;
 		}
 		
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		
-		Graphics2D g2 = (Graphics2D)bi.getGraphics();
-		g2.setPaint ( Color.DARK_GRAY );
-		g2.fillRect ( 0, 0, bi.getWidth(), bi.getHeight() );		
+		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		g2.setPaint( Color.DARK_GRAY);
+		g2.fillRect( 0, 0, bi.getWidth(), bi.getHeight());		
 		
-		g2.translate(width/2, height/2);
+		g2.translate(width / 2, height / 2);
 		
 		for (Layer l : getLayers()) {
 			try {
@@ -80,7 +72,7 @@ public class Work {
 			    
 			    imageView.setImage(i);			    
             }
-          });
+        });
 	}
 
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
@@ -92,10 +84,10 @@ public class Work {
         		Layer layer = getLayers().get(i);
         		
         		try {
-	        		if(layer.mousePressed(p)) {
+	        		if (layer.mousePressed(p)) {
 	        			return;
 	        		}
-        		}catch(Exception e) {
+        		} catch(Exception e) {
         			e.printStackTrace();
         		}
         	}
@@ -107,7 +99,7 @@ public class Work {
         public void handle(MouseEvent event) {        	
         	Point2D p = getLocalCoords(event);
         	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
+        	for (int i = getLayers().size() - 1; i >= 0; i--) {
         		Layer layer = getLayers().get(i);
         		
         		if(layer.mouseRelease(p)) {
@@ -123,10 +115,10 @@ public class Work {
         public void handle(MouseEvent event) {
         	Point2D p = getLocalCoords(event);
         	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
+        	for (int i = getLayers().size() - 1; i >= 0; i--) {
         		Layer layer = getLayers().get(i);
         		
-        		if(layer.mouseMove(p)) {
+        		if (layer.mouseMove(p)) {
         			return;
         		}        		
         	}        	
@@ -153,7 +145,7 @@ public class Work {
 			l.somethingChanged(changed);
 		}
 
-		if(changed.isJustdraw()) {
+		if (changed.isJustdraw()) {
 			repaintEvent();
 		}		
 	}

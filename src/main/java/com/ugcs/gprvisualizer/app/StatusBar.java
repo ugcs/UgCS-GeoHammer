@@ -1,12 +1,9 @@
 package com.ugcs.gprvisualizer.app;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.ugcs.gprvisualizer.app.intf.Status;
-import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
 import javafx.scene.control.Label;

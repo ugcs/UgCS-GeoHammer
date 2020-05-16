@@ -2,10 +2,6 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-
-import com.github.thecoldwine.sigrun.common.TextHeader;
 
 public class Block implements ByteBufferProducer {
 

@@ -154,7 +154,7 @@ public class ProfileScroll extends Canvas{
         }
 	};
 	
-	protected EventHandler dragDetectedHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> dragDetectedHandler = new EventHandler<MouseEvent>() {
 	    @Override
 	    public void handle(MouseEvent mouseEvent) {
 	    	
@@ -185,7 +185,7 @@ public class ProfileScroll extends Canvas{
 		return imgCoord;
 	}
 	
-	protected EventHandler dragReleaseHandler = new EventHandler<MouseDragEvent>() {
+	protected EventHandler<MouseDragEvent> dragReleaseHandler = new EventHandler<MouseDragEvent>() {
         @Override
         public void handle(MouseDragEvent event) {
 

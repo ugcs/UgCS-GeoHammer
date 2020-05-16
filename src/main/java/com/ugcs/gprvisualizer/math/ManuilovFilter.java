@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.gpr.Scan;
 
 public class ManuilovFilter {
 

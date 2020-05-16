@@ -32,7 +32,7 @@ public class RootControls {
 	private StatusBar statusBar;
 	
 	@Autowired
-	private GHToolbar toolBar;
+	private GeoHammerToolbar toolBar;
 	
 	@Autowired
 	private Broadcast broadcast;
@@ -41,7 +41,7 @@ public class RootControls {
 	private CommandRegistry commandRegistry;
 	
 	@Autowired
-	private GHSceneContent sceneContent;
+	private SceneContent sceneContent;
 	
 	@Autowired
 	private OptionPane optionPane;
@@ -75,7 +75,7 @@ public class RootControls {
 		return statusBar;
 	}
 
-	public GHToolbar getToolBar() {
+	public GeoHammerToolbar getToolBar() {
 		return toolBar;
 	}
 
@@ -91,7 +91,7 @@ public class RootControls {
 		return optionPane;
 	}
 
-	public GHSceneContent getSceneContent() {
+	public SceneContent getSceneContent() {
 		return sceneContent;
 	}
 

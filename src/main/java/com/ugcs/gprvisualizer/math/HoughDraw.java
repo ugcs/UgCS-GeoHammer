@@ -11,7 +11,6 @@ import java.awt.image.BufferedImage;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.ugcs.gprvisualizer.app.Sout;
 
 public class HoughDraw {
 

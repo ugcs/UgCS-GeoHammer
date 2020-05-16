@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,9 +14,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TabPane;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -34,7 +30,7 @@ public class MainGeoHammer extends Application {
 		
 	}
 	
-	public static void main(String args[]) {
+	public static void main(String[] args) {
 		launch(args);
 	}
 	
@@ -54,9 +50,9 @@ public class MainGeoHammer extends Application {
 
 		AppContext.stage = stage;
 
-		stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
-		
-		stage.setTitle(TITLE_VERSION);
+        stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
+	
+        stage.setTitle(TITLE_VERSION);
 		
 		Scene scene = new Scene(rootControls.getSceneContent(), 1280, 768);
 		stage.setScene(scene);
@@ -67,7 +63,7 @@ public class MainGeoHammer extends Application {
 		    @Override
 		    public void handle(WindowEvent t) {
 		    	
-	        	if(model.stopUnsaved()) {
+	        	if (model.stopUnsaved()) {
 	        		t.consume();
 	        		return;
 	        	}        	
@@ -79,7 +75,7 @@ public class MainGeoHammer extends Application {
 		
 		
 		//load files if they were given in parameters 
-		if(!getParameters().getRaw().isEmpty()) {
+		if (!getParameters().getRaw().isEmpty()) {
 			String name = getParameters().getRaw().get(0);
 			List<File> f = Arrays.asList(new File(name));			
 			rootControls.getLoader().loadWithNotify(f, emptyListener);
@@ -89,7 +85,8 @@ public class MainGeoHammer extends Application {
 
 	private static final ProgressListener emptyListener = new ProgressListener() {
 		@Override
-		public void progressPercent(int percent) {}				
+		public void progressPercent(int percent) {}
+		
 		@Override
 		public void progressMsg(String msg) {}
 	};

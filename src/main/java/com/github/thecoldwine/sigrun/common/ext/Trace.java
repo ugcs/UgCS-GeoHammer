@@ -1,12 +1,9 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.TraceHeader;
-import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class Trace {
     

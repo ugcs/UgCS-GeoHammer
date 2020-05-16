@@ -6,7 +6,6 @@ import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 /**
  * Find ground level. Put ground value to trace.maxindex

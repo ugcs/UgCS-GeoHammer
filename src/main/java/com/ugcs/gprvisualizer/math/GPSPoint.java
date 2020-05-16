@@ -20,7 +20,9 @@ public class GPSPoint {
 		
 		x = sc.nextLong();
 		y = sc.nextLong();
-		z = sc.nextLong(); 
+		z = sc.nextLong();
+		
+		sc.close();
 	}
 
 	public double x;

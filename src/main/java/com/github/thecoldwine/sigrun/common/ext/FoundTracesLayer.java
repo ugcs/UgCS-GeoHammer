@@ -2,18 +2,11 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-
-import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -23,19 +16,10 @@ import javafx.scene.Node;
 public class FoundTracesLayer implements Layer {
 
 	private Model model;
-	//private Image img;// = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel.png"));
-	private int R = 5;
 	private Color pointColor = Color.GREEN;
 	
 	public FoundTracesLayer(Model model) {
 		this.model = model;
-		
-//		try {
-//			img = ImageIO.read(getClass().getClassLoader().getResourceAsStream("shovel-48.png"));
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 	}
 
 	@Override

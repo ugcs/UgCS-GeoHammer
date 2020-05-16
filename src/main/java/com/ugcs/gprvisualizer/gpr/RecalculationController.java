@@ -4,12 +4,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class RecalculationController {
-	//private int renderCounter = 0;
-	
+		
 	private AtomicReference<RecalculationLevel> refLevel = new AtomicReference<>();
 	private boolean activeRender = false;
 
 	private Consumer<RecalculationLevel> consumer;
+	
 	public RecalculationController(Consumer<RecalculationLevel> consumer) {
 		this.consumer = consumer;
 	}
@@ -17,11 +17,11 @@ public class RecalculationController {
 	public void render(RecalculationLevel level) {
 		
 		synchronized (RecalculationController.this) {
-			if(activeRender) {
+			if (activeRender) {
 				
 				refLevel.set(max(refLevel.get(), level));
 				return;
-			}else {
+			} else {
 				activeRender = true;
 			}
 		}
@@ -32,24 +32,24 @@ public class RecalculationController {
 				RecalculationLevel lev = level;
 				do {
 					
-					try{
+					try {
 						consumer.accept(lev);
-					}catch(Exception e) {
+					} catch(Exception e) {
 						e.printStackTrace();						
 					}
 					
 					synchronized (RecalculationController.this) {
 						lev = refLevel.get();
-						if(lev != null) {
+						if (lev != null) {
 							refLevel.set(null);
 							contin = true;
-						}else {
+						} else {
 							activeRender = false;
 							contin = false;
 						}
 					}
 					
-				}while(contin); 
+				} while(contin); 
 			}
 
 		}.start();
@@ -60,16 +60,19 @@ public class RecalculationController {
 		return refLevel.get() != null;
 	}
 	
-	private RecalculationLevel max(RecalculationLevel recalculationLevel, RecalculationLevel level) {
+	private RecalculationLevel max(
+			RecalculationLevel recalculationLevel, 
+			RecalculationLevel level) {
 		
-		if(recalculationLevel == null) {
+		if (recalculationLevel == null) {
 			return level;
 		}
-		if(level == null) {
+		if (level == null) {
 			return recalculationLevel;
 		}
 		
-		return recalculationLevel.getLevel() > level.getLevel() ? recalculationLevel : level;
+		return recalculationLevel.getLevel() > level.getLevel() ? 
+				recalculationLevel : level;
 	}
 	
 	

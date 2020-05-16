@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app.commands;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -82,7 +81,7 @@ public class CommandRegistry {
 		return createAsinqTaskButton(command, null);
 	}
 	
-	public Button createAsinqTaskButton(AsinqCommand command, Consumer finish) {
+	public Button createAsinqTaskButton(AsinqCommand command, Consumer<Object> finish) {
 		
 		Button button = new Button(command.getButtonText());
 		
@@ -109,7 +108,7 @@ public class CommandRegistry {
 		return button;
 	}
 
-	public Button createAsinqTaskButton(SingleCommand command, Consumer finish) {
+	public Button createAsinqTaskButton(SingleCommand command, Consumer<Object> finish) {
 		
 		Button button = new Button(command.getButtonText());
 		
@@ -157,7 +156,7 @@ public class CommandRegistry {
 		return createButton(command, null);
 	}
 	
-	public Button createButton(Command command, Consumer finish) {
+	public Button createButton(Command command, Consumer<Object> finish) {
 		Button button = new Button(command.getButtonText());
 		
 		button.setOnAction(e -> {

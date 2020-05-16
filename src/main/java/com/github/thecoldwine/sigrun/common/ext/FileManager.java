@@ -8,14 +8,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.impl.AvalonLogger;
-
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.gpr.ScanBuilder;
-import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 public class FileManager {
-	static public FilenameFilter filter = new FilenameFilter() {
+	public static FilenameFilter FILTER = new FilenameFilter() {
 		public boolean accept(File dir, String name) {
 			return name.toLowerCase().endsWith(".sgy");
 		}
@@ -63,7 +59,7 @@ public class FileManager {
 
 		listener.progressMsg("load directory " + fl.getAbsolutePath());
 
-		processFileList(Arrays.asList(fl.listFiles(filter)));
+		processFileList(Arrays.asList(fl.listFiles(FILTER)));
 
 	}
 
@@ -115,9 +111,9 @@ public class FileManager {
 	}
 
 	public boolean isUnsavedExists() {
-		if(isActive()) {
-			for(SgyFile sgyFile : getFiles()) {
-				if(sgyFile.isUnsaved()) {
+		if (isActive()) {
+			for (SgyFile sgyFile : getFiles()) {
+				if (sgyFile.isUnsaved()) {
 					return true;
 				}
 			}

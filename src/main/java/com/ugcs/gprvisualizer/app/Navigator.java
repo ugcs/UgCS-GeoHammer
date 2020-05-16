@@ -6,10 +6,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -38,9 +37,12 @@ public class Navigator implements ToolProducer {
 
 	@Override
 	public List<Node> getToolNodes() {
-		Button backBtn = new Button("", ResourceImageHolder.getImageView("arrow_left_20.png"));
-		Button fitBtn = new Button("", ResourceImageHolder.getImageView("fit_20.png"));		
-		Button nextBtn = new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
+		Button backBtn = new Button("", 
+				ResourceImageHolder.getImageView("arrow_left_20.png"));
+		Button fitBtn = new Button("", 
+				ResourceImageHolder.getImageView("fit_20.png"));		
+		Button nextBtn = new Button("", 
+				ResourceImageHolder.getImageView("arrow_right_20.png"));
 		
 		backBtn.setTooltip(new Tooltip("Fit previous SGY file to window"));
 		fitBtn.setTooltip(new Tooltip("Fit current SGY file to window"));
@@ -67,7 +69,7 @@ public class Navigator implements ToolProducer {
 	public void fitNext() {
 		int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
 		
-		index = Math.min(model.getFileManager().getFiles().size()-1, index + 1);
+		index = Math.min(model.getFileManager().getFiles().size() - 1, index + 1);
 		SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
 				
 		fitFile(sgyFile);
@@ -89,11 +91,11 @@ public class Navigator implements ToolProducer {
 	}
 
 	private void fitFile(SgyFile sgyFile) {
-		if(sgyFile == null) {
+		if (sgyFile == null) {
 			return;
 		}
 		
-		model.getVField().setSelectedTrace((sgyFile.getOffset().getStartTrace()+sgyFile.getOffset().getFinishTrace())/2);
+		model.getVField().setSelectedTrace((sgyFile.getOffset().getStartTrace() + sgyFile.getOffset().getFinishTrace()) / 2);
 		
 		int maxSamples = sgyFile.getOffset().getMaxSamples();
 		int tracesCount = sgyFile.getTraces().size(); 
@@ -104,13 +106,14 @@ public class Navigator implements ToolProducer {
 	}
 
 	public void fit(int maxSamples, int tracesCount) {
-		double vScale = (double)model.getVField().getViewDimension().height / (double)maxSamples;
-		double z = Math.log(vScale) / Math.log(ProfileField.ZOOM_A);
+		double vertScale = (double) model.getVField().getViewDimension().height 
+				/ (double) maxSamples;
+		double zoom = Math.log(vertScale) / Math.log(ProfileField.ZOOM_A);
 		
-		model.getVField().setZoom((int)z);
+		model.getVField().setZoom((int) zoom);
 		model.getVField().setStartSample(0);
 		
-		double h = (double)(model.getVField().getViewDimension().width - model.getVField().getLeftRuleRect().width - 20) / ((double)tracesCount);
+		double h = (double)(model.getVField().getViewDimension().width - model.getVField().getLeftRuleRect().width - 20) / ((double) tracesCount);
 		
 		double realAspect = h / model.getVField().getVScale();
 

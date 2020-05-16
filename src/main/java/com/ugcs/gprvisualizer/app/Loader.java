@@ -2,31 +2,18 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
-import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.LevelFilter;
-import com.ugcs.gprvisualizer.math.ManuilovFilter;
-import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
-import javafx.application.Platform;
 import javafx.event.EventHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -47,11 +34,11 @@ public class Loader {
 		
 	}
 	
-	public EventHandler<DragEvent> getDragHandler(){
+	public EventHandler<DragEvent> getDragHandler() {
 		return dragHandler;
 	}
 	
-	public EventHandler<DragEvent> getDropHandler(){
+	public EventHandler<DragEvent> getDropHandler() {
 		return dropHandler;
 	}
 	
@@ -75,7 +62,7 @@ public class Loader {
         		return;
         	}
         	
-        	if(model.stopUnsaved()) {
+        	if (model.stopUnsaved()) {
         		return;
         	}        	
         	
@@ -87,28 +74,28 @@ public class Loader {
 				public void run(ProgressListener listener) {
 					try {
 					
-						if(files.size() == 1 && files.get(0).getName().endsWith(".constPoints")) {
+						if (files.size() == 1 
+								&& files.get(0).getName().endsWith(".constPoints")) {
 							
 							ConstPointsFile cpf = new ConstPointsFile();
 							cpf.load(files.get(0));
 							
-							for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+							for (SgyFile sgyFile : model.getFileManager().getFiles()) {
 								cpf.calcVerticalCutNearestPoints(sgyFile);
 							}
 							
 							model.updateAuxElements();
 							
-						}else {
+						} else {
 							
 							loadWithNotify(files, listener);
 							
 						}
-					}catch(Exception e) {
-						System.out.println("------------------------------");
-						
+					} catch(Exception e) {
 						e.printStackTrace();
 						
-						MessageBoxHelper.showError("Can`t open files", "Probably file has incorrect format");
+						MessageBoxHelper.showError(
+								"Can`t open files", "Probably file has incorrect format");
 						
 						model.getFileManager().getFiles().clear();
 						model.updateAuxElements();
@@ -131,7 +118,9 @@ public class Loader {
 
     };
 
-	public void loadWithNotify(final List<File> files, ProgressListener listener) throws Exception {
+	public void loadWithNotify(final List<File> files, ProgressListener listener) 
+			throws Exception {
+		
 		load(files, listener);
 		
 		model.getVField().clear();
@@ -147,12 +136,12 @@ public class Loader {
 			load2(files, listener);
 			
 			
-		}finally {
+		} finally {
 			model.setLoading(false);
 		}
 		
-		
-		status.showProgressText("loaded " + model.getFileManager().getFiles().size() + " files");
+		status.showProgressText("loaded " + 
+				model.getFileManager().getFiles().size() + " files");
 	}        		
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {

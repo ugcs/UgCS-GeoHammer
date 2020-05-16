@@ -1,9 +1,6 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
-
-import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 public class MapField {
 
@@ -33,6 +30,7 @@ public class MapField {
 		Point2D p = latLonToScreen(ll);
 		LatLon ll2 = screenTolatLon(p);
 	}
+	
 	protected void tst2(Point2D p1) {
 
 		LatLon ll = screenTolatLon(p1);
@@ -77,67 +75,13 @@ public class MapField {
 	}
 	
 	public static final int MAP_SCALE = 2;
-	private double tileSize = 256 * MAP_SCALE;
-	private double R = 6378137;
-	private double initialResolution = 2 * Math.PI * R / tileSize;
+	private static final double tileSize = 256 * MAP_SCALE;
+	private static final double R = 6378137;
+	private static final double initialResolution = 2 * Math.PI * R / tileSize;
 
-//	private double originShift = 0;//2 * Math.PI * 6378137 / 2.0;
-	
 	double resolution(double zoom) { 
 		return initialResolution / (Math.pow(2, zoom));
 	}
-	
-//	private Point2D metersToPixels(Point2D meters, double zoom) {
-//	        //"Converts EPSG:900913 to pyramid pixel coordinates in given zoom level"
-//
-//		double res = resolution( zoom );
-//		double px = meters.getX() / res;
-//		double py = meters.getY() / res;
-//        return new Point2D.Double(px, py);
-//		
-//	}
-//	
-//	private Point2D pixelsToMeters(double px, double py, double zoom) {
-//	    //"Converts pixel coordinates in given zoom level of pyramid to EPSG:900913"
-//
-//		double res = resolution(zoom);
-//		double mx = px * res;
-//		double my = py * res;
-//	    return new Point2D.Double(mx, my);
-//	}
-//
-//	private LatLon metersToLatLon(Point2D meters) {
-//	    //"Converts XY point from Spherical Mercator EPSG:900913 to lat/lon in WGS84 Datum"
-//
-//		double lat = sceneCenter.getLatDgr() - meters.getY() * 180.0 / (R * Math.PI);
-//		
-//		
-//		double r = R * Math.cos(toRad(sceneCenter.getLatDgr()));
-//		double lon = sceneCenter.getLonDgr() + meters.getX() * 180.0 / (r * Math.PI);		
-//		
-//		
-//		
-//		//double lat = (meters.getY() / originShift) * 180.0;
-//		//lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180.0)) - Math.PI / 2.0);
-//		
-//	    return new LatLon(lat, lon);
-//	}
-	
-//	private Point2D latLonToPixels_(double lat, double lon, double zoom) {
-//		return metersToPixels(latLonToMeters_(lat, lon), zoom);
-//	}
-
-//	private Point2D latLonToPixels(double cntlat, double cntlon, double lat, double lon, double zoom) {
-//		double x = CoordinatesMath.measure(cntlat, cntlon, cntlat, lon) * Math.signum(lon - cntlon);
-//		double y = -CoordinatesMath.measure(cntlat, cntlon, lat, cntlon) * Math.signum(lat - cntlat);
-//		
-//		return metersToPixels(new Point2D.Double(x, y), zoom);
-//
-//	}
-//	
-//	private LatLon pixelsToLatLon(double px, double py, double zoom) {
-//		return metersToLatLon(pixelsToMeters(px, py, zoom));
-//	}
 	
 	private static double toRad(double degree) {
 		return degree * Math.PI / 180;

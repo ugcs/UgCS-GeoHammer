@@ -1,7 +1,6 @@
 package com.github.thecoldwine.sigrun.common;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,7 +11,6 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Block;
 import com.github.thecoldwine.sigrun.common.ext.BlockFile;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;

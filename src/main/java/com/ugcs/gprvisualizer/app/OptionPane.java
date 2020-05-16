@@ -83,8 +83,11 @@ public class OptionPane extends VBox {
         tab1.setContent(t1);
 	}
 
-	private ToggleButton prepareToggleButton(String title, String imageName, MutableBoolean bool, Change change) {
-		ToggleButton btn = new ToggleButton(title, ResourceImageHolder.getImageView(imageName));
+	private ToggleButton prepareToggleButton(String title, 
+			String imageName, MutableBoolean bool, Change change) {
+		
+		ToggleButton btn = new ToggleButton(title, 
+				ResourceImageHolder.getImageView(imageName));
 		
 		btn.setSelected(bool.booleanValue());
 		
@@ -106,15 +109,21 @@ public class OptionPane extends VBox {
         
 		t2.getChildren().addAll(
 				commandRegistry.createAsinqTaskButton(new AlgorithmicScan()),				
-				prepareToggleButton("Hyperbola detection mode", "hypLive.png", model.getSettings().getHyperliveview(), Change.justdraw),				
+				
+				prepareToggleButton("Hyperbola detection mode", "hypLive.png", 
+						model.getSettings().getHyperliveview(), Change.justdraw),
+				
 				commandRegistry.createButton(new TraceStacking()), 
+				
 				new HBox(
 						commandRegistry.createButton(new EdgeFinder()),
 						commandRegistry.createButton(new EdgeSubtractGround())
 						),
 				new HBox(
-						prepareToggleButton("show edge", null, model.getSettings().showEdge, Change.justdraw),
-						prepareToggleButton("show good", null, model.getSettings().showGood, Change.justdraw)
+						prepareToggleButton("show edge", null, 
+								model.getSettings().showEdge, Change.justdraw),
+						prepareToggleButton("show good", null, 
+								model.getSettings().showGood, Change.justdraw)
 						)
 				
 			);

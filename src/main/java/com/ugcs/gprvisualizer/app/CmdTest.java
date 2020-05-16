@@ -5,15 +5,14 @@ import java.io.InputStreamReader;
 
 public class CmdTest {
 
+	private static final String RUN_CMD = "java -cp \"d:\\georadarData\\1\" CmdTestProducer f";
+
 	public static void main(String argv[]) {
 		try {
-			
 			System.out.println(System.getenv().get("SGYPROC"));
-			
 			String line;
-			//Process p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tree.com /A");
 			
-			Process p = Runtime.getRuntime().exec("java -cp \"d:\\georadarData\\1\" CmdTestProducer f");
+			Process p = Runtime.getRuntime().exec(RUN_CMD);
 			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);

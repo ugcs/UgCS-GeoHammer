@@ -1,50 +1,40 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Stroke;
 import java.util.List;
 
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
-import com.ugcs.gprvisualizer.gpr.Settings.RadarMapMode;
 
 public class PrismDrawer {
 
 	private Model model;
-	//private int vOffset;
-	Tanh tanh = new Tanh();
+	private Tanh tanh = new Tanh();	
 	
+	int goodcolor1 = (250 << 16) + (250 << 8 ) + 32;
+	int goodcolor2 = (70 << 16) + (235 << 8 ) + 197;
 	
-	int goodcolor1 = (250<<16) + (250 << 8 ) + 32;
-	int goodcolor2 = (70<<16) + (235 << 8 ) + 197;
+	int colorRed3 = (120 << 16) + (0 << 8 ) + 0;
+	int colorBlue4 = (255 << 16) + (130 << 8 ) + 130;
 	
-	int color_red3 = (120<<16) + (0 << 8 ) + 0;
-	int color_blu4 = (255<<16) + (130 << 8 ) + 130;
-	
-	int geencolorp = (0<<16) + (100 << 8 ) + 94;
-	int geencolorm = (94<<16) + (100 << 8 ) + 0;	
+	int geencolorp = (0 << 16) + (100 << 8 ) + 94;
+	int geencolorm = (94 << 16) + (100 << 8 ) + 0;	
 	int geencolorb = (130<<16) + (255 << 8 ) + 130;
 	
-	private static int goodcolors[] = new int[100];
-	static {
-		for(int i=0; i< goodcolors.length; i++) {
-			goodcolors[i] = (((i%5)*30+50)<<16) + (((7-i%7)*20+100) <<8 ) + 177;
-		}
-	}
+//	private static int goodColors[] = new int[100];
+//	static {
+//		for(int i=0; i< goodColors.length; i++) {
+//			goodColors[i] = (((i%5)*30+50)<<16) + (((7-i%7)*20+100) <<8 ) + 177;
+//		}
+//	}
 	
 	public PrismDrawer(Model model) {
 		this.model = model;
 	}
 
-	int good_colors[] = {
-			
+	int goodColors[] = {			
 			0,
 			geencolorp,
 			geencolorm,
@@ -53,13 +43,13 @@ public class PrismDrawer {
 			//color_blu4
 	};
 	
-	int edge_colors[] = {
+	int edgeColors[] = {
 			
 			0,
 			goodcolor1,
 			goodcolor2,			
-			color_blu4,
-			color_red3
+			colorBlue4,
+			colorRed3
 	};
 	
 	public void draw(//int width, int height, 
@@ -113,11 +103,11 @@ public class PrismDrawer {
 					int color = tanh.trans(values[j] - middleAmp);
 					
 					if(showEdge && trace.edge != null && trace.edge[j] > 0) {
-						color = edge_colors[trace.edge[j]] ;
+						color = edgeColors[trace.edge[j]] ;
 					}
 
 					if(showInlineHyperbolas && trace.good != null && trace.good[j] > 0) {
-						color = good_colors[trace.good[j]] ;
+						color = goodColors[trace.good[j]] ;
 					}
 					
 		    		for(int xt=0; xt < hscale; xt ++) {

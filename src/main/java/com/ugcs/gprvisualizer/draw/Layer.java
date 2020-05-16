@@ -2,10 +2,6 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
-import java.util.List;
-
-import javafx.scene.Node;
-import javafx.scene.input.MouseEvent;
 
 public interface Layer extends ToolProducer{
 

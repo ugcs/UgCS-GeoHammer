@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.awt.Point;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -11,13 +10,9 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.AreaType;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
@@ -34,7 +29,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
@@ -54,13 +48,23 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
-	private Button addBtn = new Button("", ResourceImageHolder.getImageView("addRect.png"));
-	private Button addHypBtn = new Button("", ResourceImageHolder.getImageView("addHyp.png"));	
-	private Button addSurfaceBtn = new Button("", ResourceImageHolder.getImageView("addSurf.png"));
-	private Button addFoundBtn = new Button("", ResourceImageHolder.getImageView("addFlag.png"));
+	private Button addBtn = new Button("", 
+			ResourceImageHolder.getImageView("addRect.png"));
 	
-	private Button delBtn = new Button("", ResourceImageHolder.getImageView("delete-20.png"));
-	private Button clearBtn = new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
+	private Button addHypBtn = new Button("", 
+			ResourceImageHolder.getImageView("addHyp.png"));
+	
+	private Button addSurfaceBtn = new Button("", 
+			ResourceImageHolder.getImageView("addSurf.png"));
+	
+	private Button addFoundBtn = new Button("", 
+			ResourceImageHolder.getImageView("addFlag.png"));
+	
+	private Button delBtn = new Button("", 
+			ResourceImageHolder.getImageView("delete-20.png"));
+	
+	private Button clearBtn = new Button("", 
+			ResourceImageHolder.getImageView("delete-all-20.png"));
 	
 	public AuxElementEditHandler() {
 		
@@ -74,32 +78,33 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
 		boolean processed = false;
-		if(model.getControls() != null) {
-			processed = processPress(model.getControls(), localPoint, vField);
+		if (model.getControls() != null) {
+			processed = processPress(model.getControls(), localPoint, profField);
 		}
 		
-		if(!processed && getSelected() != null) {
-			processed = getSelected().mousePressHandle(localPoint, vField);
-			if(processed) {
+		if (!processed && getSelected() != null) {
+			processed = getSelected().mousePressHandle(localPoint, profField);
+			if (processed) {
 				mouseInput = getSelected();
 			}
 		}
 		
-		if(!processed) {
-			processed = processPress1(profileView.model.getAuxElements(), localPoint, vField);
+		if (!processed) {
+			processed = processPress1(profileView.model.getAuxElements(), 
+					localPoint, profField);
 		}
 		
-		if(!processed) {
+		if (!processed) {
 			//deselect
 			mouseInput = null;
 			setSelected(null);
 			model.setControls(null);
 		}
 		
-		if(processed) {
+		if (processed) {
 			profileView.repaintEvent();
 		}
 
@@ -107,7 +112,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 	
 	public List<Node> getRightPanelTools() {
-		return Arrays.asList(addBtn, addHypBtn, /*addSurfaceBtn,*/ addFoundBtn, getSpacer(), delBtn, clearBtn);	
+		return Arrays.asList(addBtn, addHypBtn, addFoundBtn, 
+				getSpacer(), delBtn, clearBtn);	
 	}
 	
 	private Region getSpacer() {
@@ -120,7 +126,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		return new VBox();
 	}
 	
-	protected void initButtons(){
+	protected void initButtons() {
 		
 		addBtn.setTooltip(new Tooltip("Create rectangle with mask"));
 		addHypBtn.setTooltip(new Tooltip("Create parametric hyperbola"));
@@ -145,9 +151,9 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		
 		delBtn.setOnAction(e -> {		
 			
-			if(getSelected() != null) {
-				for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-					if(sgyFile.getAuxElements().contains(getSelected())){
+			if (getSelected() != null) {
+				for (SgyFile sgyFile : model.getFileManager().getFiles()) {
+					if (sgyFile.getAuxElements().contains(getSelected())) {
 						sgyFile.getAuxElements().remove(getSelected());
 						sgyFile.setUnsaved(true);
 					}					
@@ -166,15 +172,14 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		});
 		
 		addBtn.setOnAction(e -> {				
-				
-				
 				SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 				
-				if(sf == null) {
+				if (sf == null) {
 					return;
 				}
 				
-				AuxRect rect = new AuxRect(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
+				AuxRect rect = new AuxRect(field.getSelectedTrace(), 
+						field.getStartSample() + 30, sf.getOffset());
 				
 				sf.getAuxElements().add(rect);
 				sf.setUnsaved(true);
@@ -189,12 +194,12 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		addHypBtn.setOnAction(e -> {				
 			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
 			
-			if(sf == null) {
+			if (sf == null) {
 				return;
 			}
 
-			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), field.getStartSample()+30, sf.getOffset());
-				
+			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), 
+					field.getStartSample() + 30, sf.getOffset());
 			sf.getAuxElements().add(rect);
 			sf.setUnsaved(true);
 			
@@ -206,60 +211,43 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		}
 	);
 		
-//		addSurfaceBtn.setOnAction(e -> {				
-//			
-//			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-//			if(sf == null) {
-//				return;
-//			}
-//				
-//			AuxRect rect = createSurfaceRect(sf);
-//				
-//			
-//			sf.getAuxElements().add(rect);
-//			sf.setUnsaved(true);
-//			
-//			model.updateAuxElements();
-//			
-//			profileView.repaintEvent();
-//		});
-		
 		addFoundBtn.setOnAction(e -> {				
 			
 			int trace;
-			if(model.getControls() != null && !model.getControls().isEmpty() && model.getControls().get(0).getGlobalTrace() >= 0) { 
+			if (model.getControls() != null 
+					&& !model.getControls().isEmpty() 
+					&& model.getControls().get(0).getGlobalTrace() >= 0) {
+				
 				trace = model.getControls().get(0).getGlobalTrace();
-			}else {
+				
+			} else {
 				trace = field.getSelectedTrace();
 			}
 			SgyFile sf = model.getSgyFileByTrace(trace);
 			
-			if(sf == null) {
+			if (sf == null) {
 				return;
 			}
 				
-			FoundPlace rect = new FoundPlace(sf.getOffset().globalToLocal(trace), sf.getOffset());
+			FoundPlace rect = new FoundPlace(
+					sf.getOffset().globalToLocal(trace), sf.getOffset());
 			
 			sf.getAuxElements().add(rect);
 			sf.setUnsaved(true);
 			
 			model.updateAuxElements();
-
 			selectControl(rect);
-			
-			
 			updateViews();
 		});
 		
 	}
 	
 	protected void updateViews() {
-		//profileView.repaintEvent();
 		broadcast.notifyAll(new WhatChanged(Change.justdraw));		
 	}
 
 	private void clearAuxElements() {
-		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
 			sgyFile.getAuxElements().clear();
 			
 			sgyFile.setUnsaved(true);
@@ -277,11 +265,13 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		broadcast.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
-	private boolean processPress(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
-		for(BaseObject o : controls2) {
-			if(o.isPointInside(localPoint, vField)) {
+	private boolean processPress(List<BaseObject> controls2, 
+			Point localPoint, ProfileField profField) {
+		
+		for (BaseObject o : controls2) {
+			if (o.isPointInside(localPoint, profField)) {
 				
-				o.mousePressHandle(localPoint, vField);
+				o.mousePressHandle(localPoint, profField);
 				mouseInput = o;
 				
 				return true;
@@ -291,9 +281,10 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		return false;
 	}
 
-	private boolean processPress1(List<BaseObject> controls2, Point localPoint, ProfileField vField) {
-		for(BaseObject o : controls2) {
-			if(o.mousePressHandle(localPoint, vField)) {
+	private boolean processPress1(List<BaseObject> controls2, 
+			Point localPoint, ProfileField profField) {
+		for (BaseObject o : controls2) {
+			if (o.mousePressHandle(localPoint, profField)) {
 				
 				selectControl(o);
 				
@@ -310,16 +301,16 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		setSelected(o);
 		model.setControls(null);
 		List<BaseObject> c = getSelected().getControls();
-		if(c != null) {
+		if (c != null) {
 			model.setControls(c);
 		}
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 
-		if(mouseInput != null) {			
-			mouseInput.mouseReleaseHandle(localPoint, vField);
+		if (mouseInput != null) {			
+			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
 			
 			profileView.imageView.setCursor(Cursor.DEFAULT);
@@ -331,48 +322,47 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseMoveHandle(Point localPoint, ProfileField profField) {
 
-		if(mouseInput != null) {			
-			mouseInput.mouseMoveHandle(localPoint, vField);
+		if (mouseInput != null) {			
+			mouseInput.mouseMoveHandle(localPoint, profField);
 			
 			profileView.repaintEvent();
 			
 			return true;
-		}else{
-			if(aboveControl(localPoint, vField)) {
+		} else {
+			if (aboveControl(localPoint, profField)) {
 				profileView.imageView.setCursor(Cursor.MOVE);
-			}else if(aboveElement(localPoint, vField)) {
+			} else if (aboveElement(localPoint, profField)) {
 				profileView.imageView.setCursor(Cursor.HAND);
-			}else{
+			} else {
 				profileView.imageView.setCursor(Cursor.DEFAULT);
 			}			
 		}		
 		
-		
 		return false;
 	}
 
-	private boolean aboveControl(Point localPoint, ProfileField vField) {
-		if(model.getControls() == null) {
+	private boolean aboveControl(Point localPoint, ProfileField profField) {
+		if (model.getControls() == null) {
 			return false;
 		}
 		
-		for(BaseObject bo : model.getControls()) {
-			if(bo.isPointInside(localPoint, vField)) {
+		for (BaseObject bo : model.getControls()) {
+			if (bo.isPointInside(localPoint, profField)) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	private boolean aboveElement(Point localPoint, ProfileField vField) {
-		if(model.getAuxElements() == null) {
+	private boolean aboveElement(Point localPoint, ProfileField profField) {
+		if (model.getAuxElements() == null) {
 			return false;
 		}
 		
-		for(BaseObject bo : model.getAuxElements()) {
-			if(bo.isPointInside(localPoint, vField)) {
+		for (BaseObject bo : model.getAuxElements()) {
+			if (bo.isPointInside(localPoint, profField)) {
 				return true;
 			}
 		}
@@ -385,11 +375,11 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 	}
 
 	private void setSelected(BaseObject newselected) {
-		if(this.selected != null) {
+		if (this.selected != null) {
 			this.selected.setSelected(false);
 		}
 		
-		if(newselected != null) {
+		if (newselected != null) {
 			newselected.setSelected(true);
 		}
 		
@@ -398,7 +388,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		if(changed.isFileopened() || changed.isTraceCut()) {
+		if (changed.isFileopened() || changed.isTraceCut()) {
 			
 			mouseInput = null;
 			setSelected(null);

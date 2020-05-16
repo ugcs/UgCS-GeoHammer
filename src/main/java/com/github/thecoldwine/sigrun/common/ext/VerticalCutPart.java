@@ -7,7 +7,7 @@ public class VerticalCutPart {
 	private int maxSamples;
 	
 	public int getTraces() {
-		return finishTrace-startTrace;
+		return finishTrace - startTrace;
 	}
 	
 	public int localToGlobal(int trace) {
@@ -25,12 +25,15 @@ public class VerticalCutPart {
 	public int getStartTrace() {
 		return startTrace;
 	}
+	
 	public void setStartTrace(int startTrace) {
-		this.startTrace = startTrace;
+		this.startTrace = startTrace;	
 	}
+	
 	public int getFinishTrace() {
 		return finishTrace;
 	}
+	
 	public void setFinishTrace(int finishTrace) {
 		this.finishTrace = finishTrace;
 	}

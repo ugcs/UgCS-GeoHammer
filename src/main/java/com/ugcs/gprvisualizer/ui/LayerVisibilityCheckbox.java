@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.ui;
 
-import com.ugcs.gprvisualizer.gpr.Settings;
-
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 

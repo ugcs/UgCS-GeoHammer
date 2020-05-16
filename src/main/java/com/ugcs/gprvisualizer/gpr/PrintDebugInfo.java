@@ -16,11 +16,6 @@ import com.github.sereneant.segystream.SegyHeaders;
 import com.github.sereneant.segystream.SegyPart;
 import scala.concurrent.Future;*/
 
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.CompletionStage;
-
 /**
  * Prints debug information from a Seg-Y file.
  */

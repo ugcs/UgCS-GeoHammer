@@ -18,7 +18,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.layout.Region;
 
 @Component
-public class GHToolbar extends ToolBar implements SmthChangeListener {
+public class GeoHammerToolbar extends ToolBar implements SmthChangeListener {
 
 	@Autowired
 	private Model model; 
@@ -29,7 +29,7 @@ public class GHToolbar extends ToolBar implements SmthChangeListener {
 	@Autowired
 	private Saver saver; 
 	
-	@Autowired
+    @Autowired
 	private LevelFilter levelFilter;
 	
 	@Autowired
@@ -42,7 +42,7 @@ public class GHToolbar extends ToolBar implements SmthChangeListener {
 	private CommandRegistry commandRegistry;
 	
 	@PostConstruct
-	public void init() {
+	public void postConstruct() {
 		setDisable(true);
 		
 		getItems().addAll(saver.getToolNodes());
@@ -55,16 +55,16 @@ public class GHToolbar extends ToolBar implements SmthChangeListener {
 
 		getItems().addAll(commandRegistry.createAsinqTaskButton(
 				new AlgorithmicScanFull(),
-					e->{ 
+					e -> { 
 						radarMap.selectAlgMode();
 					 }
 				),
 				commandRegistry.createAsinqTaskButton(
-						houghScan, e->{}
+						houghScan, e -> {}
 				),
 				commandRegistry.createAsinqTaskButton(
 						new PluginRunner(model), 
-						e->{}
+						e -> {}
 				)
 		);
 		
@@ -79,7 +79,7 @@ public class GHToolbar extends ToolBar implements SmthChangeListener {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-		if(changed.isFileopened()) {
+		if (changed.isFileopened()) {
 			setDisable(!model.isActive());
 		}		
 	}

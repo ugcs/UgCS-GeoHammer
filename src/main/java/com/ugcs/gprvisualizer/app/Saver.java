@@ -188,7 +188,7 @@ public class Saver implements ToolProducer {
 		File newFile = null;
 		
 		try {
-			File oldFile = oldFile = sgyFile.getFile();
+			File oldFile = sgyFile.getFile();
 			
 			newFile = new File(folder, oldFile.getName());
 			

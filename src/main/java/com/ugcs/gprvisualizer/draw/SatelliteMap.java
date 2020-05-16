@@ -1,6 +1,5 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -77,13 +75,21 @@ public class SatelliteMap extends BaseLayer {
 	
 	private static String GOOGLE_API_KEY;
 	static {
+		InputStream inputStream = null;
 		try {
-			InputStream inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
+			inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
 			java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
 			GOOGLE_API_KEY = s.hasNext() ? s.next() : "";
+		
+			s.close();
 		}catch(Exception e) {
 			System.out.println("no google api key -> no googlemaps");
-			
+		}finally {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	
 		}
 	}
 	

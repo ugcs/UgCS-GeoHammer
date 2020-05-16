@@ -12,7 +12,7 @@ public class MessageBoxHelper {
 		
 		System.out.println("  MessageBoxHelper.showError " + header + " " + msg);
 		
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				
@@ -21,9 +21,7 @@ public class MessageBoxHelper {
 				alert.setHeaderText(header);
 				alert.setContentText(msg);
 				alert.showAndWait().ifPresent(rs -> {
-				    if (rs == ButtonType.OK) {
-				        //System.out.println("Pressed OK.");
-				    }
+
 				});
 			}
 		});

@@ -3,7 +3,6 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -13,26 +12,18 @@ import java.util.List;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.ProfileView;
 import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.ShapeHolder;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
 
-	static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null)/2;
-	static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null)/2;
-//	static int R_HOR_M = ShapeHolder.flag.getBounds().width/2;
-//	static int R_VER_M = ShapeHolder.flag.getBounds().height/2;
+	private static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null)/2;
+	private static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null)/2;
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
@@ -45,7 +36,6 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	private Color flagColor = Color.getHSBColor((float)Math.random(), 1, 1f); 
 	private int traceInAll;
-
 	
 	public ClickPlace(int trace) {
 		this.traceInAll = trace;
@@ -88,29 +78,21 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	public void drawOnCut(Graphics2D g2, ProfileField vField) {
 		setClip(g2, vField.getClipTopMainRect());
 		
-		
 		Rectangle rect = getRect(vField);
 		
 		g2.setColor(flagColor);
-		
 		g2.translate(rect.x , rect.y);
-		//g2.fill(ShapeHolder.flag);
 		g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
 		
-		
-//			g2.setColor(Color.green);
-//			g2.setStroke(SELECTED_STROKE);
-//			g2.draw(ShapeHolder.flag);
-			
-			g2.setStroke(VERTICAL_STROKE);
-			g2.setColor(Color.blue);
-			g2.setXORMode(Color.gray);
-			g2.drawLine(R_HOR , Model.TOP_MARGIN, R_HOR , vField.sampleToScreen(AppContext.model.getMaxHeightInSamples()));
-			g2.setPaintMode();
-		
-		
+		g2.setStroke(VERTICAL_STROKE);
+		g2.setColor(Color.blue);
+		g2.setXORMode(Color.gray);
+		g2.drawLine(R_HOR , Model.TOP_MARGIN, R_HOR , vField.sampleToScreen(
+				vField.getLastVisibleSample(vField.getLeftRuleRect().height)		
+				//AppContext.model.getMaxHeightInSamples()
+				));
+		g2.setPaintMode();
 		g2.translate(-rect.x , -(rect.y));
-		
 	}
 	
 	public Rectangle getRect(ProfileField vField) {

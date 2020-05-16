@@ -22,7 +22,8 @@ public class BackgroundRemovalFilter {
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);
 
-			float normval[] = Arrays.copyOf(trace.getNormValues(), trace.getNormValues().length);
+			float[] normval = Arrays.copyOf(
+					trace.getNormValues(), trace.getNormValues().length);
 			ArrayMath.arraySub(normval, avg);
 
 			trace.setNormValues(normval);
@@ -30,7 +31,7 @@ public class BackgroundRemovalFilter {
 	}
 
 	public float[] prepareNoiseProfile(List<Trace> lst, int deep) {
-		float avg[] = new float[deep];
+		float[] avg = new float[deep];
 
 		for (int index = 0; index < lst.size(); index++) {
 			Trace trace = lst.get(index);

@@ -76,7 +76,7 @@ public class RadarMap extends BaseLayer {
 		public void handle(ActionEvent event) {
 
 			setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
-			vBox.setDisable(!isActive());
+			vertBox.setDisable(!isActive());
 			
 			
 			if(showMapButtonAlg.isSelected()) {
@@ -118,9 +118,7 @@ public class RadarMap extends BaseLayer {
 		showMapListener.handle(null);
 	}
 	
-	VBox vBox = new VBox();
-	
-	//private double[][] scaleArray;
+	private VBox vertBox = new VBox();
 	private ArrayBuilder scaleArrayBuilder;
 	private ArrayBuilder autoArrayBuilder;
 	
@@ -177,33 +175,33 @@ public class RadarMap extends BaseLayer {
 		
 		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
 		
-		String cssLayout = "-fx-border-color: gray;\n" +
-                "-fx-border-insets: 5;\n" +
-                "-fx-border-width: 2;\n" +
-                "-fx-border-style: solid;\n";
+		String cssLayout = "-fx-border-color: gray;\n" 
+				+ "-fx-border-insets: 5;\n"
+                + "-fx-border-width: 2;\n"
+                + "-fx-border-style: solid;\n";
  
-		vBox.setStyle(cssLayout);		
+		vertBox.setStyle(cssLayout);		
 	}
 	
 	//draw on the map window prepared image
 	@Override
 	public void draw(Graphics2D g2) {
 		
-		if(!isActive()) {
+		if (!isActive()) {
 			return;
 		}
 		
 		BufferedImage _img = img;
 		
-		if(_img == null) {
+		if (_img == null) {
 			return;
 		}
 		
 		Point2D offst = model.getField().latLonToScreen(imgLatLon);
 		
 		g2.drawImage(_img, 
-			(int)offst.getX() -_img.getWidth()/2, 
-			(int)offst.getY() -_img.getHeight()/2, 
+			(int) offst.getX() -_img.getWidth()/2, 
+			(int) offst.getY() -_img.getHeight()/2, 
 			null);
 	}
 
@@ -215,23 +213,26 @@ public class RadarMap extends BaseLayer {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isTraceCut() || changed.isTraceValues() || changed.isTraceValues()) {
+		if (changed.isFileopened() 
+				|| changed.isTraceCut() 
+				|| changed.isTraceValues() 
+				|| changed.isTraceValues()) {
 			autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
 		
-		if(changed.isAdjusting()) {
+		if (changed.isAdjusting()) {
 			//autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
 		
-		if(		changed.isTraceCut() || 
-				changed.isTraceValues() ||
-				changed.isFileopened() || 
-				changed.isZoom() || 
-				changed.isAdjusting() || 
-				changed.isMapscroll() || 
-				changed.isWindowresized()) {
+		if (changed.isTraceCut() 
+				|| changed.isTraceValues() 
+				|| changed.isFileopened() 
+				|| changed.isZoom() 
+				|| changed.isAdjusting() 
+				|| changed.isMapscroll() 
+				|| changed.isWindowresized()) {
 			
 			//System.out.println("RadarMap start asinq");
 			executor.submit(t);
@@ -248,15 +249,14 @@ public class RadarMap extends BaseLayer {
 		
 		DblArray da = new DblArray(getDimension().width, getDimension().height);
 
-		
 		int[] palette;
-		if(model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
+		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
 				
 			// fill file.amplScan
 			commandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
 			
 			palette = DblArray.paletteAmp;
-		}else {
+		} else {
 			palette = DblArray.paletteAlg;
 		}
 
@@ -346,9 +346,9 @@ public class RadarMap extends BaseLayer {
 	
 	public List<Node> getControlNodes() {
 		
-		vBox.getChildren().clear();
+		vertBox.getChildren().clear();
 		
-		vBox.getChildren().addAll(
+		vertBox.getChildren().addAll(
 			Arrays.asList(
 				//depthSlider.produce(),
 				//depthWindowSlider.produce(),
@@ -359,7 +359,7 @@ public class RadarMap extends BaseLayer {
 				radiusSlider.produce()
 			));
 
-		return Arrays.asList(vBox);
+		return Arrays.asList(vertBox);
 	}
 	
 	@Override

@@ -22,9 +22,6 @@ public class Settings {
 	
 	public boolean isRadarMapVisible = true;
 	
-//	public int center_box_width; 
-//	public int center_box_height;
-	
 	public int maxsamples = 400;
 	
 	public int width = 800;
@@ -67,13 +64,14 @@ public class Settings {
 	public int heightStart = 0;
     
 	public int getWidth() {
-		return (int)(width * zoom / 100.0);
-	}
-	public int getHeight() {
-		return (int)(height * zoom / 100.0);
-	}
-	public MutableBoolean getHyperliveview() {
-		return hyperliveview;
+		return (int) (width * zoom / 100.0);
 	}
 	
+	public int getHeight() {
+		return (int) (height * zoom / 100.0);
+	}
+	
+	public MutableBoolean getHyperliveview() {
+		return hyperliveview;
+	}	
 }

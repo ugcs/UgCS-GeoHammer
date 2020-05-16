@@ -3,7 +3,6 @@ package com.ugcs.gprvisualizer.app;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -17,7 +16,6 @@ import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
-import com.ugcs.gprvisualizer.ui.DepthSlider;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -25,10 +23,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
