@@ -52,7 +52,8 @@ public enum DataSample {
      * Creates a new instance of a DataSample class
      * from its code.
      * </p>
-     * The dependency between code and other format parameters described in ``Binary File Header'' section of
+     * The dependency between code and other format parameters 
+     * described in ``Binary File Header'' section of
      * a SegY Standard rev 1.
      * @param code - Code for sample type
      *
@@ -72,13 +73,16 @@ public enum DataSample {
                 return IEEE_FP;
             case 6: /* Fall through! */
             case 7:
-                throw new IllegalArgumentException("This code is not currently supported by the SEG Y standard rev 1");
+                throw new IllegalArgumentException(
+                		"This code is not currently supported by the SEG Y standard rev 1");
             case 8:
                 return TC_1B_I;
             case 9:
             	return KSHA;
             default:
-                throw new IllegalArgumentException("This code value is not supported by the SEG Y standard rev 1 : " + code);
+                throw new IllegalArgumentException(
+                	"This code value is not supported by the SEG Y standard rev 1 : " 
+                	+ code);
             	
         }
     }

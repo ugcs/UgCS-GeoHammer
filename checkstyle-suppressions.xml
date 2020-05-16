@@ -3,14 +3,7 @@
   "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
   "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 <suppressions>
-  <suppress
-         files="Sample.java"
-         checks="Indentation"
-         lines="5,6,7"
-  />
-  <suppress
-         files="Sample.java"
-         checks="FileTabCharacter"
-         lines="5,6,7"
-  />
+  
+	<suppress checks="." files="com[\\/]github[\\/]thecoldwine[\\/]sigrun[\\/]"/>  
+  
 </suppressions>

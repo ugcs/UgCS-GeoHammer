@@ -29,11 +29,15 @@ public class ResourceImageHolder {
 	public static javafx.scene.image.Image FXIMG_DONE;
 
 	public static ImageView getImageView(String name) {
-		if(StringUtils.isBlank(name)) {
+		if (StringUtils.isBlank(name)) {
 			return null;
 		}
 		
-		javafx.scene.image.Image img = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream(name));
+		javafx.scene.image.Image img = 
+				new javafx.scene.image.Image(
+						getClassLoader()
+						.getResourceAsStream(name));
+		
 		ImageView iv = new ImageView();
 		iv.setImage(img);
 		
@@ -43,27 +47,39 @@ public class ResourceImageHolder {
 	static {
 		try {
 			
-			IMG_LEVEL = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("level.png"));
-			
-			IMG_LOGO24 = new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream("logo24.png"));
-			
-			IMG_WIDTH = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("width16.png"));
-			IMG_SHOVEL = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("shovel-48.png"));
-			IMG_HOR_SLIDER = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("horSlid16.png"));
-			IMG_VER_SLIDER = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("vertSlid16.png"));
-			IMG_LOCK = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("lock16.png"));
-			IMG_UNLOCK = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("unlock16.png"));
-			IMG_CHOOSE = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("choose16.png"));
-			FXIMG_DONE =  new javafx.scene.image.Image(ResourceImageHolder.class.getClassLoader().getResourceAsStream("done-16.png"));
-			
-			IMG_CLOSE_FILE = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("closeFile.png"));
-			
-			
-			IMG_GPS = ImageIO.read(ResourceImageHolder.class.getClassLoader().getResourceAsStream("gps32.png"));
+			IMG_LEVEL = ImageIO.read(getClassLoader()
+					.getResourceAsStream("level.png"));			
+			IMG_WIDTH = ImageIO.read(getClassLoader()
+					.getResourceAsStream("width16.png"));
+			IMG_SHOVEL = ImageIO.read(getClassLoader()
+					.getResourceAsStream("shovel-48.png"));
+			IMG_HOR_SLIDER = ImageIO.read(getClassLoader()
+					.getResourceAsStream("horSlid16.png"));
+			IMG_VER_SLIDER = ImageIO.read(getClassLoader()
+					.getResourceAsStream("vertSlid16.png"));
+			IMG_LOCK = ImageIO.read(getClassLoader()
+					.getResourceAsStream("lock16.png"));
+			IMG_UNLOCK = ImageIO.read(getClassLoader()
+					.getResourceAsStream("unlock16.png"));
+			IMG_CHOOSE = ImageIO.read(getClassLoader()
+					.getResourceAsStream("choose16.png"));
+			IMG_CLOSE_FILE = ImageIO.read(getClassLoader()
+					.getResourceAsStream("closeFile.png"));
+			IMG_GPS = ImageIO.read(getClassLoader()
+					.getResourceAsStream("gps32.png"));
+
+			FXIMG_DONE =  new javafx.scene.image.Image(getClassLoader()
+					.getResourceAsStream("done-16.png"));
+			IMG_LOGO24 = new javafx.scene.image.Image(getClassLoader()
+					.getResourceAsStream("logo24.png"));			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
+	}
+
+	public static ClassLoader getClassLoader() {
+		return ResourceImageHolder.class.getClassLoader();
 	}
 }
