@@ -18,20 +18,12 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
 
-public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandler{
+public class DragAnchor extends BaseObjectImpl 
+	implements BaseObject, MouseHandler {
 
-	//private static final int R = 5;
-	
 	private MutableInt trace = new MutableInt();
-	public MutableInt getTraceMtl() {
-		return trace;
-	}
 	
 	private MutableInt sample = new MutableInt();
-	public MutableInt getSampleMtl() {
-		return sample;
-	}
-	
 	private AlignRect alignRect;
 	private VerticalCutPart offset;
 	
@@ -42,20 +34,16 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	private boolean visible = true;
 	
 	
-	public DragAnchor(				
-			//MutableInt trace,
-			//MutableInt sample,
+	public DragAnchor(
 			Image img,
 			AlignRect alignRect,
 			VerticalCutPart offset) {
 		
 		this.offset = offset;
-		//this.trace = trace;
-		//this.sample = sample;
 		this.setImg(img);
 		this.alignRect = alignRect;
 		
-		if(img != null) {
+		if (img != null) {
 			dim = new Dimension(img.getWidth(null), img.getHeight(null));
 		}
 					
@@ -66,54 +54,61 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		//is not visible on the map view
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		if(!isVisible()) {
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		if (!isVisible()) {
 			return;
 		}
 
-		g2.setClip(vField.getClipMainRect().x, vField.getClipMainRect().y, vField.getClipMainRect().width, vField.getClipMainRect().height);
+		g2.setClip(profField.getClipMainRect().x,
+				profField.getClipMainRect().y, 
+				profField.getClipMainRect().width, 
+				profField.getClipMainRect().height);
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		realDraw(g2, rect);		
 	}
 
 	protected void realDraw(Graphics2D g2, Rectangle rect) {
-		if(getImg() == null) {
+		if (getImg() == null) {
 			g2.setColor(Color.MAGENTA);
 			g2.fillOval(rect.x, rect.y, rect.width, rect.height);
-		}else {
+		} else {
 			g2.drawImage(getImg(), rect.x, rect.y, null);
 		}
 	}
 
-	public Rectangle getRect(ProfileField vField) {
-		TraceSample ts = new TraceSample(offset.localToGlobal(this.getTrace()), getSample());
-		Point scr = vField.traceSampleToScreen(ts);		
-		Rectangle rect = alignRect.getRect(scr, dim); //new Rectangle(scr.x-R, scr.y-R, R*2, R*2);
+	public Rectangle getRect(ProfileField profField) {
+		TraceSample ts = new TraceSample(offset.localToGlobal(
+				this.getTrace()), getSample());
+		Point scr = profField.traceSampleToScreen(ts);		
+		Rectangle rect = alignRect.getRect(scr, dim);
 		return rect;
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
-		if(!isVisible()) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
+		if (!isVisible()) {
 			return false;
-		}
+		}		
 		
-		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
-		
-		if(isPointInside(localPoint, vField)) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
+		return false;
+	}
+
+	@Override
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+		if (isPointInside(localPoint, profField)) {
 			signal(null);
 			return true;
 		}
@@ -121,20 +116,17 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-
-		
-		
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 		return true;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
-		if(!isVisible()) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+		if (!isVisible()) {
 			return false;
 		}
 
-		TraceSample ts = vField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point, offset);
 		setTrace(ts.getTrace());
 		setSample(ts.getSample());
 		
@@ -180,27 +172,24 @@ public class DragAnchor extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		
-		return false;
-		
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 	
+	public MutableInt getSampleMtl() {
+		return sample;
+	}
+
+	public MutableInt getTraceMtl() {
+		return trace;
+	}
 }

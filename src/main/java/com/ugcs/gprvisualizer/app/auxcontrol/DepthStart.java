@@ -31,7 +31,7 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	Shape shape;
 	
-	public DepthStart(Shape shape){
+	public DepthStart(Shape shape) {
 		this.shape = shape;
 		horM = shape.getBounds().width;
 		verM = shape.getBounds().height;
@@ -41,7 +41,7 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		if(isPointInside(localPoint, profField)) {
+		if (isPointInside(localPoint, profField)) {
 			return true;
 		}
 		
@@ -49,13 +49,13 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
-		TraceSample ts = vField.screenToTraceSample(point);
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+		TraceSample ts = profField.screenToTraceSample(point);
 		
 		controlToSettings(ts);
 		
@@ -66,52 +66,54 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public void controlToSettings(TraceSample ts) {
 		int max = model.getMaxHeightInSamples();
-		model.getSettings().layer = Math.min( max-model.getSettings().hpage, Math.max(0, ts.getSample()));
+		model.getSettings().layer = Math.min(
+				max - model.getSettings().hpage, Math.max(0, ts.getSample()));
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		setClip(g2, vField.getClipLeftMainRect());
+		setClip(g2, profField.getClipLeftMainRect());
 		
-		Point p = getCenter(vField);
+		Point p = getCenter(profField);
 
 		g2.setColor(Color.BLUE);
 		
-		g2.translate(p.x , p.y);
+		g2.translate(p.x, p.y);
 		g2.fill(shape);
 		
-		if(isSelected()) {
+		if (isSelected()) {
 			g2.setColor(Color.green);
 			g2.setStroke(FoundPlace.SELECTED_STROKE);
 			g2.draw(shape);
 		}
 		
-		g2.translate(-p.x , -p.y);
+		g2.translate(-p.x, -p.y);
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
-		Rectangle rect = getRect(vField);
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
 	
 	@Override
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
-		Point scr = getCenter(vField);
-		Rectangle rect = new Rectangle(scr.x+offsetX, scr.y+offsetY, horM, verM);
+		Point scr = getCenter(profField);
+		Rectangle rect = new Rectangle(scr.x + offsetX, scr.y + offsetY, horM, verM);
 		return rect;
 	}
 
 	public Point getCenter(ProfileField vField) {
-		Point scr = vField.traceSampleToScreen(new TraceSample(0, model.getSettings().layer));
+		Point scr = vField.traceSampleToScreen(new TraceSample(
+				0, model.getSettings().layer));
 		scr.x = vField.visibleStart;
 		return scr;
 	}
@@ -133,19 +135,16 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
-
 		return false;
 	}
 
 	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-
 		return null;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-
 		return false;
 	}
 

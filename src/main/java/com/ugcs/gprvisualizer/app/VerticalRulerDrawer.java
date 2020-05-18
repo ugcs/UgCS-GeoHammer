@@ -14,7 +14,7 @@ public class VerticalRulerDrawer {
 	
 	private Model model;
 	
-	VerticalRulerDrawer(Model model){
+	VerticalRulerDrawer(Model model) {
 		this.model = model;
 	}
 	
@@ -49,7 +49,7 @@ public class VerticalRulerDrawer {
 		g2.setColor(Color.WHITE);
 		for (int b : tick) {
 			
-			int s = (first / b + 1 ) * b;
+			int s = (first / b + 1) * b;
 			int f = last / b * b;
 			boolean drawText = (f - s) / b < 8;
 			
@@ -60,7 +60,8 @@ public class VerticalRulerDrawer {
 				g2.drawLine(rect.x + rect.width - sz, y, rect.x + rect.width, y);
 				
 				if (drawText) {
-					g2.drawString(String.format("%1$3s", i), rect.x + rect.width - 30, y - 2);
+					g2.drawString(String.format("%1$3s", i), 
+							rect.x + rect.width - 30, y - 2);
 				}
 				
 			}

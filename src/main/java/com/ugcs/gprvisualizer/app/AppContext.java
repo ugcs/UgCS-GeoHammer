@@ -25,13 +25,13 @@ public class AppContext {
 	
 	public static void notifyAll(WhatChanged changed) {
 		
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				for (SmthChangeListener lst : AppContext.smthListener) {
 					try {
 						lst.somethingChanged(changed);
-					}catch(Exception e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}

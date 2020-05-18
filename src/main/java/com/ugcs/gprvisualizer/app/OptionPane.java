@@ -108,22 +108,30 @@ public class OptionPane extends VBox {
         t2.getChildren().addAll(profileView.getRightSearch());
         
 		t2.getChildren().addAll(
-				commandRegistry.createAsinqTaskButton(new AlgorithmicScan()),				
+				commandRegistry.createAsinqTaskButton(
+						new AlgorithmicScan()),				
 				
-				prepareToggleButton("Hyperbola detection mode", "hypLive.png", 
-						model.getSettings().getHyperliveview(), Change.justdraw),
+				prepareToggleButton("Hyperbola detection mode", 
+						"hypLive.png", 
+						model.getSettings().getHyperliveview(), 
+						Change.justdraw),
 				
 				commandRegistry.createButton(new TraceStacking()), 
 				
 				new HBox(
-						commandRegistry.createButton(new EdgeFinder()),
-						commandRegistry.createButton(new EdgeSubtractGround())
+						commandRegistry.createButton(
+								new EdgeFinder()),
+						commandRegistry.createButton(
+								new EdgeSubtractGround())
 						),
 				new HBox(
 						prepareToggleButton("show edge", null, 
-								model.getSettings().showEdge, Change.justdraw),
+								model.getSettings().showEdge, 
+								Change.justdraw),
+						
 						prepareToggleButton("show good", null, 
-								model.getSettings().showGood, Change.justdraw)
+								model.getSettings().showGood, 
+								Change.justdraw)
 						)
 				
 			);

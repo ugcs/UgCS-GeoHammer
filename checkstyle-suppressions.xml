@@ -5,5 +5,7 @@
 <suppressions>
   
 	<suppress checks="." files="com[\\/]github[\\/]thecoldwine[\\/]sigrun[\\/]"/>  
-  
+	
+	<suppress checks="." files="de[\\/]pentabyte[\\/]"/>  
+
 </suppressions>

@@ -20,7 +20,7 @@ public class DepthSlider extends BaseSlider {
 	}
 	
 	public int updateModel() {
-		settings.layer = (int)slider.getValue();
+		settings.layer = (int) slider.getValue();
 		return settings.layer;
 	}
 }

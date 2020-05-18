@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MainTestConcurency implements Callable<Void>{
+public class MainTestConcurency implements Callable<Void> {
 
 	private String name;
 	
@@ -14,7 +14,7 @@ public class MainTestConcurency implements Callable<Void>{
 		
 		ExecutorService ex = Executors.newFixedThreadPool(10);
 		
-		for(int i = 0; i< 50000; i++) {
+		for (int i = 0; i < 50000; i++) {
 			ex.submit(new MainTestConcurency("thr " + i));
 		}
 		
@@ -22,7 +22,7 @@ public class MainTestConcurency implements Callable<Void>{
 		System.out.println("finish");
 	}
 	
-	public MainTestConcurency (String name) {
+	public MainTestConcurency(String name) {
 		this.name = name;
 	}
 	

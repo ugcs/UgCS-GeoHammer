@@ -25,32 +25,37 @@ import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.math.GHUtils;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
-public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class RulerTool extends BaseObjectImpl 
+	implements BaseObject, MouseHandler {
 	
-	static Font fontB = new Font("Verdana", Font.BOLD, 11);
-	
-	DragAnchor anch1; 
-	DragAnchor anch2;
-	VerticalCutPart offset;
-	SgyFile file;
+	private static Font fontB = new Font("Verdana", Font.BOLD, 11);
+	private static final double MARGIN = 1.0;
+		
+	private DragAnchor anch1;
+	private DragAnchor anch2;
+	private VerticalCutPart offset;
+	private SgyFile file;
 	
 	
 	public static RulerTool createRulerTool(ProfileField field, SgyFile file) {
-		int fvt = field.getFirstVisibleTrace(); 
-		int file_start = file.getOffset().getStartTrace();
-		int startTrace = Math.max(0, fvt - file_start);
+		int fvt = field.getFirstVisibleTrace();
+		int fileStart = file.getOffset().getStartTrace();
+		int startTrace = Math.max(0, fvt - fileStart);
 		
 		int lvt = field.getLastVisibleTrace();
-		//int file_finish = file.getOffset().getFinishTrace();
 		
-		int finishTrace = Math.min(file.size()-1, lvt - file.getOffset().getStartTrace());		
-		int wd = finishTrace - startTrace;			
+		int finishTrace = Math.min(file.size() - 1, 
+				lvt - file.getOffset().getStartTrace());
+		int wd = finishTrace - startTrace;
 		
-		int smp_start = field.getStartSample();
-		int smp_finish = Math.min(file.getMaxSamples(), field.getLastVisibleSample(field.getMainRect().height));
-		int ht = smp_finish - smp_start; 
+		int smpStart = field.getStartSample();
+		int smpFinish = Math.min(file.getMaxSamples(), 
+				field.getLastVisibleSample(field.getMainRect().height));
+		int ht = smpFinish - smpStart; 
 		
-		RulerTool fp = new RulerTool(file, startTrace + wd/3, startTrace + wd*2/3 , smp_start+ht/3, smp_start+ht*2/3);
+		RulerTool fp = new RulerTool(file, 
+				startTrace + wd / 3, startTrace + wd * 2 / 3, 
+				smpStart + ht / 3, smpStart + ht * 2 / 3);
 		return fp;
 	}
 	
@@ -72,51 +77,48 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 		}
 	}
 	
-	public RulerTool(SgyFile file, int s, int f, int smp_s, int smp_f) {
+	public RulerTool(SgyFile file, int s, int f, int smpStart, int smpFinish) {
 		this.file = file;
 		offset = file.getOffset();
 		
 		
-		anch1 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		anch1 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, 
+				AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				anch1.setTrace(
-					NumberUtils.norm(anch1.getTrace() , 0, file.size()-1));
+					NumberUtils.norm(anch1.getTrace(), 0, file.size() - 1));
 				anch1.setSample(
-						NumberUtils.norm(anch1.getSample() , 0, file.getMaxSamples()));
+						NumberUtils.norm(anch1.getSample(), 
+								0, file.getMaxSamples()));
 
 			}
 		};
 		
-		anch2 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		anch2 = new RulerAnchor(ResourceImageHolder.IMG_VER_SLIDER, 
+				AlignRect.CENTER, offset) {
+			
 			public void signal(Object obj) {
 				anch2.setTrace(
-						NumberUtils.norm(anch2.getTrace() , 0, file.size()-1));
+						NumberUtils.norm(anch2.getTrace(),
+								0, file.size() - 1));
 				anch2.setSample(
-						NumberUtils.norm(anch2.getSample() , 0, file.getMaxSamples()));
-				
+						NumberUtils.norm(anch2.getSample(),
+								0, file.getMaxSamples()));
 			}
 		};		
 		
 		anch1.setTrace(s);
-		anch1.setSample(smp_s);
+		anch1.setSample(smpStart);
 		anch2.setTrace(f);
-		anch2.setSample(smp_f);
-		
+		anch2.setSample(smpFinish);
 	}
-
 	
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		
-		
-		
-		
-		//Rectangle rect = getRect(vField);
-		Point lt = vField.traceSampleToScreen(new TraceSample(
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		Point lt = profField.traceSampleToScreen(new TraceSample(
 				offset.localToGlobal(anch1.getTrace()), anch1.getSample()));
-		Point rb = vField.traceSampleToScreen(new TraceSample(
+		Point rb = profField.traceSampleToScreen(new TraceSample(
 				offset.localToGlobal(anch2.getTrace()), anch2.getSample()));
-		
 		
 		g2.setColor(Color.RED);
 		g2.drawLine(lt.x, lt.y, rb.x, rb.y);
@@ -138,35 +140,38 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 		
 		String distDsp = String.format("%.2f cm", dist());
 		
-		drawText(g2, lt.x+3, (lt.y+rb.y)/2, smpDsp);		
+		drawText(g2, lt.x + 3, (lt.y + rb.y) / 2, smpDsp);		
 		
-		drawText(g2, (lt.x+rb.x)/2, rb.y-3, trcDsp);
+		drawText(g2, (lt.x + rb.x) / 2, rb.y - 3, trcDsp);
 		
-		drawText(g2, (lt.x+rb.x)/2 + 5*fontHeight, (lt.y+rb.y)/2 + 2*fontHeight, distDsp);
+		drawText(g2, (lt.x + rb.x) / 2 + 5 * fontHeight, 
+				(lt.y + rb.y) / 2 + 2 * fontHeight, distDsp);
 		
 	}
 	
-	private static final double MARGIN = 1.0;
 	private void drawText(Graphics2D g2, int x, int y, String str) {
         FontMetrics fm = g2.getFontMetrics();
         Rectangle2D rect = fm.getStringBounds(str, g2);
 
-        rect = new Rectangle2D.Double(rect.getX()-MARGIN-2, rect.getY()-MARGIN, rect.getWidth()+2*MARGIN+3, rect.getHeight()+2*MARGIN);
+        rect = new Rectangle2D.Double(rect.getX() - MARGIN - 2, 
+        		rect.getY() - MARGIN, 
+        		rect.getWidth() + 2 * MARGIN + 3, 
+        		rect.getHeight() + 2 * MARGIN);
         
         g2.setColor(Color.BLACK);
         
-        g2.fillRoundRect(x+(int)rect.getX(),
-        			y + (int)(rect.getY()), //- fm.getAscent() 
-                   (int) rect.getWidth(),
-                   (int) rect.getHeight(), 
-                   5, 5);
+        g2.fillRoundRect(x + (int) rect.getX(),
+			y + (int) rect.getY(), 
+			(int) rect.getWidth(),
+			(int) rect.getHeight(), 
+			5, 5);
         
         g2.setColor(Color.YELLOW.darker());
-        g2.drawRoundRect(x+(int)rect.getX(),
-    			y  + (int)(rect.getY()), //- fm.getAscent()
-                (int) rect.getWidth(),
-                (int) rect.getHeight(), 
-                5, 5);
+        g2.drawRoundRect(x + (int) rect.getX(),
+			y + (int) rect.getY(),
+			(int) rect.getWidth(),
+			(int) rect.getHeight(), 
+			5, 5);
 
         g2.setColor(Color.MAGENTA);
         g2.drawString(str, x, y);		
@@ -192,33 +197,32 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 
 	public static double distanceCm(SgyFile file, int tr1, int tr2, double smp1, double smp2) {
 		double grndLevel = 0;
-		if(file.groundProfile != null) {
-			grndLevel = file.groundProfile.deep[(tr1 + tr2)/2];
+		if (file.groundProfile != null) {
+			grndLevel = file.groundProfile.deep[(tr1 + tr2) / 2];
 		}
 
 		int s = Math.max(0, Math.min(tr1, tr2));
-		int f = Math.min(file.size()-1 , Math.max(tr1, tr2));
+		int f = Math.min(file.size() - 1, Math.max(tr1, tr2));
 		
 		List<Trace> traces = file.getTraces();
 		
 		double dst = 0;
-		for(int i=s+1; i<=f; i++) {
+		for (int i = s + 1; i <= f; i++) {
 			dst += traces.get(i).getPrevDist();
 		}
 		
-		double h_dst_cm = dst;
-		
-		
+		double horDistCm = dst;		
 		
 		double h1 = Math.min(smp1, smp2); 
 		double h2 = Math.max(smp1, smp2);
 		
 		double hair = Math.max(0,  Math.min(grndLevel, h2) - h1); 
-		double hgrn = h2-h1 - hair;
+		double hgrn = h2 - h1 - hair;
 		
-		double v_dst_cm =  file.getSamplesToCmAir() * hair + file.getSamplesToCmGrn() * hgrn;
+		double vertDistCm =  file.getSamplesToCmAir() * hair 
+				+ file.getSamplesToCmGrn() * hgrn;
 		
-		double diag = Math.sqrt(h_dst_cm*h_dst_cm + v_dst_cm*v_dst_cm);
+		double diag = Math.sqrt(horDistCm * horDistCm + vertDistCm * vertDistCm);
 		return diag;
 	}
 
@@ -229,64 +233,57 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 		
 		//part of air
 		
-		double full_cm = distanceCm(file, tr, tr, 0, smp);
-		double grn_cm = distanceCm(file, tr, tr, 0, grn);
-		double f = grn_cm / full_cm;
+		double fullCm = distanceCm(file, tr, tr, 0, smp);
+		double grndCm = distanceCm(file, tr, tr, 0, grn);
+		double f = grndCm / fullCm;
 		
 		f = GHUtils.norm(f, 0, 1);
 		
-		double c_air = c * f;
-		double c_grn = c * (1-f);
+		double diagAir = c * f;
+		double diagGrn = c * (1 - f);
 		
-		double smp_air = c_air / file.getSamplesToCmAir();
-		double smp_grn = c_grn / file.getSamplesToCmGrn();
+		double smpAir = diagAir / file.getSamplesToCmAir();
+		double smpGrn = diagGrn / file.getSamplesToCmGrn();
 		
-		return (int)(smp_air + smp_grn);
+		return (int) (smpAir + smpGrn);
 	}
 	
-	
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean mousePressHandle(Point2D point, MapField mapField) {
 		return false;
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 		return false;
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
-		// TODO Auto-generated method stub
-		
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+		return false;
 	}
 
+	@Override
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
+	}
 	
-	
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		return false;
 	}
 
 	@Override
-	public Rectangle getRect(ProfileField vField) {
-		// TODO Auto-generated method stub
+	public Rectangle getRect(ProfileField profField) {
 		return null;
 	}
 
 	@Override
 	public void signal(Object obj) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -296,25 +293,16 @@ public class RulerTool extends BaseObjectImpl implements BaseObject, MouseHandle
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

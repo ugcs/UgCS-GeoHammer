@@ -21,29 +21,24 @@ public class AlgorithmicScan implements AsinqCommand {
 	public void execute(SgyFile file) {
 		
 		//clear
-		for(Trace t: file.getTraces()) {
-			
+		for (Trace t : file.getTraces()) {
 			t.good = new int[t.getNormValues().length];			
 		}
 		
-		
-		//double kf = AppContext.model.getSettings().hyperkfc/100.0;
-		
 		processSgyFile(file);			
-		
 	}
 
 	private void processSgyFile(SgyFile sf) {
 		List<Trace> traces = sf.getTraces();
 		int height = traces.get(0).getNormValues().length;
-		int good[][] = new int[traces.size()][height];
+		int[][] good = new int[traces.size()][height];
 		
-		if(sf.groundProfile == null) {
+		if (sf.groundProfile == null) {
 			System.out.println("!!!!groundProfile == null");
 			return;
 		}
 		
-		for(int i=0; i<traces.size(); i++) {
+		for (int i = 0; i < traces.size(); i++) {
 			processTrace(sf, i, good); 
 		}
 		
@@ -54,18 +49,17 @@ public class AlgorithmicScan implements AsinqCommand {
 		
 		ScanProfile hp = new ScanProfile(traces.size()); 
 		
-		for(int i=0; i<traces.size(); i++) {
+		for (int i = 0; i < traces.size(); i++) {
 			hp.intensity[i] = cleversumdst(good, i);
 			
-			if(traces.get(i).good == null) {
+			if (traces.get(i).good == null) {
 				traces.get(i).good = new int[good[i].length];
 			}
 			
 			//put to trace.good
-			for(int z=0;z<good[i].length; z++) {
+			for (int z = 0; z < good[i].length; z++) {
 				traces.get(i).good[z] = good[i][z];
 			}
-			
 		}
 		hp.finish();
 		
@@ -73,35 +67,31 @@ public class AlgorithmicScan implements AsinqCommand {
 	}
 
 	private int cleversumdst(int[][] good, int tr) {
-		//TODO: use real distance in meters 
-		
-		
-		
 		double sum = 0;		
 		
 		double maxsum = 0;
 		int emptycount = 0;
 		double bothCount = 1;
 		double singleCount = 1; 
-		for(int i=0; i<good[tr].length; i++) {
+		for (int i = 0; i < good[tr].length; i++) {
 			
 			// 0 1-left 2-right   3-both
 			int val = getAtLeastOneGood(good, tr, MARGIN, i);
 			
 			
-			if(val != 0) {
+			if (val != 0) {
 				emptycount = 0;
 
-				if(val == 3) {
+				if (val == 3) {
 					bothCount++;
 					sum += 20.0 / bothCount;
-				}else {
+				} else {
 					singleCount++;
 					sum += 1.0 / singleCount;
 				}
-			}else {
+			} else {
 				emptycount++;
-				if(emptycount > 5) {
+				if (emptycount > 5) {
 					maxsum = Math.max(maxsum, sum);
 					bothCount = 1;
 					singleCount = 1;
@@ -113,7 +103,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		}
 		
 		maxsum = Math.max(maxsum, sum);
-		return (int)(maxsum*5);//
+		return (int) (maxsum * 5);
 	}
 
 	
@@ -121,7 +111,9 @@ public class AlgorithmicScan implements AsinqCommand {
 	private int getAtLeastOneGood(int[][] good, int tr, int margin, int smp) {
 		int r = 0;
 		
-		for(int chtr = Math.max(0, tr-margin); chtr < Math.min(good.length, tr+margin+1); chtr++) {
+		for (int chtr = Math.max(0, tr - margin); 
+				chtr < Math.min(good.length, tr + margin + 1); 
+				chtr++) {
 			r = r | good[chtr][smp]; //0 1 2 3				
 		}
 		
@@ -135,15 +127,15 @@ public class AlgorithmicScan implements AsinqCommand {
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
-						AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
-						sgyFile.getTraces().get(tr).getNormValues().length-2
-				);
+					AppContext.model.getSettings().layer
+					+ AppContext.model.getSettings().hpage,
+					
+					sgyFile.getTraces().get(tr).getNormValues().length-2);
 		
 		// test all samples to fit hyperbola
 		
-		for(int smp = AppContext.model.getSettings().layer;				
-			smp< maxSmp ; smp++) {
-			
+		for (int smp = AppContext.model.getSettings().layer;				
+			smp < maxSmp; smp++) {			
 			
 			int exists = checkAllVariantsForPoint(sgyFile, tr, thr, smp);
 			
@@ -156,10 +148,12 @@ public class AlgorithmicScan implements AsinqCommand {
 	public static int checkAllVariantsForPoint(SgyFile sgyFile, int tr, double thr, int smp) {
 		int exists = 0;
 		// reduce x distance for hyperbola calculation
-		for(double x_factor = X_FACTOR_FROM; x_factor <= X_FACTOR_TO; x_factor += X_FACTOR_STEP) {
+		for (double x_factor = X_FACTOR_FROM;
+				x_factor <= X_FACTOR_TO;
+				x_factor += X_FACTOR_STEP) {
 
 			exists = exists | processHyper3(sgyFile, tr, smp, x_factor, thr);
-			if(exists == 3) {
+			if (exists == 3) {
 				break;
 			}
 		}
@@ -167,15 +161,17 @@ public class AlgorithmicScan implements AsinqCommand {
 	}
 
 	public double getThreshold() {
-		double thr = (double)AppContext.model.getSettings().hyperSensitivity.intValue() / 100.0;
+		double thr = (double) AppContext.model.getSettings()
+				.hyperSensitivity.intValue() / 100.0;
 		return thr;
 	}
 	
-	public static int processHyper3(SgyFile sgyFile, int tr, int smp, double x_factor, double thr) {
+	public static int processHyper3(SgyFile sgyFile, int tr, int smp, 
+			double xFactor, double thr) {
 		
-		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1, x_factor);		
+		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1, xFactor);		
 		
-		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, x_factor);
+		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, xFactor);
 		
 		double left100 = left.analize(100); 
 		//double left20 = left.analize(40);
@@ -191,9 +187,6 @@ public class AlgorithmicScan implements AsinqCommand {
 //		(right100 > thr && left20 > thr ? 2 : 0);
 		
 	}
-
-	
-	
 	
 	@Override
 	public String getButtonText() {

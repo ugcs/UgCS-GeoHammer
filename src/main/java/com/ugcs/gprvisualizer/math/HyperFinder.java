@@ -200,7 +200,7 @@ public class HyperFinder {
 		Point prev = null;
 		for(int i=0; i<lft.length; i++) {
 			
-			int traceIndex = offset.localToGlobal(lft.pinnacle_tr + i * lft.side);
+			int traceIndex = offset.localToGlobal(lft.pinnacleTrace + i * lft.side);
 			
 			Point lt = vField.traceSampleToScreenCenter(new TraceSample(traceIndex, lft.smp[i]));
 			if(prev != null) {

@@ -33,7 +33,7 @@ public class CleverViewScrollHandler implements MouseHandler {
 		return false;
 	}
 	
-	public boolean mouseMoveHandle(Point point, ProfileField vField){
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 			
 		if (dragPoint == null) {			
 			return false;

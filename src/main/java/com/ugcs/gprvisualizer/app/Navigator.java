@@ -95,7 +95,10 @@ public class Navigator implements ToolProducer {
 			return;
 		}
 		
-		model.getVField().setSelectedTrace((sgyFile.getOffset().getStartTrace() + sgyFile.getOffset().getFinishTrace()) / 2);
+		model.getVField().setSelectedTrace(
+				(sgyFile.getOffset().getStartTrace() 
+				+ sgyFile.getOffset().getFinishTrace()) 
+				/ 2);
 		
 		int maxSamples = sgyFile.getOffset().getMaxSamples();
 		int tracesCount = sgyFile.getTraces().size(); 
@@ -113,7 +116,9 @@ public class Navigator implements ToolProducer {
 		model.getVField().setZoom((int) zoom);
 		model.getVField().setStartSample(0);
 		
-		double h = (double)(model.getVField().getViewDimension().width - model.getVField().getLeftRuleRect().width - 20) / ((double) tracesCount);
+		double h = (double) (model.getVField().getViewDimension().width 
+				- model.getVField().getLeftRuleRect().width - 20) 
+				/ ((double) tracesCount);
 		
 		double realAspect = h / model.getVField().getVScale();
 
@@ -122,17 +127,11 @@ public class Navigator implements ToolProducer {
 		
 	}
 
-	public void fitFull() {
-		
-		
-		model.getVField().setSelectedTrace(model.getTracesCount()/2);
+	public void fitFull() {		
+		model.getVField().setSelectedTrace(model.getTracesCount() / 2);
 		
 		int maxSamples = model.getMaxHeightInSamples();
 
-		fit(maxSamples*2, model.getTracesCount());
+		fit(maxSamples * 2, model.getTracesCount());
 	}
-	
-
-	
-
 }

@@ -4,7 +4,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 
 import javafx.beans.value.ChangeListener;
 
-public class ZoomSlider extends BaseSlider{
+public class ZoomSlider extends BaseSlider {
 
 	public ZoomSlider(Settings settings, ChangeListener<Number> listenerExt) {
 		super(settings, listenerExt);
@@ -16,7 +16,7 @@ public class ZoomSlider extends BaseSlider{
 	@Override
 	public int updateModel() {
 		
-		settings.zoom = (int)slider.getValue();
+		settings.zoom = (int) slider.getValue();
 		return settings.zoom;
 	}
 

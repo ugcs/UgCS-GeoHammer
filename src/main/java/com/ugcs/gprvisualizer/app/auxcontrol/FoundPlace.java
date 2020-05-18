@@ -27,10 +27,10 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
 
-	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null)/2;
-	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null)/2;
-	static int R_HOR_M = ShapeHolder.flag.getBounds().width/2;
-	static int R_VER_M = ShapeHolder.flag.getBounds().height/2;
+	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null) / 2;
+	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null) / 2;
+	static int R_HOR_M = ShapeHolder.flag.getBounds().width / 2;
+	static int R_VER_M = ShapeHolder.flag.getBounds().height / 2;
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
@@ -41,7 +41,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
                 BasicStroke.JOIN_MITER,
                 10.0f, dash1, 0.0f);
 
-	private Color flagColor = Color.getHSBColor((float)Math.random(), 0.9f, 0.97f); 
+	private Color flagColor = Color.getHSBColor((float) Math.random(), 0.9f, 0.97f); 
 	private int traceInFile;
 	private VerticalCutPart offset;	
 	
@@ -61,9 +61,26 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point2D point, MapField field) {
 		
-		if (isPointInside(localPoint, vField)) {
+		Rectangle r = getRect(field);
+		if (r.contains(point)) {
+			
+			AppContext.model.getVField().setSelectedTrace(
+					offset.localToGlobal(traceInFile));
+		
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+		
+		if (isPointInside(localPoint, profField)) {
 				
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
@@ -85,7 +102,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		TraceSample ts = profField.screenToTraceSample(point, offset);
 		
-		traceInFile = Math.min( offset.getTraces()-1, Math.max(0, ts.getTrace()));
+		traceInFile = Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace()));
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		
@@ -95,31 +112,34 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
-		Rectangle rect = getRect(hField);
+		Rectangle rect = getRect(mapField);
 		
 		g2.setColor(flagColor);
 		
-		g2.translate(rect.x , rect.y+rect.height);
+		g2.translate(rect.x, rect.y + rect.height);
 		
 		g2.fill(ShapeHolder.flag);
 		
 		g2.setColor(Color.BLACK);
 		g2.draw(ShapeHolder.flag);
-		g2.translate(-rect.x , -(rect.y+rect.height));
+		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		g2.setClip(profField.getClipTopMainRect().x, profField.getClipTopMainRect().y, profField.getClipTopMainRect().width, profField.getClipTopMainRect().height);
+		g2.setClip(profField.getClipTopMainRect().x,
+				profField.getClipTopMainRect().y,
+				profField.getClipTopMainRect().width,
+				profField.getClipTopMainRect().height);
 		
 		Rectangle rect = getRect(profField);
 		
 		g2.setColor(flagColor);
 		
-		g2.translate(rect.x , rect.y+rect.height);
+		g2.translate(rect.x, rect.y + rect.height);
 		g2.fill(ShapeHolder.flag);
 		
 		if (isSelected()) {
@@ -130,11 +150,13 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 			g2.setStroke(VERTICAL_STROKE);
 			g2.setColor(Color.blue);
 			g2.setXORMode(Color.gray);
-			g2.drawLine(0 , 0, 0 , profField.sampleToScreen(offset.getMaxSamples()) - Model.TOP_MARGIN );
+			g2.drawLine(0, 0, 0, 
+					profField.sampleToScreen(
+							offset.getMaxSamples()) - Model.TOP_MARGIN);
 			g2.setPaintMode();
 		}
 		
-		g2.translate(-rect.x , -(rect.y+rect.height));
+		g2.translate(-rect.x, -(rect.y + rect.height));
 		
 	}
 	
@@ -142,26 +164,29 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
 				
-		Rectangle rect = new Rectangle(x, Model.TOP_MARGIN-R_VER_M * 2, R_HOR_M * 2, R_VER_M * 2);
+		Rectangle rect = new Rectangle(x, 
+				Model.TOP_MARGIN - R_VER_M * 2, R_HOR_M * 2, R_VER_M * 2);
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField hField) {
+	public Rectangle getRect(MapField mapField) {
 		Trace tr = getTrace();		
-		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
+		Point2D p =  mapField.latLonToScreen(tr.getLatLon());		
 		
-		Rectangle rect = new Rectangle((int)p.getX(), (int)p.getY()-R_VER_M*2, R_HOR_M*2, R_VER_M*2);
+		Rectangle rect = new Rectangle((int) p.getX(), (int) p.getY() - R_VER_M * 2, 
+				R_HOR_M * 2, R_VER_M * 2);
 		return rect;
 	}
 
 	private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces().get(offset.localToGlobal(traceInFile));
+		return AppContext.model.getFileManager().getTraces().get(
+				offset.localToGlobal(traceInFile));
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
@@ -182,24 +207,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		
-		Rectangle r = getRect(field);
-		if(r.contains(point)) {
-			
-			AppContext.model.getVField().setSelectedTrace(offset.localToGlobal(traceInFile));
-		
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			return true;
-		}
-		
-		return false;
-	}
-
-	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		FoundPlace result = new FoundPlace(traceInFile-traceoffset, verticalCutPart); 
+		FoundPlace result = new FoundPlace(traceInFile - traceoffset, verticalCutPart); 
 		
 		return result;
 	}

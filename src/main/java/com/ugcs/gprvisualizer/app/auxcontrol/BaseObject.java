@@ -16,11 +16,13 @@ import com.ugcs.gprvisualizer.app.MouseHandler;
 public interface BaseObject extends MouseHandler {
 
 	
-	void drawOnMap(Graphics2D g2, MapField hField);
-	void drawOnCut(Graphics2D g2, ProfileField vField);
+	void drawOnMap(Graphics2D g2, MapField mapField);
 	
-	boolean isPointInside(Point localPoint, ProfileField vField);
-	Rectangle getRect(ProfileField vField);
+	void drawOnCut(Graphics2D g2, ProfileField profField);
+	
+	boolean isPointInside(Point localPoint, ProfileField profField);
+	
+	Rectangle getRect(ProfileField profField);
 	
 	void signal(Object obj);
 	
@@ -28,14 +30,14 @@ public interface BaseObject extends MouseHandler {
 	
 	boolean saveTo(JSONObject json);
 	
-	boolean mousePressHandle(Point2D point, MapField field);
-	 
-	
+	boolean mousePressHandle(Point2D point, MapField mapField);
+		
 	BaseObject copy(int offset, VerticalCutPart verticalCutPart);
 	
 	boolean isFit(int begin, int end);
 	
 	void setSelected(boolean selected);
+	
 	boolean isSelected();
 	
 	int getGlobalTrace();

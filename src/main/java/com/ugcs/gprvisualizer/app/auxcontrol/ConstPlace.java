@@ -30,7 +30,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	static int R_VER = 5;
 		
 	public static ConstPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
-		int traceNum = (int)(long)(Long)json.get("trace");
+		int traceNum = (int) (long) (Long) json.get("trace");
 		
 		return new ConstPlace(traceNum, null, sgyFile.getOffset());
 	}
@@ -43,9 +43,9 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
-		if(isPointInside(localPoint, vField)) {
+		if (isPointInside(localPoint, profField)) {
 			
 				
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
@@ -59,13 +59,13 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
+
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 		
 		return false;
 	}
@@ -73,36 +73,36 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
 		
-		Rectangle rect = getRect(hField);
+		Rectangle rect = getRect(mapField);
 
 		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x+1 , rect.y+1, rect.width, rect.height);
+		g2.fillOval(rect.x + 1 , rect.y + 1, rect.width, rect.height);
 		
 		g2.setColor(Color.ORANGE);
 		g2.fillOval(rect.x , rect.y, rect.width, rect.height);
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		setClip(g2, vField.getClipTopMainRect());
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		setClip(g2, profField.getClipTopMainRect());
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x+2 , rect.y+2, rect.width, rect.height);
+		g2.fillOval(rect.x + 2 , rect.y + 2, rect.width, rect.height);
 		
 		g2.setColor(Color.ORANGE);
 		g2.fillOval(rect.x , rect.y, rect.width, rect.height);
 	}
 	
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
-		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
+		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
 				
-		Rectangle rect = new Rectangle(x-R_HOR, 5, R_HOR*2, R_VER*2);
+		Rectangle rect = new Rectangle(x - R_HOR, 5, R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 	
@@ -110,37 +110,37 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		Point2D p =  hField.latLonToScreen(latLon);
 		
-		Rectangle rect = new Rectangle((int)p.getX()-R_HOR, (int)p.getY()-R_VER*2, R_HOR*2, R_VER*2);
+		Rectangle rect = new Rectangle(
+				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
+				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 
 	private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces().get(offset.localToGlobal(traceInFile));
+		return AppContext.model.getFileManager().getTraces()
+				.get(offset.localToGlobal(traceInFile));
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
 
 	@Override
 	public void signal(Object obj) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public List<BaseObject> getControls() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		//json.put("trace", traceInFile);
 		return false;
 	}
 
@@ -148,7 +148,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	public boolean mousePressHandle(Point2D point, MapField field) {
 		
 		Rectangle r = getRect(field);
-		if(r.contains(point)) {
+		if (r.contains(point)) {
 			
 			AppContext.model.getVField().setSelectedTrace(offset.localToGlobal(traceInFile));
 		
@@ -162,13 +162,11 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

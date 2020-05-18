@@ -59,12 +59,12 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 		
 		initDragAnchors();
 		
-		pinacle.setTrace((int)(long)(Long)json.get("tracePinacle"));
-		pinacle.setSample((int)(long)(Long)json.get("samplePinacle"));
-		thickness = ((int)(long)(Long)json.get("thickness"));
-		leftWidth = ((int)(long)(Long)json.get("leftWidth"));
-		rightWidth = ((int)(long)(Long)json.get("rightWidth"));
-		hyperkfcInt = ((int)(long)(Long)json.get("hyperkfc"));
+		pinacle.setTrace((int) (long) (Long) json.get("tracePinacle"));
+		pinacle.setSample((int) (long) (Long) json.get("samplePinacle"));
+		thickness = ((int) (long) (Long) json.get("thickness"));
+		leftWidth = ((int) (long) (Long) json.get("leftWidth"));
+		rightWidth = ((int) (long) (Long) json.get("rightWidth"));
+		hyperkfcInt = ((int) (long) (Long) json.get("hyperkfc"));
 		
 		//
 		updateContols();
@@ -90,24 +90,26 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 			}
 		};
 		
-		pinacle = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		pinacle = new DragAnchor(
+				ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				
-				
 				updateContols();
 			}
 		};
 		
-		left = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		left = new DragAnchor(
+				ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
-				leftWidth = pinacle.getTrace() - left.getTrace();				
+				leftWidth = pinacle.getTrace() - left.getTrace();
 			}
 			
 			public int getSample() {
 				return pinacle.getSample();
 			}
 		};
-		right = new DragAnchor(ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
+		
+		right = new DragAnchor(
+				ResourceImageHolder.IMG_VER_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				rightWidth = right.getTrace() - pinacle.getTrace();
 			}
@@ -116,7 +118,8 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 				return pinacle.getSample();
 			}
 		};
-		thick = new DragAnchor(ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+		thick = new DragAnchor(
+				ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
 			public void signal(Object obj) {
 				thickness = thick.getSample() - pinacle.getSample();
 			}
@@ -129,41 +132,44 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 	
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {		
-		return isPointInside(localPoint, vField);
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {		
+		return isPointInside(localPoint, profField);
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		g2.setClip(vField.getClipMainRect().x, vField.getClipMainRect().y, vField.getClipMainRect().width, vField.getClipMainRect().height);
+		g2.setClip(profField.getClipMainRect().x, profField.getClipMainRect().y, 
+				profField.getClipMainRect().width, profField.getClipMainRect().height);
 		
-		drawHyperbola(g2, vField);
+		drawHyperbola(g2, profField);
 		
 	}
 
 	@Override
-	public Rectangle getRect(ProfileField vField) {
-		Point lt = vField.traceSampleToScreen(new TraceSample(getTraceStartGlobal(), pinacle.getSample()-10));
-		Point rb = vField.traceSampleToScreen(new TraceSample(getTraceFinishGlobal(), pinacle.getSample()+thickness));
+	public Rectangle getRect(ProfileField profField) {
+		Point lt = profField.traceSampleToScreen(new TraceSample(
+				getTraceStartGlobal(), pinacle.getSample() - 10));
+		Point rb = profField.traceSampleToScreen(new TraceSample(
+				getTraceFinishGlobal(), pinacle.getSample() + thickness));
 		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 	}
 
@@ -195,14 +201,14 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 		int[] topCut = getCutArray(y, y);
 		
 		JSONArray arr = new JSONArray();
-		for(int i : topCut) {
+		for (int i : topCut) {
 			arr.add(i);
 		}		
 		json.put("topCut", arr);
 		
 		int[] botCut = getCutArray(y+thickness, y);
 		JSONArray arr2 = new JSONArray();
-		for(int i : botCut) {
+		for (int i : botCut) {
 			arr2.add(i);
 		}		
 		json.put("botCut", arr2);
@@ -214,10 +220,10 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 		int[] topCut = new int[leftWidth+rightWidth];		
 		//double kf = AppContext.model.getSettings().hyperkfc / 100.0;
 		double kf = hyperkfcInt / 100.0;
-		for(int i=0; i<topCut.length; i++) {
-			double x=(i-leftWidth) * kf;
-			double c = Math.sqrt(x*x+y*y);
-			topCut[i] = (int)c - top;
+		for (int i = 0; i < topCut.length; i++) {
+			double x = (i - leftWidth) * kf;
+			double c = Math.sqrt(x * x + y * y);
+			topCut[i] = (int) c - top;
 		}
 		return topCut;
 	}
@@ -236,36 +242,30 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 
 	private void drawHyperbola(Graphics2D g2, ProfileField vField) {
-		
-		//Rectangle rect = getRect(vField); 
-		//g2.setColor(Color.RED);
-		//g2.drawRect(rect.x, rect.y, rect.width, rect.height);
-		
-		
 		g2.setColor(Color.YELLOW);
-		//double kf = AppContext.model.getSettings().hyperkfc / 100.0;
 		double kf = hyperkfcInt / 100.0;
-		int tr = getTracePinacleGlobal();//tracePinacle.intValue();
+		int tr = getTracePinacleGlobal();
 		double y = pinacle.getSample();
 		drawHyperbolaLine(g2, vField, kf, tr, y);
 		drawHyperbolaLine(g2, vField, kf, tr, y+thickness);
 	}
 
-	private void drawHyperbolaLine(Graphics2D g2, ProfileField vField, double kf, int tr, double y) {
+	private void drawHyperbolaLine(Graphics2D g2, 
+			ProfileField profField, double kf, int tr, double y) {
 		Point prev = null;
 		
-		int s = getTraceStartGlobal(); //tracePinacle.intValue() - leftWidth;
-		int f = getTraceFinishGlobal();//tracePinacle.intValue() + rightWidth;
+		int s = getTraceStartGlobal();
+		int f = getTraceFinishGlobal();
 		
 		
-		for(int i=s; i<= f; i++) {
+		for (int i = s; i <= f; i++) {
 			
-			double x=(i-tr) * kf;
-			double c = Math.sqrt(x*x+y*y);
+			double x = (i - tr) * kf;
+			double c = Math.sqrt(x * x + y * y);
 			
-			Point lt = vField.traceSampleToScreen(new TraceSample(i, (int)c));
-			if(prev != null) {
-				g2.drawLine(prev.x, prev.y, lt.x, lt.y);				
+			Point lt = profField.traceSampleToScreen(new TraceSample(i, (int) c));
+			if (prev != null) {
+				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
 			}
 			
 			prev = lt;

@@ -7,35 +7,36 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class HHAnalizer extends HalfHyperDst {
 
+	private static final int PARTS = 4;
 	
 	static class Avg{
-		int sum=0;
-		int abssum=0;
-		int count=0;
+		int sum = 0;
+		int abssum = 0;
+		int count = 0;
 		
 		void add(int dist) {
-			sum+=dist;
-			abssum+=Math.abs(dist);
-			count++;			
+			sum += dist;
+			abssum += Math.abs(dist);
+			count++;
 		}
 		
 		double avg() {
-			if(count == 0) {
+			if (count == 0) {
 				return 0;
 			}
-			return (double)sum / (double)count;
+			return (double) sum / (double) count;
 		}
 
 		double variance() {
-			if(count == 0) {
+			if (count == 0) {
 				return 0;
 			}
-			return (double)abssum / (double)count;
+			return (double) abssum / (double) count;
 		}		
 	}
 	
 	public double analize(int percent) {
-		if(defective ) {
+		if (defective ) {
 			return 0;
 		}
 		//
@@ -45,26 +46,26 @@ public class HHAnalizer extends HalfHyperDst {
 		//
 		List<Trace> traces = sgyFile.getTraces();
 		
-		int PARTS = 4;
+		
 		Avg[][] avg = instantiateAvg(PARTS);
 		
 		
-		int checked_length = length * percent / 100;
-		int part_length = checked_length / PARTS; 
-		int min_part_length = part_length*2/3;
+		int checkedLength = length * percent / 100;
+		int partLength = checkedLength / PARTS; 
+		int minPartLength = partLength * 2 / 3;
 		
 			
-		for(int i=0; i< checked_length;i++) {
+		for (int i = 0; i < checkedLength; i++) {
 			
-			int index = pinnacle_tr + side * i;			
+			int index = pinnacleTrace + side * i;			
 			Trace trace = traces.get(index);
 			int s = smp[i];
 				
-			for(int j=from; j<=to; j++) {
+			for (int j = from; j <= to; j++) {
 				
 				int edge = trace.edge[s+j];
 		
-				int part = i*PARTS / checked_length;
+				int part = i * PARTS / checkedLength;
 				
 				avg[edge][part].add(j);
 				
@@ -72,18 +73,20 @@ public class HHAnalizer extends HalfHyperDst {
 		}
 		
 		double bestCount = 0;
-		for(int edge=1; edge<5; edge++) {
-			bestCount = Math.max(bestCount, checkEdge(avg[edge], min_part_length));
+		for (int edge = 1; edge < 5; edge++) {
+			bestCount = Math.max(bestCount, checkEdge(avg[edge], minPartLength));
 		}		
 		
-		return (double)bestCount / (double)checked_length;
+		return (double) bestCount / (double) checkedLength;
 	}
 	
-	double checkEdge(Avg[] avg, int min_part_length) {
+	double checkEdge(Avg[] avg, int minPartLength) {
 		int count = 0;
-		for(Avg a : avg ) {
+		for (Avg a : avg ) {
 			
-			if(a.count < min_part_length ||  Math.abs(a.avg()) > 0.9 || a.variance() > 0.75) {
+			if (a.count < minPartLength 
+					||  Math.abs(a.avg()) > 0.9 
+					|| a.variance() > 0.75) {
 				return 0;
 			}
 			
@@ -92,22 +95,14 @@ public class HHAnalizer extends HalfHyperDst {
 		
 		return count;
 	}
-	
-
-//	public static void main(String args[]) {
-//		Avg[][] avg = instantiateAvg(4);
-//		
-//		System.out.println( avg[2][2].count  );
-//		
-//	}
 
 	public static Avg[][] instantiateAvg(int parts) {
 		Avg[][]avg = new Avg[5][];		
 		
-		Arrays.setAll(avg, p-> {
+		Arrays.setAll(avg, p -> {
 			Avg[] a = new Avg[parts];
 			
-			Arrays.setAll(a, z-> new Avg());
+			Arrays.setAll(a, z -> new Avg());
 			return a;
 		});
 		return avg;

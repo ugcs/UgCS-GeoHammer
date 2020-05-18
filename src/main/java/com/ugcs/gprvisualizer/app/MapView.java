@@ -157,11 +157,6 @@ public class MapView extends Work implements SmthChangeListener {
         		model.getVField().setSelectedTrace(traceIndex);
         		
         		ProfileView.createTempPlace(model, traceIndex);
-        		
-    			    			
-    			//AppContext.notifyAll(new WhatChanged(Change.justdraw));
-        		
-        		
         	}
         }
 

@@ -4,7 +4,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 
 import javafx.beans.value.ChangeListener;
 
-public class DepthWindowSlider extends BaseSlider{
+public class DepthWindowSlider extends BaseSlider {
 
 	public DepthWindowSlider(Settings settings, ChangeListener<Number> listenerExt) {
 		super(settings, listenerExt);
@@ -16,7 +16,7 @@ public class DepthWindowSlider extends BaseSlider{
 	@Override
 	public int updateModel() {
 		
-		settings.hpage = (int)slider.getValue();
+		settings.hpage = (int) slider.getValue();
 		return settings.hpage;
 	}
 

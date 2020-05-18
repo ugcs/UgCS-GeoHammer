@@ -79,17 +79,17 @@ public class RadarMap extends BaseLayer {
 			vertBox.setDisable(!isActive());
 			
 			
-			if(showMapButtonAlg.isSelected()) {
+			if (showMapButtonAlg.isSelected()) {
 				model.getSettings().radarMapMode = RadarMapMode.SEARCH;
 			}
-			if(showMapButtonAmp.isSelected()) {
+			if (showMapButtonAmp.isSelected()) {
                 model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
                 model.getSettings().getHyperliveview().setFalse();
 			}
 			
-			if(isActive()) {
-				executor.submit(t);
-			}else {
+			if (isActive()) {
+				executor.submit(imgRecalcThread);
+			} else {
 				getRepaintListener().repaint();
 			}
 			
@@ -97,14 +97,19 @@ public class RadarMap extends BaseLayer {
 	};
 	
 	ToggleGroup group = new ToggleGroup();
-	private ToggleButton showMapButtonAmp = new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
+	private ToggleButton showMapButtonAmp = 
+			new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
+	
 	{
 		showMapButtonAmp.setTooltip(new Tooltip("Toggle amplitude map layer"));
 		showMapButtonAmp.setSelected(true);
 		showMapButtonAmp.setOnAction(showMapListener);
 		showMapButtonAmp.setToggleGroup(group);
 	}
-	private ToggleButton showMapButtonAlg = new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
+	
+	private ToggleButton showMapButtonAlg = 
+			new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
+	
 	{
 		showMapButtonAlg.setTooltip(new Tooltip("Toggle algorithm search layer"));
 		showMapButtonAlg.setSelected(false);
@@ -128,9 +133,10 @@ public class RadarMap extends BaseLayer {
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
-		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+		public void changed(ObservableValue<? extends Number> observable, 
+				Number oldValue, Number newValue) {
 			
-			executor.submit(t);
+			executor.submit(imgRecalcThread);
 			
 			broadcast.notifyAll(new WhatChanged(Change.adjusting));
 		}
@@ -146,12 +152,13 @@ public class RadarMap extends BaseLayer {
 	
 	private ChangeListener<Boolean> autoGainListener = new ChangeListener<Boolean>() {
 		@Override
-		public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+		public void changed(ObservableValue<? extends Boolean> observable, 
+				Boolean oldValue, Boolean newValue) {
 			
 			gainBottomSlider.updateUI();
 			gainTopSlider.updateUI();
 			thresholdSlider.updateUI();
-			executor.submit(t);
+			executor.submit(imgRecalcThread);
 		}
 	};
 	
@@ -191,17 +198,17 @@ public class RadarMap extends BaseLayer {
 			return;
 		}
 		
-		BufferedImage _img = img;
+		BufferedImage tmpImg = img;
 		
-		if (_img == null) {
+		if (tmpImg == null) {
 			return;
 		}
 		
 		Point2D offst = model.getField().latLonToScreen(imgLatLon);
 		
-		g2.drawImage(_img, 
-			(int) offst.getX() -_img.getWidth()/2, 
-			(int) offst.getY() -_img.getHeight()/2, 
+		g2.drawImage(tmpImg, 
+			(int) offst.getX() - tmpImg.getWidth() / 2, 
+			(int) offst.getY() - tmpImg.getHeight() / 2, 
 			null);
 	}
 
@@ -235,7 +242,7 @@ public class RadarMap extends BaseLayer {
 				|| changed.isWindowresized()) {
 			
 			//System.out.println("RadarMap start asinq");
-			executor.submit(t);
+			executor.submit(imgRecalcThread);
 		}		
 	}
 
@@ -267,12 +274,12 @@ public class RadarMap extends BaseLayer {
 	}
 
 	public void drawCircles(MapField field, DblArray da) {
-		for(SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getFiles()) {
 			
 			ScanProfile profile = getFileScanProfile(file);
 			
 			List<Trace> traces = file.getTraces();
-			if(profile != null) {
+			if (profile != null) {
 				drawFileCircles(field, da, file, profile, traces);
 			}
 		}
@@ -280,16 +287,18 @@ public class RadarMap extends BaseLayer {
 
 	public ScanProfile getFileScanProfile(SgyFile file) {
 		ScanProfile profile;
-		if(model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
+		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
 			profile = file.amplScan;
-		}else {
+		} else {
 			profile = file.algoScan;
 		}
 		return profile;
 	}
 
-	public void drawFileCircles(MapField field, DblArray da, SgyFile file, ScanProfile profile, List<Trace> traces) {
-		for(int i=0; i<file.size(); i++) {
+	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
+			ScanProfile profile, List<Trace> traces) {
+		
+		for (int i = 0; i < file.size(); i++) {
 			Trace trace = traces.get(i);
 			
 			Point2D p = field.latLonToScreen(trace.getLatLon());
@@ -297,20 +306,20 @@ public class RadarMap extends BaseLayer {
 			double alpha = profile.intensity[i];
 			
 			da.drawCircle(
-				(int)p.getX() + getDimension().width/2, 
-				(int)p.getY() + getDimension().height/2, 
+				(int) p.getX() + getDimension().width / 2, 
+				(int) p.getY() + getDimension().height / 2, 
 				model.getSettings().radius, alpha);
 		}
 	}
 	
-	Thread t = new Thread() {
+	Thread imgRecalcThread = new Thread() {
 		public void run() {
 			try {
-				if(!model.getFileManager().isActive()) {
+				if (!model.getFileManager().isActive()) {
 					return;
 				}
 				
-				if(executor.getQueue().size() > 0) {
+				if (executor.getQueue().size() > 0) {
 					return;
 				}
 			
@@ -320,7 +329,7 @@ public class RadarMap extends BaseLayer {
 				getRepaintListener().repaint();
 							
 
-			}catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}			
 		}
@@ -365,7 +374,6 @@ public class RadarMap extends BaseLayer {
 	@Override
 	public List<Node> getToolNodes() {
 
-		
 		return Arrays.asList(
 			showMapButtonAmp, showMapButtonAlg);	
 		

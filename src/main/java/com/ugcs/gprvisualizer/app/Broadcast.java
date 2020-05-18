@@ -20,23 +20,23 @@ public class Broadcast {
 	
 	@PostConstruct
 	public void init() {
-		AppContext.setItems( getItems() );
+		AppContext.setItems(getItems());
 	}
 	
-	public Set<SmthChangeListener> getItems(){
+	public Set<SmthChangeListener> getItems() {
 		return items;
 	}
 	
 	public void notifyAll(WhatChanged changed) {
 		
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 		
 				for (SmthChangeListener lst : items) {
 					try {
 						lst.somethingChanged(changed);
-					}catch(Exception e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}

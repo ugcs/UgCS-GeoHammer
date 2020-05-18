@@ -48,14 +48,18 @@ public class PluginRunner implements SingleCommand {
 			
 			String line;
 
-			String cmd = "python \"" + sgyprocPath + "/main.py\" "
-					+ "\""+ sb.toString() +"\" "
-					+ "--model \"" + sgyprocPath + "\\model.pb\" --no_progressbar";
+			String cmd = "python \"" + sgyprocPath 
+					+ "/main.py\" "
+					+ "\" "+ sb.toString() + "\" "
+					+ "--model \"" + sgyprocPath 
+					+ "\\model.pb\" --no_progressbar";
+			
 			System.out.println(cmd);
 			Process p = Runtime.getRuntime().exec(cmd);
 			
 			//
-			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			BufferedReader input = new BufferedReader(
+					new InputStreamReader(p.getInputStream()));
 			while ((line = input.readLine()) != null) {
 				
 				if (!line.contains("Iterations")) {
@@ -82,7 +86,7 @@ public class PluginRunner implements SingleCommand {
 		} catch (Exception err) {
 			err.printStackTrace();
 			
-			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW,"");
+			MessageBoxHelper.showError(NEURAL_NETWORK_IS_NOT_AVAILABLE_NOW, "");
 		}
 	}
 	

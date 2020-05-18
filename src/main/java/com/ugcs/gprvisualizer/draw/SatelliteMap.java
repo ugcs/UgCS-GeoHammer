@@ -49,21 +49,24 @@ public class SatelliteMap extends BaseLayer {
 	private BufferedImage img;
 	private LatLon imgLatLon;
 	private int imgZoom;
-
+	private LatLon click;
+	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
 			setActive(showLayerCheckbox.isSelected());
-			if(isActive()) {
+			if (isActive()) {
 				loadMap();
-			}else {
+			} else {
 				getRepaintListener().repaint();
 			}
 				
 		}
 	};
 	
-	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
+	private ToggleButton showLayerCheckbox = 
+			new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
+	
 	{
 		boolean apiExists = StringUtils.isNotBlank(GOOGLE_API_KEY);
 		
@@ -74,17 +77,20 @@ public class SatelliteMap extends BaseLayer {
 	}
 	
 	private static String GOOGLE_API_KEY;
+	
 	static {
 		InputStream inputStream = null;
 		try {
-			inputStream = SatelliteMap.class.getClassLoader().getResourceAsStream("googleapikey");
-			java.util.Scanner s = new java.util.Scanner(inputStream).useDelimiter("\\A");
+			inputStream = SatelliteMap.class.getClassLoader()
+					.getResourceAsStream("googleapikey");
+			java.util.Scanner s = new java.util.Scanner(inputStream)
+					.useDelimiter("\\A");
 			GOOGLE_API_KEY = s.hasNext() ? s.next() : "";
 		
 			s.close();
-		}catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("no google api key -> no googlemaps");
-		}finally {
+		} finally {
 			try {
 				inputStream.close();
 			} catch (IOException e) {
@@ -93,37 +99,32 @@ public class SatelliteMap extends BaseLayer {
 		}
 	}
 	
-	
-	
-	private LatLon click;
-	
 	public SatelliteMap() {
 		super();		
 	}
 	
 	@Override
 	public void draw(Graphics2D g2) {
-		BufferedImage _img = img;
-		if(_img != null && isActive()) {
+		BufferedImage tmpImg = img;
+		if (tmpImg != null && isActive()) {
 			
 			Point2D offst = model.getField().latLonToScreen(imgLatLon);
 			
 			double scale = Math.pow(2, model.getField().getZoom() - imgZoom);
 			
-			g2.drawImage(_img, 
-				(int)(offst.getX() -_img.getWidth()/2*scale), 
-				(int)(offst.getY() -_img.getHeight()/2*scale),
-				(int)(_img.getWidth()*scale),
-				(int)(_img.getHeight()*scale),
+			g2.drawImage(tmpImg, 
+				(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
+				(int) (offst.getY() - tmpImg.getHeight() / 2 * scale),
+				(int) (tmpImg.getWidth() * scale),
+				(int) (tmpImg.getHeight() * scale),
 				null);
 		}		
 		
-		if(click != null) {
+		if (click != null) {
 			Point2D p = model.getField().latLonToScreen(click);
 			
-			g2.drawOval((int)p.getX()-3, (int)p.getY()-3, 7, 7);
+			g2.drawOval((int) p.getX() - 3, (int) p.getY() - 3, 7, 7);
 		}
-		
 	}
 
 	@Override
@@ -136,18 +137,18 @@ public class SatelliteMap extends BaseLayer {
 	public void somethingChanged(WhatChanged changed) {
 		
 		
-		if(changed.isFileopened() || changed.isZoom()) {
+		if (changed.isFileopened() || changed.isZoom()) {
 			
-			if(model.isActive()) {
+			if (model.isActive()) {
 				loadMap();
-			}else {
+			} else {
 				this.img = null;
 			}			
 		}		
 	}
 
 	private void loadMap() {
-		if(isActive() && StringUtils.isNotBlank(GOOGLE_API_KEY)) {
+		if (isActive() && StringUtils.isNotBlank(GOOGLE_API_KEY)) {
 			new Calc().start();
 		}
 	}
@@ -163,7 +164,8 @@ public class SatelliteMap extends BaseLayer {
 		
 		LatLon midlPoint = model.getField().getSceneCenter();
 		int imgZoom = model.getField().getZoom();
-		map.setLocation(new Location(midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); //40.714, -73.998 
+		map.setLocation(new Location(
+				midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); 
 		map.setMaptype(Maptype.hybrid);
 		
 		try {
@@ -182,17 +184,9 @@ public class SatelliteMap extends BaseLayer {
 			e.printStackTrace();
 		}
 		
-		//drawTrack(img);
-		
-//		Graphics2D g2 = (Graphics2D)img.getGraphics();
-//		int r = 40;
-//		g2.drawLine(img.getWidth()/2-r, img.getHeight()/2, img.getWidth()/2+r, img.getHeight()/2);
-//		g2.drawLine(img.getWidth()/2, img.getHeight()/2-r, img.getWidth()/2, img.getHeight()/2+r);
-		
 		this.img = img;
 		this.imgLatLon = midlPoint;
 		this.imgZoom = imgZoom;
-		
 	}
 	
 	class Calc extends Thread {
@@ -209,7 +203,7 @@ public class SatelliteMap extends BaseLayer {
 	@Override
 	public boolean mousePressed(Point2D point) {
 		
-		if(!model.getFileManager().isActive()) {
+		if (!model.getFileManager().isActive()) {
 			return false;
 		}
 		
@@ -240,20 +234,22 @@ public class SatelliteMap extends BaseLayer {
 	@Override
 	public boolean mouseMove(Point2D point) {
 		
-		if(dragField == null) {
+		if (dragField == null) {
 			return false;
 		}
 
 		LatLon newCenter = dragField.screenTolatLon(point);		
-		double lat = dragField.getSceneCenter().getLatDgr() + click.getLatDgr() - newCenter.getLatDgr();
-		double lon = dragField.getSceneCenter().getLonDgr() + click.getLonDgr() - newCenter.getLonDgr();
+		double lat = dragField.getSceneCenter().getLatDgr() 
+				+ click.getLatDgr() - newCenter.getLatDgr();
+		double lon = dragField.getSceneCenter().getLonDgr() 
+				+ click.getLonDgr() - newCenter.getLonDgr();
 		
 		model.getField().setSceneCenter(new LatLon(lat, lon));
 		
 		getRepaintListener().repaint();
 		
 		return true;
-	};
+	}
 
 	@Override
 	public List<Node> getToolNodes() {

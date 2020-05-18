@@ -55,13 +55,14 @@ public class Saver implements ToolProducer {
 			try {
 				loader.load(newfiles, listener);
 				
-			}catch(Exception e) {
+			} catch (Exception e) {
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 		    	
 	    	broadcast.notifyAll(new WhatChanged(Change.fileopened));
 		    	
-		    status.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
+		    status.showProgressText("saved " 
+		    		+ model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -76,7 +77,7 @@ public class Saver implements ToolProducer {
 			
 			try {
 				loader.load(newfiles, listener);
-			}catch(Exception e) {
+			} catch(Exception e) {
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 				
@@ -84,7 +85,8 @@ public class Saver implements ToolProducer {
 	    	
 			broadcast.notifyAll(new WhatChanged(Change.fileopened));
 	    	
-	    	status.showProgressText("saved " + model.getFileManager().getFiles().size() + " files");
+	    	status.showProgressText("saved " 
+	    			+ model.getFileManager().getFiles().size() + " files");
 		}
 	};
 
@@ -99,13 +101,17 @@ public class Saver implements ToolProducer {
 		buttonSaveTo.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		    	
-		    	DirectoryChooser dir_chooser = new DirectoryChooser(); 
-		    	if(!model.getFileManager().getFiles().isEmpty()) {
-		    		dir_chooser.setInitialDirectory(model.getFileManager().getFiles().get(0).getFile().getParentFile());
+		    	DirectoryChooser dirChooser = new DirectoryChooser(); 
+		    	if (!model.getFileManager().getFiles().isEmpty()) {
+		    		
+		    		SgyFile firstFile = model.getFileManager().getFiles().get(0);
+		    		
+					dirChooser.setInitialDirectory(
+		    				firstFile.getFile().getParentFile());
 		    	}
-		    	folder = dir_chooser.showDialog(AppContext.stage); 
+		    	folder = dirChooser.showDialog(AppContext.stage); 
 		    	  
-                if(folder != null) { 
+                if (folder != null) { 
                 	new TaskRunner(status, saveAsTask).start();
                 } 		    	
 		    }
@@ -127,7 +133,7 @@ public class Saver implements ToolProducer {
 	private List<File> saveTheSame() {
 		List<File> newfiles = new ArrayList<>();
 		
-		for(SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getFiles()) {
 			newfiles.add(save(file));
 		}
 		
@@ -137,50 +143,11 @@ public class Saver implements ToolProducer {
 	private List<File> saveAs(File folder) {
 		List<File> newfiles = new ArrayList<>();
 		
-		//File folder = createFolder();
-		for(SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getFiles()) {
 			newfiles.add(save(file, folder));
 		}
 		
 		return newfiles;
-	}
-
-//	private List<List<Trace>> splitFile(SgyFile file) {
-//		List<List<Trace>> splitList = new ArrayList<>();
-//		List<Trace> sublist = new ArrayList<>();
-//		for(Trace trace : file.getTraces()) {
-//			
-//			
-//			
-//			if(trace.isActive()) {
-//				sublist.add(trace);
-//			}else {
-//				if(!sublist.isEmpty()){
-//					splitList.add(sublist);
-//					sublist = new ArrayList<>();
-//											
-//				}		
-//			}
-//		}
-//		//for last
-//		if(!sublist.isEmpty()){					
-//			splitList.add(sublist);
-//		}
-//		return splitList;
-//	}
-
-	private File createFolder() {
-		File someFile = model.getFileManager().getFiles().get(0).getFile();
-		File nfolder;
-		int cnt=0;
-		do {
-			cnt++;
-			String name = String.format("processed_%03d", cnt);
-			nfolder = new File(someFile.getParentFile(), name);
-		}while(nfolder.exists());
-		
-		nfolder.mkdir();
-		return nfolder;
 	}
 
 	private File save(SgyFile sgyFile, File folder) {

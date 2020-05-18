@@ -21,7 +21,7 @@ public class ThresholdSlider  extends BaseSlider {
 	}
 	
 	public int updateModel() {
-		settings.threshold = (int)slider.getValue();
+		settings.threshold = (int) slider.getValue();
 		return settings.threshold;
 	}
 }

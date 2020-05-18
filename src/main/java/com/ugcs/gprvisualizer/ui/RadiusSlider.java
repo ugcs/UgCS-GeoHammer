@@ -4,7 +4,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 
 import javafx.beans.value.ChangeListener;
 
-public class RadiusSlider extends BaseSlider{
+public class RadiusSlider extends BaseSlider {
 
 	public RadiusSlider(Settings settings, ChangeListener<Number> listenerExt) {
 		super(settings, listenerExt);
@@ -16,7 +16,7 @@ public class RadiusSlider extends BaseSlider{
 	@Override
 	public int updateModel() {
 		
-		settings.radius = (int)slider.getValue();
+		settings.radius = (int) slider.getValue();
 		return settings.radius;
 	}
 

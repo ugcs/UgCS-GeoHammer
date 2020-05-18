@@ -107,48 +107,45 @@ public class HalfHyper {
 	private static void updateAroundOpposite(List<Trace> traces, HalfHyper hh) {
 		double example = traces.get(hh.pinnacle_tr).getNormValues()[hh.pinnacle_smp];
 		
-		int above=0;
-		int below=0;
-		int mid = hh.length/2;
-		for(int i=0 ; i < hh.length; i++){
-			int checked_tr = hh.pinnacle_tr + i * hh.side; 
-			float []values = traces.get(checked_tr).getNormValues();
+		int above = 0;
+		int below = 0;
+		int mid = hh.length / 2;
+		for (int i=0 ; i < hh.length; i++) {
+			int checkedTr = hh.pinnacle_tr + i * hh.side; 
+			float[] values = traces.get(checkedTr).getNormValues();
 			
 			int smp = hh.smp[i];
 			
-			if(i>mid) {
+			if (i>mid) {
 				above += lookingForOpposite(values, smp, example, -1);
 			}
-			if(i<mid) {
+			if (i<mid) {
 				below += lookingForOpposite(values, smp, example, +1);
 			}
 		}
 		
-		hh.oppositeAbovePerc = (double)above/(double)hh.length;
-		hh.oppositeBelowPerc = (double)below/(double)hh.length;
+		hh.oppositeAbovePerc = (double) above / (double) hh.length;
+		hh.oppositeBelowPerc = (double) below / (double) hh.length;
 	}
 	
 	
 	
-	static private boolean similar(float example, float val) {
-		
+	private static boolean similar(float example, float val) {
 		return (example > 0) == (val > 0);
 	}
 
-	static private int lookingForOpposite(float[] values, int smpstart, double example, int side) {
+	private static int lookingForOpposite(float[] values, int smpstart, double example, int side) {
 		
 		boolean positive = example > 0;
 		
-		for(int smp=1; smp< 3; smp++) {
-			float val = values[smpstart + side*smp];
+		for (int smp = 1; smp < 3; smp++) {
+			float val = values[smpstart + side * smp];
 			
-			if(val > 0 != positive) {
+			if (val > 0 != positive) {
 				return 1;
 			}			
 		}		
 		return 0;
 	}
-	
-	
 	
 }

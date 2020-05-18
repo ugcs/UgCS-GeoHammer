@@ -22,19 +22,19 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
 
-	private static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null)/2;
-	private static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null)/2;
+	private static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null) / 2;
+	private static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null) / 2;
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
-	final static float dash1[] = {7.0f, 2.0f};
+	final static float[] dash1 = {7.0f, 2.0f};
 	static Stroke VERTICAL_STROKE = 	
 			new BasicStroke(1.0f,
                 BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER,
                 10.0f, dash1, 0.0f);
 
-	private Color flagColor = Color.getHSBColor((float)Math.random(), 1, 1f); 
+	private Color flagColor = Color.getHSBColor((float) Math.random(), 1, 1f); 
 	private int traceInAll;
 	
 	public ClickPlace(int trace) {
@@ -42,19 +42,19 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
 		return false;
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 
 		return false;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 		
 		return false;
 	}
@@ -62,46 +62,45 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
-		Rectangle rect = getRect(hField);
+		Rectangle rect = getRect(mapField);
 		
 		g2.setColor(flagColor);
 		
-		g2.translate(rect.x , rect.y);
+		g2.translate(rect.x, rect.y);
 		
 		g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
-		g2.translate(-rect.x , -(rect.y));
+		g2.translate(-rect.x, -rect.y);
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		setClip(g2, vField.getClipTopMainRect());
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		setClip(g2, profField.getClipTopMainRect());
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		g2.setColor(flagColor);
-		g2.translate(rect.x , rect.y);
+		g2.translate(rect.x, rect.y);
 		g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
 		
 		g2.setStroke(VERTICAL_STROKE);
 		g2.setColor(Color.blue);
 		g2.setXORMode(Color.gray);
-		g2.drawLine(R_HOR , Model.TOP_MARGIN, R_HOR , vField.sampleToScreen(
-				vField.getLastVisibleSample(vField.getLeftRuleRect().height)		
-				//AppContext.model.getMaxHeightInSamples()
+		g2.drawLine(R_HOR, Model.TOP_MARGIN, R_HOR, profField.sampleToScreen(
+				profField.getLastVisibleSample(profField.getLeftRuleRect().height)		
 				));
 		g2.setPaintMode();
-		g2.translate(-rect.x , -(rect.y));
+		g2.translate(-rect.x, -rect.y);
 	}
 	
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
-		int x = vField.traceToScreen(traceInAll);
+		int x = profField.traceToScreen(traceInAll);
 				
 		Rectangle rect = new Rectangle(
-				x-R_HOR, Model.TOP_MARGIN-R_VER*2, 
-				R_HOR*2, R_VER*2);
+				x - R_HOR, Model.TOP_MARGIN - R_VER * 2, 
+				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 	
@@ -111,8 +110,8 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
 		
 		Rectangle rect = new Rectangle(
-				(int)p.getX()-R_HOR, (int)p.getY()-R_VER*2, 
-				R_HOR*2, R_VER*2);
+				(int) p.getX() - R_HOR, (int) p.getY() - R_VER  *2, 
+				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 
@@ -121,11 +120,9 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		
-		//Rectangle rect = getRect(vField);
-		
-		return false;//rect.contains(localPoint);
+		return false;
 	}
 
 	@Override
@@ -139,12 +136,11 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		//json.put("trace", traceInFile);
 		return false;
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
+	public boolean mousePressHandle(Point2D point, MapField mapField) {
 		return false;
 	}
 

@@ -330,7 +330,8 @@ public class ProfileView implements SmthChangeListener {
 				g2.setColor(new Color(50, 200, 250));
 				g2.setStroke(AMP_STROKE);
 				for (HorizontalProfile pf : f.profiles) {
-					drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), pf, 0);
+					drawHorizontalProfile(field, g2, 
+							f.getOffset().getStartTrace(), pf, 0);
 				}
 			}
 
@@ -338,7 +339,8 @@ public class ProfileView implements SmthChangeListener {
 			if (f.groundProfile != null) {
 				g2.setColor(new Color(210, 105, 30));
 				g2.setStroke(LEVEL_STROKE);
-				drawHorizontalProfile(field, g2, f.getOffset().getStartTrace(), f.groundProfile,
+				drawHorizontalProfile(field, g2, 
+						f.getOffset().getStartTrace(), f.groundProfile,
 						shiftGround.intValue());
 			}
 
@@ -347,7 +349,8 @@ public class ProfileView implements SmthChangeListener {
 				g2.setColor(Color.GREEN);
 				g2.setStroke(AMP_STROKE);
 
-				drawScanProfile(field, g2, f.getOffset().getStartTrace(), f.algoScan);
+				drawScanProfile(field, g2, 
+						f.getOffset().getStartTrace(), f.algoScan);
 			}
 
 		}
@@ -365,7 +368,10 @@ public class ProfileView implements SmthChangeListener {
 		int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
 		g2.drawLine(-width / 2, y, width / 2, y);
 
-		int y2 = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer + model.getSettings().hpage)).y;
+		int bottomSelectedSmp = model.getSettings().layer + model.getSettings().hpage;
+		int y2 = field.traceSampleToScreen(new TraceSample(
+				0, bottomSelectedSmp)).y;
+		
 		g2.drawLine(-width / 2, y2, width / 2, y2);
 
 	}
@@ -393,48 +399,58 @@ public class ProfileView implements SmthChangeListener {
 		Rectangle leftRuleRect = field.getLeftRuleRect();
 
 		g2.setPaint(Color.DARK_GRAY);
-		g2.fillRect(mainRectRect.x, mainRectRect.y, mainRectRect.width, mainRectRect.height);
+		g2.fillRect(mainRectRect.x, mainRectRect.y, 
+				mainRectRect.width, mainRectRect.height);
 
 		g2.setPaint(new Color(45, 60, 100));
-		g2.fillRect(topRuleRect.x, topRuleRect.y, topRuleRect.width, topRuleRect.height);
+		g2.fillRect(topRuleRect.x, topRuleRect.y, 
+				topRuleRect.width, topRuleRect.height);
 		g2.setPaint(Color.white);
-		g2.drawLine(topRuleRect.x, topRuleRect.y + topRuleRect.height, topRuleRect.x + topRuleRect.width,
+		g2.drawLine(topRuleRect.x, 
+				topRuleRect.y + topRuleRect.height, 
+				topRuleRect.x + topRuleRect.width,
 				topRuleRect.y + topRuleRect.height);
 
 		g2.setPaint(new Color(45, 60, 100));
-		g2.fillRect(leftRuleRect.x, leftRuleRect.y, leftRuleRect.width, leftRuleRect.height);
+		g2.fillRect(leftRuleRect.x, leftRuleRect.y, 
+				leftRuleRect.width, leftRuleRect.height);
 		g2.setPaint(Color.white);
-		g2.drawLine(leftRuleRect.x + leftRuleRect.width, leftRuleRect.y, leftRuleRect.x + leftRuleRect.width,
+		g2.drawLine(leftRuleRect.x + leftRuleRect.width, 
+				leftRuleRect.y, 
+				leftRuleRect.x + leftRuleRect.width,
 				leftRuleRect.y + leftRuleRect.height);
 
 	}
 
-	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, int startTraceIndex, HorizontalProfile pf,
+	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, 
+			int startTraceIndex, HorizontalProfile pf,
 			int voffset) {
 
 		g2.setColor(pf.color);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex, pf.deep[0] + voffset));
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(
+				startTraceIndex, pf.deep[0] + voffset));
 		int max2 = 0;
 
 		for (int i = 1; i < pf.deep.length; i++) {
 
 			max2 = Math.max(max2, pf.deep[i] + voffset);
 
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex + i, max2));
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
+					startTraceIndex + i, max2));
+			
 			if (p2.x - p1.x > 2) {
-
 				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
-
 				p1 = p2;
 				max2 = 0;
 			}
-
 		}
 	}
 
-	private void drawScanProfile(ProfileField field, Graphics2D g2, int startTraceIndex, ScanProfile pf) {
+	private void drawScanProfile(ProfileField field, Graphics2D g2, 
+			int startTraceIndex, ScanProfile pf) {
 
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex, 0));
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(
+				startTraceIndex, 0));
 		int max2 = 0;
 		int offsety = field.getMainRect().y;
 
@@ -442,7 +458,9 @@ public class ProfileView implements SmthChangeListener {
 
 			max2 = Math.max(max2, (int) pf.intensity[i]);
 
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(startTraceIndex + i, 0));
+			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
+					startTraceIndex + i, 0));
+			
 			p2.y = max2;
 
 			if (p2.x - p1.x > 2) {
@@ -458,7 +476,8 @@ public class ProfileView implements SmthChangeListener {
 
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 
-		SgyFile currentFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
+		SgyFile currentFile = model.getSgyFileByTrace(
+				model.getVField().getSelectedTrace());
 
 		int selectedX1 = 0;
 		int selectedX2 = 0;
@@ -470,9 +489,11 @@ public class ProfileView implements SmthChangeListener {
 		g2.setStroke(AMP_STROKE);
 		for (SgyFile fl : model.getFileManager().getFiles()) {
 
-			p = field.traceSampleToScreen(new TraceSample(fl.getTraces().get(0).indexInSet, 0));
-			p2 = field
-					.traceSampleToScreen(new TraceSample(fl.getTraces().get(fl.getTraces().size() - 1).indexInSet, 0));
+			p = field.traceSampleToScreen(new TraceSample(
+					fl.getTraces().get(0).indexInSet, 0));
+			
+			p2 = field.traceSampleToScreen(new TraceSample(
+					fl.getTraces().get(fl.getTraces().size() - 1).indexInSet, 0));
 
 			if (currentFile == fl) {
 				g2.setColor(Color.YELLOW);
@@ -491,8 +512,10 @@ public class ProfileView implements SmthChangeListener {
 
 			p.x = Math.max(p.x, leftMargin);
 
-			g2.setClip(p.x, 0, p2.x - p.x - ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null), 20);
-			g2.drawString((fl.isUnsaved() ? "*" : "") + fl.getFile().getName(), p.x + 7, 11);
+			int iconImageWidth = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
+			g2.setClip(p.x, 0, p2.x - p.x - iconImageWidth, 20);
+			String fileName = (fl.isUnsaved() ? "*" : "") + fl.getFile().getName();
+			g2.drawString(fileName, p.x + 7, 11);
 			g2.setClip(null);
 		}
 
@@ -538,9 +561,12 @@ public class ProfileView implements SmthChangeListener {
 
 	public List<Node> getRightSearch() {
 
-		return Arrays.asList(hyperbolaSlider.produce(), hyperGoodSizeSlider.produce(), middleAmplitudeSlider.produce(),
+		return Arrays.asList(hyperbolaSlider.produce(), 
+				hyperGoodSizeSlider.produce(), 
+				middleAmplitudeSlider.produce(),
 
-				SliderFactory.create("shift ground", shiftGround, 0, 100, new ChangeListener<Number>() {
+				SliderFactory.create("shift ground", shiftGround, 0, 100, 
+						new ChangeListener<Number>() {
 
 					@Override
 					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
@@ -550,7 +576,9 @@ public class ProfileView implements SmthChangeListener {
 					}
 				}, 20),
 				
-				SliderFactory.create("printHoughAindex", model.getSettings().printHoughAindex, 0, HoughScan.DISCRET_SIZE-1, new ChangeListener<Number>() {
+				SliderFactory.create("printHoughAindex", model.getSettings().printHoughAindex, 
+						0, HoughScan.DISCRET_SIZE - 1, 
+						new ChangeListener<Number>() {
 					@Override
 					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
 							Number newValue) {
@@ -562,7 +590,6 @@ public class ProfileView implements SmthChangeListener {
 
 	protected void initImageView() {
 		imageView.setOnScroll(event -> {
-			// model.getField().setZoom( .getZoom() + (event.getDeltaY() > 0 ? 1 : -1 ) );
 			int ch = (event.getDeltaY() > 0 ? 1 : -1);
 
 			double ex = event.getSceneX();
@@ -589,7 +616,6 @@ public class ProfileView implements SmthChangeListener {
 
 			double realAspect = getField().getAspectReal()
 					* (ch > 0 ? ProfileField.ASPECT_A : 1 / ProfileField.ASPECT_A);
-			// h / model.getVField().getVScale();
 
 			getField().setAspectReal(realAspect);
 
@@ -612,7 +638,8 @@ public class ProfileView implements SmthChangeListener {
 
 	}
 
-	protected EventHandler<MouseEvent> dragDetectedHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> dragDetectedHandler = 
+			new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent mouseEvent) {
 
@@ -622,7 +649,8 @@ public class ProfileView implements SmthChangeListener {
 		}
 	};
 
-	protected EventHandler<MouseDragEvent> dragReleaseHandler = new EventHandler<MouseDragEvent>() {
+	protected EventHandler<MouseDragEvent> dragReleaseHandler = 
+			new EventHandler<MouseDragEvent>() {
 		@Override
 		public void handle(MouseDragEvent event) {
 
@@ -639,7 +667,8 @@ public class ProfileView implements SmthChangeListener {
 		}
 	};
 
-	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mouseMoveHandler = 
+			new EventHandler<MouseEvent>() {
 
 		@Override
 		public void handle(MouseEvent event) {
@@ -691,11 +720,11 @@ public class ProfileView implements SmthChangeListener {
 				if (trace >= 0 && trace < model.getTracesCount()) {
 
 					// select in MapView
-					model.getField().setSceneCenter(model.getFileManager().getTraces().get(trace).getLatLon());
+					model.getField().setSceneCenter(
+							model.getFileManager().getTraces().get(trace).getLatLon());
 
 					createTempPlace(model, trace);
 
-					//AppContext.notifyAll(new WhatChanged(Change.mapscroll));
 					broadcast.notifyAll(new WhatChanged(Change.mapscroll));
 				}
 			}
@@ -709,7 +738,8 @@ public class ProfileView implements SmthChangeListener {
 		model.setControls(Arrays.asList(fp));
 	}
 
-	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mousePressHandler = 
+			new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent event) {
 
@@ -726,7 +756,8 @@ public class ProfileView implements SmthChangeListener {
 		}
 	};
 
-	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
+	protected EventHandler<MouseEvent> mouseReleaseHandler = 
+			new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent event) {
 
@@ -786,7 +817,8 @@ public class ProfileView implements SmthChangeListener {
 		profileScroll.recalc();
 	}
 
-	private RecalculationController controller = new RecalculationController(new Consumer<RecalculationLevel>() {
+	private RecalculationController controller = 
+			new RecalculationController(new Consumer<RecalculationLevel>() {
 
 		@Override
 		public void accept(RecalculationLevel level) {

@@ -47,7 +47,7 @@ public class AmplitudeMatrix {
 		
 		this.traces = traces;
 		matrix = new float[traces.size()][];
-		for(int i=0; i< traces.size(); i++) {
+		for (int i = 0; i < traces.size(); i++) {
 			matrix[i] = getAmpVector(traces.get(i).getNormValues());
 		}		
 	}
@@ -61,41 +61,43 @@ public class AmplitudeMatrix {
 		float min = values[0];
 		int zeroind = 0;
 		int midind = 0;
-		for(int i=0; i < values.length; i++) {
+		for (int i = 0; i < values.length; i++) {
 			
 			float val = values[i];
 			max = Math.max(max, val);
 			min = Math.min(min, val);
 			
-			if(isCrosZero(val, prevval)) {
+			if (isCrosZero(val, prevval)) {
 				midind = i;
 			}
-			if(isCrosZero(prevval, val)) {
+			if (isCrosZero(prevval, val)) {
 				//float amp = ;
 				
 				fill(res, zeroind, i, max - min);
-				colls.get(colls.size()-1).add(new Grp(zeroind, i, max - min, midind));
+				colls.get(colls.size() - 1).add(
+						new Grp(zeroind, i, max - min, midind));
 				zeroind = i;
 				min = val;
 				max = val;
 			}
-			prevval=val;
+			prevval = val;
 		}
 		fill(res, zeroind, values.length, max - min);
 		return res;
 	}
 	
 	class Grp{
+		int start;
+		int midind;
+		int finish;
+		float amp;
+
 		public Grp(int start, int finish, float f, int midind) {
 			this.start = start;
 			this.finish = finish;
 			this.amp = f;
 			this.midind =  midind;
 		}
-		int start;
-		int midind;
-		int finish;
-		float amp;
 	}
 	
 	/**
@@ -108,7 +110,7 @@ public class AmplitudeMatrix {
 		List<List<Grp>> selected = new ArrayList<>();
 		
 		//select[X] - cohesive union of groups (row)
-		for(Grp start : startList) {
+		for (Grp start : startList) {
 			selected.add(findLevelStartingAt(start));
 		}
 		
@@ -130,7 +132,7 @@ public class AmplitudeMatrix {
 		
 		//level = new int[selrow.size()];
 		
-		for(int i=0; i< selrow.size(); i++) {
+		for (int i = 0; i < selrow.size(); i++) {
 			 int r = calcAvgHeight(selrow, i);
 			 
 			 hp.deep[i] = r;
@@ -148,14 +150,14 @@ public class AmplitudeMatrix {
 
 	private List<List<Integer>> getRows(List<List<Grp>> selected) {
 		List<List<Integer>> rows = new ArrayList<>();
-		for(List<Grp> row : selected) {
+		for (List<Grp> row : selected) {
 			List<Integer> lstop = new ArrayList<>();
 			List<Integer> lsbot = new ArrayList<>();
 			List<Integer> lscen = new ArrayList<>();
-			for(Grp g : row ) {
+			for (Grp g : row ) {
 				lstop.add(g.start);
 				lscen.add(g.midind);
-				lsbot.add(g.finish-1);
+				lsbot.add(g.finish - 1);
 			}
 			rows.add(lstop);
 			//rows.add(lscen);
@@ -164,35 +166,37 @@ public class AmplitudeMatrix {
 		return rows;
 	}
 
+	private static final int R = 20;
+	
 	private int calcAvgHeight(List<Integer> selrow, int i) {
-		int R = 20;
-		int from = i-R;
+		
+		int from = i - R;
 		from = Math.max(from, 0);
 		
-		int to = i+R;
-		to = Math.min(to, selrow.size()-1);
+		int to = i + R;
+		to = Math.min(to, selrow.size() - 1);
 
 		double sum = 0;
 		double del = 0;
-		for(int j=from; j<=to; j++) {
+		for (int j = from; j <= to; j++) {
 			
-			
-			double d = ((double)(R - Math.abs(j-i))) / ((double)R);
+			double d = ((double) (R - Math.abs(j - i))) 
+					/ ((double) R);
 			
 			sum += selrow.get(j) * d;
 			del += d;
 		}
 		
-		return (int)Math.round(sum/del);
+		return (int) Math.round(sum / del);
 	}
 
 	private List<Integer> findBestPath(List<List<Integer>> selected) {
 		List<Integer> selrow = null;
 		long selsum = 0;
-		for(List<Integer> row : selected) {
+		for (List<Integer> row : selected) {
 			long sum = getIndignation(row);
 			
-			if(selrow == null || sum < selsum) {
+			if (selrow == null || sum < selsum) {
 				selrow = row;
 				selsum = sum;
 			}			
@@ -206,21 +210,22 @@ public class AmplitudeMatrix {
 		// continuos number of zero shift
 		int zerocount = 0;
 		int maxzerocount = 0;
-		for(int i = 1; i< row.size(); i++) {
+		for (int i = 1; i < row.size(); i++) {
 			
-			int diff = Math.abs(row.get(i-1)-row.get(i));
+			int diff = Math.abs(row.get(i - 1) - row.get(i));
 			res += diff;
-			if(diff == 0) {
+			if (diff == 0) {
 				zerocount++;
-			}else {
+			} else {
 				maxzerocount = Math.max(maxzerocount, zerocount);
 				zerocount = 0;
 			}
 		}
 		maxzerocount = Math.max(maxzerocount, zerocount);
 		
-		if(maxzerocount > row.size()/8) {
-			//it s strait line - can`t be the ground.  Most probable it is background const noise
+		if (maxzerocount > row.size() / 8) {
+			//it s strait line - can`t be the ground.  
+			//Most probable it is background const noise
 			return 10000000;
 		}
 		return res;
@@ -251,16 +256,16 @@ public class AmplitudeMatrix {
 		finishAvg = new MovingAvg();
 		finishAvg.add(start.finish);
 		
-		int x=0;
-		for(List<Grp> col : colls) {
+		int x = 0;
+		for (List<Grp> col : colls) {
 			
 			Grp avggrp = getAvgGrp();
 			avgrow.add(avggrp);
 			List<Grp> grpcandidats = find(avggrp, col);
-			if(grpcandidats.isEmpty()) {
+			if (grpcandidats.isEmpty()) {
 				
-				selected.add(selected.get(selected.size()-1));
-			}else {
+				selected.add(selected.get(selected.size() - 1));
+			} else {
 			
 				Grp grp = selectbest(grpcandidats, selected);
 				startAvg.add(grp.start);
@@ -291,13 +296,14 @@ public class AmplitudeMatrix {
 	}
 
 	private Grp getAvgGrp() {
-		Grp avggrp = new Grp(startAvg.get(), finishAvg.get(), 2000, (startAvg.get() + finishAvg.get())/2);
+		Grp avggrp = new Grp(startAvg.get(), finishAvg.get(), 
+				2000, (startAvg.get() + finishAvg.get()) / 2);
 		return avggrp;
 	}
 
 	private List<Grp> findBestByCommonLst(List<Grp> grpcandidats, Grp last) {
 		List<Pair<Integer, Grp>> lst = new ArrayList<>();
-		for(Grp grp : grpcandidats) {
+		for (Grp grp : grpcandidats) {
 			
 			lst.add(Pair.of(com(grp, last), grp));
 		}
@@ -313,8 +319,8 @@ public class AmplitudeMatrix {
 		
 		List<Grp> res = new ArrayList<>();
 		res.add(lst.get(0).getValue());
-		if(lst.size() > 1 && 
-			diffMinor(lst.get(0).getKey(), lst.get(1).getKey())) {
+		if (lst.size() > 1 
+			&& diffMinor(lst.get(0).getKey(), lst.get(1).getKey())) {
 			
 			res.add(lst.get(1).getValue());
 		}
@@ -329,9 +335,9 @@ public class AmplitudeMatrix {
 
 	private Grp findBestByCommon(List<Grp> grpcandidats, Grp last) {
 		Grp r2 = grpcandidats.get(0);
-		for(Grp grp : grpcandidats) {
+		for (Grp grp : grpcandidats) {
 			
-			if(com(grp, last) > com(r2, last)) {
+			if (com(grp, last) > com(r2, last)) {
 				r2 = grp;
 			}
 		}
@@ -340,10 +346,10 @@ public class AmplitudeMatrix {
 
 	private Grp findBestByAmp(List<Grp> grpcandidats) {
 		Grp r1 = grpcandidats.get(0);
-		for(Grp grp : grpcandidats) {
+		for (Grp grp : grpcandidats) {
 			
 			
-			if(grp.amp > r1.amp) {
+			if (grp.amp > r1.amp) {
 				r1 = grp;
 			}
 		}
@@ -353,15 +359,15 @@ public class AmplitudeMatrix {
 	private int com(Grp g1, Grp g2) {
 		
 		return 
-			Math.min(g1.finish, g2.finish) - 
-			Math.max(g1.start, g2.start);
+			Math.min(g1.finish, g2.finish) 
+			- Math.max(g1.start, g2.start);
 	}
 
 	private List<Grp> find(Grp last, List<Grp> col) {
 		List<Grp> result = new ArrayList<>();
 		
-		for(Grp grp : col) {
-			if(isTouched(last, grp)) {
+		for (Grp grp : col) {
+			if (isTouched(last, grp)) {
 				result.add(grp);
 			}
 		}
@@ -383,7 +389,7 @@ public class AmplitudeMatrix {
 
 	private void fill(float[] res, int zeroind, int to, float amp) {
 
-		for(int i=zeroind; i<to; i++ ) {
+		for (int i = zeroind; i < to; i++) {
 			res[i] = amp; 
 		}
 		
@@ -398,22 +404,24 @@ public class AmplitudeMatrix {
 	int vertkf = 4;
 	int width;
 	int height;
+	
 	public BufferedImage getImg() {
 		
 		int[] palette = new PaletteBuilder().build();
 		width = matrix.length;
 		height = matrix[0].length;
-	    BufferedImage image = new BufferedImage(width, height*vertkf, BufferedImage.TYPE_INT_RGB);
+	    BufferedImage image = new BufferedImage(width, height * vertkf, 
+	    		BufferedImage.TYPE_INT_RGB);
 	    
-	    int[] buffer = ((DataBufferInt)image.getRaster().getDataBuffer()).getData() ;	    
+	    int[] buffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData() ;	    
 	    
-	    for(int x=0; x<width; x++){
-	    	for(int y=0; y<height; y++){
+	    for (int x = 0; x < width; x++) {
+	    	for (int y = 0; y < height; y++) {
 	    	
-	    		int  s = (int)(matrix[x][y]/30);
+	    		int  s = (int) (matrix[x][y] / 30);
 	    		s = Math.min(s, 2000);
 	    		
-	    		for(int hy=0; hy<vertkf; hy++) {
+	    		for (int hy = 0; hy < vertkf; hy++) {
 	    			buffer[getIndex(x, y, hy)] = palette[s];
 	    		}
 	    	
@@ -426,10 +434,10 @@ public class AmplitudeMatrix {
 	    int red = Color.RED.getRGB();
 	    int levelColor = Color.BLUE.getRGB();
 	    
-	    if(rows != null) {
-		    for(List<Integer> row : rows) {
-		    	int x =0;
-		    	for(Integer col : row) {
+	    if (rows != null) {
+		    for (List<Integer> row : rows) {
+		    	int x = 0;
+		    	for (Integer col : row) {
 		    		buffer[getIndex(x, col, 2)] = grn;
 		    		x++;
 		    	}
@@ -452,26 +460,6 @@ public class AmplitudeMatrix {
 		return x + y * vertkf * width + hy * width;
 	}
 	
-	
-//	public static void main(String [] args) throws Exception {
-//		//File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed\\2019-07-24-10-43-52-gpr_8.sgy");
-//		File file = new File("d:\\georadarData\\Gas pipes\\2019-07-24-10-43-52-gpr_processed");
-//		//File file = new File("d:\\georadarData\\Greenland\\2018-06-29-22-36-37-gpr-shift_processed");
-//		//File file = new File("d:\\georadarData\\normal soil 1Ghz\\2019-08-30-09-06-30-gpr_processed");
-//		//File file = new File("d:\\georadarData\\mines\\processed_003");
-//		//File file = new File("d:\\georadarData\\sandy soil 1Ghz\\2019-08-30-11-34-28-gpr_processed\\2019-08-30-11-34-28-gpr_5.sgy");
-//		
-//		if(file.isDirectory()) {
-//			File[] lst = file.listFiles(FileManager.filter);
-//			int cnt = 0;
-//			for(File sfile : lst) {
-//				execute(sfile, cnt++);
-//			}
-//		}else {
-//			execute(file, 0);
-//		}
-//	}
-	
 	public static void execute(File file, int prefix) throws Exception {
 		
 		SgyFile sgyFile = new SgyFile();
@@ -491,12 +479,7 @@ public class AmplitudeMatrix {
 		File outputfile = new File(name);
 		ImageIO.write(img, "png", outputfile);
 		
-		//Runtime.getRuntime().exec(outputfile.getAbsolutePath());
-		
 		 Desktop.getDesktop().open(outputfile);
-		
-		
-		
 	}
 
 	
@@ -504,7 +487,6 @@ public class AmplitudeMatrix {
 		
 		try {
 			SgyFile sgyFile = new SgyFile();
-			//sgyFile.open(new File("d:\\georadarData\\mines\\2019-08-29-12-48-48-gpr_0005.SGY"));
 			sgyFile.open(file);
 			
 			BackgroundRemovalFilter lf = new BackgroundRemovalFilter();
@@ -517,7 +499,7 @@ public class AmplitudeMatrix {
 			
 			BufferedImage img = m.getImg();
 			return img;
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}

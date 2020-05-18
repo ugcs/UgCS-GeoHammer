@@ -74,14 +74,16 @@ public class Loader {
 				public void run(ProgressListener listener) {
 					try {
 					
-						if (files.size() == 1 
-								&& files.get(0).getName().endsWith(".constPoints")) {
+						if (isConstPointsFile(files)) {
 							
 							ConstPointsFile cpf = new ConstPointsFile();
 							cpf.load(files.get(0));
 							
-							for (SgyFile sgyFile : model.getFileManager().getFiles()) {
-								cpf.calcVerticalCutNearestPoints(sgyFile);
+							for (SgyFile sgyFile : 
+								model.getFileManager().getFiles()) {
+								
+								cpf.calcVerticalCutNearestPoints(
+										sgyFile);
 							}
 							
 							model.updateAuxElements();
@@ -91,11 +93,12 @@ public class Loader {
 							loadWithNotify(files, listener);
 							
 						}
-					} catch(Exception e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 						
 						MessageBoxHelper.showError(
-								"Can`t open files", "Probably file has incorrect format");
+							"Can`t open files", 
+							"Probably file has incorrect format");
 						
 						model.getFileManager().getFiles().clear();
 						model.updateAuxElements();
@@ -103,10 +106,10 @@ public class Loader {
 						model.getVField().clear();
 						
 						
-						broadcast.notifyAll(new WhatChanged(Change.fileopened));
+						broadcast.notifyAll(
+								new WhatChanged(Change.fileopened));
 					}
 				}
-
         	};
         	
 			new TaskRunner(status, loadTask).start();
@@ -118,6 +121,7 @@ public class Loader {
 
     };
 
+    
 	public void loadWithNotify(final List<File> files, ProgressListener listener) 
 			throws Exception {
 		
@@ -129,7 +133,8 @@ public class Loader {
 	}
 
     
-	public void load(final List<File> files, ProgressListener listener) throws Exception {
+	public void load(final List<File> files, ProgressListener listener) 
+			throws Exception {
 		try {
 			model.setLoading(true);
 			
@@ -140,8 +145,8 @@ public class Loader {
 			model.setLoading(false);
 		}
 		
-		status.showProgressText("loaded " + 
-				model.getFileManager().getFiles().size() + " files");
+		status.showProgressText("loaded " 
+				+ model.getFileManager().getFiles().size() + " files");
 	}        		
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {
@@ -157,11 +162,12 @@ public class Loader {
 		
 		//when open file by dnd (not after save)
 		model.initField();		
-		
-		
-		
 	}
 
+	private boolean isConstPointsFile(final List<File> files) {
+		return files.size() == 1 
+				&& files.get(0).getName().endsWith(".constPoints");
+	}
 
 	
 }

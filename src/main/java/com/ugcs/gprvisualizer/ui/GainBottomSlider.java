@@ -4,7 +4,7 @@ import com.ugcs.gprvisualizer.gpr.Settings;
 
 import javafx.beans.value.ChangeListener;
 
-public class GainBottomSlider extends BaseSlider{
+public class GainBottomSlider extends BaseSlider {
 
 	public GainBottomSlider(Settings settings, ChangeListener<Number> listenerExt) {
 		super(settings, listenerExt);
@@ -16,7 +16,7 @@ public class GainBottomSlider extends BaseSlider{
 	@Override
 	public int updateModel() {
 		
-		settings.bottomscale = (int)slider.getValue();
+		settings.bottomscale = (int) slider.getValue();
 		return settings.bottomscale;
 	}
 

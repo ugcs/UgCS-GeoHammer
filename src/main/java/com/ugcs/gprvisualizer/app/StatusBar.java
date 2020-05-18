@@ -13,11 +13,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
 @Component
-public class StatusBar extends GridPane implements Status{
+public class StatusBar extends GridPane implements Status {
 	
 	private Label first = new Label();
 	
 	private TextField textField = new TextField();
+	
 	{
 		textField.setEditable(false);
 		textField.setStyle("-fx-focus-color: transparent;");
@@ -25,35 +26,27 @@ public class StatusBar extends GridPane implements Status{
 	
 	public StatusBar() {
 		this.getColumnConstraints().add(new ColumnConstraints(140));
-        ColumnConstraints column2 = new ColumnConstraints(150,150,Double.MAX_VALUE);
+        ColumnConstraints column2 = new ColumnConstraints(150, 150, Double.MAX_VALUE);
         column2.setHgrow(Priority.ALWAYS);
         this.getColumnConstraints().add(column2);
          
-        ColumnConstraints column3 = new ColumnConstraints(70,70,Double.MAX_VALUE);
+        ColumnConstraints column3 = new ColumnConstraints(70, 70, Double.MAX_VALUE);
         column3.setHgrow(Priority.ALWAYS);
         this.getColumnConstraints().add(column3);
          
-        //statusBar.setGridLinesVisible(true);
-        //statusBar.setColumnIndex(first, 0);
-        //statusBar.setColumnIndex(second, 1);
-        //statusBar.setColumnIndex(third, 2);
-		
 		this.add(first, 0, 0);
 		this.add(textField, 1, 0);
 		this.add(new Label(""), 2, 0);
-		
 		
 		AppContext.status = this;
 	}
 	
 	public void showProgressText(String txt) {
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				textField.setText(txt);
 			}
 		});
 	}
-	
-
 }

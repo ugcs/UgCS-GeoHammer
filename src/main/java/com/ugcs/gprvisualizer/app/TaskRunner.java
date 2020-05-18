@@ -14,7 +14,6 @@ import javafx.stage.StageStyle;
 
 public class TaskRunner implements ProgressListener {
 	
-	
 	private Status status;
 	private Stage primaryStage = AppContext.stage;
 	private Stage dialog = new Stage();
@@ -47,46 +46,36 @@ public class TaskRunner implements ProgressListener {
 	}
 	
 	public void start() {
-		
-		//primaryStage.getScene().setCursor(Cursor.WAIT);
 		showPopup();
 		
 		new Thread() {
 			public void run() {
-				
-				
 				try {
 					task.run(TaskRunner.this);
 
-				}catch(Exception e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					progressMsg("Error: " + e.getMessage());
 				}
 
-
 				closePopup();
-				
-				
 			}
 		}.start();
-		
 	}
 	
 	protected void closePopup() {
-		//dialog.close();
-		Platform.runLater(new Runnable(){
+
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				primaryStage.getScene().setCursor(Cursor.DEFAULT);
 			}
 		});
-		
-		
 	}
 	
 	protected void showPopup() {
 		 
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				Sout.p(" showPopup() ");
@@ -94,18 +83,12 @@ public class TaskRunner implements ProgressListener {
 				primaryStage.getScene().setCursor(Cursor.WAIT);
 			}
 		});
-		
-		
-		
-        //Scene dialogScene = new Scene(dialogVbox, loadingView.getImage().getWidth(), loadingView.getImage().getHeight());
-        //dialog.setScene(dialogScene);
-        //dialog.show();		
 	}
 
 	@Override
 	public void progressMsg(String msg) {
 		
-		Platform.runLater(new Runnable(){
+		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				status.showProgressText(msg);
@@ -115,7 +98,6 @@ public class TaskRunner implements ProgressListener {
 
 	@Override
 	public void progressPercent(int percent) {
-		// TODO Auto-generated method stub
 		
 	}
 
