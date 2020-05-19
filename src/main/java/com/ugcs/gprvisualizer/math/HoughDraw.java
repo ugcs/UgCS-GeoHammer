@@ -59,13 +59,13 @@ public class HoughDraw {
 				"res : " + String.format("%.2f", res));
 	}
 	
-	public Rectangle getRect(ProfileField vField) {
+	public Rectangle getRect(ProfileField profField) {
 		
 		int gtrLeft = file.getOffset().localToGlobal(startTrace);
 		int gtrRight = file.getOffset().localToGlobal(finishTrace);
 		
-		Point lt = vField.traceSampleToScreen(new TraceSample(gtrLeft, startSample));
-		Point rb = vField.traceSampleToScreen(new TraceSample(gtrRight, finishSample));
+		Point lt = profField.traceSampleToScreen(new TraceSample(gtrLeft, startSample));
+		Point rb = profField.traceSampleToScreen(new TraceSample(gtrRight, finishSample));
 		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
 	}
 	
@@ -82,14 +82,14 @@ public class HoughDraw {
         g2.setColor(Color.BLACK);
         
         g2.fillRoundRect(x + (int) rect.getX(),
-        		y + (int)(rect.getY()), 
+        		y + (int) (rect.getY()), 
                 (int) rect.getWidth(),
                 (int) rect.getHeight(), 
                 5, 5);
         
         g2.setColor(Color.YELLOW.darker());
         g2.drawRoundRect(x + (int) rect.getX(),
-    			y  + (int)(rect.getY()),
+    			y  + (int) (rect.getY()),
                 (int) rect.getWidth(),
                 (int) rect.getHeight(),
                 5, 5);

@@ -13,7 +13,6 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
-import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
 
@@ -77,7 +76,7 @@ public class VerticalCut implements SmthChangeListener {
 	}
 	
 	public void recalc() {
-		controller.render(null);
+		controller.render();
 	}
 
 	public void show() {
@@ -99,10 +98,10 @@ public class VerticalCut implements SmthChangeListener {
 		return vBox;
 	}
 	
-	private RecalculationController controller = new RecalculationController(new Consumer<RecalculationLevel>() {
+	private RecalculationController controller = new RecalculationController(new Consumer<Void>() {
 
 		@Override
-		public void accept(RecalculationLevel obj) {
+		public void accept(Void obj) {
 
 			//img = render2_spektr();
 			img = render();

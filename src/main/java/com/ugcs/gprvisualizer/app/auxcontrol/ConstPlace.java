@@ -43,10 +43,36 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
+	public boolean mousePressHandle(Point2D point, MapField field) {
+		
+		Rectangle r = getRect(field);
+		if (r.contains(point)) {
+			
+			AppContext.model.getVField().setSelectedTrace(
+					offset.localToGlobal(traceInFile));
+		
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			
+			return true;
+		}
+		
+		return false;
+	}
+
+	@Override
+	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+		return null;
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		return false;
+	}
+	
+	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
 		if (isPointInside(localPoint, profField)) {
-			
 				
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
@@ -79,10 +105,10 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		Rectangle rect = getRect(mapField);
 
 		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x + 1 , rect.y + 1, rect.width, rect.height);
+		g2.fillOval(rect.x + 1, rect.y + 1, rect.width, rect.height);
 		
 		g2.setColor(Color.ORANGE);
-		g2.fillOval(rect.x , rect.y, rect.width, rect.height);
+		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
 	}
 
 	@Override
@@ -92,10 +118,10 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		Rectangle rect = getRect(profField);
 		
 		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x + 2 , rect.y + 2, rect.width, rect.height);
+		g2.fillOval(rect.x + 2, rect.y + 2, rect.width, rect.height);
 		
 		g2.setColor(Color.ORANGE);
-		g2.fillOval(rect.x , rect.y, rect.width, rect.height);
+		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
 	}
 	
 	public Rectangle getRect(ProfileField profField) {
@@ -106,9 +132,9 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField hField) {
+	public Rectangle getRect(MapField mapField) {
 		
-		Point2D p =  hField.latLonToScreen(latLon);
+		Point2D p =  mapField.latLonToScreen(latLon);
 		
 		Rectangle rect = new Rectangle(
 				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
@@ -144,30 +170,5 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return false;
 	}
 
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		
-		Rectangle r = getRect(field);
-		if (r.contains(point)) {
-			
-			AppContext.model.getVField().setSelectedTrace(offset.localToGlobal(traceInFile));
-		
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			return true;
-		}
-		
-		return false;
-	}
-
-	@Override
-	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		return null;
-	}
-
-	@Override
-	public boolean isFit(int begin, int end) {
-		return false;
-	}
 
 }

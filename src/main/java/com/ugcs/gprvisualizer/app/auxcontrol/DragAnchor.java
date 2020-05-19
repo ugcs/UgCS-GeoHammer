@@ -150,7 +150,7 @@ public class DragAnchor extends BaseObjectImpl
 		sample.setValue(s);
 	}
 
-	public List<BaseObject> getControls(){
+	public List<BaseObject> getControls() {
 		return null;
 	}
 

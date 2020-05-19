@@ -8,6 +8,7 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -19,7 +20,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 
-public class GpsTrack extends BaseLayer{
+public class GpsTrack extends BaseLayer {
 
 	private RepaintListener listener;
 	
@@ -34,7 +35,9 @@ public class GpsTrack extends BaseLayer{
 		}
 	};
 	
-	private ToggleButton showLayerCheckbox = new ToggleButton("", ResourceImageHolder.getImageView("path_20.png"));
+	private ToggleButton showLayerCheckbox = 
+			new ToggleButton("", ResourceImageHolder.getImageView("path_20.png"));
+	
 	{
 		showLayerCheckbox.setTooltip(new Tooltip("Toggle GPS track layer"));
 		showLayerCheckbox.setSelected(true);
@@ -52,7 +55,7 @@ public class GpsTrack extends BaseLayer{
 	
 	@Override
 	public void draw(Graphics2D g2) {
-		if(model.getField().getSceneCenter() == null) {
+		if (model.getField().getSceneCenter() == null) {
 			return;
 		}
 		
@@ -60,7 +63,7 @@ public class GpsTrack extends BaseLayer{
 	}
 
 	private void drawGPSPath(Graphics2D g2) {
-		if(!isActive()) {
+		if (!isActive()) {
 			return;
 		}
 		
@@ -68,40 +71,47 @@ public class GpsTrack extends BaseLayer{
 		
 		
 		double sumdist = 0;
-		double threshold =
-				model.getField().getSceneCenter().getDistance(
-						model.getField().screenTolatLon(new Point2D.Double(0, 5))) * 100.0;// meter to cm
+		
+		LatLon ll = model.getField().screenTolatLon(
+				new Point2D.Double(0, 5));
+		
+		// meter to cm
+		double threshold =				
+				model.getField().getSceneCenter().getDistance(ll) * 100.0;
 		
 		//
 		g2.setColor(Color.RED);
 		
-		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
-			Point2D pPrev = null;
+		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
+			Point2D prevPoint = null;
 			List<Trace> traces = sgyFile.getTraces();
 	
-			for (int tr=0; tr< traces.size(); tr++) {
+			for (int tr = 0; tr < traces.size(); tr++) {
 				Trace trace =  traces.get(tr);
 				
-				if(pPrev == null) {
+				if (prevPoint == null) {
 					
-					pPrev = model.getField().latLonToScreen(trace.getLatLon());
+					prevPoint = model.getField().latLonToScreen(trace.getLatLon());
 					sumdist = 0;
 					
-				}else{//prev point exists
+				} else {//prev point exists
 					
-						sumdist += trace.getPrevDist();
+					sumdist += trace.getPrevDist();
+					
+					if (sumdist >= threshold) {
 						
-						if(sumdist >= threshold /*&& !trace.isEnd()*/) {
-							
-							Point2D pNext = model.getField().latLonToScreen(trace.getLatLon());
-									
-							g2.drawLine((int)pPrev.getX(), (int)pPrev.getY(), (int)pNext.getX(), (int)pNext.getY());
-							
-							pPrev = pNext;
-							sumdist = 0;
-						}
+						Point2D pNext = model.getField()
+								.latLonToScreen(trace.getLatLon());
+								
+						g2.drawLine((int) prevPoint.getX(),
+								(int) prevPoint.getY(),
+								(int) pNext.getX(),
+								(int) pNext.getY());
+						
+						prevPoint = pNext;
+						sumdist = 0;
+					}
 				}
-				
 			}
 		}
 	}
@@ -115,7 +125,9 @@ public class GpsTrack extends BaseLayer{
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isFileopened() || changed.isZoom() || changed.isAdjusting()) {
+		if (changed.isFileopened()
+				|| changed.isZoom()
+				|| changed.isAdjusting()) {
 			
 		}		
 	}

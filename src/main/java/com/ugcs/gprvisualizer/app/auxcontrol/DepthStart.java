@@ -40,6 +40,21 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	@Override
+	public boolean mousePressHandle(Point2D point, MapField field) {
+		return false;
+	}
+
+	@Override
+	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+		return null;
+	}
+
+	@Override
+	public boolean isFit(int begin, int end) {
+		return false;
+	}
+
+	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		if (isPointInside(localPoint, profField)) {
 			return true;
@@ -111,10 +126,10 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 
-	public Point getCenter(ProfileField vField) {
-		Point scr = vField.traceSampleToScreen(new TraceSample(
+	public Point getCenter(ProfileField profField) {
+		Point scr = profField.traceSampleToScreen(new TraceSample(
 				0, model.getSettings().layer));
-		scr.x = vField.visibleStart;
+		scr.x = profField.visibleStart;
 		return scr;
 	}
 
@@ -130,21 +145,6 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean saveTo(JSONObject json) {
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		return false;
-	}
-
-	@Override
-	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-		return null;
-	}
-
-	@Override
-	public boolean isFit(int begin, int end) {
 		return false;
 	}
 

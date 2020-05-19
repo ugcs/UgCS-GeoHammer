@@ -24,7 +24,9 @@ public class LeftRulerController {
 	
 	public interface Converter {
 		Pair<Integer, Integer> convert(int s, int f);
+		
 		int back(int unt);
+		
 		String getUnit();
 	}
 	
@@ -36,7 +38,7 @@ public class LeftRulerController {
 	};
 	private int index = 0;
 	
-	public LeftRulerController(Model model){
+	public LeftRulerController(Model model) {
 		this.model = model;
 	}
 	
@@ -45,7 +47,7 @@ public class LeftRulerController {
 	}
 	
 	public void nextConverter() {
-		index = (index +1) % list.length;
+		index = (index + 1) % list.length;
 	}
 	
 	
@@ -65,6 +67,7 @@ public class LeftRulerController {
 			return "smpl";
 		}		
 	}
+	
 	class NanosecConverter implements Converter {
 
 		@Override
@@ -91,16 +94,15 @@ public class LeftRulerController {
 	}
 	
 	
-	public BaseObjectImpl tb = new BaseObjectImpl () {
+	public BaseObjectImpl tb = new BaseObjectImpl() {
 
 		@Override
-		public void drawOnCut(Graphics2D g2, ProfileField vField) {
+		public void drawOnCut(Graphics2D g2, ProfileField profField) {
 			
-			setClip(g2, vField.getClipInfoRect());
+			setClip(g2, profField.getClipInfoRect());
 			
-			Rectangle  r = getRect(vField);
+			Rectangle  r = getRect(profField);
 			
-			//g2.fillRect(r.x, r.y, r.width, r.height);
 			g2.setStroke(STROKE);
 			g2.setColor(Color.YELLOW);
 			g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);			
@@ -113,16 +115,16 @@ public class LeftRulerController {
 		}
 
 		@Override
-		public boolean isPointInside(Point localPoint, ProfileField vField) {
-			// TODO Auto-generated method stub
+		public boolean isPointInside(Point localPoint, ProfileField profField) {
 			return false;
 		}
 
 		@Override
-		public Rectangle getRect(ProfileField vField) {
+		public Rectangle getRect(ProfileField profField) {
 
-			Rectangle  r = vField.getInfoRect();
-			return new Rectangle(vField.visibleStart + r.x+5, r.y + r.height - 25, r.width-10, 20);
+			Rectangle  r = profField.getInfoRect();
+			return new Rectangle(profField.visibleStart + r.x + 5, r.y + r.height - 25, 
+					r.width - 10, 20);
 
 		}
 
@@ -133,37 +135,17 @@ public class LeftRulerController {
 
 		@Override
 		public List<BaseObject> getControls() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public boolean saveTo(JSONObject json) {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
-		public boolean mousePressHandle(Point2D point, MapField field) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public boolean isFit(int begin, int end) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public boolean mousePressHandle(Point localPoint, ProfileField vField) {
-			if(getRect(vField).contains(localPoint)) {
+		public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+			if (getRect(profField).contains(localPoint)) {
 				
 				nextConverter();
 				return true;
@@ -173,18 +155,32 @@ public class LeftRulerController {
 		}
 
 		@Override
-		public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-			// TODO Auto-generated method stub
+		public boolean mousePressHandle(Point2D point, MapField field) {
 			return false;
 		}
 
 		@Override
-		public boolean mouseMoveHandle(Point point, ProfileField vField) {
-			// TODO Auto-generated method stub
+		public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+			return null;
+		}
+
+		@Override
+		public boolean isFit(int begin, int end) {
 			return false;
 		}
+
 		@Override
-		public void drawOnMap(Graphics2D g2, MapField hField) {
+		public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
+			return false;
+		}
+
+		@Override
+		public boolean mouseMoveHandle(Point point, ProfileField profField) {
+			return false;
+		}
+		
+		@Override
+		public void drawOnMap(Graphics2D g2, MapField mapField) {
 							
 		}
 

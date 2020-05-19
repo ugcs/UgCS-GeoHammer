@@ -24,14 +24,14 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 @Component
-@Scope(value="prototype")
+@Scope(value = "prototype")
 public class HoughScan implements AsinqCommand {
 
 	public static final int DISCRET_SIZE = 22;
 	private static final double DISCRET_FROM = 0.5;
 	private static final double DISCRET_TO = 1.5;
 
-	public boolean print_log = false;
+	public boolean isPrintLog = false;
 
 	@Autowired
 	private Model model;
@@ -54,67 +54,66 @@ public class HoughScan implements AsinqCommand {
 		new EdgeSubtractGround().execute(file);
 
 		//
-		int maxSmp = Math.min(AppContext.model.getSettings().layer + AppContext.model.getSettings().hpage,
+		int maxSmp = Math.min(AppContext.model.getSettings().layer 
+				+ AppContext.model.getSettings().hpage,
 				file.getMaxSamples() - 2);
 
 		double threshold = model.getSettings().hyperSensitivity.doubleValue();
 
-		for (int pincl_tr = 0; pincl_tr < file.size(); pincl_tr++) {
-			if (pincl_tr % 100 == 0) {
-				Sout.p("tr " + pincl_tr + "/" + file.size());
+		for (int pinTr = 0; pinTr < file.size(); pinTr++) {
+			if (pinTr % 300 == 0) {
+				Sout.p("tr " + pinTr + "/" + file.size());
 			}
-			Trace tr = file.getTraces().get(pincl_tr);
+			Trace tr = file.getTraces().get(pinTr);
 			tr.good = new int[file.getMaxSamples()];
 
-			for (int pincl_smp = AppContext.model.getSettings().layer; pincl_smp < maxSmp; pincl_smp++) {
-				double s = scan(file, pincl_tr, pincl_smp);
-
-				// maxf = Math.max(s, maxf);
+			for (int pinSmp = AppContext.model.getSettings().layer; 
+					pinSmp < maxSmp; pinSmp++) {
+				double s = scan(file, pinTr, pinSmp);
 
 				if (s > threshold) {
-					// Sout.p("^ "+ s + " " + pincl_tr);
-					tr.good[pincl_smp] = 3;
+					tr.good[pinSmp] = 3;
 				}
 			}
 		}
+		
+		new ScanGood().execute(file);
 	}	
 
-	public double scan(SgyFile sgyFile, int pincl_tr, int pincl_smp) {
+	public double scan(SgyFile sgyFile, int pinTr, int pinSmp) {
 		
-		// TODO:
-		// sides
-		// good size
+		double goodCm = HalfHyperDst.getGoodSideDstPin(sgyFile, pinTr, pinSmp);
+		double vertDstToPinCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, 0, pinSmp);
 		
-		double good_cm = HalfHyperDst.getGoodSideDstPin(sgyFile, pincl_tr, pincl_smp);
-		double pin_v_cm = RulerTool.distanceCm(sgyFile, pincl_tr, pincl_tr, 0, pincl_smp);
+		double goodDiagCm = Math.sqrt(
+				goodCm * goodCm + vertDstToPinCm * vertDstToPinCm);		
 		
-		double vd_cm = Math.sqrt(good_cm*good_cm + pin_v_cm*pin_v_cm);		
-		//int grn = sgyFile.groundProfile.deep[pincl_tr];
-		//double grn_cm = grn * sgyFile.getSamplesToCmAir();
-		//int vdiapason = (int)(vd_cm / sgyFile.getSamplesToCmGrn());
+		int trFrom = sgyFile.getLeftDistTraceIndex(pinTr, goodCm);
+		int trTo = sgyFile.getRightDistTraceIndex(pinTr, goodCm);
 		
-		int tr_from = sgyFile.getLeftDistTraceIndex(pincl_tr, good_cm);
-		int tr_to = sgyFile.getRightDistTraceIndex(pincl_tr, good_cm);
-		
-		int smp_from = pincl_smp;
-		int smp_to = Math.min(sgyFile.getMaxSamples()-1, RulerTool.diagonalToSmp(sgyFile, pincl_tr, pincl_smp, vd_cm) );
+		int smpFrom = pinSmp;
+		int smpTo = Math.min(sgyFile.getMaxSamples() - 1,
+				RulerTool.diagonalToSmp(sgyFile, pinTr, pinSmp, goodDiagCm));
 		
 		
 		BufferedImage img = null;
 		int[] buffer = null;
-		int width = tr_to-tr_from+1;
-		int height = smp_to-smp_from+1;
+		int width = trTo - trFrom + 1;
+		int height = smpTo - smpFrom + 1;
 		
-		if(print_log) {
-			Sout.p("smp:  "+ smp_from + " - "+ smp_to + "  horiz good  " + good_cm + "   tr " + tr_from + " - " + tr_to);
+		if (isPrintLog) {
+			Sout.p("smp:  " + smpFrom 
+					+ " - " + smpTo 
+					+ "  horiz good  " + goodCm 
+					+ "   tr " + trFrom + " - " + trTo);
 			
 			img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 			buffer = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
 			
 		}		
 		
-		Store stores[] = new Store[5];
-		for(int i=0;i<stores.length; i++) {
+		Store[] stores = new Store[5];
+		for (int i = 0; i < stores.length; i++) {
 			stores[i] = new Store();			
 		}		
 		
@@ -122,45 +121,41 @@ public class HoughScan implements AsinqCommand {
 		
 		
 		//
-		for(int smp = smp_from; smp <= smp_to; smp++) {
+		for (int smp = smpFrom; smp <= smpTo; smp++) {
 			
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append(String.format("%3d | ", smp));
 			
-			double value = (smp == smp_from ? 0.33 : 1.0); 
+			double value = (smp == smpFrom ? 0.33 : 1.0); 
 			
-			for(int tr = tr_from; tr <= tr_to; tr++) {
+			for (int tr = trFrom; tr <= trTo; tr++) {
 				
 				
 				int edge = getEdge(sgyFile, tr, smp);
-				if(/*edge == 0 ||*/ tr == pincl_tr) {
+				if (tr == pinTr) {
 					continue;
 				}
 				
-				double xf1 = xfact(sgyFile, pincl_tr, pincl_smp, tr, smp+0.01);
+				double xf1 = xfact(sgyFile, pinTr, pinSmp, tr, smp + 0.01);
 				//overlapping
-				double xf2 = xfact(sgyFile, pincl_tr, pincl_smp, tr, smp+1.99);
-				
-//				if((xf1 < DISCRET_FROM || xf1 > DISCRET_TO) && (xf2 < DISCRET_FROM || xf2 > DISCRET_TO)) {
-//					continue;
-//				}
+				double xf2 = xfact(sgyFile, pinTr, pinSmp, tr, smp + 1.99);
 				
 				int xfd1 = discret(xf1);
 				int xfd2 = discret(xf2);
 				
-				
-				
 				stores[edge].add(xfd1, xfd2, value);
 				
-				if(print_log) {
+				if (isPrintLog) {
 					String s;
 					
-					if(xfd1 <=showIndex && xfd2 >= showIndex || xfd2 <= showIndex && xfd1 >= showIndex) {
+					if (xfd1 <= showIndex && xfd2 >= showIndex 
+							|| xfd2 <= showIndex && xfd1 >= showIndex) {
 						s = "" + edge;
-					}else {
+					} else {
 						s = " ";
-						buffer[tr-tr_from + width * (smp-smp_from)] = 0xDD505070;
+						int index = tr - trFrom + width * (smp - smpFrom);
+						buffer[index] = 0xDD505070;
 					}
 					
 					sb.append(s);
@@ -168,29 +163,29 @@ public class HoughScan implements AsinqCommand {
 				
 			}
 			
-			if(print_log) {
+			if (isPrintLog) {
 				//Sout.p(sb.toString());
 			}
 		}
 		
 		//print(stores);
-		int aux[][] = new int[5][2];
+		int[][] aux = new int[5][2];
 		double[] best = getMax(stores, aux);
 		
 		
 		//double res = Arrays.stream(best).max().getAsDouble();
-		int mxIndex = 0;
-		for(int i=1; i<5;i++){
+		int mxIndex = 1;
+		for (int i = 1; i < 5; i++) {
 		
-			if(best[i] > best[mxIndex]){
+			if (best[i] > best[mxIndex]) {
 				mxIndex = i;
 			}
 		}
 		
-		if(print_log) {
-			Sout.p("res "+ best[mxIndex]);
+		if (isPrintLog) {
+			Sout.p("res " + best[mxIndex]);
 			
-			hd = new HoughDraw(img, sgyFile, tr_from, tr_to+1, smp_from, smp_to+1);
+			hd = new HoughDraw(img, sgyFile, trFrom, trTo + 1, smpFrom, smpTo + 1);
 			
 			hd.resedge = aux[mxIndex][0];
 			hd.resindex = aux[mxIndex][1];
@@ -202,38 +197,35 @@ public class HoughScan implements AsinqCommand {
 
 	public void printForPoint(int tr, int smp) {
 
-		int pincl_smp = model.getSettings().layer;
+		int pinSmp = model.getSettings().layer;
 		SgyFile file = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
-		int pincl_tr = model.getVField().getSelectedTrace() - file.getOffset().getStartTrace();
+		int pinTr = model.getVField().getSelectedTrace() - file.getOffset().getStartTrace();
 
-		double xf1 = xfact(file, pincl_tr, pincl_smp, tr, smp + 0.02);
-		double xf2 = xfact(file, pincl_tr, pincl_smp, tr, smp + 1.98);
+		double xf1 = xfact(file, pinTr, pinSmp, tr, smp + 0.02);
+		double xf2 = xfact(file, pinTr, pinSmp, tr, smp + 1.98);
 
 		int xfd1 = discret(xf1);
 		int xfd2 = discret(xf2);
 
-		Sout.p(" " + (tr - pincl_tr) + " " + (smp - pincl_smp) + " ->  " + Math.min(xfd1, xfd2) + " - "
+		Sout.p(" " + (tr - pinTr) + " " + (smp - pinSmp) 
+				+ " ->  " + Math.min(xfd1, xfd2) + " - "
 				+ Math.max(xfd1, xfd2));
 
 	}
 
 	private void print(Store[] stores) {
 
-		if (!print_log) {
+		if (!isPrintLog) {
 			return;
 		}
 
 		for (int i = 1; i < stores.length; i++) {
-
 			Store s = stores[i];
-
 			Sout.p("edge " + i + " = " + Arrays.toString(s.a));
-
 		}
-
 	}
 
-	public double[] getMax(Store[] stores, int aux[][] ) {
+	public double[] getMax(Store[] stores, int[][] aux) {
 		double[] best = new double[5];
 		for (int i = 1; i < stores.length; i++) {
 
@@ -242,41 +234,43 @@ public class HoughScan implements AsinqCommand {
 				best[i] = stores[i].getMax();
 			}
 
-			if (print_log) {
+			if (isPrintLog) {
 			
 				aux[i][0] = i;
 				aux[i][1] = index;
 				
 				StringBuilder sb = new StringBuilder();
-				for(int z=0; z<stores[i].a.length; z++){
+				for (int z = 0; z < stores[i].a.length; z++) {
 					sb.append(String.format(" %.2f", stores[i].a[z]));
 				}
 				
-				Sout.p(String.format("edge %2d ind %3d - maxval %.2f = " , i, index, stores[i].getMax()) + sb.toString());
+				Sout.p(String.format("edge %2d ind %3d - maxval %.2f = ", 
+						i, index, stores[i].getMax()) 
+						+ sb.toString());
 			}
 		}
 		return best;
 	}
 
-	private double xfact(SgyFile sgyFile, int pincl_tr, double pincl_smp, int tr, double smp) {
-		// TODO: check again
-		double c_cm = RulerTool.distanceCm(sgyFile, pincl_tr, pincl_tr, 0, smp);
-		double y_cm = RulerTool.distanceCm(sgyFile, pincl_tr, pincl_tr, 0, pincl_smp);
-		double x_cm_ideal = Math.sqrt(c_cm * c_cm - y_cm * y_cm);
+	private double xfact(SgyFile sgyFile, int pinTr, double pinSmp, int tr, double smp) {
 
-		double x_cm_real = RulerTool.distanceCm(sgyFile, pincl_tr, tr, smp, smp);
+		double diagCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, 0, smp);
+		double y_cm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, 0, pinSmp);
+		double x_cm_ideal = Math.sqrt(diagCm * diagCm - y_cm * y_cm);
 
-		double x_factor = x_cm_ideal / x_cm_real;
+		double x_cm_real = RulerTool.distanceCm(sgyFile, pinTr, tr, smp, smp);
 
-		return x_factor;
+		double factorX = x_cm_ideal / x_cm_real;
+
+		return factorX;
 	}
 
 	/*
 	 * 0 - except
 	 */
-	private int discret(double x_factor) {
+	private int discret(double factorX) {
 		// to 0-1
-		double norm = (x_factor - DISCRET_FROM) / (DISCRET_TO - DISCRET_FROM);
+		double norm = (factorX - DISCRET_FROM) / (DISCRET_TO - DISCRET_FROM);
 
 		if (norm < 0) {
 			return -1;
@@ -295,16 +289,19 @@ public class HoughScan implements AsinqCommand {
 	}
 
 
-	static double FACTOR[] = new double[DISCRET_SIZE];
-//	static {
-//		for(int i=0; i<DISCRET_SIZE; i++){
-//			FACTOR[i] = (DISCRET_FROM + (double) i / (double) DISCRET_SIZE * (DISCRET_TO - DISCRET_FROM));
-//			Sout.p("f " + i + " = " + FACTOR[i]);
-//		}
-//	}
+	static double[] FACTOR = new double[DISCRET_SIZE];
+
+	static {
+		for (int i = 0; i < DISCRET_SIZE; i++) {
+			FACTOR[i] = (DISCRET_FROM + 
+				(double) i 
+				/ (double) DISCRET_SIZE 
+				* (DISCRET_TO - DISCRET_FROM));
+		}
+	}
 
 	class Store {
-		double a[] = new double[DISCRET_SIZE];
+		double[] a = new double[DISCRET_SIZE];
 
 		public void clear() {
 			Arrays.fill(a, 0);
@@ -318,11 +315,11 @@ public class HoughScan implements AsinqCommand {
 				return;
 			}
 
-			from = GHUtils.norm(from, 0, DISCRET_SIZE);
-			to = GHUtils.norm(to, 0, DISCRET_SIZE);
+			from = MathUtils.norm(from, 0, DISCRET_SIZE);
+			to = MathUtils.norm(to, 0, DISCRET_SIZE);
 
 			for (int i = from; i <= to; i++) {
-				a[i]+=value;
+				a[i] += value;
 			}
 		}
 
@@ -344,14 +341,6 @@ public class HoughScan implements AsinqCommand {
 		}
 
 		double getMax() {
-			// int val = Arrays.stream(a).max().getAsInt();
-//			double max = 0;
-//			for(int i=0; i<a.length; i++) {
-//
-//				double v = (double)a[i] * (DISCRET_FROM + (double)i / (double)DISCRET_SIZE * (DISCRET_TO-DISCRET_FROM));
-//				
-//				max = Math.max(max, v);
-//			}
 
 			int index = getMaxIndex();
 			double v = a[index] * FACTOR[index];
@@ -397,7 +386,7 @@ public class HoughScan implements AsinqCommand {
 //		
 //	}
 
-	public static void main2(String args[]) {
+	public static void main2(String[] args) {
 
 		Sout.p("start");
 		SgyFile sgyFile = new SgyFile();
@@ -407,7 +396,8 @@ public class HoughScan implements AsinqCommand {
 		sgyFile.getBinaryHeader().setSampleInterval((short) 104);
 		sgyFile.setTraces(new ArrayList<>());
 		for (int i = 0; i < 110; i++) {
-			Trace t = new Trace(new byte[200], null, new float[200], new LatLon(10, 10));
+			Trace t = new Trace(new byte[200], null, new float[200], 
+					new LatLon(10, 10));
 			t.setPrevDist(1.25);
 			t.setOriginalValues(new float[200]);
 			sgyFile.getTraces().add(t);
@@ -416,8 +406,8 @@ public class HoughScan implements AsinqCommand {
 		Arrays.fill(sgyFile.groundProfile.deep, 65);
 		sgyFile.groundProfile.finish(sgyFile.getTraces());
 
-		int pincl_tr = 50;
-		int pincl_smp = 100;
+		int pinTr = 50;
+		int pinSmp = 100;
 
 		HoughScan hs = new HoughScan();
 
@@ -426,8 +416,8 @@ public class HoughScan implements AsinqCommand {
 			StringBuilder sb = new StringBuilder();
 			for (int tr = 0; tr <= 100; tr++) {
 
-				double xf1 = hs.xfact(sgyFile, pincl_tr, pincl_smp, tr, smp + 0.01);
-				double xf2 = hs.xfact(sgyFile, pincl_tr, pincl_smp, tr, smp + 0.99);
+				double xf1 = hs.xfact(sgyFile, pinTr, pinSmp, tr, smp + 0.01);
+				double xf2 = hs.xfact(sgyFile, pinTr, pinSmp, tr, smp + 0.99);
 
 				int xfd1 = hs.discret(xf1);
 				int xfd2 = hs.discret(xf2);

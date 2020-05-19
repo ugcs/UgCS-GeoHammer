@@ -130,7 +130,7 @@ public class AlgorithmicScan implements AsinqCommand {
 					AppContext.model.getSettings().layer
 					+ AppContext.model.getSettings().hpage,
 					
-					sgyFile.getTraces().get(tr).getNormValues().length-2);
+					sgyFile.getTraces().get(tr).getNormValues().length - 2);
 		
 		// test all samples to fit hyperbola
 		
@@ -148,11 +148,11 @@ public class AlgorithmicScan implements AsinqCommand {
 	public static int checkAllVariantsForPoint(SgyFile sgyFile, int tr, double thr, int smp) {
 		int exists = 0;
 		// reduce x distance for hyperbola calculation
-		for (double x_factor = X_FACTOR_FROM;
-				x_factor <= X_FACTOR_TO;
-				x_factor += X_FACTOR_STEP) {
+		for (double factorX = X_FACTOR_FROM;
+				factorX <= X_FACTOR_TO;
+				factorX += X_FACTOR_STEP) {
 
-			exists = exists | processHyper3(sgyFile, tr, smp, x_factor, thr);
+			exists = exists | processHyper3(sgyFile, tr, smp, factorX, thr);
 			if (exists == 3) {
 				break;
 			}
@@ -167,11 +167,13 @@ public class AlgorithmicScan implements AsinqCommand {
 	}
 	
 	public static int processHyper3(SgyFile sgyFile, int tr, int smp, 
-			double xFactor, double thr) {
+			double factorX, double thr) {
 		
-		HalfHyperDst left = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, -1, xFactor);		
+		HalfHyperDst left = HalfHyperDst.getHalfHyper(
+				sgyFile, tr, smp, -1, factorX);		
 		
-		HalfHyperDst right = HalfHyperDst.getHalfHyper(sgyFile, tr, smp, +1, xFactor);
+		HalfHyperDst right = HalfHyperDst.getHalfHyper(
+				sgyFile, tr, smp, +1, factorX);
 		
 		double left100 = left.analize(100); 
 		//double left20 = left.analize(40);
@@ -182,10 +184,6 @@ public class AlgorithmicScan implements AsinqCommand {
 			(left100 > thr ? 1 : 0) 
 				| 
 			(right100 > thr ? 2 : 0);
-//		(left100 > thr && right20 > thr ? 1 : 0) 
-//		| 
-//		(right100 > thr && left20 > thr ? 2 : 0);
-		
 	}
 	
 	@Override

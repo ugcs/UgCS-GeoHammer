@@ -16,8 +16,8 @@ public class DepthHeight extends DepthStart {
 		int max = model.getMaxHeightInSamples();
 		
 		model.getSettings().hpage = 
-				Math.min(max - model.getSettings().layer, 
-						Math.max(0, ts.getSample() - model.getSettings().layer));
+			Math.min(max - model.getSettings().layer, Math.max(
+				0, ts.getSample() - model.getSettings().layer));
 	}
 	
 	public Point getCenter(ProfileField profField) {

@@ -8,8 +8,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 public class HorizontalProfile {
 
 	// in smp
-	public int deep[];
-	
+	public int[] deep;	
 	public int minDeep;
 	public int maxDeep;
 	public int height;
@@ -18,7 +17,7 @@ public class HorizontalProfile {
 	
 	public Color color = new Color(50, 200, 255);
 	
-	public HorizontalProfile(int size){
+	public HorizontalProfile(int size) {
 		deep = new int[size];
 	}
 	
@@ -34,23 +33,23 @@ public class HorizontalProfile {
 		smoothLevel();
 		
 		//min, max, avg_val
-		for(int i=0; i<deep.length; i++) {
+		for (int i = 0; i < deep.length; i++) {
 			
 			minDeep = Math.min(deep[i], minDeep);
 			maxDeep = Math.max(deep[i], maxDeep);
 			
 			int d = deep[i];
 			
-			if(list != null) {
+			if (list != null) {
 				float[] values = list.get(i).getNormValues();
-				valsum+= values[d];
+				valsum += values[d];
 			}			
 						
 			deepsum += d;
 		}
 		
 		avgval = valsum / deep.length;
-		avgdeep = (int)(deepsum / deep.length);
+		avgdeep = (int) (deepsum / deep.length);
 		height = maxDeep - minDeep;
 	}
 	
@@ -58,38 +57,35 @@ public class HorizontalProfile {
 	
 	private void smoothLevel() {
 
-		int result[] = new int[deep.length];
-		for(int i=0; i<deep.length; i++) {
+		int[] result = new int[deep.length];
+		for (int i = 0; i < deep.length; i++) {
 			
-			result[i] = avg(i);
-			
+			result[i] = avg(i);			
 		}
 
 		deep = result;
 	}
 
-	int R=7;
-	double DR=R;
+	private static final int R = 7;
+	private static final double DR = R;
+	
 	private int avg(int i) {
 		
-		int from = i-R;
+		int from = i - R;
 		from = Math.max(0, from);
-		int to = i+R;
-		to = Math.min(to, deep.length-1);
+		int to = i + R;
+		to = Math.min(to, deep.length - 1);
 		double sum = 0;
 		double cnt = 0;
 		
-		for(int j=from; j<= to; j++) {
-			double kfx = (DR+j-i)/ (DR*2);
-			double kf = kfx*kfx*(1-kfx)*(1-kfx); 
+		for (int j = from; j <= to; j++) {
+			double kfx = (DR + j - i) / (DR * 2);
+			double kf = kfx * kfx * (1 - kfx) * (1 - kfx); 
 			
 			sum += deep[j] * kf;
-			cnt+= kf;
+			cnt += kf;
 		}
 		
-		return (int)Math.round(sum/cnt);
-	}
-	
-	
-	
+		return (int) Math.round(sum / cnt);
+	}	
 }

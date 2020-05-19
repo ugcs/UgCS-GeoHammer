@@ -77,7 +77,7 @@ public class Saver implements ToolProducer {
 			
 			try {
 				loader.load(newfiles, listener);
-			} catch(Exception e) {
+			} catch (Exception e) {
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 				

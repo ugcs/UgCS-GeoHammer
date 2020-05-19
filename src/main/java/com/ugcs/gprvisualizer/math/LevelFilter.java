@@ -33,7 +33,10 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	private Button buttonRemoveLevel;
 	private Button buttonLevelGround;
 
+	private boolean levelCalculated = false;
+	
 
+	
 	public LevelFilter() {
 	}
 
@@ -73,7 +76,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		
 
 		buttonRemoveLevel = commandRegistry.createButton(new LevelClear(),
-			e->{ 
+			e -> { 
 				levelCalculated = false; 
 				updateButtons(); 
 			});
@@ -89,30 +92,24 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			commandRegistry.createButton(new BackgroundNoiseRemover()), 
 		
 			commandRegistry.createButton(new LevelScanner(), 
-					e->{ 
+					e -> {
 						levelCalculated = true; 
 						updateButtons(); 
 					}),
 			commandRegistry.createButton(new LevelScanHP(), 
-					e->{ 
+					e -> {
 						levelCalculated = true; 
 						updateButtons(); 
 					}),
 			
 				buttonRemoveLevel, buttonLevelGround 
 		
-			//CommandRegistry.createButton(new GroundBandRemovalFilter()),
-			
-			//CommandRegistry.createButton(new EdgeSubtractGround()),
-			
-			
 		);				
 					
 			
 		
 	}
 
-	boolean levelCalculated = false;
 	protected void updateButtons() {
 		buttonLevelGround.setDisable(!levelCalculated);
 		buttonRemoveLevel.setDisable(!levelCalculated);
@@ -127,12 +124,10 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-		if(changed.isFileopened()) {
+		if (changed.isFileopened()) {
 			
 			clearForNewFile();
-		}
-		
+		}		
 	}
-
 
 }

@@ -51,10 +51,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
-		if(isPointInside(localPoint, vField)) {
-			
+		if (isPointInside(localPoint, profField)) {			
 			 
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.setTitle("Close file");
@@ -66,9 +65,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 			Optional<ButtonType> result = alert.showAndWait();
 			 
 			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {		
-				//todo:
 				
-				int index = AppContext.model.getFileManager().getFiles().indexOf(sgyFile);
+				int index = AppContext.model.getFileManager()
+						.getFiles().indexOf(sgyFile);
 				AppContext.model.getFileManager().getFiles().remove(index);
 				
 			
@@ -80,96 +79,12 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 				AppContext.notifyAll(new WhatChanged(Change.fileopened));
 			}
 			
-			//AppContext.model.getField().setSceneCenter(getTrace().getLatLon());			
-			//AppContext.notifyAll(new WhatChanged(Change.mapscroll));
-			
-			
 			return true;
 		}
 		
 		return false;
 	}
-
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField vField) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
-		
-		return false;
-	}
 	
-	
-
-	@Override
-	public void drawOnMap(Graphics2D g2, MapField hField) {
-		
-	}
-
-	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField vField) {
-		setClip(g2, vField.getClipTopMainRect());
-		
-		Rectangle rect = getRect(vField);
-		
-		
-		
-		g2.translate(rect.x, rect.y);
-		
-		g2.drawImage(ResourceImageHolder.IMG_CLOSE_FILE, 0, 0, null);
-		
-		g2.translate(-rect.x, -rect.y);
-		
-	}
-	
-	public Rectangle getRect(ProfileField vField) {
-		
-		int x = vField.traceToScreen(offset.localToGlobal(traceInFile));
-				
-		Rectangle rect = new Rectangle(x - R_HOR, 0, 
-			R_HOR, R_VER);
-		return rect;
-	}
-	
-	public Rectangle getRect(MapField hField) {
-		
-		
-		return null;
-	}
-
-	private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces().get(offset.localToGlobal(traceInFile));
-	}
-
-	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
-		
-		Rectangle rect = getRect(vField);
-		
-		return rect.contains(localPoint);
-	}
-
-	@Override
-	public void signal(Object obj) {
-		
-		
-	}
-
-	@Override
-	public List<BaseObject> getControls() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		//json.put("trace", traceInFile);
-		return false;
-	}
-
 	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
 		
@@ -179,7 +94,8 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		RemoveFileButton result = new RemoveFileButton(traceInFile, verticalCutPart, sgyFile); 
+		RemoveFileButton result = new RemoveFileButton(
+				traceInFile, verticalCutPart, sgyFile); 
 		
 		return result;
 	}
@@ -187,7 +103,76 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	@Override
 	public boolean isFit(int begin, int end) {
 		
-		return traceInFile >= begin && traceInFile <=end;
+		return traceInFile >= begin && traceInFile <= end;
+	}
+	
+	@Override
+	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
+		return false;
 	}
 
+	@Override
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+		return false;
+	}	
+
+	@Override
+	public void drawOnMap(Graphics2D g2, MapField mapField) {
+		
+	}
+
+	@Override
+	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		setClip(g2, profField.getClipTopMainRect());
+		
+		Rectangle rect = getRect(profField);
+		
+		g2.translate(rect.x, rect.y);
+		
+		g2.drawImage(ResourceImageHolder.IMG_CLOSE_FILE, 0, 0, null);
+		
+		g2.translate(-rect.x, -rect.y);
+		
+	}
+	
+	public Rectangle getRect(ProfileField profField) {
+		
+		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
+				
+		Rectangle rect = new Rectangle(x - R_HOR, 0, 
+			R_HOR, R_VER);
+		return rect;
+	}
+	
+	public Rectangle getRect(MapField mapField) {		
+		return null;
+	}
+
+	private Trace getTrace() {
+		return AppContext.model.getFileManager().getTraces()
+				.get(offset.localToGlobal(traceInFile));
+	}
+
+	@Override
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
+		
+		Rectangle rect = getRect(profField);
+		
+		return rect.contains(localPoint);
+	}
+
+	@Override
+	public void signal(Object obj) {
+		
+	}
+
+	@Override
+	public List<BaseObject> getControls() {
+		return null;
+	}
+
+	@Override
+	public boolean saveTo(JSONObject json) {
+		return false;
+	}
 }

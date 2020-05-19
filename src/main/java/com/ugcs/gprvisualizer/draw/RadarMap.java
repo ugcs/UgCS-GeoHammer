@@ -51,6 +51,8 @@ import javafx.scene.layout.VBox;
 @Component
 public class RadarMap extends BaseLayer {
 
+	private static final double MIN_CIRCLE_THRESHOLD = 2.0;
+	
 	@Autowired
 	private Model model;
 	
@@ -298,17 +300,27 @@ public class RadarMap extends BaseLayer {
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
 			ScanProfile profile, List<Trace> traces) {
 		
+		int radius = model.getSettings().radius;
+		int centerX = getDimension().width / 2;
+		int centerY = getDimension().height / 2;
+		
 		for (int i = 0; i < file.size(); i++) {
 			Trace trace = traces.get(i);
 			
-			Point2D p = field.latLonToScreen(trace.getLatLon());
-			
 			double alpha = profile.intensity[i];
+			int effectRadius = profile.radius != null ? profile.radius[i] : radius;
 			
-			da.drawCircle(
-				(int) p.getX() + getDimension().width / 2, 
-				(int) p.getY() + getDimension().height / 2, 
-				model.getSettings().radius, alpha);
+			if (alpha > MIN_CIRCLE_THRESHOLD) {				
+			
+				Point2D p = field.latLonToScreen(trace.getLatLon());
+				
+				da.drawCircle(
+					(int) p.getX() + centerX, 
+					(int) p.getY() + centerY, 
+					effectRadius, 
+					alpha);
+				
+			}
 		}
 	}
 	

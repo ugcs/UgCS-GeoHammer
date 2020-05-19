@@ -5,21 +5,21 @@ import java.util.function.Consumer;
 
 public class RecalculationController {
 		
-	private AtomicReference<RecalculationLevel> refLevel = new AtomicReference<>();
+	private AtomicReference<Boolean> refLevel = new AtomicReference<>();
 	private boolean activeRender = false;
 
-	private Consumer<RecalculationLevel> consumer;
+	private Consumer<Void> consumer;
 	
-	public RecalculationController(Consumer<RecalculationLevel> consumer) {
+	public RecalculationController(Consumer<Void> consumer) {
 		this.consumer = consumer;
 	}
 	
-	public void render(RecalculationLevel level) {
+	public void render() {
 		
 		synchronized (RecalculationController.this) {
 			if (activeRender) {
 				
-				refLevel.set(max(refLevel.get(), level));
+				refLevel.set(true);
 				return;
 			} else {
 				activeRender = true;
@@ -29,17 +29,17 @@ public class RecalculationController {
 		new Thread() {
 			public void run() {
 				boolean contin = false;
-				RecalculationLevel lev = level;
+				
 				do {
 					
 					try {
-						consumer.accept(lev);
-					} catch(Exception e) {
+						consumer.accept(null);
+					} catch (Exception e) {
 						e.printStackTrace();						
 					}
 					
 					synchronized (RecalculationController.this) {
-						lev = refLevel.get();
+						Boolean lev = refLevel.get();
 						if (lev != null) {
 							refLevel.set(null);
 							contin = true;
@@ -49,7 +49,7 @@ public class RecalculationController {
 						}
 					}
 					
-				} while(contin); 
+				} while (contin); 
 			}
 
 		}.start();
@@ -59,22 +59,5 @@ public class RecalculationController {
 	public boolean isEnquiued() {
 		return refLevel.get() != null;
 	}
-	
-	private RecalculationLevel max(
-			RecalculationLevel recalculationLevel, 
-			RecalculationLevel level) {
-		
-		if (recalculationLevel == null) {
-			return level;
-		}
-		if (level == null) {
-			return recalculationLevel;
-		}
-		
-		return recalculationLevel.getLevel() > level.getLevel() ? 
-				recalculationLevel : level;
-	}
-	
-	
 	
 }

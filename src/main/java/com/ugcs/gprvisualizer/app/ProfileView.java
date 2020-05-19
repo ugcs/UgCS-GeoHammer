@@ -36,7 +36,6 @@ import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
-import com.ugcs.gprvisualizer.gpr.RecalculationLevel;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HoughScan;
@@ -69,7 +68,7 @@ public class ProfileView implements SmthChangeListener {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
-	private static final float dash1[] = { 5.0f };
+	private static final float[] dash1 = {5.0f};
 	private static final BasicStroke dashed = 
 			new BasicStroke(1.0f, 
 					BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 
@@ -253,7 +252,7 @@ public class ProfileView implements SmthChangeListener {
 		} else {
 			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		}
-		int[] buffer = ((DataBufferInt) bi.getRaster().getDataBuffer()).getData();
+		
 
 		Graphics2D g2 = (Graphics2D) bi.getGraphics();
 
@@ -265,6 +264,8 @@ public class ProfileView implements SmthChangeListener {
 
 		new VerticalRulerDrawer(model).draw(g2, field);
 
+		int[] buffer = ((DataBufferInt) bi.getRaster().getDataBuffer()).getData();
+		
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
 
 		g2.translate(field.getMainRect().x + field.getMainRect().width / 2, 0);
@@ -492,8 +493,9 @@ public class ProfileView implements SmthChangeListener {
 			p = field.traceSampleToScreen(new TraceSample(
 					fl.getTraces().get(0).indexInSet, 0));
 			
+			int lastTraceIndex = fl.getTraces().size() - 1;
 			p2 = field.traceSampleToScreen(new TraceSample(
-					fl.getTraces().get(fl.getTraces().size() - 1).indexInSet, 0));
+					fl.getTraces().get(lastTraceIndex).indexInSet, 0));
 
 			if (currentFile == fl) {
 				g2.setColor(Color.YELLOW);
@@ -544,16 +546,12 @@ public class ProfileView implements SmthChangeListener {
 
 		topPane.getChildren().add(vbox);
 
-		// sp2.getChildren().add(toolBar);
-
 		return topPane;
 	}
-
 
 	public List<Node> getRight() {
 
 		return Arrays.asList(
-				// new HBox( zoomInBtn, zoomOutBtn),
 				contrastSlider.produce());
 	}
 
@@ -569,18 +567,23 @@ public class ProfileView implements SmthChangeListener {
 						new ChangeListener<Number>() {
 
 					@Override
-					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
+					public void changed(
+							ObservableValue<? extends Number> observable,
+							Number oldValue,
 							Number newValue) {
 						repaintEvent();
 
 					}
 				}, 20),
 				
-				SliderFactory.create("printHoughAindex", model.getSettings().printHoughAindex, 
+				SliderFactory.create("printHoughAindex", 
+						model.getSettings().printHoughAindex, 
 						0, HoughScan.DISCRET_SIZE - 1, 
 						new ChangeListener<Number>() {
 					@Override
-					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
+					public void changed(
+							ObservableValue<? extends Number> observable, 
+							Number oldValue,
 							Number newValue) {
 						repaintEvent();
 					}
@@ -615,7 +618,8 @@ public class ProfileView implements SmthChangeListener {
 		if (justHorizont) {
 
 			double realAspect = getField().getAspectReal()
-					* (ch > 0 ? ProfileField.ASPECT_A : 1 / ProfileField.ASPECT_A);
+					* (ch > 0 ? ProfileField.ASPECT_A : 
+						1 / ProfileField.ASPECT_A);
 
 			getField().setAspectReal(realAspect);
 
@@ -628,7 +632,8 @@ public class ProfileView implements SmthChangeListener {
 		Point t2 = getLocalCoords(ex, ey);
 		TraceSample ts2 = getField().screenToTraceSample(t2);
 
-		getField().setSelectedTrace(getField().getSelectedTrace() - (ts2.getTrace() - ts.getTrace()));
+		getField().setSelectedTrace(getField().getSelectedTrace()
+				- (ts2.getTrace() - ts.getTrace()));
 
 		int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
 		getField().setStartSample(starts);
@@ -702,7 +707,8 @@ public class ProfileView implements SmthChangeListener {
 	protected Point getLocalCoords(double x, double y) {
 		javafx.geometry.Point2D sceneCoords = new javafx.geometry.Point2D(x, y);
 		javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
-		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x - getField().getMainRect().width / 2),
+		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x
+				- getField().getMainRect().width / 2),
 				(int) (imgCoord.getY()));
 		return p;
 	}
@@ -721,7 +727,8 @@ public class ProfileView implements SmthChangeListener {
 
 					// select in MapView
 					model.getField().setSceneCenter(
-							model.getFileManager().getTraces().get(trace).getLatLon());
+							model.getFileManager().getTraces()
+							.get(trace).getLatLon());
 
 					createTempPlace(model, trace);
 
@@ -773,7 +780,7 @@ public class ProfileView implements SmthChangeListener {
 
 	protected void repaintEvent() {
 		if (!model.isLoading()) {
-			controller.render(RecalculationLevel.BUFFERED_IMAGE);
+			controller.render();
 		}
 	}
 
@@ -818,10 +825,10 @@ public class ProfileView implements SmthChangeListener {
 	}
 
 	private RecalculationController controller = 
-			new RecalculationController(new Consumer<RecalculationLevel>() {
+			new RecalculationController(new Consumer<Void>() {
 
 		@Override
-		public void accept(RecalculationLevel level) {
+		public void accept(Void level) {
 
 			repaint();
 
@@ -915,7 +922,8 @@ public class ProfileView implements SmthChangeListener {
 
 	public class MiddleAmplitudeSlider extends BaseSlider {
 
-		public MiddleAmplitudeSlider(Settings settings, ChangeListener<Number> listenerExt) {
+		public MiddleAmplitudeSlider(Settings settings,
+				ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "Middle amp";
 			units = "";

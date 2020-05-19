@@ -9,11 +9,6 @@ public class LevelClear implements Command {
 	public void execute(SgyFile file) {
 		
 		file.groundProfile = null;
-//		for(Trace trace : file.getTraces()) {
-//			//trace.maxindex = 0;
-//			
-//		}
-		
 	}
 
 	@Override

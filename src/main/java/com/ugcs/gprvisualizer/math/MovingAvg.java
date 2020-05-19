@@ -5,20 +5,21 @@ public class MovingAvg {
 	double sum;
 	double div;
 	double reduce = 0.91;
+	
 	public MovingAvg() {
 		
 	}
 	
 	public void add(int val) {
-		sum+=val;
-		div+=1;
+		sum += val;
+		div += 1;
 		
 		sum *= reduce;
 		div *= reduce;
 	}
 	
 	public int get() {
-		return (int) Math.round(sum/div); 
+		return (int) Math.round(sum / div); 
 	}
 	
 }

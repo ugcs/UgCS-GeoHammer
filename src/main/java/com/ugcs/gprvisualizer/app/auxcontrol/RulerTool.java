@@ -22,7 +22,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.math.GHUtils;
+import com.ugcs.gprvisualizer.math.MathUtils;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 public class RulerTool extends BaseObjectImpl 
@@ -237,7 +237,7 @@ public class RulerTool extends BaseObjectImpl
 		double grndCm = distanceCm(file, tr, tr, 0, grn);
 		double f = grndCm / fullCm;
 		
-		f = GHUtils.norm(f, 0, 1);
+		f = MathUtils.norm(f, 0, 1);
 		
 		double diagAir = c * f;
 		double diagGrn = c * (1 - f);

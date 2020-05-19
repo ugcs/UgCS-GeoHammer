@@ -22,24 +22,19 @@ public abstract class BaseSlider {
 	protected ChangeListener<Number> listenerExt;
 	protected ChangeListener<Number> listener = new ChangeListener<Number>() {
         @Override
-        public void changed(ObservableValue<? extends Number> source, Number oldValue, Number newValue) {
+        public void changed(ObservableValue<? extends Number> source,
+        		Number oldValue, Number newValue) {
         	int val = updateModel();
         	label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
         } 
     };
 	
 	public BaseSlider(Settings settings, ChangeListener<Number> listenerExt) {
-//		if(settings == null) {
-//			throw new RuntimeException("settings == null");
-//		}
 		this.settings = settings;
 		this.listenerExt = listenerExt;
 	}
 	
 	public Node produce() {
-		
-		
-		 
         slider = new Slider();
         
         updateUI();
@@ -68,7 +63,8 @@ public abstract class BaseSlider {
         return root;
 	}
 	
-	public abstract int updateModel(); 
+	public abstract int updateModel();
+	
 	public abstract void updateUI();
 	
 }

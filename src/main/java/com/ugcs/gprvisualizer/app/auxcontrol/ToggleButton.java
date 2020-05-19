@@ -14,8 +14,7 @@ public class ToggleButton extends DragAnchor {
 	Image unselectedImg;
 	private boolean selected = false;
 	
-	public ToggleButton( 
-			Image selectedImg, 
+	public ToggleButton(Image selectedImg, 
 			Image unselectedImg,
 			AlignRect alignRect,
 			VerticalCutPart offset,
@@ -29,18 +28,18 @@ public class ToggleButton extends DragAnchor {
 	}
 	
 	protected Image getImg() {
-		if(isSelected()) {
+		if (isSelected()) {
 			return selectedImg;
-		}else {
+		} else {
 			return unselectedImg;
 		}
 	}
 	
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField vField) {
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
-		if(isPointInside(localPoint, vField)) {
+		if (isPointInside(localPoint, profField)) {
 			
 			setSelected(!isSelected());
 			
@@ -51,7 +50,7 @@ public class ToggleButton extends DragAnchor {
 	}
 	
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField vField) {
+	public boolean mouseMoveHandle(Point point, ProfileField profField) {
 		
 		return false;
 	}

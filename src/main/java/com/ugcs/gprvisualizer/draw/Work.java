@@ -33,15 +33,15 @@ public class Work {
 		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		
 		Graphics2D g2 = (Graphics2D) bi.getGraphics();
-		g2.setPaint( Color.DARK_GRAY);
-		g2.fillRect( 0, 0, bi.getWidth(), bi.getHeight());		
+		g2.setPaint(Color.DARK_GRAY);
+		g2.fillRect(0, 0, bi.getWidth(), bi.getHeight());
 		
 		g2.translate(width / 2, height / 2);
 		
 		for (Layer l : getLayers()) {
 			try {
 				l.draw(g2);
-			}catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -65,7 +65,7 @@ public class Work {
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
-            	if(img == null) {
+            	if (img == null) {
             		return;
             	}
 			    Image i = SwingFXUtils.toFXImage(img, null);
@@ -80,14 +80,14 @@ public class Work {
         public void handle(MouseEvent event) {
         	Point2D p = getLocalCoords(event);
         	
-        	for(int i = getLayers().size()-1; i>=0; i--) {
+        	for (int i = getLayers().size() - 1; i >= 0; i--) {
         		Layer layer = getLayers().get(i);
         		
         		try {
 	        		if (layer.mousePressed(p)) {
 	        			return;
 	        		}
-        		} catch(Exception e) {
+        		} catch (Exception e) {
         			e.printStackTrace();
         		}
         	}
@@ -102,7 +102,7 @@ public class Work {
         	for (int i = getLayers().size() - 1; i >= 0; i--) {
         		Layer layer = getLayers().get(i);
         		
-        		if(layer.mouseRelease(p)) {
+        		if (layer.mouseRelease(p)) {
         			return;
         		}        		
         	}
@@ -132,10 +132,10 @@ public class Work {
 	
 	protected Point2D getLocalCoords(double x, double y) {
 		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
-    	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords );        	
+    	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
     	Point2D p = new Point2D.Double(
-    			imgCoord.getX() - imageView.getBoundsInLocal().getWidth()/2, 
-    			imgCoord.getY() - imageView.getBoundsInLocal().getHeight()/2);
+    			imgCoord.getX() - imageView.getBoundsInLocal().getWidth() / 2, 
+    			imgCoord.getY() - imageView.getBoundsInLocal().getHeight() / 2);
 		return p;
 	}
 

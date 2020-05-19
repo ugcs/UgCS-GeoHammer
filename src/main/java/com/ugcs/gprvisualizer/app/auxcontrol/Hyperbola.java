@@ -132,6 +132,11 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 	
 	@Override
+	public boolean mousePressHandle(Point2D point, MapField field) {
+		return false;
+	}
+
+	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField profField) {		
 		return isPointInside(localPoint, profField);
 	}
@@ -157,8 +162,10 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
-		g2.setClip(profField.getClipMainRect().x, profField.getClipMainRect().y, 
-				profField.getClipMainRect().width, profField.getClipMainRect().height);
+		g2.setClip(profField.getClipMainRect().x,
+				profField.getClipMainRect().y, 
+				profField.getClipMainRect().width,
+				profField.getClipMainRect().height);
 		
 		drawHyperbola(g2, profField);
 		
@@ -206,7 +213,7 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 		}		
 		json.put("topCut", arr);
 		
-		int[] botCut = getCutArray(y+thickness, y);
+		int[] botCut = getCutArray(y + thickness, y);
 		JSONArray arr2 = new JSONArray();
 		for (int i : botCut) {
 			arr2.add(i);
@@ -217,8 +224,8 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 
 	private int[] getCutArray(int y, int top) {
-		int[] topCut = new int[leftWidth+rightWidth];		
-		//double kf = AppContext.model.getSettings().hyperkfc / 100.0;
+		int[] topCut = new int[leftWidth + rightWidth];
+
 		double kf = hyperkfcInt / 100.0;
 		for (int i = 0; i < topCut.length; i++) {
 			double x = (i - leftWidth) * kf;
@@ -229,25 +236,20 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		return false;
-	}
-
-	@Override
-	public boolean isPointInside(Point localPoint, ProfileField vField) {
+	public boolean isPointInside(Point localPoint, ProfileField profField) {
 		
-		Rectangle rect = getRect(vField);
+		Rectangle rect = getRect(profField);
 		
 		return rect.contains(localPoint);
 	}
 
-	private void drawHyperbola(Graphics2D g2, ProfileField vField) {
+	private void drawHyperbola(Graphics2D g2, ProfileField profField) {
 		g2.setColor(Color.YELLOW);
 		double kf = hyperkfcInt / 100.0;
 		int tr = getTracePinacleGlobal();
 		double y = pinacle.getSample();
-		drawHyperbolaLine(g2, vField, kf, tr, y);
-		drawHyperbolaLine(g2, vField, kf, tr, y+thickness);
+		drawHyperbolaLine(g2, profField, kf, tr, y);
+		drawHyperbolaLine(g2, profField, kf, tr, y + thickness);
 	}
 
 	private void drawHyperbolaLine(Graphics2D g2, 

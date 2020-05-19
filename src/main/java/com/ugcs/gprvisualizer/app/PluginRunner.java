@@ -50,7 +50,7 @@ public class PluginRunner implements SingleCommand {
 
 			String cmd = "python \"" + sgyprocPath 
 					+ "/main.py\" "
-					+ "\" "+ sb.toString() + "\" "
+					+ "\" " + sb.toString() + "\" "
 					+ "--model \"" + sgyprocPath 
 					+ "\\model.pb\" --no_progressbar";
 			

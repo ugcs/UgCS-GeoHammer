@@ -1,6 +1,6 @@
 package com.ugcs.gprvisualizer.math;
 
-public class GHUtils {
+public class MathUtils {
 
 	
 	public static int norm(int i, int min, int max) {

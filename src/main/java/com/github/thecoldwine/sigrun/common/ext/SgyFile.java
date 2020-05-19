@@ -70,8 +70,6 @@ public class SgyFile {
     
     // amplitude
     public ScanProfile amplScan;
-    
-	
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
 	public void open(File file) throws Exception {
@@ -410,4 +408,5 @@ public class SgyFile {
 		
 		return traceIndex;
 	}
+
 }

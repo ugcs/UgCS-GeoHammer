@@ -27,7 +27,7 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
-	final static float[] dash1 = {7.0f, 2.0f};
+	private static final float[] dash1 = {7.0f, 2.0f};
 	static Stroke VERTICAL_STROKE = 	
 			new BasicStroke(1.0f,
                 BasicStroke.CAP_BUTT,
@@ -42,11 +42,29 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
+	public boolean mousePressHandle(Point2D point, MapField mapField) {
+		return false;
+	}
+
+	@Override
 	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
 		
 		return false;
 	}
+	
+	@Override
+	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
+		ClickPlace result = new ClickPlace(traceInAll); 
+		
+		return result;
+	}
 
+	@Override
+	public boolean isFit(int begin, int end) {
+		
+		return false;
+	}
+	
 	@Override
 	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 
@@ -58,8 +76,6 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		return false;
 	}
-	
-	
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField mapField) {
@@ -88,8 +104,8 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		g2.setColor(Color.blue);
 		g2.setXORMode(Color.gray);
 		g2.drawLine(R_HOR, Model.TOP_MARGIN, R_HOR, profField.sampleToScreen(
-				profField.getLastVisibleSample(profField.getLeftRuleRect().height)		
-				));
+				profField.getLastVisibleSample(
+						profField.getLeftRuleRect().height)));
 		g2.setPaintMode();
 		g2.translate(-rect.x, -rect.y);
 	}
@@ -104,13 +120,13 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField hField) {
+	public Rectangle getRect(MapField mapField) {
 		
 		Trace tr = getTrace();		
-		Point2D p =  hField.latLonToScreen(tr.getLatLon());		
+		Point2D p =  mapField.latLonToScreen(tr.getLatLon());		
 		
 		Rectangle rect = new Rectangle(
-				(int) p.getX() - R_HOR, (int) p.getY() - R_VER  *2, 
+				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
 				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
@@ -139,27 +155,8 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return false;
 	}
 
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField mapField) {
-		return false;
-	}
-
-	@Override
-	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		ClickPlace result = new ClickPlace(traceInAll); 
-		
-		return result;
-	}
-
-	@Override
-	public boolean isFit(int begin, int end) {
-		
-		return false;
-	}
-	
 	public int getGlobalTrace() {
 		return traceInAll;
 	}
-
 
 }

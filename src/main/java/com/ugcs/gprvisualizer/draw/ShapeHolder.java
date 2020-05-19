@@ -17,11 +17,11 @@ public class ShapeHolder {
 	    
 	    result.moveTo(0, 0);
 	    
-	    result.lineTo(0, -5*step);	    
-	    result.lineTo(3*step, -5*step);	    
-	    result.lineTo(2*step, -4*step);	    
-	    result.lineTo(3*step, -3*step);	    
-	    result.lineTo(2, -3*step);
+	    result.lineTo(0, -5 * step);
+	    result.lineTo(3 * step, -5 * step);
+	    result.lineTo(2 * step, -4 * step);
+	    result.lineTo(3 * step, -3 * step);
+	    result.lineTo(2, -3 * step);
 	    result.lineTo(2, 0);
 	    
 	    result.closePath();
@@ -34,8 +34,8 @@ public class ShapeHolder {
 	    
 	    result.moveTo(0, 0);
 	    
-	    result.lineTo(0, -3*step);	    
-	    result.lineTo(3*step, 0);	    
+	    result.lineTo(0, -3 * step);
+	    result.lineTo(3 * step, 0);
 	    
 	    result.closePath();
 	    
@@ -51,14 +51,11 @@ public class ShapeHolder {
 	    
 	    result.moveTo(0, 0);
 	    
-	    result.lineTo(0, 3*step);	    
-	    result.lineTo(3*step, 0);	    
+	    result.lineTo(0, 3 * step);	    
+	    result.lineTo(3 * step, 0);	    
 	    
 	    result.closePath();
 	    
-	    Rectangle r = result.getBounds();
-	    
-
 	    return result;
 	}
 	
