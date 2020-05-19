@@ -45,7 +45,7 @@ public class AutomaticScaleBuilder implements ArrayBuilder {
 	}
 	
 	public void analyze(float[] values) {
-		if(maxvalues.length < values.length) {
+		if (maxvalues.length < values.length) {
 			float[] tmp = new float[values.length];
 			System.arraycopy(maxvalues, 0, tmp, 0, maxvalues.length);
 			maxvalues = tmp;

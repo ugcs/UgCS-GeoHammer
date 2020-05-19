@@ -7,13 +7,14 @@ public class CmdTest {
 
 	private static final String RUN_CMD = "java -cp \"d:\\georadarData\\1\" CmdTestProducer f";
 
-	public static void main(String argv[]) {
+	public static void main(String[] argv) {
 		try {
 			System.out.println(System.getenv().get("SGYPROC"));
 			String line;
 			
 			Process p = Runtime.getRuntime().exec(RUN_CMD);
-			BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			BufferedReader input = new BufferedReader(
+					new InputStreamReader(p.getInputStream()));
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
 			}

@@ -21,7 +21,7 @@ public class PrismDrawer {
 	
 	int geencolorp = (0 << 16) + (100 << 8) + 94;
 	int geencolorm = (94 << 16) + (100 << 8) + 0;	
-	int geencolorb = (130 <<16) + (255 << 8) + 130;
+	int geencolorb = (130 << 16) + (255 << 8) + 130;
 	
 	public PrismDrawer(Model model) {
 		this.model = model;
@@ -80,7 +80,7 @@ public class PrismDrawer {
 			float middleAmp = model.getSettings().hypermiddleamp;
 			float[] values = trace.getNormValues();
 			for (int j = field.getStartSample();
-					j < Math.min(lastSample, values.length ); j++) {
+					j < Math.min(lastSample, values.length); j++) {
 				
 				int sampStart = field.sampleToScreen(j);
 				int sampFinish = field.sampleToScreen(j + 1);
@@ -93,17 +93,17 @@ public class PrismDrawer {
 				int color = tanh.trans(values[j] - middleAmp);
 				
 				if (showEdge && trace.edge != null && trace.edge[j] > 0) {
-					color = edgeColors[trace.edge[j]] ;
+					color = edgeColors[trace.edge[j]];
 				}
 
-				if(showInlineHyperbolas 
+				if (showInlineHyperbolas 
 						&& trace.good != null 
 						&& trace.good[j] > 0) {
 					color = goodColors[trace.good[j]];
 				}
 				
-	    		for (int xt = 0; xt < hscale; xt ++) {
-	    			for (int yt =0; yt < vscale; yt++) {
+	    		for (int xt = 0; xt < hscale; xt++) {
+	    			for (int yt = 0; yt < vscale; yt++) {
 	    				int index = rect.x + rect.width / 2 + xt + traceStartX 
 	    						+ (sampStart + yt) * bytesInRow;
 						buffer[index ] = color;

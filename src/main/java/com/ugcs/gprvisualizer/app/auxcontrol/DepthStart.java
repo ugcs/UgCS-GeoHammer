@@ -40,6 +40,15 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	@Override
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+		if (isPointInside(localPoint, profField)) {
+			return true;
+		}
+		
+		return false;
+	}
+
+	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
 		return false;
 	}
@@ -51,15 +60,6 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		if (isPointInside(localPoint, profField)) {
-			return true;
-		}
-		
 		return false;
 	}
 

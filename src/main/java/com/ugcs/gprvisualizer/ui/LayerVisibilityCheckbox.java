@@ -3,7 +3,7 @@ package com.ugcs.gprvisualizer.ui;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 
-public class LayerVisibilityCheckbox extends BaseCheckBox{
+public class LayerVisibilityCheckbox extends BaseCheckBox {
 
 	public LayerVisibilityCheckbox(String name, ChangeListener<Boolean> listenerExt) {
 		super(listenerExt, name);

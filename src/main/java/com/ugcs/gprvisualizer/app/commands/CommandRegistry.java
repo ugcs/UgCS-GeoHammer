@@ -43,7 +43,7 @@ public class CommandRegistry {
 		public void progressMsg(String msg) {
 			
 		}
-	} ;
+	};
 	
 	public void runForFiles(Command command) {
 		
@@ -52,14 +52,15 @@ public class CommandRegistry {
 	
 	public void runForFiles(Command command, ProgressListener listener) {
 	
-		for(SgyFile sgyFile : model.getFileManager().getFiles()) {
+		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
 			
 			try {
-				listener.progressMsg("process file '" + sgyFile.getFile().getName() + "'");
+				listener.progressMsg("process file '" 
+						+ sgyFile.getFile().getName() + "'");
 				
 				command.execute(sgyFile);
 				
-			}catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				
 				listener.progressMsg("error");
@@ -67,7 +68,7 @@ public class CommandRegistry {
 		}
 		
 		Change ch = command.getChange();
-		if(ch != null) {
+		if (ch != null) {
 			AppContext.notifyAll(new WhatChanged(ch));
 		}
 		
@@ -91,7 +92,7 @@ public class CommandRegistry {
 			public void run(ProgressListener listener) {
 				runForFiles(command, listener);				
 				
-				if(finish != null) {
+				if (finish != null) {
 					finish.accept(null);
 				}
 			}
@@ -119,22 +120,24 @@ public class CommandRegistry {
 				try {
 					listener.progressMsg("start processing");
 					
-					command.execute(AppContext.model.getFileManager().getFiles(), listener);
+                    command.execute(AppContext.model.getFileManager().getFiles(),
+							listener);
 					
-				}catch(Exception e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					
 					listener.progressMsg("error");
 				}
 				
 				Change ch = command.getChange();
-				if(ch != null) {
+				if (ch != null) {
 					broadcast.notifyAll(new WhatChanged(ch));
 				}
 				
-				listener.progressMsg("process finished '" + command.getButtonText() + "'");
+				listener.progressMsg("process finished '" 
+						+ command.getButtonText() + "'");
 					
-				if(finish != null) {
+				if (finish != null) {
 					finish.accept(null);
 				}
 			}
@@ -162,7 +165,7 @@ public class CommandRegistry {
 		button.setOnAction(e -> {
 			runForFiles(command);
 			
-			if(finish != null) {
+			if (finish != null) {
 				finish.accept(null);
 			}
 		});
@@ -173,7 +176,7 @@ public class CommandRegistry {
 	public static Button createButton(String title, EventHandler<ActionEvent> action) {
 		
 		Button button = new Button(title);
-		button.setOnAction( action);
+		button.setOnAction(action);
 		
 		return button;
 	}

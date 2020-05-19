@@ -44,7 +44,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 //		for(SgyFile sf : model.getFileManager().getFiles()) {
 //			
 //			int result[] = new int[sf.getTraces().size()];
-//			for(int i = 0; i < sf.getTraces().size(); i++) {							
+//			for(int i = 0; i < sf.getTraces().size(); i++) {
 //				result[i] = avg(sf.getTraces(), i);				
 //			}
 //			

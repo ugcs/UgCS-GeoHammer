@@ -24,7 +24,8 @@ public abstract class BaseCheckBox {
 	
 	protected ChangeListener<Boolean> listener = new ChangeListener<Boolean>() {
         @Override
-        public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
+        public void changed(ObservableValue<? extends Boolean> source,
+        		Boolean oldValue, Boolean newValue) {
         	boolean val = updateModel();
         	//label.textProperty().setValue(name + ": " + String.valueOf(val) + " " + units);
         } 

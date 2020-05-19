@@ -16,14 +16,9 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class HyperFinder {
 	
-	//private static final int R = 160;
-	
-	TraceSample ts;
-	
-	//private static Map<Integer, Integer> map = ;
-	
-	final static float[] dash1 = {1.0f, 7.0f};
-	final static BasicStroke dashed =
+	private TraceSample ts;	
+	private static final float[] dash1 = {1.0f, 7.0f};
+	private static final BasicStroke dashed =
 	        new BasicStroke(1.0f,
 	                        BasicStroke.CAP_BUTT,
 	                        BasicStroke.JOIN_MITER,
@@ -52,169 +47,6 @@ public class HyperFinder {
 	public void setPoint(TraceSample ts) {
 		this.ts = ts;
 	}
-	
-	public void drawHyperbolaLine(Graphics2D g2, ProfileField profField) {
-		
-		if (ts == null) {
-			return;
-		}
-		
-		int tr = ts.getTrace();
-		List<Trace> traces = model.getFileManager().getTraces();
-		
-		if (tr < 0 || tr >= traces.size() || ts.getSample() < 0) {
-			return;
-		}
-		
-		Trace extr = traces.get(tr);
-		
-		float [] values = extr.getNormValues();
-		if (ts.getSample() < 0 || ts.getSample() >= values.length) {
-			return;
-		}
-		
-		////
-		SgyFile file = model.getSgyFileByTrace(tr);
-		HoughScan hs = new HoughScan(model);
-		hs.isPrintLog = true;
-		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample());
-		
-		
-		hs.hd.drawOnCut(g2, profField);
-		
-		double hyperkf = model.getSettings().hyperkfc / 100.0;		
-		float example2 = values[ts.getSample()];
-		HalfHyper left2 = HalfHyper.getHalfHyper(
-				traces, tr, ts.getSample(), example2, -1, hyperkf);		
-		HalfHyper right2 = HalfHyper.getHalfHyper(
-				traces, tr, ts.getSample(), example2, +1, hyperkf);		
-		
-		Point lt = profField.traceSampleToScreen(ts);
-
-		///draw
-		
-		g2.setColor(Color.LIGHT_GRAY);
-		g2.fillRect(lt.x - 100, lt.y - 60, 200, 40);
-		g2.setColor(Color.RED);
-
-		g2.drawString("" + ts.getTrace() + " (" + extr.indexInFile + ") " 
-				+ ts.getSample() + " (" + fl(example2) + ")   ofst: " + extr.verticalOffset,
-				lt.x-100, lt.y - 40);
-		
-		g2.drawString(" l: " + fl(left2.oppositeAbovePerc) + " " 
-				+ fl(left2.oppositeBelowPerc) + " <-|-> " +  
-				" r: " +  fl(right2.oppositeAbovePerc) + " " + fl(right2.oppositeBelowPerc),				
-				lt.x-100, lt.y - 30);
-		
-		g2.setColor(Color.CYAN);
-		g2.setStroke(line4);
-	}
-	
-	public void drawHalfHyperLine(Graphics2D g2, ProfileField profField, 
-			HalfHyper hh, int voffst) {
-		
-		
-		boolean positive = hh.example > 0;
-		double hyperkf = model.getSettings().hyperkfc / 100.0;
-		int goodside = (int) (HalfHyper.getGoodSideSize(hh.pinnacle_smp) / hyperkf);
-		if (hh.length >= goodside ) {
-			
-			if (hh.isGood()) {
-				g2.setStroke(line4);
-				g2.setColor(positive ? plusBest : minusBest);
-			} else {
-				g2.setStroke(line2);
-				g2.setColor(positive ? plusGood : minusGood);
-			}
-			
-		}else {
-			g2.setStroke(dashed);			
-			g2.setColor(positive ? plusBad : minusBad);
-		}		
-		
-		Point prev = null;
-		for (int i = 0; i < hh.length; i++) {
-			Point lt = profField.traceSampleToScreen(new TraceSample(
-					hh.pinnacle_tr + i * hh.side, hh.smp[i]));
-			
-			if (prev != null) {
-				g2.drawLine(prev.x, prev.y + voffst, lt.x, lt.y + voffst);				
-			}
-			
-			prev = lt;
-		}
-		
-	}
-	
-	
-	public double getThreshold() {
-		double thr = (double) model.getSettings().hyperSensitivity.intValue() / 100.0;
-		return thr;
-	}
-		
-	public static double THRESHOLD = 0.7;
-	
-	public void drawHyperbolaLine2(Graphics2D g2, ProfileField vField) {
-		
-		double thr = getThreshold();
-		
-		int tr = ts.getTrace();
-		int smp = ts.getSample();
-		
-		SgyFile sgyFile = model.getSgyFileByTrace(tr);
-		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
-		
-		//List<Trace> traces = AppContext.model.getFileManager().getTraces();
-		//double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
-		
-		for (double x_factor = AlgorithmicScan.X_FACTOR_FROM; 
-				x_factor <= AlgorithmicScan.X_FACTOR_TO; 
-				x_factor += AlgorithmicScan.X_FACTOR_STEP) {
-			drawHyperSingleLine(g2, vField, thr, smp, sgyFile, traceInFile, x_factor);
-		}
-		
-		
-	}
-
-	public void drawHyperSingleLine(Graphics2D g2, ProfileField vField, double thr, 
-			int smp, SgyFile sgyFile,
-			int traceInFile, double x_factor) {
-		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, -1, x_factor);
-		double lftRate = lft.analize(100);
-		
-		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, traceInFile, smp, +1, x_factor);
-		double rhtRate = rht.analize(100);
-		
-				
-		boolean lftGood = lftRate > thr;		
-		g2.setColor(lftGood ? Color.RED : Color.CYAN);
-		g2.setStroke(lftGood ? line2 : line1);
-		
-		drawHHDst(g2, vField, sgyFile.getOffset(), lft);
-		
-		boolean rhtGood = rhtRate > thr;		
-		g2.setColor(rhtGood ? Color.RED : Color.CYAN);
-		g2.setStroke(rhtGood ? line2 : line1);
-		drawHHDst(g2, vField, sgyFile.getOffset(), rht);
-	}
-
-	public void drawHHDst(Graphics2D g2, ProfileField profField, 
-			VerticalCutPart  offset, HalfHyperDst lft) {
-		Point prev = null;
-		for (int i=0; i < lft.length; i++) {
-			
-			int traceIndex = offset.localToGlobal(lft.pinnacleTrace + i * lft.side);
-			
-			Point lt = profField.traceSampleToScreenCenter(new TraceSample(
-					traceIndex, lft.smp[i]));
-			if (prev != null) {
-				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
-			}
-			
-			prev = lt;
-		}
-	}	
-	
 	
 	public void drawHyperbolaLine(Graphics2D g2, ProfileField profField, 
 			int smp, int lft, int rht, int voffst) {
@@ -246,6 +78,176 @@ public class HyperFinder {
 			prev = lt;
 		}
 	}
+	
+	public void drawHyperbolaLine(Graphics2D g2, ProfileField profField) {
+		
+		if (ts == null) {
+			return;
+		}
+		
+		int tr = ts.getTrace();
+		List<Trace> traces = model.getFileManager().getTraces();
+		
+		if (tr < 0 || tr >= traces.size() || ts.getSample() < 0) {
+			return;
+		}
+		
+		Trace extr = traces.get(tr);
+		
+		float [] values = extr.getNormValues();
+		if (ts.getSample() < 0 || ts.getSample() >= values.length) {
+			return;
+		}
+		
+		////
+		SgyFile file = model.getSgyFileByTrace(tr);
+		HoughScan hs = new HoughScan(model);
+		hs.isPrintLog = true;
+		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample());
+		
+		
+		hs.getHoughDrawer().drawOnCut(g2, profField);
+		
+		double hyperkf = model.getSettings().hyperkfc / 100.0;		
+		float example2 = values[ts.getSample()];
+		HalfHyper left2 = HalfHyper.getHalfHyper(
+				traces, tr, ts.getSample(), example2, -1, hyperkf);		
+		HalfHyper right2 = HalfHyper.getHalfHyper(
+				traces, tr, ts.getSample(), example2, +1, hyperkf);		
+		
+		Point lt = profField.traceSampleToScreen(ts);
+
+		///draw
+		
+		g2.setColor(Color.LIGHT_GRAY);
+		g2.fillRect(lt.x - 100, lt.y - 60, 200, 40);
+		g2.setColor(Color.RED);
+
+		g2.drawString("" + ts.getTrace() + " (" + extr.indexInFile + ") " 
+				+ ts.getSample() + " (" + fl(example2) 
+				+ ")   ofst: " + extr.verticalOffset,
+				lt.x - 100, lt.y - 40);
+		
+		g2.drawString(" l: " + fl(left2.oppositeAbovePerc) + " " 
+				+ fl(left2.oppositeBelowPerc) + " <-|-> " 
+				+ " r: " +  fl(right2.oppositeAbovePerc)
+				+ " " + fl(right2.oppositeBelowPerc),
+				lt.x - 100, lt.y - 30);
+		
+		g2.setColor(Color.CYAN);
+		g2.setStroke(line4);
+	}
+	
+	public void drawHalfHyperLine(Graphics2D g2, ProfileField profField, 
+			HalfHyper hh, int voffst) {
+		
+		
+		boolean positive = hh.example > 0;
+		double hyperkf = model.getSettings().hyperkfc / 100.0;
+		int goodside = (int) (HalfHyper.getGoodSideSize(hh.pinSmp) / hyperkf);
+		if (hh.length >= goodside) {
+			
+			if (hh.isGood()) {
+				g2.setStroke(line4);
+				g2.setColor(positive ? plusBest : minusBest);
+			} else {
+				g2.setStroke(line2);
+				g2.setColor(positive ? plusGood : minusGood);
+			}
+			
+		} else {
+			g2.setStroke(dashed);			
+			g2.setColor(positive ? plusBad : minusBad);
+		}		
+		
+		Point prev = null;
+		for (int i = 0; i < hh.length; i++) {
+			Point lt = profField.traceSampleToScreen(new TraceSample(
+					hh.pinTr + i * hh.side, hh.smp[i]));
+			
+			if (prev != null) {
+				g2.drawLine(prev.x, prev.y + voffst, lt.x, lt.y + voffst);
+			}
+			
+			prev = lt;
+		}
+		
+	}
+	
+	
+	public double getThreshold() {
+		double thr = (double) model.getSettings().hyperSensitivity.intValue() / 100.0;
+		return thr;
+	}
+		
+	public static double THRESHOLD = 0.7;
+	
+	public void drawHyperbolaLine2(Graphics2D g2, ProfileField profField) {
+		
+		double thr = getThreshold();
+		
+		int tr = ts.getTrace();
+		int smp = ts.getSample();
+		
+		SgyFile sgyFile = model.getSgyFileByTrace(tr);
+		int traceInFile = tr - sgyFile.getOffset().getStartTrace();
+		
+		//List<Trace> traces = AppContext.model.getFileManager().getTraces();
+		//double x_factor = AppContext.model.getSettings().hyperkfc/100.0;
+		
+		for (double factorX = AlgorithmicScan.X_FACTOR_FROM; 
+				factorX <= AlgorithmicScan.X_FACTOR_TO; 
+				factorX += AlgorithmicScan.X_FACTOR_STEP) {
+			drawHyperSingleLine(g2, profField, thr, smp, sgyFile, traceInFile, factorX);
+		}
+		
+		
+	}
+
+	public void drawHyperSingleLine(Graphics2D g2, 
+			ProfileField profField, double thr, 
+			int smp, SgyFile sgyFile,
+			int traceInFile, double factorX) {
+		
+		//left
+		HalfHyperDst lft = HalfHyperDst.getHalfHyper(sgyFile, 
+				traceInFile, smp, -1, factorX);
+		double lftRate = lft.analize(100);
+		
+		boolean lftGood = lftRate > thr;		
+		g2.setColor(lftGood ? Color.RED : Color.CYAN);
+		g2.setStroke(lftGood ? line2 : line1);
+		
+		drawHypDst(g2, profField, sgyFile.getOffset(), lft);
+
+		
+		//right
+		HalfHyperDst rht = HalfHyperDst.getHalfHyper(sgyFile, 
+				traceInFile, smp, +1, factorX);
+		double rhtRate = rht.analize(100);
+		
+		boolean rhtGood = rhtRate > thr;		
+		g2.setColor(rhtGood ? Color.RED : Color.CYAN);
+		g2.setStroke(rhtGood ? line2 : line1);
+		drawHypDst(g2, profField, sgyFile.getOffset(), rht);
+	}
+
+	public void drawHypDst(Graphics2D g2, ProfileField profField, 
+			VerticalCutPart  offset, HalfHyperDst lft) {
+		Point prev = null;
+		for (int i = 0; i < lft.length; i++) {
+			
+			int traceIndex = offset.localToGlobal(lft.pinnacleTrace + i * lft.side);
+			
+			Point lt = profField.traceSampleToScreenCenter(new TraceSample(
+					traceIndex, lft.smp[i]));
+			if (prev != null) {
+				g2.drawLine(prev.x, prev.y, lt.x, lt.y);
+			}
+			
+			prev = lt;
+		}
+	}	
 	
 	String fl(double d) {
 		return String.format(" %.2f ", d);

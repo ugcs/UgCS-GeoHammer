@@ -18,15 +18,18 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 	@Override
 	public double[][] build() {
 		
-		if(scaleArray != null) {
+		if (scaleArray != null) {
 			return scaleArray;
 		}
 		
 		scaleArray = new double[2][settings.maxsamples];
 		
-		for(int i=0; i < settings.maxsamples; i++) {
+		for (int i = 0; i < settings.maxsamples; i++) {
 			scaleArray[0][i] = settings.threshold;
-			scaleArray[1][i] = (settings.topscale + (settings.bottomscale - settings.topscale) *i / settings.maxsamples)/10000.0;
+			scaleArray[1][i] = (settings.topscale 
+					+ (settings.bottomscale - settings.topscale) 
+					* i / settings.maxsamples)
+					/ 10000.0;
 		}
 		
 		return scaleArray;

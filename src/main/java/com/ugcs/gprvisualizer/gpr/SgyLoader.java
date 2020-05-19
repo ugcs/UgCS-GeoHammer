@@ -44,28 +44,24 @@ public class SgyLoader {
         };
     }
 
-    private static Set<ParseProgressListener> makeListenerSet() {
-        Set<ParseProgressListener> result = new HashSet<ParseProgressListener>();
-        result.add(makeListener());
-
-        return result;
-    }
-
     public static BinaryHeaderFormat makeBinHeaderFormat() {
         return BinaryHeaderFormatBuilder.aBinaryHeaderFormat()
         		
 				/*
 				3201–3204 Job identification number.
-				+3205–3208 Line number. For 3-D poststack data, this will typically contain the in-line number.
+				+3205–3208 Line number. 
 				+3209–3212 Reel number.
-				3213–3214 Number of data traces per ensemble. Mandatory for prestack data.
-				3215–3216 Number of auxiliary traces per ensemble. Mandatory for prestack data.
-				3217–3218 Sample interval. Microseconds (µs) for time data, Hertz (Hz) for frequency data, meters (m) or feet (ft) for depth data.
-				3219–3220 Sample interval of original field recording. Microseconds (µs) for time data, Hertz (Hz) for frequency data, meters (m) or feet (ft) for depth data.
+				3213–3214 Number of data traces per ensemble.
+				3215–3216 Number of auxiliary traces per ensemble.
+				3217–3218 Sample interval. Microseconds (µs) for time data, 
+					Hertz (Hz) for frequency data, 
+					meters (m) or feet (ft) for depth data.
+				3219–3220 Sample interval of original field recording. 
+					Microseconds (µs) for time data, 
+					Hertz (Hz) for frequency data, 
+					meters (m) or feet (ft) for depth data.
 				3221–3222 Number of samples per data trace.
-					Note: The sample interval and number of samples in the Binary File Header
-					should be for the primary set of seismic data traces in the file.
-				3223–3224 Number of samples per data trace for original field recording.        		
+				3223–3224 Number of samples per data trace for original.
 				 */
                 .withLineNumberFormat(FormatEntry.create(4, 8))
                 .withReelNumberFormat(FormatEntry.create(8, 12))
@@ -132,17 +128,22 @@ public class SgyLoader {
     }
 
     private static void printTraceInfo(SeismicTrace trace) {
-        System.out.println("Trace Header info.    " + trace.getHeader().getNumberOfSamples() + " samples. " + trace.getHeader().getPositionInFile() 
-        		+ " . " + trace.getHeader().getEnsembleNumber());
+        System.out.println("Trace Header info.    " 
+        	+ trace.getHeader().getNumberOfSamples() 
+        	+ " samples. " + trace.getHeader().getPositionInFile() 
+        	+ " . " + trace.getHeader().getEnsembleNumber());
         
-        System.out.println("   gps " +  trace.getHeader().getSourceX() + " " + trace.getHeader().getSourceY() + "  "  +trace.getHeader().getCoordinateUnitsCode());
-        System.out.println(" group " +  trace.getHeader().getGroupX() + " " + trace.getHeader().getGroupY());
+        System.out.println("   gps " + trace.getHeader().getSourceX() 
+        		+ " " + trace.getHeader().getSourceY() 
+        		+ " " + trace.getHeader().getCoordinateUnitsCode());
+        System.out.println(" group " + trace.getHeader().getGroupX() 
+        		+ " " + trace.getHeader().getGroupY());
         
         
         
     }
     
-    static void printF(float[] ar){
+    static void printF(float[] ar) {
     	StringBuilder sb = new StringBuilder();
     	for (float f : ar) {
     		sb.append(", ");
@@ -151,7 +152,7 @@ public class SgyLoader {
     	System.out.println(sb.toString());
     }
 
-    static String printB(byte[] ar){
+    static String printB(byte[] ar) {
     	StringBuilder sb = new StringBuilder();
     	for (byte f : ar) {
     		sb.append(", ");

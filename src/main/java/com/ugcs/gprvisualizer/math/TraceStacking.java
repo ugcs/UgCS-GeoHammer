@@ -21,8 +21,8 @@ public class TraceStacking implements Command {
 		double sampleDist = sgyFile.getSamplesToCmGrn();
 		
 		// to meters
-		double STACK_DIST = sampleDist;		
-		System.out.println(" sample length: " + STACK_DIST);
+		double stackDist = sampleDist;		
+		System.out.println(" sample length: " + stackDist);
 		
 		
 		List<Trace> traces = sgyFile.getTraces();
@@ -30,15 +30,13 @@ public class TraceStacking implements Command {
 		List<Trace> stack = new ArrayList<>();
 		double stackSumDist = 0;
 		
-		for(int i=0; i<traces.size(); i++) {
+		for (int i = 0; i < traces.size(); i++) {
 			
 			Trace t1 = traces.get(i);
 			stack.add(t1);
 			stackSumDist += t1.getPrevDist();
 			
-			if(stackSumDist >= STACK_DIST) {
-				
-				System.out.println(" stack: " + stackSumDist + " > " + STACK_DIST + "    unite " + stack.size());
+			if (stackSumDist >= stackDist) {
 				
 				result.add(merge(stack));
 				
@@ -55,16 +53,17 @@ public class TraceStacking implements Command {
 
 
 	private Trace merge(List<Trace> stack) {
-		Trace example = stack.get(stack.size()/2);
+		Trace example = stack.get(stack.size() / 2);
 		float[] res = new float[example.getNormValues().length];
 		
-		for(int i=0; i< res.length; i++) {
+		for (int i = 0; i < res.length; i++) {
 			
 			res[i] = mergeVal(stack, i);
 			
 		}
 		
-		Trace combined = new Trace(example.getBinHeader(), example.getHeader(), res, example.getLatLon());
+		Trace combined = new Trace(example.getBinHeader(), example.getHeader(),
+				res, example.getLatLon());
 		
 		combined.verticalOffset = example.verticalOffset; 
 		
@@ -78,23 +77,23 @@ public class TraceStacking implements Command {
 		int positiveCount = 0;
 		int negativeCount = 0;
 		
-		for(Trace t : stack) {
+		for (Trace t : stack) {
 			float v = t.getNormValues()[i];
 			
 			max = Math.max(max, v);
 			min = Math.min(min, v);
-			if(v > 0) {
+			if (v > 0) {
 				positiveCount++;
-			}else {
+			} else {
 				negativeCount++;
 			}			
 		}
 		
-		int limit = stack.size()/4;
-		if(positiveCount < limit) {
+		int limit = stack.size() / 4;
+		if (positiveCount < limit) {
 			return min;
 		}
-		if(negativeCount < limit) {
+		if (negativeCount < limit) {
 			return max;
 		}
 		

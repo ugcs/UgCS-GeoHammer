@@ -3,7 +3,7 @@ package com.ugcs.gprvisualizer.draw;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
-public interface Layer extends ToolProducer{
+public interface Layer extends ToolProducer {
 
 	void draw(Graphics2D g2);
 	

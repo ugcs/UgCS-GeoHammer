@@ -44,7 +44,7 @@ public class HalfHyperDst {
 	}
 	
 	public double analize(int percent, boolean higher) {
-		if (defective ) {
+		if (defective) {
 			return 0;
 		}
 		//
@@ -63,7 +63,7 @@ public class HalfHyperDst {
 		
 		for (int j = from; j <= to; j++) {
 			
-			for (int i=0; i < checkedLength; i++) {
+			for (int i = 0; i < checkedLength; i++) {
 				int index = pinnacleTrace + side * i;
 				Trace trace = traces.get(index);
 				
@@ -94,8 +94,8 @@ public class HalfHyperDst {
 	
 	private double[] smpToDst(int smp) {
 		
-		int grndSmp = sgyFile.groundProfile != null ? 
-				sgyFile.groundProfile.deep[pinnacleTrace] : 0;
+		int grndSmp = sgyFile.groundProfile != null 
+				? sgyFile.groundProfile.deep[pinnacleTrace] : 0;
 		
 		return smpToDst(sgyFile, smp, grndSmp);
 	}
@@ -130,14 +130,14 @@ public class HalfHyperDst {
 	}
 
 	public static HalfHyperDst getHalfHyper(SgyFile sgyFile, 
-			int pnclTr, int pnclSmp, int side, double x_factor) {
+			int pnclTr, int pnclSmp, int side, double factorX) {
 		
 		List<Trace> traces = sgyFile.getTraces();
 		Trace trace = traces.get(pnclTr);
 		int maxSamplIndex = trace.getNormValues().length - 2;
 		
 		//HalfHyperDst hh = new HalfHyperDst();
-		HalfHyperDst hh = new HHAnalizer();
+		HalfHyperDst hh = new HalfHypAnalizer();
 		
 		hh.sgyFile = sgyFile;
 		hh.pinnacleTrace = pnclTr;		
@@ -147,13 +147,13 @@ public class HalfHyperDst {
 		//hh.sampleToCm_grn = sgyFile.getSamplesToCmGrn();
 		
 		//reduce size not so intensive 
-		double goodsizefactor = (1 + (x_factor - 1) / 2);
+		double goodsizefactor = (1 + (factorX - 1) / 2);
 		hh.hypergoodsize = hh.getGoodSideDst(hh.pinnacleSmp) / goodsizefactor;
 		
 		int i = 0;
 		int index = 0;
 		//double r[] = hh.smpToDst(hh.pinnacle_smp);
-		double y_cm = RulerTool.distanceCm(sgyFile, pnclTr, pnclTr, 0, hh.pinnacleSmp);
+		double vertDstCm = RulerTool.distanceCm(sgyFile, pnclTr, pnclTr, 0, hh.pinnacleSmp);
 		double x = 0;
 		
 		while (Math.abs(x) < hh.hypergoodsize && i < 300) {
@@ -163,12 +163,12 @@ public class HalfHyperDst {
 				break;
 			}
 
-			x += getXStep(side, traces, i, index) * x_factor;
+			x += getXStep(side, traces, i, index) * factorX;
 			
 			
-			double c_cm = Math.sqrt(x * x + y_cm * y_cm);
+			double diagCm = Math.sqrt(x * x + vertDstCm * vertDstCm);
 			
-			int smp = RulerTool.diagonalToSmp(sgyFile, pnclTr, pnclSmp, c_cm);
+			int smp = RulerTool.diagonalToSmp(sgyFile, pnclTr, pnclSmp, diagCm);
 			if (smp >= maxSamplIndex) {
 				break;
 			}
@@ -183,7 +183,7 @@ public class HalfHyperDst {
 
 
 	/**
-	 * in cm 
+	 * in cm.
 	 */
 	public static double getXStep(int side, List<Trace> traces, int i, int index) {
 		double xstep = 0;

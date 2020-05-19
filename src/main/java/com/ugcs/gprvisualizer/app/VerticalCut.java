@@ -28,8 +28,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
- * 
- * not used
+ * not used.
  *
  */
 public class VerticalCut implements SmthChangeListener {
@@ -49,6 +48,7 @@ public class VerticalCut implements SmthChangeListener {
 	
 	//BorderPane bPane = new BorderPane();
 	VBox vbox = new VBox();
+	
 	{
 		vbox.getChildren().add(imageView);
 	}
@@ -57,7 +57,8 @@ public class VerticalCut implements SmthChangeListener {
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
-		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {			
+		public void changed(ObservableValue<? extends Number> observable,
+				Number oldValue, Number newValue) {			
 			recalc();
 		}
 	};
@@ -70,7 +71,8 @@ public class VerticalCut implements SmthChangeListener {
 		heightStartSlider = new HeightStartSlider(model.getSettings(), sliderListener);
 		
 		selectedTraceSlider = new SelectedTraceSlider(model.getSettings(), sliderListener);
-		distBetweenTracesSlider = new DistBetweenTracesSlider(model.getSettings(), sliderListener);
+		distBetweenTracesSlider = new DistBetweenTracesSlider(
+				model.getSettings(), sliderListener);
 		
 		//AppContext.smthListener.add(this);
 	}
@@ -89,17 +91,8 @@ public class VerticalCut implements SmthChangeListener {
 		
 	}
 	
-	private Node getToolPane() {
-		VBox vBox = new VBox(); 
-		vBox.setPadding(new Insets(3, 13, 3, 3));
-		
-		vBox.getChildren().addAll(getRight());
-		
-		return vBox;
-	}
-	
-	private RecalculationController controller = new RecalculationController(new Consumer<Void>() {
-
+	private RecalculationController controller = 
+			new RecalculationController(new Consumer<Void>() {
 		@Override
 		public void accept(Void obj) {
 
@@ -117,37 +110,38 @@ public class VerticalCut implements SmthChangeListener {
 	});
 
 	protected BufferedImage render() {
-		if(width == 0 || height == 0) {
+		if (width == 0 || height == 0) {
 			return null;
 		}
 		
 	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	    
-	    Graphics2D g2 = (Graphics2D)image.getGraphics();
+	    Graphics2D g2 = (Graphics2D) image.getGraphics();
 	    
 	    
 	    
 	    //draw hor grid
 	    g2.setColor(Color.GRAY);
-	    for(int i=0; i<30; i++) {
+	    for (int i = 0; i < 30; i++) {
 	    	
-	    	int h = (int)((i-model.getSettings().heightStart) * getHZoom());
+	    	int h = (int) ((i - model.getSettings().heightStart) * getHZoom());
 	    	g2.drawLine(0, h, width, h);
 	    }
 	    
 	    int rangx = width / model.getSettings().distBetweenTraces / 2;
-	    for(int x=-rangx; x<rangx; x++){
+	    for (int x = -rangx; x < rangx; x++) {
 	    	
     		int scanNum = model.getSettings().selectedScanIndex + x;
-    		if(scanNum<0 || scanNum >= model.getFileManager().getTraces().size()) {
+    		if (scanNum < 0 
+    				|| scanNum >= model.getFileManager().getTraces().size()) {
     			continue;
     		}
 
     		//step between graphics
-    		int startx = width/2 + x * model.getSettings().distBetweenTraces;
+    		int startx = width / 2 + x * model.getSettings().distBetweenTraces;
     		
     		g2.setColor(Color.DARK_GRAY);
-    		g2.drawLine(startx,0, startx, height);
+    		g2.drawLine(startx, 0, startx, height);
     		
     		g2.setColor(Color.GRAY);
     		
@@ -158,25 +152,19 @@ public class VerticalCut implements SmthChangeListener {
     		g2.setColor(Color.RED);
     		drawGraph(trace.getNormValues(), startx, g2);
     	
-    		if(trace.isEnd()) {
+    		if (trace.isEnd()) {
     			g2.setColor(Color.LIGHT_GRAY);
-    			g2.drawLine(startx,0, startx, height/2);
+    			g2.drawLine(startx, 0, startx, height / 2);
     		}
     		int rad = 2;
-    		for(Integer i : trace.max) {
+    		for (Integer i : trace.max) {
     			g2.setColor(Color.YELLOW);    		
     			g2.fillOval(startx - rad, 
-    					(int)((i-model.getSettings().heightStart) * getHZoom()), 
-    					rad*2, rad*2);
+    					(int) ((i - model.getSettings().heightStart) * getHZoom()), 
+    					rad * 2, rad * 2);
     		}
     		g2.setColor(Color.GREEN);    		
-//    		g2.drawOval(startx - rad, 
-//    			(int)((trace.maxindex2-model.getSettings().heightStart) * getHZoom()), 
-//    			rad*2, rad*2);
-    		
 	    }
-
-	    
 	    
 	    return image;
 	}
@@ -192,27 +180,25 @@ public class VerticalCut implements SmthChangeListener {
 		int x1 = 0;
 		int heightstart = model.getSettings().heightStart;
 		int maxy = values.length - heightstart;
-    	for(int y=0; y<maxy; y++){
+    	for (int y = 0; y < maxy; y++) {
     		
     		double val = values[y + heightstart];
     		
-    		int x2 = (int)(val / delitel);
-    		if(y != 0) {
-    			int y1 = (int)((y-1)*kfy);
-    			int y2 = (int)(y*kfy);
+    		int x2 = (int) (val / delitel);
+    		if (y != 0) {
+    			int y1 = (int) ((y - 1) * kfy);
+    			int y2 = (int) (y * kfy);
     			
-    			if(x1 != 0 || x2 != 0 ) {
+    			if (x1 != 0 || x2 != 0) {
     				g2.drawLine(startx + x1, y1, startx + x2, y2);
-    			}
-    			
+    			}    			
     		}
     		x1 = x2;
-    	}
-		
+    	}		
 	}
 
 	private float getHZoom() {
-		float kfy = (float)model.getSettings().heightZoomKf / 10.0f;
+		float kfy = (float) model.getSettings().heightZoomKf / 10.0f;
 		return kfy;
 	}
 	
@@ -232,7 +218,7 @@ public class VerticalCut implements SmthChangeListener {
 		}
 		
 		public int updateModel() {
-			settings.widthZoomKf = (int)slider.getValue();
+			settings.widthZoomKf = (int) slider.getValue();
 			return settings.widthZoomKf;
 		}
 	}
@@ -253,7 +239,7 @@ public class VerticalCut implements SmthChangeListener {
 		}
 		
 		public int updateModel() {
-			settings.heightZoomKf = (int)slider.getValue();
+			settings.heightZoomKf = (int) slider.getValue();
 			return settings.heightZoomKf;
 		}
 	}
@@ -270,7 +256,8 @@ public class VerticalCut implements SmthChangeListener {
 
 		public void updateUI() {
 			//slider.setMax(model.getFileManager().getTraces().size()-1);
-			int mx = model.getFileManager().isActive() ? model.getFileManager().getTraces().size()-1 : 1; 
+			int mx = model.getFileManager().isActive() 
+					? model.getFileManager().getTraces().size() - 1 : 1; 
 			slider.setMax(mx);
 			slider.setMin(0);
 			//slider.set
@@ -278,14 +265,15 @@ public class VerticalCut implements SmthChangeListener {
 		}
 		
 		public int updateModel() {
-			settings.selectedScanIndex = (int)slider.getValue();
+			settings.selectedScanIndex = (int) slider.getValue();
 			return settings.selectedScanIndex;
 		}
 	}
 
 	public class DistBetweenTracesSlider extends BaseSlider {
 		
-		public DistBetweenTracesSlider(Settings settings, ChangeListener<Number> listenerExt) {
+		public DistBetweenTracesSlider(Settings settings,
+				ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
 			name = "distance";
 			units = "px";
@@ -299,7 +287,7 @@ public class VerticalCut implements SmthChangeListener {
 		}
 		
 		public int updateModel() {
-			settings.distBetweenTraces = (int)slider.getValue();
+			settings.distBetweenTraces = (int) slider.getValue();
 			return settings.distBetweenTraces;
 		}
 	}
@@ -320,7 +308,7 @@ public class VerticalCut implements SmthChangeListener {
 		}
 		
 		public int updateModel() {
-			settings.heightStart = (int)slider.getValue();
+			settings.heightStart = (int) slider.getValue();
 			return settings.heightStart;
 		}
 	}
@@ -347,10 +335,9 @@ public class VerticalCut implements SmthChangeListener {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if(changed.isTraceValues()) {
+		if (changed.isTraceValues()) {
 			recalc();
-		}
-		
+		}		
 	}
 	
 }

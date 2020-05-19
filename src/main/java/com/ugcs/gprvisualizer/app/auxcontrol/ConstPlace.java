@@ -43,6 +43,21 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
+	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+		
+		if (isPointInside(localPoint, profField)) {
+				
+			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
+			
+			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			
+			return true;
+		}
+		
+		return false;
+	}
+
+	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
 		
 		Rectangle r = getRect(field);
@@ -69,21 +84,6 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return false;
 	}
 	
-	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		
-		if (isPointInside(localPoint, profField)) {
-				
-			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
-			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			return true;
-		}
-		
-		return false;
-	}
-
 	@Override
 	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
 

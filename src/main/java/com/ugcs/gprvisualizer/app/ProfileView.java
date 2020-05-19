@@ -568,9 +568,10 @@ public class ProfileView implements SmthChangeListener {
 
 					@Override
 					public void changed(
-							ObservableValue<? extends Number> observable,
-							Number oldValue,
-							Number newValue) {
+						ObservableValue<? extends Number> observable,
+						Number oldValue,
+						Number newValue) {
+						
 						repaintEvent();
 
 					}
@@ -582,9 +583,10 @@ public class ProfileView implements SmthChangeListener {
 						new ChangeListener<Number>() {
 					@Override
 					public void changed(
-							ObservableValue<? extends Number> observable, 
-							Number oldValue,
-							Number newValue) {
+						ObservableValue<? extends Number> observable, 
+						Number oldValue,
+						Number newValue) {
+						
 						repaintEvent();
 					}
 				}, 5)
@@ -691,7 +693,7 @@ public class ProfileView implements SmthChangeListener {
 					selectedMouseHandler.mouseMoveHandle(p, getField());
 				} else {
 					if (!auxEditHandler.mouseMoveHandle(p, getField())) {
-
+						//do nothing
 					}
 				}
 			}

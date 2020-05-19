@@ -7,7 +7,7 @@ public class MinMaxAvg {
 	private boolean first  = true;
 	
 	public void put(double x) {
-		if(first) {
+		if (first) {
 			first = false;
 			min = x;
 			max = x;

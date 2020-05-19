@@ -39,7 +39,7 @@ public class Model {
 	private boolean loading = false; 
 	
 	private MapField field = new MapField();
-	private ProfileField vField = new ProfileField(this);
+	private ProfileField profField = new ProfileField(this);
 	
 	private FileManager fileManager = new FileManager();
 	private List<SgyFile> undoFiles = null;
@@ -58,7 +58,7 @@ public class Model {
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
 	
-	public Model(){
+	public Model() {
 		Sout.p("create model");
 	}
 	
@@ -83,7 +83,7 @@ public class Model {
 		this.bounds = bounds;		
 	}
 	
-	public Rectangle2D.Double getBounds(){
+	public Rectangle2D.Double getBounds() {
 		return bounds;
 	}
 
@@ -94,18 +94,6 @@ public class Model {
 	public FileManager getFileManager() {
 		return fileManager;
 	}
-
-//	public List<Trace> getFoundTrace() {
-//		return foundTrace;
-//	}
-//
-//	public void setFoundTrace(List<Trace> foundTrace) {
-//		this.foundTrace = foundTrace;
-//	}
-//
-//	public Map<SgyFile, List<Integer>> getFoundIndexes() {
-//		return foundIndexes;
-//	}
 
 	public Set<FileChangeType> getChanges() {
 		return changes;
@@ -125,13 +113,14 @@ public class Model {
 	
 	public void updateAuxElements() {
 		auxElements.clear();
-		for(SgyFile sf : getFileManager().getFiles()) {
+		for (SgyFile sf : getFileManager().getFiles()) {
 			auxElements.addAll(sf.getAuxElements());
 			
-			Trace lastTrace = sf.getTraces().get(sf.getTraces().size()-1);
+			Trace lastTrace = sf.getTraces().get(sf.getTraces().size() - 1);
 			
 			// add remove button
-			RemoveFileButton rfb = new RemoveFileButton(lastTrace.indexInFile, sf.getOffset(), sf); 			
+			RemoveFileButton rfb = new RemoveFileButton(
+					lastTrace.indexInFile, sf.getOffset(), sf);
 			
 			auxElements.add(rfb);
 			
@@ -144,8 +133,10 @@ public class Model {
 	
 	public SgyFile getSgyFileByTrace(int i) {
 		
-		for(SgyFile fl : getFileManager().getFiles()) {
-			if(i <= fl.getTraces().get(fl.getTraces().size()-1).indexInSet) {
+		for (SgyFile fl : getFileManager().getFiles()) {
+			
+			Trace lastTrace = fl.getTraces().get(fl.getTraces().size() - 1);
+			if (i <= lastTrace.indexInSet) {
 				
 				return fl;
 			}		
@@ -156,10 +147,11 @@ public class Model {
 
 	public int getSgyFileIndexByTrace(int i) {
 		
-		for(int index=0; index<getFileManager().getFiles().size(); index++) {
+		for (int index = 0;
+				index < getFileManager().getFiles().size(); index++) {
 			SgyFile fl =  getFileManager().getFiles().get(index);
 			
-			if(i <= fl.getTraces().get(fl.getTraces().size()-1).indexInSet) {
+			if (i <= fl.getTraces().get(fl.getTraces().size() - 1).indexInSet) {
 				
 				return index;
 			}		
@@ -169,7 +161,7 @@ public class Model {
 	}
 	
 	public ProfileField getVField() {
-		return vField;
+		return profField;
 	}
 
 	public int getMaxHeightInSamples() {
@@ -180,7 +172,9 @@ public class Model {
 		
 		//set index of traces
 		int maxHeight = 0;
-		for(int i=0; i< this.getFileManager().getTraces().size(); i++ ) {
+		for (int i = 0;
+				i < this.getFileManager().getTraces().size(); 
+				i++) {
 			Trace tr = this.getFileManager().getTraces().get(i);
 			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
 		}
@@ -189,10 +183,10 @@ public class Model {
 		getSettings().maxsamples = maxHeightInSamples;
 		
 		
-		if(getSettings().layer + getSettings().hpage > maxHeightInSamples) {
+		if (getSettings().layer + getSettings().hpage > maxHeightInSamples) {
 			
-			getSettings().layer = maxHeightInSamples/4;
-			getSettings().hpage = maxHeightInSamples/4;			
+			getSettings().layer = maxHeightInSamples / 4;
+			getSettings().hpage = maxHeightInSamples / 4;			
 		}
 		
 	}
@@ -207,17 +201,12 @@ public class Model {
 	
 	public void updateSgyFileOffsets() {
 		int startTraceNum = 0;
-		for(SgyFile sgyFile : this.getFileManager().getFiles()) {
+		for (SgyFile sgyFile : this.getFileManager().getFiles()) {
 			
 			sgyFile.getOffset().setStartTrace(startTraceNum);
 			startTraceNum += sgyFile.getTraces().size();
 			sgyFile.getOffset().setFinishTrace(startTraceNum);
 			sgyFile.getOffset().setMaxSamples(maxHeightInSamples);
-			//try {
-			//	new MarkupFile().load(sgyFile, model);
-			//} catch (Exception e) {
-			//	e.printStackTrace();
-			//}
 		}
 	}
 
@@ -226,7 +215,7 @@ public class Model {
 		MinMaxAvg lonMid = new MinMaxAvg();
 		MinMaxAvg latMid = new MinMaxAvg();
 		for (Trace trace : this.getFileManager().getTraces()) {
-			if(trace == null || trace.getLatLon() == null) {
+			if (trace == null || trace.getLatLon() == null) {
 				System.out.println("null trace or ot latlon");
 				continue;
 			}
@@ -274,7 +263,7 @@ public class Model {
 	}
 
 	public boolean stopUnsaved() {
-    	if(getFileManager().isUnsavedExists()) {
+    	if (getFileManager().isUnsavedExists()) {
     		
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.setTitle("Warning");

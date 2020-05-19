@@ -5,15 +5,16 @@ import Jama.Matrix;
 public class DronMath {
 
 	
-	public static Matrix getDronNorm(Matrix dronRelativeOrigin, double zAng, double xAng) {
-		Matrix longtitRotMatr = Rotation.getZRotationMatrix(zAng);			
-		Matrix zRotatedV = longtitRotMatr.times(dronRelativeOrigin);		
+	public static Matrix getDronNorm(Matrix dronRelativeOrigin, 
+			double zaxisAng, double xaxisAng) {
+		Matrix longtitRotMatr = Rotation.getZRotationMatrix(zaxisAng);			
+		Matrix zaxisRotateMtrx = longtitRotMatr.times(dronRelativeOrigin);
 		
-		Matrix latitRotMatr = Rotation.getYRotationMatrix(xAng);			
-		Matrix result = latitRotMatr.times(zRotatedV);
+		Matrix latitRotMatr = Rotation.getYRotationMatrix(xaxisAng);			
+		Matrix result = latitRotMatr.times(zaxisRotateMtrx);
 		
-		Matrix Z180RotMatr = Rotation.getZRotationMatrix(Math.PI);
-		result = Z180RotMatr.times(result);
+		Matrix zaxis180RotateMtrx = Rotation.getZRotationMatrix(Math.PI);
+		result = zaxis180RotateMtrx.times(result);
 		
 		return result;
 	}

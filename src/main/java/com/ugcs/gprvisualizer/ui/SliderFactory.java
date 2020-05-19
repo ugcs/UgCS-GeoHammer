@@ -7,7 +7,8 @@ import javafx.scene.Node;
 
 public class SliderFactory {
 
-	public static Node create(String name, MutableInt valueHolder, int min, int max, ChangeListener<Number> listener,
+	public static Node create(String name, MutableInt valueHolder, 
+			int min, int max, ChangeListener<Number> listener,
 			double tickUnits) {
 
 		BaseSlider sliderProduucer = new BaseSlider(null, listener) {

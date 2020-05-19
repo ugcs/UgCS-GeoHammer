@@ -35,7 +35,7 @@ public class RecalculationController {
 					try {
 						consumer.accept(null);
 					} catch (Exception e) {
-						e.printStackTrace();						
+						e.printStackTrace();
 					}
 					
 					synchronized (RecalculationController.this) {

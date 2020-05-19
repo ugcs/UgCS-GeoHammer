@@ -7,23 +7,20 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 /*
- * поиск уровня земли по среднему профилю, путем подставления его наразные высоты и выбор наименьшего расхождения
- * 
- *  не исопльзуется
+ * find ground by set avg profile on diffrent heights 
+ * and select those with smallest difference.
+ *  not used.
  */
 public class AvgShiftFilter {
 
 	Model model;
-	
-//	static final int START = 110;  
-//	static final int FINISH = 360;
 	
 	static final int START = 50;  
 	static final int FINISH = 360;
 	
 	static final int RANGE = 3;
 
-	float sumvalues[] = new float[FINISH];
+	float[] sumvalues = new float[FINISH];
 	int cnt = 1;
 	
 	public AvgShiftFilter(Model model) {
@@ -31,7 +28,7 @@ public class AvgShiftFilter {
 	}
 	
 	public void execute2() {
-		for(SgyFile sf : model.getFileManager().getFiles()) {
+		for (SgyFile sf : model.getFileManager().getFiles()) {
 			execute2(sf.getTraces());
 			
 		}
@@ -43,16 +40,16 @@ public class AvgShiftFilter {
 		
 		execute(traces);
 		
-		float avgvalues[] = getAvg();
+		float[] avgvalues = getAvg();
 		
-		for(Trace tr : traces) {
+		for (Trace tr : traces) {
 
 			float[] values = tr.getNormValues();
 			
-			for(int i=0; i<avgvalues.length; i++ ) {
+			for (int i = 0; i < avgvalues.length; i++) {
 				
 				int avind = i - tr.maxindex;
-				if(avind >=0 && avind < avgvalues.length) {
+				if (avind >= 0 && avind < avgvalues.length) {
 					values[i] -= avgvalues[avind];
 				}
 			}			
@@ -62,7 +59,7 @@ public class AvgShiftFilter {
 	
 	public void execute() {
 		
-		for(SgyFile sf : model.getFileManager().getFiles()) {
+		for (SgyFile sf : model.getFileManager().getFiles()) {
 			execute(sf.getTraces());			
 		}		
 	}
@@ -76,9 +73,9 @@ public class AvgShiftFilter {
 		
 		int shift = 0;
 		
-		for(Trace tr : traces) {
+		for (Trace tr : traces) {
 			
-			float avgvalues[] = getAvg();
+			float[] avgvalues = getAvg();
 			
 			
 			shift = lessDiff(tr.getNormValues(), avgvalues, shift);
@@ -93,34 +90,37 @@ public class AvgShiftFilter {
 		
 		
 	}
+	
 	private void addToAvg(float[] sumvalues, float[] normValues, int shift) {
 
-		for(int i=Math.max(START, START-shift); i< Math.min(FINISH, FINISH-shift); i++) {
-			sumvalues[i] += normValues[i+shift]; 			
+		for (int i = Math.max(START, START - shift);
+				i < Math.min(FINISH, FINISH - shift); i++) {
+			sumvalues[i] += normValues[i + shift]; 			
 		}		
 	}
 	
 	private float[] getAvg() {
 		float[] avg = new float[sumvalues.length];
 		
-		for(int i=START; i < FINISH; i++) {
-			avg[i] = sumvalues[i]/cnt;
+		for (int i = START; i < FINISH; i++) {
+			avg[i] = sumvalues[i] / cnt;
 		}
 		
 		return avg;
 	}
+	
 	private int lessDiff(float[] normValues, float[] avgvalues, int prevshift) {
 		
-		int from = prevshift-RANGE;
+		int from = prevshift - RANGE;
 		float lessdiff = getDiff(normValues, from, avgvalues);
 		int lesshift = from;
 		
-		for(int shift=from; shift <= prevshift+RANGE; shift++) {
+		for (int shift = from; shift <= prevshift + RANGE; shift++) {
 			
 			//float[] shiftValues = new float[avgvalues.length];
 			
 			float diff = getDiff(normValues, shift, avgvalues); 
-			if(Math.abs(diff) < Math.abs(lessdiff)) {
+			if (Math.abs(diff) < Math.abs(lessdiff)) {
 				lessdiff = diff;
 				lesshift = shift;				
 			}
@@ -131,12 +131,13 @@ public class AvgShiftFilter {
 	
 	private float getDiff(float[] normValues, int shift, float[] avgvalues) {
 		float diff = 0;
-		for(int i=Math.max(START, START-shift); i< Math.min(FINISH, FINISH-shift); i++) {
-			diff += Math.abs(avgvalues[i]-normValues[i+shift]); 			
+		for (int i = Math.max(START, START - shift);
+				i < Math.min(FINISH, FINISH - shift); i++) {
+			
+			diff += Math.abs(avgvalues[i] - normValues[i + shift]);
 		}
 		
 		return diff;
-	}
-	
+	}	
 	
 }

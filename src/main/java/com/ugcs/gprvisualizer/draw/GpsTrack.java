@@ -59,10 +59,10 @@ public class GpsTrack extends BaseLayer {
 			return;
 		}
 		
-		drawGPSPath(g2);
+		drawGpsPath(g2);
 	}
 
-	private void drawGPSPath(Graphics2D g2) {
+	private void drawGpsPath(Graphics2D g2) {
 		if (!isActive()) {
 			return;
 		}
@@ -91,24 +91,26 @@ public class GpsTrack extends BaseLayer {
 				
 				if (prevPoint == null) {
 					
-					prevPoint = model.getField().latLonToScreen(trace.getLatLon());
+					prevPoint = model.getField().latLonToScreen(
+							trace.getLatLon());
 					sumdist = 0;
 					
-				} else {//prev point exists
+				} else {
+					//prev point exists
 					
 					sumdist += trace.getPrevDist();
 					
 					if (sumdist >= threshold) {
 						
-						Point2D pNext = model.getField()
+						Point2D pointNext = model.getField()
 								.latLonToScreen(trace.getLatLon());
 								
 						g2.drawLine((int) prevPoint.getX(),
 								(int) prevPoint.getY(),
-								(int) pNext.getX(),
-								(int) pNext.getY());
+								(int) pointNext.getX(),
+								(int) pointNext.getY());
 						
-						prevPoint = pNext;
+						prevPoint = pointNext;
 						sumdist = 0;
 					}
 				}
@@ -125,11 +127,6 @@ public class GpsTrack extends BaseLayer {
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
-		if (changed.isFileopened()
-				|| changed.isZoom()
-				|| changed.isAdjusting()) {
-			
-		}		
 	}
 
 	@Override

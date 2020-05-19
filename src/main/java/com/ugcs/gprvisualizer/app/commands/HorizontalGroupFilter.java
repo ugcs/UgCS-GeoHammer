@@ -21,15 +21,15 @@ public class HorizontalGroupFilter implements Command {
 		
 		List<HorizontalProfile> tmpStraight = new ArrayList<>();
 		List<HorizontalProfile> tmpCurve = new ArrayList<>();
-		for(HorizontalProfile hp : file.profiles) {
-			if(hp.height <= 4) {
+		for (HorizontalProfile hp : file.profiles) {
+			if (hp.height <= 4) {
 				tmpStraight.add(hp);
-			}else {
+			} else {
 				tmpCurve.add(hp);
 			}
 		}
 		
-		if(tmpStraight.isEmpty() || tmpCurve.isEmpty()) {
+		if (tmpStraight.isEmpty() || tmpCurve.isEmpty()) {
 			return;
 		}
 		System.out.println("  -top- ");
@@ -42,28 +42,21 @@ public class HorizontalGroupFilter implements Command {
 		
 		file.groundProfile = brightestGrn; 
 		
-//		HorizontalProfile bott = createMirroredLine(file, brightestTop, brightestGrn);
-		
-		
-//		List<HorizontalProfile> result = new ArrayList<>();
-//		result.add(brightestTop);
-//		result.add(brightestGrn);
-//		result.add(bott);
-//		file.profiles = result;
-		
-		
 	}
 
-	public static HorizontalProfile createMirroredLine(SgyFile file, HorizontalProfile brightestTop,
+	public static HorizontalProfile createMirroredLine(SgyFile file,
+			HorizontalProfile brightestTop,
 			HorizontalProfile brightestGrn) {
 		
-		int maxsmp = file.getMaxSamples()-1;
+		int maxsmp = file.getMaxSamples() - 1;
 		HorizontalProfile bott = new HorizontalProfile(brightestTop.deep.length);
-		for(int i=0; i<brightestTop.deep.length; i++ ) {
+		for (int i = 0; i < brightestTop.deep.length; i++) {
 			
 			bott.deep[i] = 
 					Math.min(maxsmp,
-					Math.max(0, brightestGrn.deep[i] + (brightestGrn.deep[i] - (int)brightestTop.avgdeep)));// deep[i]
+					Math.max(0, brightestGrn.deep[i] 
+							+ (brightestGrn.deep[i] 
+							- (int) brightestTop.avgdeep)));
 			
 		}
 		bott.finish(file.getTraces());
@@ -86,18 +79,18 @@ public class HorizontalGroupFilter implements Command {
 	public static HorizontalProfile getBrightest(List<HorizontalProfile> tmpStraight) {
 		int maxi = 0;
 		int mini = 0;
-		for(int i=0; i< tmpStraight.size(); i++) {
+		for (int i = 0; i < tmpStraight.size(); i++) {
 			
 			HorizontalProfile hpi = tmpStraight.get(i);
 			
-			if(hpi.avgval > tmpStraight.get(maxi).avgval) {
+			if (hpi.avgval > tmpStraight.get(maxi).avgval) {
 				maxi = i;
 			}
-			if(hpi.avgval < tmpStraight.get(mini).avgval) {
+			if (hpi.avgval < tmpStraight.get(mini).avgval) {
 				mini = i;
 			}
 		}
-		int mid = (maxi+mini)/2;
+		int mid = (maxi + mini) / 2;
 		
 		HorizontalProfile brightest = tmpStraight.get(mid);
 		return brightest;

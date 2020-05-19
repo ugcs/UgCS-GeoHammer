@@ -9,7 +9,7 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 /**
- * find ground level 2 (from HorizontalProfile) 
+ * find ground level 2 (from HorizontalProfile). 
  *
  */
 public class LevelScanHP implements Command {
@@ -48,7 +48,7 @@ public class LevelScanHP implements Command {
 		
 		// select curve lines
 		List<HorizontalProfile> lines2 = findCurveLines(file2);
-		if(lines2.isEmpty()) {
+		if (lines2.isEmpty()) {
 			System.out.println("no grnd line2 :(");
 			return;
 		}
@@ -59,14 +59,13 @@ public class LevelScanHP implements Command {
 		grnd.color = new Color(200, 100, 100);
 		
 		// create sum HP
-		//HorizontalProfile mirr = HorizontalGroupFilter.createMirroredLine(file, top, grnd);
+		//HorizontalProfile mirr = 
+		//HorizontalGroupFilter.createMirroredLine(file, top, grnd);
 		
 		// copy to HP to original
 		List<HorizontalProfile> result = new ArrayList<>();
-//		result.add(top);
 		result.add(grnd);
-		//result.add(mirr);
-		file.profiles= result;
+		file.profiles = result;
 		file.groundProfile = grnd;
 		
 		
@@ -78,7 +77,7 @@ public class LevelScanHP implements Command {
 
 	public List<HorizontalProfile> findStraightLines(SgyFile file) {
 		List<HorizontalProfile> tmpStraight = new ArrayList<>();
-		for(HorizontalProfile hp : file.profiles) {
+		for (HorizontalProfile hp : file.profiles) {
 			if(hp.height <= 3) {
 				tmpStraight.add(hp);
 			}
@@ -89,8 +88,8 @@ public class LevelScanHP implements Command {
 
 	public List<HorizontalProfile> findCurveLines(SgyFile file) {
 		List<HorizontalProfile> tmpStraight = new ArrayList<>();
-		for(HorizontalProfile hp : file.profiles) {
-			if(hp.height > 4) {
+		for (HorizontalProfile hp : file.profiles) {
+			if (hp.height > 4) {
 				tmpStraight.add(hp);
 			}
 		}
@@ -109,8 +108,5 @@ public class LevelScanHP implements Command {
 
 		return Change.traceValues;
 	}
-	
-	
-	
 
 }

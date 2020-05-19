@@ -5,11 +5,11 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
-public class HHAnalizer extends HalfHyperDst {
+public class HalfHypAnalizer extends HalfHyperDst {
 
 	private static final int PARTS = 4;
 	
-	static class Avg{
+	static class Avg {
 		int sum = 0;
 		int abssum = 0;
 		int count = 0;
@@ -36,7 +36,7 @@ public class HHAnalizer extends HalfHyperDst {
 	}
 	
 	public double analize(int percent) {
-		if (defective ) {
+		if (defective) {
 			return 0;
 		}
 		//
@@ -63,7 +63,7 @@ public class HHAnalizer extends HalfHyperDst {
 				
 			for (int j = from; j <= to; j++) {
 				
-				int edge = trace.edge[s+j];
+				int edge = trace.edge[s + j];
 		
 				int part = i * PARTS / checkedLength;
 				
@@ -82,7 +82,7 @@ public class HHAnalizer extends HalfHyperDst {
 	
 	double checkEdge(Avg[] avg, int minPartLength) {
 		int count = 0;
-		for (Avg a : avg ) {
+		for (Avg a : avg) {
 			
 			if (a.count < minPartLength 
 					||  Math.abs(a.avg()) > 0.9 
