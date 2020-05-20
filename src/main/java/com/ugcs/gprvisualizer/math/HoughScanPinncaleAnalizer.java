@@ -9,7 +9,9 @@ public class HoughScanPinncaleAnalizer {
 
 	boolean isPrintLog = false;
 	
+	public HoughHypFullness fullnessAnalizer = null;
 	public StubPrepator additionalPreparator = new StubPrepator();
+	
 	
 	public static class StubPrepator {
 		public void mark(int tr, int smp, int xfd1, int xfd2) {
@@ -44,7 +46,7 @@ public class HoughScanPinncaleAnalizer {
 				
 				int edge = getEdge(sgyFile, tr, smp);
 				if (tr == workingRect.getTracePin()) {
-					//continue;
+					continue;
 				}
 				
 				double xf1 = getFactorX(sgyFile, 
@@ -63,7 +65,9 @@ public class HoughScanPinncaleAnalizer {
 
 				additionalPreparator.mark(tr, smp, xfd1, xfd2);
 				
-				
+				if (fullnessAnalizer != null) {
+					fullnessAnalizer.add(tr - workingRect.getTracePin(), xfd1, xfd2, edge);
+				}				
 			}
 			
 			if (isPrintLog) {

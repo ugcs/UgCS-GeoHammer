@@ -103,7 +103,9 @@ public class HyperFinder {
 		SgyFile file = model.getSgyFileByTrace(tr);
 		HoughScan hs = new HoughScan(model);
 		hs.isPrintLog = true;
-		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample());
+		
+		double threshold = model.getSettings().hyperSensitivity.doubleValue();
+		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample(), threshold);
 		
 		
 		hs.getHoughDrawer().drawOnCut(g2, profField);

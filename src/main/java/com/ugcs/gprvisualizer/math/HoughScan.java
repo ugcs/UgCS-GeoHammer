@@ -61,17 +61,20 @@ public class HoughScan implements AsinqCommand {
 		double threshold = model.getSettings().hyperSensitivity.doubleValue();
 
 		for (int pinTr = 0; pinTr < file.size(); pinTr++) {
+			//log progress
 			if (pinTr % 300 == 0) {
-				Sout.p("tr " + pinTr + "/" + file.size());
+				Sout.p("tr " + pinTr + " / " + file.size());
 			}
+			
 			Trace tr = file.getTraces().get(pinTr);
 			tr.good = new int[file.getMaxSamples()];
 
 			for (int pinSmp = AppContext.model.getSettings().layer; 
 					pinSmp < maxSmp; pinSmp++) {
-				double s = scan(file, pinTr, pinSmp);
+				
+				boolean isGood = scan(file, pinTr, pinSmp, threshold);
 
-				if (s > threshold) {
+				if (isGood) {
 					tr.good[pinSmp] = 3;
 				}
 			}
@@ -80,7 +83,8 @@ public class HoughScan implements AsinqCommand {
 		new ScanGood().execute(file);
 	}	
 
-	public double scan(SgyFile sgyFile, int pinTrace, int pinSmpl) {
+	public boolean scan(SgyFile sgyFile, 
+			int pinTrace, int pinSmpl, double threshold) {
 		
 		double goodCm = HalfHyperDst.getGoodSideDstPin(sgyFile, pinTrace, pinSmpl);
 		double vertDstToPinCm = RulerTool.distanceCm(sgyFile,
@@ -101,32 +105,71 @@ public class HoughScan implements AsinqCommand {
 		HoughScanPinncaleAnalizer analizer = new HoughScanPinncaleAnalizer();
 		
 		if (isPrintLog) {
-			
-			analizer.additionalPreparator = 
-					new HoughImgPreparator(workingRect, 
+			Sout.p("------");
+			analizer.additionalPreparator =
+					new HoughImgPreparator(workingRect,
 						model.getSettings().printHoughAindex.intValue());
-		}		
+		}
 		
 		HoughArray[] stores = analizer.processRectAroundPin(sgyFile, workingRect);
 		
-		int[][] aux = new int[5][2];
-		double[] best = getMax(stores, aux);
+		//
+		int[] bestMaxIndexes = getMaxIndexes(stores);
+		int bestEdge = bestOfTheBestestIndex(stores, bestMaxIndexes);
+		int bestDiscr = bestMaxIndexes[bestEdge];
 		
-		int mxIndex = bestOfTheBestestIndex(best);
+		double bestVal = stores[bestEdge].ar[bestDiscr];
 		
 		if (isPrintLog) {
-			Sout.p("res " + best[mxIndex]);
-			
-			hd = new HoughDraw(analizer.additionalPreparator.getImage(), sgyFile, 
-					workingRect.getTraceFrom(), workingRect.getTraceTo() + 1,
-					workingRect.getSmpFrom(), workingRect.getSmpTo() + 1);
-			
-			hd.resedge = aux[mxIndex][0];
-			hd.resindex = aux[mxIndex][1];
-			hd.res = best[mxIndex];
-			
+			Sout.p("------");
+			prepareDrawer(sgyFile, workingRect, analizer, bestDiscr, bestEdge, bestVal);
 		}
-		return best[mxIndex];
+		
+		
+		if (bestDiscr < 2 || bestVal < threshold) {
+			return false;			
+		}
+		
+		int maxHorizSize = workingRect.getTracePin() - workingRect.getTraceFrom();
+		double horizontalSize = (double) maxHorizSize
+				* HoughArray.FACTOR[bestDiscr] * 0.7;
+		
+		analizer.fullnessAnalizer = new HoughHypFullness((int) horizontalSize, 
+				bestDiscr, bestEdge);
+		
+		analizer.processRectAroundPin(sgyFile, workingRect);
+		double maxgap = analizer.fullnessAnalizer.getMaxGap();
+		
+		if (isPrintLog) {
+			Sout.p("gap " + maxgap + "  horizontalSize " + horizontalSize);
+		}
+		//		
+		return maxgap < 0.20;
+	}
+
+	private int bestOfTheBestestIndex(HoughArray[] stores, int[] bestMaxIndexes) {
+		int res = 1;
+		for (int edge = 1; edge < 5; edge++) {
+			double val = stores[edge].ar[bestMaxIndexes[edge]];
+			if (val > stores[res].ar[bestMaxIndexes[res]]) {
+				res = edge;
+			}
+		}
+		
+		return res;
+	}
+
+	public void prepareDrawer(SgyFile sgyFile, WorkingRect workingRect,
+			HoughScanPinncaleAnalizer analizer, int bestDiscr, int bestEdge, double bestval) {
+		//Sout.p("res " + best[mxIndex]);
+		
+		hd = new HoughDraw(analizer.additionalPreparator.getImage(), sgyFile, 
+				workingRect.getTraceFrom(), workingRect.getTraceTo() + 1,
+				workingRect.getSmpFrom(), workingRect.getSmpTo() + 1);
+		
+		hd.resedge = bestEdge;
+		hd.resindex = bestDiscr;
+		hd.res = bestval;
 	}
 
 	public int bestOfTheBestestIndex(double[] best) {
@@ -152,20 +195,17 @@ public class HoughScan implements AsinqCommand {
 		}
 	}
 
-	public double[] getMax(HoughArray[] stores, int[][] aux) {
-		double[] best = new double[5];
+	public int[] getMaxIndexes(HoughArray[] stores) {
+		//double[] best = new double[5];
+		int[] bestIndex = new int[5];
 		for (int i = 1; i < stores.length; i++) {
 
 			int index = stores[i].getMaxIndex();
-			if (index > 2) {
-				best[i] = stores[i].getMax();
-			}
+			//if (index > 2) {
+				bestIndex[i] = index;
+			//}
 
 			if (isPrintLog) {
-			
-				aux[i][0] = i;
-				aux[i][1] = index;
-				
 				StringBuilder sb = new StringBuilder();
 				for (int z = 0; z < stores[i].ar.length; z++) {
 					sb.append(String.format(" %.2f", stores[i].ar[z]));
@@ -176,7 +216,7 @@ public class HoughScan implements AsinqCommand {
 						+ sb.toString());
 			}
 		}
-		return best;
+		return bestIndex;
 	}
 
 

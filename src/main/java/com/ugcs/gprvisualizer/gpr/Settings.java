@@ -32,7 +32,7 @@ public class Settings {
 	
 	
 	public int hyperkfc = 100; 
-	public MutableInt hyperSensitivity = new MutableInt(40);
+	public MutableInt hyperSensitivity = new MutableInt(23);
 	public MutableInt printHoughAindex = new MutableInt(0);
 	public int hypermiddleamp = 0;
 	

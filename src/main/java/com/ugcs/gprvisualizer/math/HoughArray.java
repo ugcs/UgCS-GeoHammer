@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.ugcs.gprvisualizer.app.Sout;
 
 public class HoughArray {
-	static double[] FACTOR = new double[HoughScan.DISCRET_SIZE];
+	public static double[] FACTOR = new double[HoughScan.DISCRET_SIZE];
 
 	static {
 		for (int i = 0; i < HoughScan.DISCRET_SIZE; i++) {
@@ -34,7 +34,7 @@ public class HoughArray {
 		to = MathUtils.norm(to, 0, HoughScan.DISCRET_SIZE);
 
 		for (int i = from; i <= to; i++) {
-			ar[i] += value;
+			ar[i] += value * FACTOR[i];
 		}
 	}
 
@@ -43,7 +43,7 @@ public class HoughArray {
 		int index = 0;
 		for (int i = 0; i < ar.length; i++) {
 
-			double v = ar[i] * FACTOR[i];
+			double v = ar[i];
 
 			if (v > max) {
 				max = v;
@@ -58,7 +58,7 @@ public class HoughArray {
 	double getMax() {
 
 		int index = getMaxIndex();
-		double v = ar[index] * FACTOR[index];
+		double v = ar[index];
 
 		return v;
 	}
