@@ -26,6 +26,8 @@ public class HoughDraw {
 	public int resedge;
 	public int resindex;
 	public double res;
+
+	public double horizontalSize;
 	
 	public HoughDraw(BufferedImage img,
 		SgyFile file,
@@ -50,6 +52,14 @@ public class HoughDraw {
 		
 		g2.setColor(Color.BLACK);
 		g2.drawRect(rect.x, rect.y, rect.width, rect.height);
+		
+		int lineY = rect.y + rect.height + 2;
+		
+		int dst = (int) (horizontalSize / (double) img.getWidth() * (double) rect.width);
+		int x1 = rect.x + rect.width / 2 - dst;
+		int x2 = rect.x + rect.width / 2 + dst;
+		g2.drawLine(x1, lineY, x2, lineY);
+		
 			
 		drawText(g2, rect.x + rect.width, rect.y + 0,
 				"edge: " + resedge);

@@ -38,6 +38,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
+import com.ugcs.gprvisualizer.math.HoughDiscretizer;
 import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
@@ -579,7 +580,7 @@ public class ProfileView implements SmthChangeListener {
 				
 				SliderFactory.create("printHoughAindex", 
 						model.getSettings().printHoughAindex, 
-						0, HoughScan.DISCRET_SIZE - 1, 
+						0, HoughDiscretizer.DISCRET_SIZE - 1, 
 						new ChangeListener<Number>() {
 					@Override
 					public void changed(
@@ -686,7 +687,9 @@ public class ProfileView implements SmthChangeListener {
 				TraceSample ts = getField().screenToTraceSample(p);
 				hyperFinder.setPoint(ts);
 				repaintEvent();
-			} else {
+			} 
+			
+			{
 
 				if (selectedMouseHandler != null) {
 
@@ -911,6 +914,11 @@ public class ProfileView implements SmthChangeListener {
 		}
 
 		public void updateUI() {
+			
+			slider.setMajorTickUnit(1);
+			slider.setShowTickLabels(true);
+			slider.setSnapToTicks(true);			
+			//slider.set
 			slider.setMax(100);
 			slider.setMin(0);
 			slider.setValue(settings.hyperSensitivity.intValue());

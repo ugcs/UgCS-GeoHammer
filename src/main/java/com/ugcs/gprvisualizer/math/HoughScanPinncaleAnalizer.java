@@ -12,6 +12,7 @@ public class HoughScanPinncaleAnalizer {
 	public HoughHypFullness fullnessAnalizer = null;
 	public StubPrepator additionalPreparator = new StubPrepator();
 	
+	private HoughDiscretizer discretizer = new HoughDiscretizer();
 	
 	public static class StubPrepator {
 		public void mark(int tr, int smp, int xfd1, int xfd2) {
@@ -23,11 +24,11 @@ public class HoughScanPinncaleAnalizer {
 		}
 	}
 	
-	public HoughArray[] processRectAroundPin(SgyFile sgyFile, WorkingRect workingRect) {
+	public HoughArray[] processRectAroundPin(SgyFile sgyFile, WorkingRect workingRect, double threshold) {
 		HoughArray[] stores = new HoughArray[5];
 		//init stores
 		for (int i = 0; i < stores.length; i++) {
-			stores[i] = new HoughArray();			
+			stores[i] = new HoughArray(threshold);
 		}
 		
 		//
@@ -57,8 +58,8 @@ public class HoughScanPinncaleAnalizer {
 						workingRect.getTracePin(), workingRect.getSmpPin(), 
 						tr, smp + 1.99);
 				
-				int xfd1 = discret(xf1);
-				int xfd2 = discret(xf2);
+				int xfd1 = discretizer.transform(xf1);
+				int xfd2 = discretizer.transform(xf2);
 				
 				stores[edge].add(xfd1, xfd2, addValue);
 				
@@ -98,21 +99,21 @@ public class HoughScanPinncaleAnalizer {
 	/*
 	 * 0 - except
 	 */
-	private int discret(double factorX) {
-		// to 0-1
-		double norm = (factorX - HoughScan.DISCRET_FROM) 
-				/ (HoughScan.DISCRET_TO - HoughScan.DISCRET_FROM);
-
-		if (norm < 0) {
-			return -1;
-		}
-
-		if (norm > 1) {
-			return HoughScan.DISCRET_SIZE;
-		}
-
-		return (int) Math.round(norm * (HoughScan.DISCRET_SIZE - 1));
-	}
+//	private int discret(double factorX) {
+//		// to 0-1
+//		double norm = (factorX - HoughScan.DISCRET_FROM) 
+//				/ (HoughScan.DISCRET_TO - HoughScan.DISCRET_FROM);
+//
+//		if (norm < 0) {
+//			return -1;
+//		}
+//
+//		if (norm > 1) {
+//			return HoughScan.DISCRET_SIZE;
+//		}
+//
+//		return (int) Math.round(norm * (HoughScan.DISCRET_SIZE - 1));
+//	}
 
 //	public void printForPoint(int tr, int smp) {
 //

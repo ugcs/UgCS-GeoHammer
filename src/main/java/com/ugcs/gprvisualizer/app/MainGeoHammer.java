@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -54,7 +56,9 @@ public class MainGeoHammer extends Application {
 	
         stage.setTitle(TITLE_VERSION);
 		
-		Scene scene = new Scene(rootControls.getSceneContent(), 1280, 768);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        
+		Scene scene = new Scene(rootControls.getSceneContent(), screenSize.getWidth(), 768);
 		stage.setScene(scene);
 		//stage.setMaximized(true);
 		stage.show();

@@ -5,18 +5,42 @@ import java.util.Arrays;
 import com.ugcs.gprvisualizer.app.Sout;
 
 public class HoughArray {
-	public static double[] FACTOR = new double[HoughScan.DISCRET_SIZE];
+	
+	public static int DISCRET_SIZE = HoughDiscretizer.DISCRET_SIZE;
+	public static double[] FACTOR = new double[DISCRET_SIZE];
+	double threshold;
+	
+	static {
+		FACTOR[0] = 0.75;
+		for (int i = 1; i < DISCRET_SIZE; i++) {
+			
+			double gain = (1 + ((double) i / (double) DISCRET_SIZE * 0.15));
+			
+			FACTOR[i] = (HoughDiscretizer.FACTORX_FROM 
+				+ (double) i 
+				/ (double) DISCRET_SIZE 
+				* HoughDiscretizer.FACTORX_WIDTH)
+				* gain;
+		}
+	}
+
+	public static double[] REDUCE = new double[DISCRET_SIZE];
 
 	static {
-		for (int i = 0; i < HoughScan.DISCRET_SIZE; i++) {
-			FACTOR[i] = (HoughScan.DISCRET_FROM 
-				+ (double) i 
-				/ (double) HoughScan.DISCRET_SIZE 
-				* (HoughScan.DISCRET_TO - HoughScan.DISCRET_FROM));
+		for (int i = 0; i < DISCRET_SIZE; i++) {
+			REDUCE[i] = 
+				1.20 * (HoughDiscretizer.FACTORX_FROM 
+						- (double) i / (double) DISCRET_SIZE * 0.02);
+			
+			Sout.p(""+ REDUCE[i]);
 		}
 	}
 	
-	double[] ar = new double[HoughScan.DISCRET_SIZE];
+	double[] ar = new double[DISCRET_SIZE];
+
+	public HoughArray(double threshold) {
+		this.threshold = threshold;
+	}
 
 	public void clear() {
 		Arrays.fill(ar, 0);
@@ -26,12 +50,12 @@ public class HoughArray {
 
 		int from = Math.min(afrom, ato);
 		int to = Math.max(afrom, ato);
-		if (to < 0 || from >= HoughScan.DISCRET_SIZE) {
+		if (to < 0 || from >= DISCRET_SIZE) {
 			return;
 		}
 
-		from = MathUtils.norm(from, 0, HoughScan.DISCRET_SIZE);
-		to = MathUtils.norm(to, 0, HoughScan.DISCRET_SIZE);
+		from = MathUtils.norm(from, 0, DISCRET_SIZE);
+		to = MathUtils.norm(to, 0, DISCRET_SIZE);
 
 		for (int i = from; i <= to; i++) {
 			ar[i] += value * FACTOR[i];
@@ -55,6 +79,32 @@ public class HoughArray {
 
 	}
 
+	int getLocalMaxIndex() {
+		double max = 0;
+		int index = 0;
+		boolean thresholdReached = false;
+		for (int i = ar.length - 1; i >= 0; i--) {
+
+			double v = ar[i];
+
+			if(thresholdReached && v < max / 3) {
+				return index;
+			}
+			
+			if(v > threshold) {
+				thresholdReached = true;
+			}
+			
+			if (v > max) {
+				max = v;
+				index = i;
+			}
+		}
+
+		return index;
+
+	}
+	
 	double getMax() {
 
 		int index = getMaxIndex();

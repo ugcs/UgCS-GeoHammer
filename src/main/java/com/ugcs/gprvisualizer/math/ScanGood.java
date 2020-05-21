@@ -88,7 +88,7 @@ public class ScanGood implements Command {
 		
 	}
 
-	private static final int R = 4;
+	private static final int R = 6;
 	
 	private float getMaxAround(float[] values, int smp, int maxSmp) {
 

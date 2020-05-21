@@ -21,7 +21,7 @@ public class PrismDrawer {
 	
 	int geencolorp = (0 << 16) + (100 << 8) + 94;
 	int geencolorm = (94 << 16) + (100 << 8) + 0;	
-	int geencolorb = (130 << 16) + (255 << 8) + 130;
+	int geencolorb = (90 << 16) + (250 << 8) + 90;
 	
 	public PrismDrawer(Model model) {
 		this.model = model;

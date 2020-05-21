@@ -23,6 +23,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.Mnemonic;
 import javafx.scene.control.TabPane.TabClosingPolicy;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -107,6 +111,7 @@ public class OptionPane extends VBox {
 		VBox t2 = new VBox(10);		
         t2.getChildren().addAll(profileView.getRightSearch());
         
+		ToggleButton shEdge;
 		t2.getChildren().addAll(
 				commandRegistry.createAsinqTaskButton(
 						new AlgorithmicScan()),				
@@ -125,7 +130,7 @@ public class OptionPane extends VBox {
 								new EdgeSubtractGround())
 						),
 				new HBox(
-						prepareToggleButton("show edge", null, 
+						shEdge = prepareToggleButton("show edge", null, 
 								model.getSettings().showEdge, 
 								Change.justdraw),
 						
@@ -135,6 +140,13 @@ public class OptionPane extends VBox {
 						)
 				
 			);
+		
+		
+
+//		KeyCombination kc = new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN);
+//		Mnemonic mn = new Mnemonic(shEdge, kc); // you can also use kp
+//		AppContext.scene.addMnemonic(mn);
+		
         tab2.setContent(t2);
 	}
 }

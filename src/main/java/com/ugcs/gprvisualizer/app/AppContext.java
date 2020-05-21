@@ -9,11 +9,13 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class AppContext {
 
 	public static Stage stage;
+	public static Scene scene;
 	public static Model model;
 	public static Status status;
 	

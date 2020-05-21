@@ -1,19 +1,25 @@
 package com.ugcs.gprvisualizer.math;
 
+import com.ugcs.gprvisualizer.app.Sout;
+
 public class HoughHypFullness {
 
 	private int horizontalSize;
 	private int searchIndex;
 	private int searchEdge;
 	
+	private boolean isPrintLog;
 	int[] pointCount;
 	
-	public HoughHypFullness(int horizontalSize, int searchIndex, int searchEdge) {
+	public HoughHypFullness(int horizontalSize, int searchIndex, int searchEdge,
+			boolean isPrintLog) {
 		this.horizontalSize = horizontalSize;
 		this.searchIndex = searchIndex;
 		this.searchEdge = searchEdge;
 		
-		pointCount = new int[horizontalSize * 2];
+		this.isPrintLog = isPrintLog;
+		
+		pointCount = new int[horizontalSize * 2 + 1];
 	}
 	
 	public void add(int tr, int xfd1, int xfd2, int edge) {
@@ -53,7 +59,14 @@ public class HoughHypFullness {
 		int group = 0;
 		boolean started = true;
 		
+		StringBuilder sb = new StringBuilder();
+		
 		for (int point : pointCount) {
+			if(isPrintLog) {
+				sb.append(point);
+				sb.append("");
+			}
+			
 			if (point == 0) {
 				if (started) {
 					group++;
@@ -61,14 +74,20 @@ public class HoughHypFullness {
 			} else {
 				started = true;
 				if (group > result) {
-					result = group;
-					group = 0;
+					result = group;					
 				}				
+				group = 0;
 			}			
 		}
 		if (group > result) {
 			result = group;
 		}				
+		
+		if(isPrintLog) {
+			Sout.p("zerogrp: " + result + "  ar:  " + sb.toString());
+			
+		}
+
 		
 		return result;
 	}
