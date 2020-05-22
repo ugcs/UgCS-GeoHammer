@@ -114,41 +114,62 @@ public class HoughScan implements AsinqCommand {
 						model.getSettings().printHoughAindex.intValue());
 		}
 		
-		HoughArray[] stores = analizer.processRectAroundPin(sgyFile, workingRect, threshold);
+		HoughArray[] stores = analizer.processRectAroundPin(
+				sgyFile, workingRect, threshold);
 		
 		//
-		int[] bestMaxIndexes = getMaxIndexes(stores);
-		int bestEdge = bestOfTheBestestIndex(stores, bestMaxIndexes);
+		if (isPrintLog) {
+			printMatix(stores);
+			prepareDrawer(sgyFile, workingRect, analizer);
+		}
 		
-		int bestDiscr = bestMaxIndexes[bestEdge];
-		
-		double bestVal = stores[bestEdge].ar[bestDiscr];
+		for (int bestEdge = 1; bestEdge <= 4; bestEdge++) {
+			
+			HoughArray store = stores[bestEdge];
+			
+			int bestDiscr = store.getLocalMaxIndex();
+			
+			double bestVal = store.getLocalMax();
+			if (bestDiscr < HoughDiscretizer.DISCRET_GOOD_FROM
+					|| bestVal < threshold) {
+				continue;
+			}
+	
+			double horizontalSize = getHorSizeForGap(workingRect, bestDiscr);
+			
+			analizer.fullnessAnalizer = new HoughHypFullness((int) horizontalSize,
+					bestDiscr, bestEdge, isPrintLog);
+			analizer.processRectAroundPin(sgyFile, workingRect, threshold);
+			double maxgap = analizer.fullnessAnalizer.getMaxGap();
+			
+			// 0.15 - 0.35
+			double gapThreshold = 0.35 - store.getClearness() * 0.2;
 
-		double horizontalSize = getHorSizeForGap(workingRect, bestDiscr);
-		
-		if (isPrintLog) {
-			prepareDrawer(sgyFile, workingRect, analizer, 
-					bestDiscr, bestEdge, bestVal);
+			if (isPrintLog) {
+				Sout.p( "  e " + bestEdge  + "  i " + bestDiscr + "  v " + bestVal
+						+ "  clrnss: " + store.getClearness()
+						+ "  found gap: " + maxgap 
+						+ "  gapThreshold: " + gapThreshold
+						+ "   horSize: " + horizontalSize 
+					);
+			}
+			
+			
+			
+			if (maxgap > gapThreshold) {
+				continue;				
+			}
+			
+			if (isPrintLog) {
+				hd.resedge = bestEdge;
+				hd.resindex = bestDiscr;
+				hd.res = bestVal;
+			}
+			return true;
 		}
 		
-		
-		if (bestDiscr < HoughDiscretizer.DISCRET_GOOD_FROM 
-				|| bestVal < threshold) {
-			return false;
-		}
-		
-		
-		analizer.fullnessAnalizer = new HoughHypFullness((int) horizontalSize, 
-				bestDiscr, bestEdge, isPrintLog);
-		
-		analizer.processRectAroundPin(sgyFile, workingRect, threshold);
-		double maxgap = analizer.fullnessAnalizer.getMaxGap();
-		
-		if (isPrintLog) {
-			Sout.p("gap " + maxgap + "  horizontalSize " + horizontalSize);
-		}
 		//		
-		return maxgap < MAX_GAP_SIZE;
+		return false;
 	}
 
 	public double getHorSizeForGap(WorkingRect workingRect, int bestDiscr) {
@@ -171,8 +192,7 @@ public class HoughScan implements AsinqCommand {
 	}
 
 	public void prepareDrawer(SgyFile sgyFile, WorkingRect workingRect,
-			HoughScanPinncaleAnalizer analizer,
-			int bestDiscr, int bestEdge, double bestval) {
+			HoughScanPinncaleAnalizer analizer) {
 
 		double horSize = getHorSizeForGap(workingRect, 
 				model.getSettings().printHoughAindex.intValue());
@@ -184,10 +204,6 @@ public class HoughScan implements AsinqCommand {
 		hd = new HoughDraw(analizer.additionalPreparator.getImage(), sgyFile, 
 				workingRect.getTraceFrom(), workingRect.getTraceTo() + 1,
 				workingRect.getSmpFrom(), workingRect.getSmpTo() + 1);
-		
-		hd.resedge = bestEdge;
-		hd.resindex = bestDiscr;
-		hd.res = bestval;
 		
 		hd.horizontalSize = horSize;
 	}
@@ -215,15 +231,12 @@ public class HoughScan implements AsinqCommand {
 		}
 	}
 
-	public int[] getMaxIndexes(HoughArray[] stores) {
-		//double[] best = new double[5];
-		int[] bestIndex = new int[5];
+	//public Map<Integer, Integer> getMaxIndexes(HoughArray[] stores) {
+	public void printMatix(HoughArray[] stores) {
+		
 		for (int i = 1; i < stores.length; i++) {
 
 			int index = stores[i].getLocalMaxIndex();
-
-			bestIndex[i] = index;
-
 
 			if (isPrintLog) {
 				StringBuilder sb = new StringBuilder();
@@ -252,7 +265,7 @@ public class HoughScan implements AsinqCommand {
 						+ sb.toString());
 			}
 		}
-		return bestIndex;
+		
 	}
 
 

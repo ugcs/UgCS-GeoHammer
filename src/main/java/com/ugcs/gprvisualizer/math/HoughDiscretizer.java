@@ -2,10 +2,10 @@ package com.ugcs.gprvisualizer.math;
 
 public class HoughDiscretizer {
 
-	public static final int DISCRET_SIZE = 22;
+	public static final int DISCRET_SIZE = 21;
 	public static final double DISCRET_GOOD_FROM = 4;
 	
-	public static final double FACTORX_FROM = 0.5;	
+	public static final double FACTORX_FROM = 0.5 + 0.045;	
 	public static final double FACTORX_TO = 1.5;
 	public static final double FACTORX_WIDTH = FACTORX_TO - FACTORX_FROM;
 	
@@ -22,7 +22,9 @@ public class HoughDiscretizer {
 			return DISCRET_SIZE;
 		}
 		
-		return (int) Math.round(norm * (DISCRET_SIZE - 1));
+		int res = (int) Math.round(norm * (DISCRET_SIZE - 1));
+		
+		return res;// > 1 ? res : 0;
 		
 	}
 	

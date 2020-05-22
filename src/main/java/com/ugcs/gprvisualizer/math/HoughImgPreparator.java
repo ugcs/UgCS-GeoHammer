@@ -28,6 +28,9 @@ public class HoughImgPreparator extends StubPrepator {
 	}
 	
 	public void mark(int tr, int smp, int xfd1, int xfd2) {
+		if (smp < workingRect.getSmpFrom()) {
+			return;
+		}
 		
 		if (xfd1 <= showIndex && xfd2 >= showIndex 
 			|| xfd2 <= showIndex && xfd1 >= showIndex) {

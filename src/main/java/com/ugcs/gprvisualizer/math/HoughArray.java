@@ -10,6 +10,10 @@ public class HoughArray {
 	public static double[] FACTOR = new double[DISCRET_SIZE];
 	double threshold;
 	
+	double clearness;
+	double localMax;
+	int localMaxIndex;
+	
 	static {
 		FACTOR[0] = 0.75;
 		for (int i = 1; i < DISCRET_SIZE; i++) {
@@ -21,6 +25,8 @@ public class HoughArray {
 				/ (double) DISCRET_SIZE 
 				* HoughDiscretizer.FACTORX_WIDTH)
 				* gain;
+			
+			Sout.p("factor " + i + " -> " + FACTOR[i]);
 		}
 	}
 
@@ -32,7 +38,7 @@ public class HoughArray {
 				1.20 * (HoughDiscretizer.FACTORX_FROM 
 						- (double) i / (double) DISCRET_SIZE * 0.02);
 			
-			Sout.p(""+ REDUCE[i]);
+			Sout.p("reduce " + i + " -> " + REDUCE[i]);
 		}
 	}
 	
@@ -79,40 +85,45 @@ public class HoughArray {
 
 	}
 
-	int getLocalMaxIndex() {
+	public void calculate() {
 		double max = 0;
 		int index = 0;
 		boolean thresholdReached = false;
+		boolean minimumReached = false;
+		
+		double smallest = 999999.0;
 		for (int i = ar.length - 1; i >= 0; i--) {
 
 			double v = ar[i];
 
-			if(thresholdReached && v < max / 3) {
-				return index;
+			if(thresholdReached) {
+				
+				smallest = Math.min(smallest, v);
+				
+				if(smallest < max / 3) {
+					minimumReached = true;
+				}
+				//return index;
 			}
 			
 			if(v > threshold) {
 				thresholdReached = true;
+				smallest = v;
 			}
 			
-			if (v > max) {
+			if (v > max && !minimumReached) {
 				max = v;
 				index = i;
 			}
 		}
 
-		return index;
+		localMaxIndex = index;
+		localMax = max;
+		clearness = smallest / max;
+		
 
 	}
 	
-	double getMax() {
-
-		int index = getMaxIndex();
-		double v = ar[index];
-
-		return v;
-	}
-
 	void print() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(" debug a ");
@@ -123,4 +134,18 @@ public class HoughArray {
 		Sout.p(sb.toString());
 	}
 
+	public double getClearness() {
+		
+		return clearness;
+	}
+
+	public double getLocalMax() {
+		
+		return localMax;
+	}
+
+	public int getLocalMaxIndex() {
+		return localMaxIndex;
+	}
+	
 }

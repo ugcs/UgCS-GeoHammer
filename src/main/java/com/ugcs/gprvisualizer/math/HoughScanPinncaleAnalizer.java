@@ -32,14 +32,14 @@ public class HoughScanPinncaleAnalizer {
 		}
 		
 		//
-		for (int smp = workingRect.getSmpFrom(); 
+		for (int smp = workingRect.getSmpFrom()-1; 
 				smp <= workingRect.getSmpTo(); smp++) {
 			
 			StringBuilder sb = new StringBuilder();
 			
 			sb.append(String.format("%3d | ", smp));
 			
-			double addValue = (smp == workingRect.getSmpFrom() ? 0.33 : 1.0); 
+			double addValue = (smp == workingRect.getSmpFrom() ? 0.40 : 1.0); 
 			
 			for (int tr = workingRect.getTraceFrom();
 					tr <= workingRect.getTraceTo(); tr++) {
@@ -75,6 +75,11 @@ public class HoughScanPinncaleAnalizer {
 				//Sout.p(sb.toString());
 			}
 		}
+		
+		for (HoughArray ha : stores) {
+			ha.calculate();
+		}
+		
 		return stores;
 	}
 
