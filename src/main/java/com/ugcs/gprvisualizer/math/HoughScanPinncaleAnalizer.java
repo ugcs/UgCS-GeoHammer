@@ -24,7 +24,8 @@ public class HoughScanPinncaleAnalizer {
 		}
 	}
 	
-	public HoughArray[] processRectAroundPin(SgyFile sgyFile, WorkingRect workingRect, double threshold) {
+	public HoughArray[] processRectAroundPin(SgyFile sgyFile,
+			WorkingRect workingRect, double threshold) {
 		HoughArray[] stores = new HoughArray[5];
 		//init stores
 		for (int i = 0; i < stores.length; i++) {
@@ -32,7 +33,7 @@ public class HoughScanPinncaleAnalizer {
 		}
 		
 		//
-		for (int smp = workingRect.getSmpFrom()-1; 
+		for (int smp = workingRect.getSmpFrom() - 1;
 				smp <= workingRect.getSmpTo(); smp++) {
 			
 			StringBuilder sb = new StringBuilder();
@@ -43,12 +44,13 @@ public class HoughScanPinncaleAnalizer {
 			
 			for (int tr = workingRect.getTraceFrom();
 					tr <= workingRect.getTraceTo(); tr++) {
-				
-				
-				int edge = getEdge(sgyFile, tr, smp);
 				if (tr == workingRect.getTracePin()) {
 					continue;
 				}
+				
+				
+				int edge = getEdge(sgyFile, tr, smp);
+				
 				
 				double xf1 = getFactorX(sgyFile, 
 						workingRect.getTracePin(), workingRect.getSmpPin(), 
@@ -67,7 +69,10 @@ public class HoughScanPinncaleAnalizer {
 				additionalPreparator.mark(tr, smp, xfd1, xfd2);
 				
 				if (fullnessAnalizer != null) {
-					fullnessAnalizer.add(tr - workingRect.getTracePin(), xfd1, xfd2, edge);
+					
+					float ampValue = getAmpValue(sgyFile, tr, smp);
+					
+					fullnessAnalizer.add(tr - workingRect.getTracePin(), xfd1, xfd2, edge, ampValue);
 				}				
 			}
 			
@@ -99,6 +104,11 @@ public class HoughScanPinncaleAnalizer {
 	private int getEdge(SgyFile sgyFile, int tr, int smp) {
 
 		return sgyFile.getTraces().get(tr).edge[smp];
+	}
+
+	private float getAmpValue(SgyFile sgyFile, int tr, int smp) {
+
+		return sgyFile.getTraces().get(tr).getNormValues()[smp];
 	}
 
 	/*

@@ -147,17 +147,17 @@ public class HoughScan implements AsinqCommand {
 
 			if (isPrintLog) {
 				Sout.p( "  e " + bestEdge  + "  i " + bestDiscr + "  v " + bestVal
-						+ "  clrnss: " + store.getClearness()
-						+ "  found gap: " + maxgap 
-						+ "  gapThreshold: " + gapThreshold
-						+ "   horSize: " + horizontalSize 
+						+ " clrnss: " + store.getClearness()
+						+ " found gap: " + maxgap 
+						+ " gapThrs: " + gapThreshold
+						//+ " horSize: " + horizontalSize 
+						+ " brdweak: " + analizer.fullnessAnalizer.getBorderWeakness()
 					);
 			}
 			
-			
-			
-			if (maxgap > gapThreshold) {
-				continue;				
+			if (maxgap > gapThreshold 
+					|| analizer.fullnessAnalizer.getBorderWeakness() > 0.45) {
+				continue;
 			}
 			
 			if (isPrintLog) {
