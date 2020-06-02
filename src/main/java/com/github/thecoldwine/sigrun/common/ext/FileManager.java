@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.ugcs.gprvisualizer.app.ProgressListener;
+import com.ugcs.gprvisualizer.dzt.DztFile;
 
 public class FileManager {
 	public static FilenameFilter FILTER = new FilenameFilter() {
@@ -65,8 +66,16 @@ public class FileManager {
 
 	private void processFile(File fl) throws Exception {
 		
-		SgyFile sgyFile = new SgyFile();
+		SgyFile sgyFile = null;
+		if (fl.getName().toLowerCase().endsWith("sgy")) {
+			sgyFile = new GprFile();
+		} else if (fl.getName().toLowerCase().endsWith("dzt")) {
+			sgyFile = new DztFile();
+		}
+		
+		
 		sgyFile.open(fl);
+		
 		files.add(sgyFile);
 
 		try {	

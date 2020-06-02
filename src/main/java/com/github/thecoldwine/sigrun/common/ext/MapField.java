@@ -18,13 +18,9 @@ public class MapField {
 		this.zoom = field.zoom;
 	}
 
-
-	public static void main(String[] args) {
-		
-		
-		new MapField().test();
+	public boolean isActive() {
+		return pathCenter != null; 
 	}
-	
 	
 	protected void tst(LatLon ll) {
 		Point2D p = latLonToScreen(ll);
@@ -100,7 +96,11 @@ public class MapField {
 	}
 
 	public void setSceneCenter(LatLon sceneCenter) {
-		this.sceneCenter = sceneCenter;
+		if (isActive()) {
+			this.sceneCenter = sceneCenter;
+		} else {
+			this.sceneCenter = null;
+		}
 	}	
 
 	public LatLon getPathCenter() {

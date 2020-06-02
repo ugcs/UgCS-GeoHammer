@@ -77,13 +77,13 @@ public class LeftRulerController {
 			
 			
 			return Pair.of(
-					fl.getBinaryHeader().getSampleInterval() * s / 1000, 
-					fl.getBinaryHeader().getSampleInterval() * f / 1000);
+					fl.getSampleInterval() * s / 1000, 
+					fl.getSampleInterval() * f / 1000);
 		}
 		
 		public int back(int unt) {
 			SgyFile fl = model.getFileManager().getFiles().get(0);
-			return unt * 1000 / fl.getBinaryHeader().getSampleInterval();
+			return unt * 1000 / fl.getSampleInterval();
 		}
 		
 

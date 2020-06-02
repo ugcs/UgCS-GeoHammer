@@ -24,7 +24,9 @@ public class BackgroundNoiseRemover implements Command {
 		float[] subteProfile = null; 
 				
 		if (lst.size() > 1) {
-			int deep = model.getSettings().layer + model.getSettings().hpage;
+			//int deep = model.getSettings().layer + model.getSettings().hpage;
+			int deep = file.getMaxSamples();
+			
 			subteProfile = brf.prepareNoiseProfile(lst, deep);
 			brf.subtractProfile(lst, subteProfile);
 		}

@@ -8,7 +8,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.draw.Change;
 
 /**
- * Find ground level. Put ground value to trace.maxindex
+ * Find ground level. 
  * @author Kesha
  *
  */

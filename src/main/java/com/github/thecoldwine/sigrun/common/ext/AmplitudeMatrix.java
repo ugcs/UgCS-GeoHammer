@@ -458,11 +458,11 @@ public class AmplitudeMatrix {
 
 	private int getIndex(int x, int y, int hy) {
 		return x + y * vertkf * width + hy * width;
-	}
+	} 
 	
 	public static void execute(File file, int prefix) throws Exception {
 		
-		SgyFile sgyFile = new SgyFile();
+		SgyFile sgyFile = new GprFile();
 		sgyFile.open(file);
 		
 		BackgroundRemovalFilter lf = new BackgroundRemovalFilter();
@@ -486,7 +486,7 @@ public class AmplitudeMatrix {
 	public BufferedImage createImg(File file, int prefix) {
 		
 		try {
-			SgyFile sgyFile = new SgyFile();
+			SgyFile sgyFile = new GprFile();
 			sgyFile.open(file);
 			
 			BackgroundRemovalFilter lf = new BackgroundRemovalFilter();

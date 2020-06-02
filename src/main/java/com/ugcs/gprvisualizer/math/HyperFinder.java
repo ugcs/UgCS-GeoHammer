@@ -107,8 +107,9 @@ public class HyperFinder {
 		double threshold = model.getSettings().hyperSensitivity.doubleValue();
 		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample(), threshold);
 		
-		
-		hs.getHoughDrawer().drawOnCut(g2, profField);
+		if (hs.getHoughDrawer() != null) {
+			hs.getHoughDrawer().drawOnCut(g2, profField);
+		}
 		
 		double hyperkf = model.getSettings().hyperkfc / 100.0;		
 		float example2 = values[ts.getSample()];

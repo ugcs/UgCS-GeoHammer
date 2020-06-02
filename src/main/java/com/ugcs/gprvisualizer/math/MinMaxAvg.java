@@ -2,6 +2,9 @@ package com.ugcs.gprvisualizer.math;
 
 public class MinMaxAvg {
 
+	private double sum = 0;
+	private double cnt = 0;
+	
 	private double min;
 	private double max;
 	private boolean first  = true;
@@ -15,6 +18,17 @@ public class MinMaxAvg {
 		
 		min = Math.min(min, x);
 		max = Math.max(max, x);
+		
+		sum += x;
+		cnt++;
+	}
+
+	public double getAvg() {
+		if (cnt > 0) {
+			return sum / cnt;
+		} else {
+			return 0;
+		}
 	}
 	
 	public double getMax() {
@@ -29,4 +43,7 @@ public class MinMaxAvg {
 		return (min + max) / 2;
 	}
 	
+	public boolean isNotEmpty() {
+		return !first; 
+	}
 }

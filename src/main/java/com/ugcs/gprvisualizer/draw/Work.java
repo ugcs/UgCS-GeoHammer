@@ -78,6 +78,10 @@ public class Work {
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+        	
         	Point2D p = getLocalCoords(event);
         	
         	for (int i = getLayers().size() - 1; i >= 0; i--) {
@@ -96,7 +100,11 @@ public class Work {
 
 	protected EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
         @Override
-        public void handle(MouseEvent event) {        	
+        public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+        	
         	Point2D p = getLocalCoords(event);
         	
         	for (int i = getLayers().size() - 1; i >= 0; i--) {
@@ -113,6 +121,10 @@ public class Work {
 	protected EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+
         	Point2D p = getLocalCoords(event);
         	
         	for (int i = getLayers().size() - 1; i >= 0; i--) {
@@ -140,6 +152,9 @@ public class Work {
 	}
 
 	public void somethingChanged(WhatChanged changed) {
+		if (!isGpsPresent()) {
+			return;
+		}
 		
 		for (Layer l : getLayers()) {
 			l.somethingChanged(changed);
@@ -149,5 +164,10 @@ public class Work {
 			repaintEvent();
 		}		
 	}
-	
+
+	protected boolean isGpsPresent() {
+		
+		return true;
+	}
+
 }

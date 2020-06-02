@@ -10,6 +10,7 @@ import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.LevelClear;
 import com.ugcs.gprvisualizer.app.commands.LevelGround;
+import com.ugcs.gprvisualizer.app.commands.LevelManualSetter;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -92,6 +93,11 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			commandRegistry.createButton(new BackgroundNoiseRemover()), 
 		
 			commandRegistry.createButton(new LevelScanner(), 
+					e -> {
+						levelCalculated = true; 
+						updateButtons(); 
+					}),
+			commandRegistry.createButton(new LevelManualSetter(), 
 					e -> {
 						levelCalculated = true; 
 						updateButtons(); 

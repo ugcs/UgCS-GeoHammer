@@ -27,6 +27,10 @@ public class ManuilovFilter {
 		ll[1] = new double[list.size()];
 		
 		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).getLatLon() == null) {
+				continue;
+			}
+			
 			ll[0][i] = list.get(i).getLatLon().getLatDgr();
 			ll[1][i] = list.get(i).getLatLon().getLonDgr();			
 		}

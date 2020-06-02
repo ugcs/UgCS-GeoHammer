@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -215,21 +216,54 @@ public class Model {
 		MinMaxAvg lonMid = new MinMaxAvg();
 		MinMaxAvg latMid = new MinMaxAvg();
 		for (Trace trace : this.getFileManager().getTraces()) {
-			if (trace == null || trace.getLatLon() == null) {
+			if (trace == null) {
 				System.out.println("null trace or ot latlon");
 				continue;
 			}
 			
-			latMid.put(trace.getLatLon().getLatDgr());
-			lonMid.put(trace.getLatLon().getLonDgr());
+			if (trace.getLatLon() != null) {
+				latMid.put(trace.getLatLon().getLatDgr());
+				lonMid.put(trace.getLatLon().getLonDgr());
+			}
 		}
 		
-		  
-		this.getField().setPathCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
-
-		this.getField().setSceneCenter(new LatLon(latMid.getMid(), lonMid.getMid()));
 		
-		this.getField().setZoom(18);
+		if (latMid.isNotEmpty()) {
+			this.getField().setPathCenter(
+					new LatLon(latMid.getMid(), lonMid.getMid()));
+			this.getField().setSceneCenter(
+					new LatLon(latMid.getMid(), lonMid.getMid()));
+			
+			adjustZoom(lonMid, latMid);
+		} else {
+			Sout.p("GPS coordinates not found");
+			this.getField().setPathCenter(null);
+			this.getField().setSceneCenter(null);
+		}
+		
+		
+		
+		
+		
+		
+	}
+
+	public void adjustZoom(MinMaxAvg lonMid, MinMaxAvg latMid) {
+		LatLon lt = new LatLon(latMid.getMin(), lonMid.getMin());
+		LatLon rb = new LatLon(latMid.getMax(), lonMid.getMax());
+		//double dst = lt.getDistance(rb);
+		
+		int zoom = 18;
+		this.getField().setZoom(zoom);
+		Point2D scr = this.getField().latLonToScreen(rb);
+		while (zoom > 2
+				&& (Math.abs(scr.getX()) > 200 
+				|| Math.abs(scr.getY()) > 350)) {
+			zoom--;
+			this.getField().setZoom(zoom);
+			
+			scr = this.getField().latLonToScreen(rb);
+		}
 	}
 
 	public void init() {

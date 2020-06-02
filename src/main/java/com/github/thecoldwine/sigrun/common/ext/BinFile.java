@@ -34,7 +34,7 @@ public class BinFile {
 		this.binHdr = Arrays.copyOf(copy.binHdr, copy.binHdr.length);
 	}
 	
-	public static BinFile load(File file) throws Exception{
+	public static BinFile load(File file) throws Exception {
 		
 		BinFile binFile = new BinFile();
 		
@@ -46,29 +46,29 @@ public class BinFile {
 			binFile.txtHdr = txtHdrBlock.read(blockFile).array();
 			binFile.binHdr = binHdrBlock.read(blockFile).array();
 			
-			BinaryHeader binaryHeader = SgyFile.binaryHeaderReader.read(binHdrBlock.read(blockFile).array());
+			BinaryHeader binaryHeader = GprFile.binaryHeaderReader.read(binHdrBlock.read(blockFile).array());
 			
 			System.out.println(binaryHeader.getDataSampleCode() + " " + binaryHeader.getDataSampleCode().getSize());
 			
-			while(blockFile.hasNext(TraceHeader.TRACE_HEADER_LENGTH)) {
+			while (blockFile.hasNext(TraceHeader.TRACE_HEADER_LENGTH)) {
 				Block traceHdrBlock = blockFile.next(TraceHeader.TRACE_HEADER_LENGTH);
 				
 				BinTrace binTrace = new BinTrace();
 				binTrace.header = traceHdrBlock.read(blockFile).array();
 				
 				
-		        TraceHeader header = SgyFile.traceHeaderReader.read(binTrace.header);
+		        TraceHeader header = GprFile.traceHeaderReader.read(binTrace.header);
 		        
 		        
 		        int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
 		        
-		        if(dataLength > 0 && blockFile.hasNext(dataLength)){
+		        if (dataLength > 0 && blockFile.hasNext(dataLength)) {
 		        	Block traceDataBlock = blockFile.next(dataLength);				
 		        	binTrace.data = traceDataBlock.read(blockFile).array();
 		        	binFile.traces.add(binTrace);
 		        }
 			}
-		}finally {
+		} finally {
 			blockFile.close();
 		}
 		
@@ -83,7 +83,7 @@ public class BinFile {
 		writechan.write(ByteBuffer.wrap(txtHdr));
 		writechan.write(ByteBuffer.wrap(binHdr));		
 		
-		for(BinTrace trace : traces) {
+		for (BinTrace trace : traces) {
 			writechan.write(ByteBuffer.wrap(trace.header));
 			writechan.write(ByteBuffer.wrap(trace.data));
 		}		

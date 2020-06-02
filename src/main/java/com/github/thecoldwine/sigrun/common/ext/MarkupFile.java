@@ -68,8 +68,18 @@ public class MarkupFile {
 	}
 
 	private File getMarkupFileBySgy(File file) {
-		String mrkupName = StringUtils.replaceIgnoreCase(
-				file.getAbsolutePath(), ".sgy", ".mrkup");		
+		
+		String mrkupName = null; 
+		
+		if (file.getName().toLowerCase().endsWith(".sgy")) {
+			mrkupName = StringUtils.replaceIgnoreCase(
+					file.getAbsolutePath(), ".sgy", ".mrkup");
+		} else if (file.getName().toLowerCase().endsWith(".dzt")) {
+			mrkupName = StringUtils.replaceIgnoreCase(
+					file.getAbsolutePath(), ".dzt", ".mrkup");
+		}
+		
+		
 		File mkupfile = new File(mrkupName);
 		return mkupfile;
 	}

@@ -1,7 +1,12 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,14 +102,25 @@ public class MapView extends Work implements SmthChangeListener {
 		super.somethingChanged(changed);
 		
 		if (changed.isFileopened()) {
-			toolBar.setDisable(!model.isActive());
+			toolBar.setDisable(!model.isActive() || !isGpsPresent());
+			repaintEvent();
 		}
 		
+	}
+	
+	protected boolean isGpsPresent() {
+		
+		return model.getField().isActive();
 	}
 		
 	private void initImageView() {
 		//ZOOM
 		imageView.setOnScroll(event -> {
+			
+			if (!isGpsPresent()) {
+				return;
+			}
+			
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
 			LatLon ll = model.getField().screenTolatLon(p);
 			
@@ -145,6 +161,11 @@ public class MapView extends Work implements SmthChangeListener {
 	protected EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+        	
+        	
         	if (event.getClickCount() == 2) {
         		
         		Point2D p = getLocalCoords(event);
@@ -223,9 +244,34 @@ public class MapView extends Work implements SmthChangeListener {
 	}
 
 	
+	private static final String NO_GPS_TEXT = "There are no coordinates in files";
+	
 	protected void repaintEvent() {
+		if (isGpsPresent()) {
 		
-		img = draw(windowSize.width, windowSize.height);
+			img = draw(windowSize.width, windowSize.height);
+			
+		} else {
+			
+			BufferedImage noGpsImg = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_RGB);
+			
+			Graphics2D g2 = (Graphics2D)noGpsImg.getGraphics();
+			g2.setColor(Color.LIGHT_GRAY);
+			g2.fillRect(0, 0, windowSize.width, windowSize.height);
+			
+			g2.setColor(Color.DARK_GRAY);
+			
+	        FontMetrics fm = g2.getFontMetrics();
+	        Rectangle2D rect = fm.getStringBounds(NO_GPS_TEXT, g2);
+			
+			int x = (int) ((windowSize.width - rect.getWidth()) / 2);
+			int y = windowSize.height / 2;
+			
+			g2.drawString(NO_GPS_TEXT, x, y);
+			
+			img = noGpsImg;
+			
+		}
 		
 		updateWindow();
 	}

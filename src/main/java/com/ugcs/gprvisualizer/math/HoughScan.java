@@ -48,7 +48,9 @@ public class HoughScan implements AsinqCommand {
 	@Override
 	public void execute(SgyFile file) {
 
-		new LevelScanner().execute(file);
+		if (file.groundProfile == null) {
+			new LevelScanner().execute(file);
+		}
 		new EdgeFinder().execute(file);
 		new EdgeSubtractGround().execute(file);
 
@@ -85,7 +87,8 @@ public class HoughScan implements AsinqCommand {
 	public boolean scan(SgyFile sgyFile, 
 			int pinTrace, int pinSmpl, double threshold) {
 		
-		if (pinSmpl < sgyFile.groundProfile.deep[pinTrace]) {
+		if (sgyFile.groundProfile == null 
+				|| pinSmpl < sgyFile.groundProfile.deep[pinTrace]) {
 			return false;
 		}
 		

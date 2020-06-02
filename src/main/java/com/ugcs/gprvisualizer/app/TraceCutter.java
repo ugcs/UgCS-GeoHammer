@@ -14,6 +14,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -26,6 +27,7 @@ import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.dzt.DztFile;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -216,25 +218,27 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		return ins;
 	}
 	
-	private SgyFile generateSgyFileFrom(SgyFile file, List<Trace> traces, int part) {
+	private SgyFile generateSgyFileFrom(SgyFile sourceFile, List<Trace> traces, int part) {
 		
-		SgyFile sgyFile = new SgyFile();
+		SgyFile sgyFile = sourceFile.copyHeader(); 
 		
 		sgyFile.setUnsaved(true);
 		
 		sgyFile.setTraces(traces);
-		sgyFile.setFile(getPartFile(file, part, file.getFile().getParentFile()));
-		
-		sgyFile.setBinHdr(file.getBinHdr());
-		sgyFile.setTxtHdr(file.getTxtHdr());
-		
-		sgyFile.setBinaryHeader(file.getBinaryHeader());
+		sgyFile.setFile(getPartFile(sourceFile, part, sourceFile.getFile().getParentFile()));
 		
 		int begin = traces.get(0).indexInFile;
 		int end = traces.get(traces.size() - 1).indexInFile;
-		sgyFile.setAuxElements(copyAuxObjects(file, sgyFile, begin, end));
+		sgyFile.setAuxElements(copyAuxObjects(sourceFile, sgyFile, begin, end));
 		
 		
+		/// TODO:
+		if (sgyFile instanceof DztFile) {
+			DztFile dztfile = (DztFile) sgyFile;
+			dztfile.dzg = dztfile.dzg.cut(begin, end);
+		}
+		
+		///
 		sgyFile.updateInternalIndexes();
 		return sgyFile;
 	}

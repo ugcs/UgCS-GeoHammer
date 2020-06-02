@@ -937,12 +937,12 @@ public class ProfileView implements SmthChangeListener {
 			super(settings, listenerExt);
 			name = "Middle amp";
 			units = "";
-			tickUnits = 200;
+			tickUnits = 5200;
 		}
 
 		public void updateUI() {
-			slider.setMax(1000);
-			slider.setMin(-1000);
+			slider.setMax(91000);
+			slider.setMin(-91000);
 			slider.setValue(settings.hypermiddleamp);
 		}
 

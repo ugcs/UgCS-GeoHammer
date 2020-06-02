@@ -30,33 +30,14 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ManuilovFilter;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
-public class SgyFile {
+public abstract class SgyFile {
 	
 
-	private static final int MARK_BYTE_POS = 238;
-	private static final Charset charset = Charset.forName("UTF8");
-    private static final BinaryHeaderFormat binaryHeaderFormat 
-    	= SgyLoader.makeBinHeaderFormat();
-    private static final TraceHeaderFormat traceHeaderFormat 
-    	= SgyLoader.makeTraceHeaderFormat();
-
-    public static final TextHeaderReader textHeaderReader 
-    	= new TextHeaderReader(charset);
-    public static final BinaryHeaderReader binaryHeaderReader 
-    	= new BinaryHeaderReader(binaryHeaderFormat);
-    public static final TraceHeaderReader traceHeaderReader 
-    	= new TraceHeaderReader(traceHeaderFormat);
-	
-    //unchanged blocks from original file
-    private byte[] txtHdr;
-    private byte[] binHdr;
-    
-    private BinaryHeader binaryHeader; 
-    private List<Trace> traces; 
+    protected List<Trace> traces; 
     
     private VerticalCutPart offset = new VerticalCutPart();
     
-	private File file;
+	protected File file;
 	
 	private boolean unsaved = true;
 	
@@ -72,61 +53,27 @@ public class SgyFile {
     public ScanProfile amplScan;
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
-	public void open(File file) throws Exception {
-		this.file = file;		
-		
-		BinFile binFile = BinFile.load(file); 
-		
-		txtHdr = binFile.getTxtHdr();
-		binHdr = binFile.getBinHdr();
-		
-		binaryHeader = binaryHeaderReader.read(binFile.getBinHdr());
-		
-		System.out.println("binaryHeader.getSampleInterval() " 
-				+ binaryHeader.getSampleInterval());
-		System.out.println("SamplesPerDataTrace " 
-				+ binaryHeader.getSamplesPerDataTrace());
-		setTraces(loadTraces(binFile));
-		
-		//sampleIntervalInMcs
-		Trace t = getTraces().get(getTraces().size() / 2);
-		System.out.println("SampleIntervalInMcs: " 
-				+ t.getHeader().getSampleIntervalInMcs());
-		
-		System.out.println(" sgyFile.SamplesToCmAir: " + getSamplesToCmAir());
-		System.out.println(" sgyFile.SamplesToCmGrn: " + getSamplesToCmGrn());
-		
-		updateInternalIndexes();
-		
-		markToAux();		
-		
-		new ManuilovFilter().filter(getTraces());
-		
-		updateInternalDist();
-		
-		setUnsaved(false);
-		
-		System.out.println("opened  '" + file.getName() 
-			+ "'   load size: " + getTraces().size() 
-			+ "  actual size: " + binFile.getTraces().size());
-	}
 	
-	private static double SPEED_SM_NS_VACUUM = 30.0;
-	private static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
+	
+	protected static double SPEED_SM_NS_VACUUM = 30.0;
+	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
 
-	public double getSamplesToCmGrn() {
-		// dist between 2 samples
-		double sampleIntervalNS = getBinaryHeader().getSampleInterval() / 1000.0;
-		double sampleDist = SPEED_SM_NS_SOIL * sampleIntervalNS / 2;
-		return sampleDist;
-	}
+	public abstract void open(File file) throws Exception;
+	
+	public abstract void save(File file) throws Exception;
+	
+	public abstract void saveAux(File file) throws Exception;
+	
+	public abstract double getSamplesToCmGrn();
 
-	public double getSamplesToCmAir() {
-		// dist between 2 samples
-		double sampleIntervalNS = getBinaryHeader().getSampleInterval() / 1000.0;
-		double sampleDist = SPEED_SM_NS_VACUUM * sampleIntervalNS / 2;
-		return sampleDist;
-	}
+	public abstract double getSamplesToCmAir();
+
+	public abstract SgyFile copy();
+	
+	public abstract SgyFile copyHeader();
+	
+	public abstract int getSampleInterval();
+	
 	
 	public void markToAux() {
 		for (int i = 0; i < traces.size(); i++) {
@@ -137,26 +84,6 @@ public class SgyFile {
 						new FoundPlace(trace.indexInFile, offset));
 			}
 		}
-	}
-	
-	private List<Trace> loadTraces(BinFile binFile) throws Exception {
-		List<Trace> traces = new ArrayList<>();
-		
-
-		
-
-		for (BinTrace binTrace : binFile.getTraces()) {
-			
-			Trace trace = next(binTrace);
-			
-			if (trace == null) {
-				continue;
-			}
-			
-			traces.add(trace);			
-		}
-		
-		return traces;
 	}
 	
 	public void updateInternalIndexes() {
@@ -174,118 +101,25 @@ public class SgyFile {
 			Trace tracePrev = traces.get(i - 1);
 			Trace trace 	= traces.get(i);
 			
-			double dist = CoordinatesMath.measure(
-				tracePrev.getLatLon().getLatDgr(), 
-				tracePrev.getLatLon().getLonDgr(), 
-				trace.getLatLon().getLatDgr(), 
-				trace.getLatLon().getLonDgr());
+			if (tracePrev.getLatLon() != null 
+					&& trace.getLatLon() != null) {
 			
-			//to cm
-			trace.setPrevDist(dist * 100.0);
-		}		
-	}
-
-	public Trace next(BinTrace binTrace) throws IOException {
-		
-		byte[] headerBin = binTrace.header;		
-        TraceHeader header = traceHeaderReader.read(headerBin);
-        
-        SeismicValuesConverter converter = 
-        		ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-        
-        final float[] values = converter.convert(binTrace.data);        
-        
-        LatLon latLon = getLatLon(header);
-        if (latLon == null) {
-        	return null;
-        }
-        
-        Trace trace = new Trace(headerBin, header, values, latLon);
-        if (headerBin[MARK_BYTE_POS] != 0) {
-        	trace.setMarked(true);
-        }
-        
-        return trace;
-	}
-
-	private LatLon getLatLon(TraceHeader header) {
-		double lon = retrieveVal(header.getLongitude(), header.getSourceX()); 
-		double lat = retrieveVal(header.getLatitude(), header.getSourceY()); 
-		
-		if (Double.isNaN(lon) || Double.isNaN(lat) 
-				|| Math.abs(lon) < 0.1 
-				|| Math.abs(lat) < 0.1 
-				|| Math.abs(lon) > 18000 
-				|| Math.abs(lat) > 18000) {
-		
-			return null;
-		}
-
-		
-		// prism: 65.3063232422°N 40.0569335938°W
-		// 65.3063232421875 -40.05693359375
-		double rlon = convertDegreeFraction(lon);
-		double rlat = convertDegreeFraction(lat);
-		
-		return new LatLon(rlat, rlon);
-	}
-
-	private double convertDegreeFraction(double org) {
-		org = org / 100.0;
-		int dgr = (int) org;
-		double fract = org - dgr;
-		double rx = dgr + fract / 60.0 * 100.0;
-		return rx;
-	}
-	
-	private double retrieveVal(Double v1, Float v2) {
-		if (v1 != null && Math.abs(v1) > 0.01) {
-			return v1;
-		}
-		return v2;
-	}
-
-	public void save(File file) throws Exception {
-		
-		Set<Integer> marks = prepareMarksIndexSet();
-		BinFile binFile = new BinFile();
-		
-		binFile.setTxtHdr(txtHdr);
-		binFile.setBinHdr(binHdr);
-		
-		SeismicValuesConverter converter = 
-				ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-		
-		for (Trace trace : traces) {
-			BinTrace binTrace = new BinTrace();
-			
-			binTrace.header = trace.getBinHeader();
-			
-			//set or clear marks
-			binTrace.header[MARK_BYTE_POS] = 
-					(byte) (marks.contains(trace.indexInFile) ? -1 : 0);
-			
-			binTrace.data = converter.valuesToByteBuffer(trace.getNormValues()).array();
-			
-			binFile.getTraces().add(binTrace);
-		}		
-		
-		binFile.save(file);
-	}
-
-	private Set<Integer> prepareMarksIndexSet() {
-		Set<Integer> result = new HashSet<>();
-		
-		for (BaseObject bo : getAuxElements()) {
-			if (bo instanceof FoundPlace) {
-				FoundPlace fp = (FoundPlace) bo;
-				result.add(fp.getTraceInFile());
+				double dist = CoordinatesMath.measure(
+					tracePrev.getLatLon().getLatDgr(), 
+					tracePrev.getLatLon().getLonDgr(), 
+					trace.getLatLon().getLatDgr(), 
+					trace.getLatLon().getLonDgr());
+				
+				//to cm
+				trace.setPrevDist(dist * 100.0);
+			} else {
+				//some not null value. For example 10 cm.
+				trace.setPrevDist(10.0);
 			}
-		}
-		
-		return result;
+		}		
 	}
-	
+
+
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) 
 			throws IOException {
 		writechan.write(ByteBuffer.wrap(block.read(blockFile).array()));
@@ -320,29 +154,7 @@ public class SgyFile {
 		return offset;
 	}
 
-	public byte[] getTxtHdr() {
-		return txtHdr;
-	}
 
-	public void setTxtHdr(byte[] d) {
-		txtHdr = d;
-	}
-
-	public byte[] getBinHdr() {
-		return binHdr;		
-	}
-
-	public void setBinHdr(byte[] d) {
-		binHdr = d;		
-	}
-	
-	public BinaryHeader getBinaryHeader() {
-		return binaryHeader;
-	}
-
-	public void setBinaryHeader(BinaryHeader bh) {
-		binaryHeader = bh;
-	}
 
 	public boolean isUnsaved() {
 		return unsaved;
@@ -354,29 +166,6 @@ public class SgyFile {
 	
 	public int getMaxSamples() {
 		return getTraces().get(0).getNormValues().length;
-	}
-
-	public SgyFile copy() {
-
-		
-		SgyFile file2 = new SgyFile();
-		
-		file2.setFile(this.getFile());
-		
-		List<Trace> traces = new ArrayList<>();
-		for (Trace org : this.getTraces()) {
-			
-			float[] values = Arrays.copyOf(
-					org.getNormValues(), org.getNormValues().length);
-			
-			Trace tr = new Trace(org.getBinHeader(), 
-					org.getHeader(), values, org.getLatLon());
-			traces.add(tr);
-		}		
-		
-		file2.setTraces(traces);
-		
-		return file2;
 	}
 
 	public int size() {
@@ -409,4 +198,13 @@ public class SgyFile {
 		return traceIndex;
 	}
 
+	public static double convertDegreeFraction(double org) {
+		org = org / 100.0;
+		int dgr = (int) org;
+		double fract = org - dgr;
+		double rx = dgr + fract / 60.0 * 100.0;
+		return rx;
+	}	
+	
+	
 }

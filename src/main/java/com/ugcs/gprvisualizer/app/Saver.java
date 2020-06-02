@@ -78,6 +78,8 @@ public class Saver implements ToolProducer {
 			try {
 				loader.load(newfiles, listener);
 			} catch (Exception e) {
+				
+				e.printStackTrace();
 				MessageBoxHelper.showError("error reopening files", "");
 			}
 				
@@ -159,8 +161,12 @@ public class Saver implements ToolProducer {
 			
 			newFile = new File(folder, oldFile.getName());
 			
+			sgyFile.setFile(newFile);
 			
 			sgyFile.save(newFile);
+			
+			sgyFile.saveAux(newFile);
+			
 			new MarkupFile().save(sgyFile, newFile);
 			
 		} catch (Exception e) {
@@ -183,9 +189,17 @@ public class Saver implements ToolProducer {
 			sgyFile.save(tmp);
 			
 			boolean t = oldFile.delete();
+			if (!t) {
+				System.out.println("!!!   delete problem!");
+			}
 			
 			boolean r = tmp.renameTo(oldFile);
 			
+			if (!r) {
+				System.out.println("!!!   rename problem!");
+			}
+			
+			sgyFile.saveAux(oldFile);
 			new MarkupFile().save(sgyFile, oldFile);
 			
 		} catch (Exception e) {
