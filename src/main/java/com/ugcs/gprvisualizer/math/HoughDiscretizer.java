@@ -43,6 +43,12 @@ public class HoughDiscretizer {
 		
 	}
 	
+	public double back(int discr) {
+		
+		return FACTORX_FROM * Math.pow(STEP, discr);
+	}
+	
+	
 	public static void main(String[] args) {
 		HoughDiscretizer d = new HoughDiscretizer();
 		
@@ -50,9 +56,10 @@ public class HoughDiscretizer {
 		
 		for(double i = 0.4; i < 2.0; i+= 0.05) {
 			
-			double z = Math.log(i / FACTORX_FROM) / Math.log(STEP);
-			
-			Sout.p(i + " -> " + z);
+			int z = d.transform(i);
+			double i2 = d.back(z);
+					
+			Sout.p(i + " -> " + z + " -> " + i2);
 		}
 		
 	}

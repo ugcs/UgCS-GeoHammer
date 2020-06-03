@@ -95,7 +95,9 @@ public class HoughScan implements AsinqCommand {
 		WorkingRect workingRect = makeWorkingRect(sgyFile, pinTrace, pinSmpl);
 		
 		HoughScanPinncaleAnalizer analizer = new HoughScanPinncaleAnalizer(
-				sgyFile, workingRect, threshold);
+				sgyFile, workingRect, threshold,
+				100.0 / workingRect.getWidth()
+				);
 		
 		_makeAuxImgPreparator(workingRect, analizer);
 		
@@ -109,6 +111,8 @@ public class HoughScan implements AsinqCommand {
 			HoughArray store = stores[bestEdge];
 			
 			int bestDiscr = store.getLocalMaxIndex();
+			
+			//
 			double bestVal = store.getLocalMax();
 			
 			if (bestDiscr < HoughDiscretizer.DISCRET_GOOD_FROM
@@ -116,20 +120,36 @@ public class HoughScan implements AsinqCommand {
 				continue;
 			}
 	
+			double horizontalSize = getHorSizeForGap(workingRect, bestDiscr);
+			analizer.fullnessAnalizer = new HoughHypFullness(
+					(int) horizontalSize,
+					bestDiscr, bestEdge, isPrintLog,
+					analizer.getNormFactor());
+			/// run again
+			analizer.processRectAroundPin();
+			///
+			
+			_logStoreResults(analizer, bestEdge, store, bestDiscr, bestVal);
+			
+			
+			double distantPointsCount = analizer.fullnessAnalizer.getDistantPointsCount();
+			if (bestVal - distantPointsCount < threshold ) {
+				return false;
+			}			
+			
 			if (!checkGap(analizer, workingRect, bestEdge, store)) {
 				continue;
 			}
 			
 			if (analizer.fullnessAnalizer.getBorderWeakness() > 0.6) {
 				continue;
-			}			
+			}
 			
-			//TODO: check top and below
-			if (analizer.fullnessAnalizer.getOutsideCount() > 6
-					|| analizer.fullnessAnalizer.getInsideCount() > 6) {
+			if (analizer.fullnessAnalizer.getOutsideCount() / bestVal > 0.35
+				|| analizer.fullnessAnalizer.getInsideCount() / bestVal > 0.35) {
+				
 				continue;
-			}			
-			
+			}
 			
 			
 			if (isPrintLog) {
@@ -146,6 +166,23 @@ public class HoughScan implements AsinqCommand {
 		return false;
 	}
 
+	public void _logStoreResults(HoughScanPinncaleAnalizer analizer, int bestEdge, HoughArray store,
+			int bestDiscr, double bestVal) {
+		if (isPrintLog) {
+			Sout.p( "  e " + bestEdge  
+					+ "  i " + bestDiscr 
+					+ " val: " + Sout.d(store.getLocalMax())
+					+ " clr: " + Sout.d(store.getClearness())
+					+ " outs: " +  Sout.d(analizer.fullnessAnalizer.getOutsideCount())
+					+ " / " + Sout.d(analizer.fullnessAnalizer.getOutsideCount() / bestVal)
+					
+					+ " ins: " +  Sout.d(analizer.fullnessAnalizer.getInsideCount())
+					+ " / " + Sout.d(analizer.fullnessAnalizer.getInsideCount() / bestVal)
+					+ " brdweak: " + Sout.d(analizer.fullnessAnalizer.getBorderWeakness())
+				);
+		}
+	}
+
 	public void _makeAuxDrawer(SgyFile sgyFile, WorkingRect workingRect,
 			HoughScanPinncaleAnalizer analizer, HoughArray[] stores) {
 		if (isPrintLog) {
@@ -156,7 +193,6 @@ public class HoughScan implements AsinqCommand {
 
 	public void _makeAuxImgPreparator(WorkingRect workingRect, HoughScanPinncaleAnalizer analizer) {
 		if (isPrintLog) {
-			Sout.p("------");
 			analizer.additionalPreparator =
 					new HoughImgPreparator(workingRect,
 						lastHoughAindex != null 
@@ -191,42 +227,25 @@ public class HoughScan implements AsinqCommand {
 			HoughArray store
 		) {
 		
-		int bestDiscr = store.getLocalMaxIndex();
-		double bestVal = store.getLocalMax();
-
-		
-		double horizontalSize = getHorSizeForGap(workingRect, bestDiscr);
-		
-		analizer.fullnessAnalizer = new HoughHypFullness(
-				(int) horizontalSize,
-				bestDiscr, 
-				bestEdge, 
-				isPrintLog);
-
-		/// run again
-		analizer.processRectAroundPin();
-		///
-		
 		
 		double maxgap = analizer.fullnessAnalizer.getMaxGap();
-		
 		// 0.15 - 0.35
 		double gapThreshold = 0.35 - store.getClearness() * 0.2;
-
-		if (isPrintLog) {
-			Sout.p( "  e " + bestEdge  + "  i " + bestDiscr + "  v " + bestVal
-					+ " clrns: " + store.getClearness()
-					+ " gap: " + maxgap 
-					+ " gpThsh: " + gapThreshold
-					+ " outs: " +  analizer.fullnessAnalizer.getOutsideCount() 
-					+ " ins: " +  analizer.fullnessAnalizer.getInsideCount()
-					+ " brdweak: " + analizer.fullnessAnalizer.getBorderWeakness()
-				);
+		
+		if (//maxgap > gapThreshold 
+			//	|| 
+				analizer.fullnessAnalizer.getBorderWeakness() > 0.6) {
+			
+			return false;
 		}
 		
-		if (maxgap > gapThreshold 
-				|| analizer.fullnessAnalizer.getBorderWeakness() > 0.6) {
-			
+		
+		///
+		
+		//left/right balance check
+		double l = analizer.fullnessAnalizer.getLeftCount();
+		double r = analizer.fullnessAnalizer.getRightCount();		
+		if (l > r * 2 || r > l * 2) {
 			return false;
 		}
 		
@@ -236,7 +255,7 @@ public class HoughScan implements AsinqCommand {
 	public double getHorSizeForGap(WorkingRect workingRect, int bestDiscr) {
 		int maxHorizSize = workingRect.getTracePin() - workingRect.getTraceFrom();
 		double horizontalSize = (double) maxHorizSize
-				/ HoughArray.FACTOR[bestDiscr] * HoughArray.REDUCE[bestDiscr];
+				/ HoughArray.FACTOR[bestDiscr];// * HoughArray.REDUCE[bestDiscr];
 		return horizontalSize;
 	}
 
@@ -252,6 +271,7 @@ public class HoughScan implements AsinqCommand {
 		return res;
 	}
 
+	
 	Integer lastHoughAindex = null;
 	
 	public void prepareDrawer(SgyFile sgyFile, WorkingRect workingRect,
@@ -260,7 +280,7 @@ public class HoughScan implements AsinqCommand {
 		double horSize = getHorSizeForGap(workingRect,
 			model.getSettings().printHoughAindex.intValue());
 		
-		Sout.p("------ " + horSize + "   horSize " + horSize + "  lastHoughAindex " + lastHoughAindex );
+		//Sout.p("------ " + horSize + "   horSize " + horSize + "  lastHoughAindex " + lastHoughAindex );
 
 		
 		

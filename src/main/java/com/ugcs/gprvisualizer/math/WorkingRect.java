@@ -57,6 +57,11 @@ public class WorkingRect {
 	public int getSmpPin() {
 		return smpPin;
 	}
+
+	public double getWidth() {
+		
+		return getTraceTo() - getTraceFrom();
+	}
 	
 	
 	

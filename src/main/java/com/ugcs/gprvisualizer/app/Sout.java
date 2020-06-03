@@ -10,6 +10,11 @@ public class Sout {
 		}
 	}
 	
+	public static String d(double d) {
+		return String.format(" %.3f ", d);
+	
+	}
+	
 	public static void sleep(int milsec) {
 		if (developMode) {		
 			try {

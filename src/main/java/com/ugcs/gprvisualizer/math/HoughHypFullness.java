@@ -16,14 +16,18 @@ public class HoughHypFullness {
 	
 	int outsidecount = 0;
 	int insidecount = 0;
+	double normFactor;
 	
 	public HoughHypFullness(int horizontalSize, int searchIndex, int searchEdge,
-			boolean isPrintLog) {
+			boolean isPrintLog,
+			double normFactor) {
 		this.horizontalSize = horizontalSize;
 		this.searchIndex = searchIndex;
 		this.searchEdge = searchEdge;
 		
 		this.isPrintLog = isPrintLog;
+		
+		this.normFactor = normFactor;
 		
 		pointCount = new int[horizontalSize * 2 + 1];
 		amplitudes = new double[horizontalSize * 2 + 1];
@@ -77,7 +81,7 @@ public class HoughHypFullness {
 	private int getMaxZeroGroup() {
 		int result = 0;
 		int group = 0;
-		boolean started = true;
+		boolean started = false;
 		
 		StringBuilder sb = new StringBuilder();
 		
@@ -99,11 +103,11 @@ public class HoughHypFullness {
 				group = 0;
 			}			
 		}
-		if (group > result) {
-			result = group;
-		}				
+		//if (group > result) {
+		//	result = group;
+		//}				
 		
-		if(isPrintLog) {
+		if (isPrintLog) {
 			Sout.p("zerogrp: " + result + "  ar:  " + sb.toString());
 			
 		}
@@ -166,6 +170,65 @@ public class HoughHypFullness {
 		return avg.avg();
 	}
 	
+	public double getLeftCount() {
+		double s = 0;
+		for(int i = 0; i < pointCount.length / 2; i++ ) {
+			s+= pointCount[i];
+		}
+		
+		return s;
+	}
+
+	public double getRightCount() {
+		double s = 0;
+		for(int i = pointCount.length / 2 + 1; i < pointCount.length; i++ ) {
+			s+= pointCount[i];
+		}
+		
+		return s;		
+	}
+	
+	public int getDistantPointsCount() {
+		int threshold = (int) ((double) horizontalSize * 0.3);
+		
+		return 
+			getDistantPointsCount(-1, threshold)
+			+ getDistantPointsCount(+1, threshold);
+		
+		
+	}
+	private int getDistantPointsCount(int side, int threshold) {
+		 
+		int result = 0;
+		int zerogrp = 0;
+		boolean startCount = false;
+		
+		for(int i = pointCount.length / 2 + 1; i < pointCount.length && i >= 0; i+= side ) {
+			if (pointCount[i] == 0) {
+				zerogrp++;
+				
+				if (zerogrp > threshold) {
+					startCount = true;
+				}
+			} else {
+				zerogrp = 0;
+				
+				if (startCount) {
+					result++;
+				}
+			}
+		}
+		
+	
+		return result;
+	}
+	
+
+	public double getMaxAmpl() {
+		
+		return Arrays.stream(amplitudes).max().getAsDouble();		
+	}
+	
 	// 0  -  1
 	private static final double FROM = 0.6;
 	
@@ -173,15 +236,15 @@ public class HoughHypFullness {
 		
 		//0.6-1 ->  0-1 ..
 		
-		return Math.min( 1.2,
+		return Math.min(1.2,
 				Math.max(0, k - FROM) / (1 - FROM));
 	}
 
-	public int getOutsideCount() {
-		return outsidecount;
+	public double getOutsideCount() {
+		return outsidecount * normFactor;
 	}
 
-	public int getInsideCount() {
-		return insidecount;
+	public double getInsideCount() {
+		return insidecount * normFactor;
 	}
 }

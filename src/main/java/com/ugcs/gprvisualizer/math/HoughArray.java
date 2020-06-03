@@ -16,17 +16,21 @@ public class HoughArray {
 	
 	static {
 		FACTOR[0] = 0.75;
+		HoughDiscretizer discr = new HoughDiscretizer();
 		for (int i = 1; i < DISCRET_SIZE; i++) {
 			
 			double gain = (1 + ((double) i / (double) DISCRET_SIZE * 0.15));
 			
-			FACTOR[i] = (HoughDiscretizer.FACTORX_FROM 
+			
+			FACTOR[i] = discr.back(i);
+			
+			double old = (HoughDiscretizer.FACTORX_FROM 
 				+ (double) i 
 				/ (double) DISCRET_SIZE 
 				* HoughDiscretizer.FACTORX_WIDTH)
 				* gain;
 			
-			Sout.p("factor " + i + " -> " + FACTOR[i]);
+			Sout.p("factor " + i + " -> " + FACTOR[i] + "  old: " + old);
 		}
 	}
 
@@ -68,22 +72,22 @@ public class HoughArray {
 		}
 	}
 
-	int getMaxIndex() {
-		double max = 0;
-		int index = 0;
-		for (int i = 0; i < ar.length; i++) {
-
-			double v = ar[i];
-
-			if (v > max) {
-				max = v;
-				index = i;
-			}
-		}
-
-		return index;
-
-	}
+//	int getMaxIndex() {
+//		double max = 0;
+//		int index = 0;
+//		for (int i = 0; i < ar.length; i++) {
+//
+//			double v = ar[i];
+//
+//			if (v > max) {
+//				max = v;
+//				index = i;
+//			}
+//		}
+//
+//		return index;
+//
+//	}
 
 	public void calculate() {
 		double max = 0;
@@ -96,17 +100,17 @@ public class HoughArray {
 
 			double v = ar[i];
 
-			if(thresholdReached) {
+			if (thresholdReached) {
 				
 				smallest = Math.min(smallest, v);
 				
-				if(smallest < max / 3) {
+				if (smallest < max / 3) {
 					minimumReached = true;
 				}
 				//return index;
 			}
 			
-			if(v > threshold) {
+			if (v > threshold) {
 				thresholdReached = true;
 				smallest = v;
 			}

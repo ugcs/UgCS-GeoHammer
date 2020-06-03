@@ -17,6 +17,7 @@ public class HoughScanPinncaleAnalizer {
 	SgyFile sgyFile;
 	WorkingRect workingRect;
 	double threshold;
+	double normFactor;
 	
 	public static class StubPrepator {
 		public void mark(int tr, int smp, int xfd1, int xfd2) {
@@ -31,11 +32,12 @@ public class HoughScanPinncaleAnalizer {
 	public HoughScanPinncaleAnalizer(
 		SgyFile sgyFile,
 		WorkingRect workingRect,
-		double threshold) {
+		double threshold, double normFactor) {
 
 		this.sgyFile = sgyFile;
 		this.workingRect = workingRect;
 		this.threshold = threshold;
+		this.normFactor = normFactor;
 	}
 	
 	public HoughArray[] processRectAroundPin() {
@@ -46,14 +48,15 @@ public class HoughScanPinncaleAnalizer {
 		}
 		
 		//
-		for (int smp = workingRect.getSmpFrom() - 1;
+		for (int smp = workingRect.getSmpFrom();
 				smp <= workingRect.getSmpTo(); smp++) {
 			
-			StringBuilder sb = new StringBuilder();
+//			StringBuilder sb = new StringBuilder();
+//			
+//			sb.append(String.format("%3d | ", smp));
 			
-			sb.append(String.format("%3d | ", smp));
-			
-			double addValue = (smp == workingRect.getSmpFrom() ? 0.40 : 1.0); 
+			//1st row is not so significant so we use reducing factor
+			double addValue = (smp == workingRect.getSmpFrom() ? 0.50 : 1.0) * normFactor; 
 			
 			for (int tr = workingRect.getTraceFrom();
 					tr <= workingRect.getTraceTo(); tr++) {
@@ -81,11 +84,13 @@ public class HoughScanPinncaleAnalizer {
 
 				additionalPreparator.mark(tr, smp, xfd1, xfd2);
 				
-				if (fullnessAnalizer != null) {
-					
+				
+				
+				if (fullnessAnalizer != null) {					
 					float ampValue = getAmpValue(sgyFile, tr, smp);
 					
-					fullnessAnalizer.add(tr - workingRect.getTracePin(), xfd1, xfd2, edge, ampValue);
+					fullnessAnalizer.add(tr - workingRect.getTracePin(),
+							xfd1, xfd2, edge, ampValue);
 				}				
 			}
 			
@@ -124,6 +129,11 @@ public class HoughScanPinncaleAnalizer {
 		return sgyFile.getTraces().get(tr).getNormValues()[smp];
 	}
 
+	public double getNormFactor() {
+		return normFactor;
+	}
+	
+	
 	/*
 	 * 0 - except
 	 */
