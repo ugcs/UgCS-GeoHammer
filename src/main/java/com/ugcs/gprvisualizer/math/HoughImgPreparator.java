@@ -33,7 +33,8 @@ public class HoughImgPreparator extends StubPrepator {
 		}
 		
 		if (xfd1 <= showIndex && xfd2 >= showIndex 
-			|| xfd2 <= showIndex && xfd1 >= showIndex) {
+			//|| xfd2 <= showIndex && xfd1 >= showIndex
+			) {
 			
 			//s = "" + edge;
 		} else {
@@ -41,7 +42,14 @@ public class HoughImgPreparator extends StubPrepator {
 			//s = " ";
 			int index = tr - workingRect.getTraceFrom() 
 					+ width * (smp - workingRect.getSmpFrom());
-			buffer[index] = 0xDD505070;
+			
+			if (xfd2 < showIndex && xfd2 > showIndex - HoughDiscretizer.OUTSIDE_STEPS
+				|| xfd1 > showIndex && xfd1 < showIndex + HoughDiscretizer.INSIDE_STEPS) {
+				
+				buffer[index] = 0x99705050;
+			} else {
+				buffer[index] = 0xAA505070;
+			}
 		}
 		
 	}

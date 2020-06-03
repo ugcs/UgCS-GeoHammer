@@ -39,9 +39,12 @@ public class HyperFinder {
 	Color minusGood = new Color(70, 70, 180); 
 	Color minusBad = new Color(0, 0, 111);
 	Model model;
+	HoughScan hs;
 	
 	public HyperFinder(Model model) {
 		this.model = model;
+		
+		hs = new HoughScan(model);
 	}
 	
 	public void setPoint(TraceSample ts) {
@@ -101,7 +104,7 @@ public class HyperFinder {
 		
 		////
 		SgyFile file = model.getSgyFileByTrace(tr);
-		HoughScan hs = new HoughScan(model);
+		
 		hs.isPrintLog = true;
 		
 		double threshold = model.getSettings().hyperSensitivity.doubleValue();

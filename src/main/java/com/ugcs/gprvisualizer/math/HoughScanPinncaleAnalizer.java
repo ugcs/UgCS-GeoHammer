@@ -14,6 +14,10 @@ public class HoughScanPinncaleAnalizer {
 	
 	private HoughDiscretizer discretizer = new HoughDiscretizer();
 	
+	SgyFile sgyFile;
+	WorkingRect workingRect;
+	double threshold;
+	
 	public static class StubPrepator {
 		public void mark(int tr, int smp, int xfd1, int xfd2) {
 			// do nothing
@@ -24,8 +28,17 @@ public class HoughScanPinncaleAnalizer {
 		}
 	}
 	
-	public HoughArray[] processRectAroundPin(SgyFile sgyFile,
-			WorkingRect workingRect, double threshold) {
+	public HoughScanPinncaleAnalizer(
+		SgyFile sgyFile,
+		WorkingRect workingRect,
+		double threshold) {
+
+		this.sgyFile = sgyFile;
+		this.workingRect = workingRect;
+		this.threshold = threshold;
+	}
+	
+	public HoughArray[] processRectAroundPin() {
 		HoughArray[] stores = new HoughArray[5];
 		//init stores
 		for (int i = 0; i < stores.length; i++) {

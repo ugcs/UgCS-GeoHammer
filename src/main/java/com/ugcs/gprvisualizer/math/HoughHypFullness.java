@@ -14,6 +14,9 @@ public class HoughHypFullness {
 	int[] pointCount;
 	double[] amplitudes;
 	
+	int outsidecount = 0;
+	int insidecount = 0;
+	
 	public HoughHypFullness(int horizontalSize, int searchIndex, int searchEdge,
 			boolean isPrintLog) {
 		this.horizontalSize = horizontalSize;
@@ -26,21 +29,33 @@ public class HoughHypFullness {
 		amplitudes = new double[horizontalSize * 2 + 1];
 	}
 	
+	
+	
 	public void add(int tr, int xfd1, int xfd2, int edge, float ampValue) {
 		boolean inside = 
-				xfd1 <= searchIndex && xfd2 >= searchIndex 
-				|| xfd2 <= searchIndex && xfd1 >= searchIndex;
+				xfd1 <= searchIndex && xfd2 >= searchIndex; 
+				//|| xfd2 <= searchIndex && xfd1 >= searchIndex;
 				
-		if (edge == searchEdge && inside) {
-			
-			int index = horizontalSize + tr;
-			if (index < 0 || index >= pointCount.length) {
-				return;
+		if (edge == searchEdge) {
+			if (inside) {
+				int index = horizontalSize + tr;
+				if (index < 0 || index >= pointCount.length) {
+					return;
+				}
+				
+				pointCount[index]++;
+				
+				amplitudes[index] = Math.max(amplitudes[index], Math.abs(ampValue));
+			} else {
+				//
+				if (xfd2 < searchIndex && xfd2 > searchIndex - HoughDiscretizer.OUTSIDE_STEPS) {
+					outsidecount++;
+				}
+				if (xfd1 > searchIndex && xfd1 < searchIndex + HoughDiscretizer.INSIDE_STEPS) {
+					insidecount++;
+				}
+				
 			}
-			
-			pointCount[index]++;
-			
-			amplitudes[index] = Math.max(amplitudes[index], Math.abs(ampValue));
 		}
 	}
 	
@@ -67,7 +82,7 @@ public class HoughHypFullness {
 		StringBuilder sb = new StringBuilder();
 		
 		for (int point : pointCount) {
-			if(isPrintLog) {
+			if (isPrintLog) {
 				sb.append(point);
 				sb.append("");
 			}
@@ -143,7 +158,7 @@ public class HoughHypFullness {
 	private double getRangeValue(int start, int finish) {
 		Avg avg = new Avg();
 		Arrays.stream(amplitudes, start, finish).forEach(e -> {
-			if(e > 0) {
+			if (e > 0) {
 				avg.add(e);
 			}
 		});
@@ -153,6 +168,7 @@ public class HoughHypFullness {
 	
 	// 0  -  1
 	private static final double FROM = 0.6;
+	
 	private double norm(double k) {
 		
 		//0.6-1 ->  0-1 ..
@@ -160,5 +176,12 @@ public class HoughHypFullness {
 		return Math.min( 1.2,
 				Math.max(0, k - FROM) / (1 - FROM));
 	}
-	
+
+	public int getOutsideCount() {
+		return outsidecount;
+	}
+
+	public int getInsideCount() {
+		return insidecount;
+	}
 }
