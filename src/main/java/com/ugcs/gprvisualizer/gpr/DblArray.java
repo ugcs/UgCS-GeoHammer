@@ -103,7 +103,7 @@ public class DblArray {
 
 	    //tmp show palette
 	    if (Sout.developMode) {
-		    showGradientPalatte(palette, buffer);
+		    //showGradientPalatte(palette, buffer);
 	    }
 	    
 	    return image;

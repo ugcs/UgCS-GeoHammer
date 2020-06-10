@@ -54,12 +54,12 @@ public class HoughDiscretizer {
 		
 		Sout.p(" step " + STEP);
 		
-		for(double i = 0.4; i < 2.0; i+= 0.05) {
+		for(int i = 0; i < 22; i+= 1) {
 			
-			int z = d.transform(i);
-			double i2 = d.back(z);
+			double i2 = d.back(i);
+			int z = d.transform(i2);			
 					
-			Sout.p(i + " -> " + z + " -> " + i2);
+			Sout.p(i + " -> " + i2 + " -> " + z);
 		}
 		
 	}

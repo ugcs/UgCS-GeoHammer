@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.math;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
@@ -92,6 +94,40 @@ public class HoughScan implements AsinqCommand {
 			return false;
 		}
 		
+		////
+		if (isPrintLog) {
+			
+			StringBuilder sb = new StringBuilder();
+			
+			double goodCm = HalfHyperDst.getGoodSideDstPin(sgyFile, pinTrace, pinSmpl);;
+			
+			
+			
+			sb.append(" pinSmpl: ").append(pinSmpl);
+			//sb.append(" goodDiagCm: ").append(Sout.d(goodDiagCm));
+			
+			for (int i = 0; i < HoughDiscretizer.DISCRET_SIZE; i++) {
+			
+				double goodSpecific = goodCm / HoughArray.FACTOR[i];
+				
+				double goodDiagCm = getGoodHeightCm(sgyFile, pinTrace, pinSmpl, goodSpecific);
+				
+				
+		
+				int smpTo = Math.min(sgyFile.getMaxSamples() - 1,
+						RulerTool.diagonalToSmp(sgyFile, pinTrace, pinSmpl, goodDiagCm));
+				
+				
+				sb.append(i).append(":");
+				sb.append(Sout.d(goodSpecific));
+				sb.append(Sout.d(goodDiagCm));
+				
+				sb.append(" | ");
+			}
+			Sout.p(sb.toString());
+		}
+		
+		////
 		WorkingRect workingRect = makeWorkingRect(sgyFile, pinTrace, pinSmpl);
 		
 		HoughScanPinncaleAnalizer analizer = new HoughScanPinncaleAnalizer(
@@ -173,11 +209,9 @@ public class HoughScan implements AsinqCommand {
 					+ "  i " + bestDiscr 
 					+ " val: " + Sout.d(store.getLocalMax())
 					+ " clr: " + Sout.d(store.getClearness())
-					+ " outs: " +  Sout.d(analizer.fullnessAnalizer.getOutsideCount())
-					+ " / " + Sout.d(analizer.fullnessAnalizer.getOutsideCount() / bestVal)
+					+ " outs: " + Sout.d(analizer.fullnessAnalizer.getOutsideCount() / bestVal)
 					
-					+ " ins: " +  Sout.d(analizer.fullnessAnalizer.getInsideCount())
-					+ " / " + Sout.d(analizer.fullnessAnalizer.getInsideCount() / bestVal)
+					+ " ins: " + Sout.d(analizer.fullnessAnalizer.getInsideCount() / bestVal)
 					+ " brdweak: " + Sout.d(analizer.fullnessAnalizer.getBorderWeakness())
 				);
 		}
@@ -203,21 +237,30 @@ public class HoughScan implements AsinqCommand {
 
 	public WorkingRect makeWorkingRect(SgyFile sgyFile, int pinTrace, int pinSmpl) {
 		double goodCm = HalfHyperDst.getGoodSideDstPin(sgyFile, pinTrace, pinSmpl);
+		int trFrom = sgyFile.getLeftDistTraceIndex(pinTrace, goodCm);
+		int trTo = sgyFile.getRightDistTraceIndex(pinTrace, goodCm);		
+
+		double goodDiagCm = getGoodHeightCm(sgyFile, pinTrace, pinSmpl, goodCm);		
+		
+		int smpTo = Math.min(sgyFile.getMaxSamples() - 1,
+				RulerTool.diagonalToSmp(sgyFile, pinTrace, pinSmpl, goodDiagCm));
+		
+		
+		//Sout.p(goodDiagCm + " <=> " + RulerTool.distanceCm(sgyFile, trFrom, trFrom, 0, smpTo));
+		
+		int smpFrom = pinSmpl;
+		WorkingRect workingRect = new WorkingRect(sgyFile, trFrom, trTo, 
+				smpFrom, smpTo, pinTrace, pinSmpl);
+		return workingRect;
+	}
+
+	public double getGoodHeightCm(SgyFile sgyFile, int pinTrace, int pinSmpl, double goodCm) {
 		double vertDstToPinCm = RulerTool.distanceCm(sgyFile,
 				pinTrace, pinTrace, 0, pinSmpl);
 		
 		double goodDiagCm = Math.sqrt(
-				goodCm * goodCm + vertDstToPinCm * vertDstToPinCm);		
-		
-		int trFrom = sgyFile.getLeftDistTraceIndex(pinTrace, goodCm);
-		int trTo = sgyFile.getRightDistTraceIndex(pinTrace, goodCm);		
-		int smpFrom = pinSmpl;
-		int smpTo = Math.min(sgyFile.getMaxSamples() - 1,
-				RulerTool.diagonalToSmp(sgyFile, pinTrace, pinSmpl, goodDiagCm));
-		
-		WorkingRect workingRect = new WorkingRect(sgyFile, trFrom, trTo, 
-				smpFrom, smpTo, pinTrace, pinSmpl);
-		return workingRect;
+				goodCm * goodCm + vertDstToPinCm * vertDstToPinCm);
+		return goodDiagCm;
 	}
 	
 	
@@ -255,6 +298,7 @@ public class HoughScan implements AsinqCommand {
 	public double getHorSizeForGap(WorkingRect workingRect, int bestDiscr) {
 		int maxHorizSize = workingRect.getTracePin() - workingRect.getTraceFrom();
 		double horizontalSize = (double) maxHorizSize
+				//* HoughDiscretizer.FACTORX_FROM
 				/ HoughArray.FACTOR[bestDiscr];// * HoughArray.REDUCE[bestDiscr];
 		return horizontalSize;
 	}
@@ -284,7 +328,39 @@ public class HoughScan implements AsinqCommand {
 
 		
 		
-		hd = new HoughDraw(analizer.additionalPreparator.getImage(), sgyFile, 
+		////
+		
+		BufferedImage img = analizer.additionalPreparator.getImage();
+		Graphics2D g2 = (Graphics2D)img.getGraphics(); 
+		g2.setColor(Color.BLACK);
+		
+		double goodCm = HalfHyperDst.getGoodSideDstPin(sgyFile, workingRect.getTracePin(), workingRect.getSmpPin());
+		
+		
+		for (int i = 0; i < HoughDiscretizer.DISCRET_SIZE; i++) {
+		
+			double goodSpecific = goodCm / HoughArray.FACTOR[i];
+			
+			double goodDiagCm = getGoodHeightCm(sgyFile, workingRect.getTracePin(), workingRect.getSmpPin(), goodSpecific);
+			
+			
+	
+			int smp = Math.min(sgyFile.getMaxSamples() - 1,
+					RulerTool.diagonalToSmp(sgyFile, workingRect.getTracePin(), workingRect.getSmpPin(), goodDiagCm)) - workingRect.getSmpPin();
+			
+			int x = sgyFile.getLeftDistTraceIndex(workingRect.getTracePin(), goodSpecific);
+			g2.setColor(Color.BLACK);
+			g2.drawLine(x, smp, x, smp);
+
+			x = sgyFile.getRightDistTraceIndex(workingRect.getTracePin(), goodSpecific) - workingRect.getTraceFrom();
+			g2.setColor(Color.WHITE);
+			g2.drawLine(x, smp, x, smp);
+			
+		}
+		
+		
+		
+		hd = new HoughDraw(img, sgyFile, 
 				workingRect.getTraceFrom(), workingRect.getTraceTo() + 1,
 				workingRect.getSmpFrom(), workingRect.getSmpTo() + 1);
 		

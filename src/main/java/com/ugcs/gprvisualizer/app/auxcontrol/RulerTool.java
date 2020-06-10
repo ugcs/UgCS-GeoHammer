@@ -226,8 +226,27 @@ public class RulerTool extends BaseObjectImpl
 		return diag;
 	}
 
+
 	
 	public static int diagonalToSmp(SgyFile file, int tr, int smp, double c) {
+		
+		int grn = file.groundProfile.deep[tr];
+	
+		int i=0;
+		double dst = 0;
+		while (dst < c) {
+			if (i < grn) {
+				dst += file.getSamplesToCmAir();
+			} else {
+				dst += file.getSamplesToCmGrn();
+			}
+			i++;
+		}
+
+		return i;
+	}
+		
+	public static int diagonalToSmp2(SgyFile file, int tr, int smp, double c) {
 		
 		int grn = file.groundProfile.deep[tr];
 		
@@ -245,7 +264,11 @@ public class RulerTool extends BaseObjectImpl
 		double smpAir = diagAir / file.getSamplesToCmAir();
 		double smpGrn = diagGrn / file.getSamplesToCmGrn();
 		
-		return (int) (smpAir + smpGrn);
+		double smpSum = smpAir + smpGrn;
+		
+		
+		
+		return (int) smpSum;
 	}
 	
 	@Override

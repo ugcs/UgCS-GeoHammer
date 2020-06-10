@@ -52,9 +52,17 @@ public class HoughImgPreparator extends StubPrepator {
 			}
 		}
 		
+		
+		///
+		
+		
 	}
 	
 	public BufferedImage getImage() {
+		
+		
+		
+		
 		return img;
 	}
 

@@ -64,7 +64,7 @@ public class HalfHyper {
 		double y = hh.pinSmp - trace.verticalOffset;
 		
 		while (i < hypergoodsize + 1 
-				&& bad < 0.2) {
+				/*&& bad < 0.2*/) {
 			index = tr + side * i;
 			if (index < 0 || index >= traces.size()) {
 				break;

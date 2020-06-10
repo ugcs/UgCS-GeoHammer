@@ -142,6 +142,10 @@ public class HyperFinder {
 		
 		g2.setColor(Color.CYAN);
 		g2.setStroke(line4);
+		
+		
+		//drawHalfHyperLine(g2, profField, left2, 1);
+		//drawHalfHyperLine(g2, profField, right2, 1);
 	}
 	
 	public void drawHalfHyperLine(Graphics2D g2, ProfileField profField, 
@@ -165,9 +169,13 @@ public class HyperFinder {
 			g2.setStroke(dashed);			
 			g2.setColor(positive ? plusBad : minusBad);
 		}		
+
+		
+		g2.setStroke(line4);
+		g2.setColor(plusBest);
 		
 		Point prev = null;
-		for (int i = 0; i < hh.length; i++) {
+		for (int i = 0; i < hh.smp.length; i++) {
 			Point lt = profField.traceSampleToScreen(new TraceSample(
 					hh.pinTr + i * hh.side, hh.smp[i]));
 			

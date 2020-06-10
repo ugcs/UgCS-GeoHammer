@@ -33,6 +33,10 @@ public class HoughArray {
 			Sout.p("factor " + i + " -> " + FACTOR[i] + "  old: " + old);
 		}
 	}
+	
+	public static void main(String[] args) {
+		
+	}
 
 	public static double[] REDUCE = new double[DISCRET_SIZE];
 

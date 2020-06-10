@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
@@ -29,8 +31,10 @@ import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.utils.TiffImagingCreation;
 
 import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToolBar;
@@ -59,6 +63,8 @@ public class MapView extends Work implements SmthChangeListener {
 	@Autowired
 	private RadarMap radarMap;	
 
+	GpsTrack gpsTrackMap;
+	
 	private ToolBar toolBar = new ToolBar();
 	private Dimension windowSize = new Dimension();
 	
@@ -84,9 +90,12 @@ public class MapView extends Work implements SmthChangeListener {
 		satelliteMap.setDimension(windowSize);
 		satelliteMap.setRepaintListener(listener);
 
+		
+		gpsTrackMap = new GpsTrack(windowSize, model, listener);
+		
 		getLayers().add(satelliteMap);
 		getLayers().add(radarMap);
-		getLayers().add(new GpsTrack(windowSize, model, listener));
+		getLayers().add(gpsTrackMap);
 		getLayers().add(new FoundTracesLayer(model));
 		
 		//TODO: bad
@@ -202,10 +211,55 @@ public class MapView extends Work implements SmthChangeListener {
 
 	};
 	
+	
+	protected BufferedImage drawTiff(int width,	int height) {
+		if (width <= 0 || height <= 0) {
+			return null;
+		}
+		
+		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		
+		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		
+		g2.translate(width / 2, height / 2);
+		
+		radarMap.draw(g2);
+		gpsTrackMap.draw(g2);
+		
+		return bi;
+	}
+	
 	public Node getCenter() {
 		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
+		
+		toolBar.getItems().add(CommandRegistry.createButton("Tiff", new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent event) {
+
+				BufferedImage tiffImg = drawTiff(windowSize.width, windowSize.height);
+				
+				LatLon lt = model.getField().screenTolatLon(
+						new Point2D.Double(
+								-tiffImg.getWidth() / 2,
+								-tiffImg.getHeight() / 2));
+				LatLon rb = model.getField().screenTolatLon(
+						new Point2D.Double(
+								+tiffImg.getWidth() / 2,
+								+tiffImg.getHeight() / 2));
+				
+				try {
+					new TiffImagingCreation().save(
+							new File("d:/tmp/tiff/created1.tif"), 
+							tiffImg, lt, rb);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}));
+				
 		toolBar.getItems().addAll(getToolNodes());
 		
 		Pane sp1 = new Pane();
