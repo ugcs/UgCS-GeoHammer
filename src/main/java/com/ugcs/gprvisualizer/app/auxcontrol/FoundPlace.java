@@ -178,7 +178,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 
-	private Trace getTrace() {
+	public Trace getTrace() {
 		return AppContext.model.getFileManager().getTraces().get(
 				offset.localToGlobal(traceInFile));
 	}

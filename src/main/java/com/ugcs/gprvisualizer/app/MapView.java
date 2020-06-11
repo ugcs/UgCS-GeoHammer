@@ -31,6 +31,7 @@ import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.utils.KmlSaver;
 import com.ugcs.gprvisualizer.utils.TiffImagingCreation;
 
 import javafx.beans.value.ChangeListener;
@@ -41,6 +42,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.stage.FileChooser;
 
 @Component
 public class MapView extends Work implements SmthChangeListener {
@@ -238,7 +240,18 @@ public class MapView extends Work implements SmthChangeListener {
 			
 			@Override
 			public void handle(ActionEvent event) {
+				
+				FileChooser chooser = new FileChooser();
+				
+				chooser.setTitle("Save tiff file");
+				chooser.setInitialFileName("geohammer.tif");
+				
+				File tiffFile = chooser.showSaveDialog(AppContext.stage); 
 
+				if (tiffFile == null) {
+					return;
+				}
+				
 				BufferedImage tiffImg = drawTiff(windowSize.width, windowSize.height);
 				
 				LatLon lt = model.getField().screenTolatLon(
@@ -252,10 +265,40 @@ public class MapView extends Work implements SmthChangeListener {
 				
 				try {
 					new TiffImagingCreation().save(
-							new File("d:/tmp/tiff/created1.tif"), 
+							tiffFile, 
 							tiffImg, lt, rb);
 				} catch (Exception e) {
 					e.printStackTrace();
+					MessageBoxHelper.showError(
+							"Error", "Can`t save file");
+					
+				}
+			}
+		}));
+		
+		toolBar.getItems().add(CommandRegistry.createButton("Kml", new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent event) {
+				
+				FileChooser chooser = new FileChooser();
+				
+				chooser.setTitle("Save kml file");
+				chooser.setInitialFileName("geohammer.kml");
+				
+				File tiffFile = chooser.showSaveDialog(AppContext.stage); 
+
+				if (tiffFile == null) {
+					return;
+				}
+
+				try {
+					new KmlSaver(model).save(tiffFile);
+				} catch (Exception e) {
+					e.printStackTrace();
+					MessageBoxHelper.showError(
+							"Error", "Can`t save file");
+
 				}
 			}
 		}));
