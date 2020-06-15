@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -20,13 +21,19 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.stage.DirectoryChooser;
 
 @Component
 public class Saver implements ToolProducer {
 
-	private Button buttonSave = new Button("Save");
-	private Button buttonSaveTo = new Button("Save to");
+	private Button buttonSave = new Button("", ResourceImageHolder.getImageView("save.png"));
+	private Button buttonSaveTo = new Button("", ResourceImageHolder.getImageView("save_go.png"));
+	{
+		buttonSave.setTooltip(new Tooltip("Save"));
+		buttonSaveTo.setTooltip(new Tooltip("Save to.."));
+	}
+	
 	
 	@Autowired
 	private Model model;

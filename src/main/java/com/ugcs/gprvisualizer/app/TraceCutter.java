@@ -35,6 +35,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 
 @Component
@@ -57,8 +58,12 @@ public class TraceCutter implements Layer, SmthChangeListener {
 			ResourceImageHolder.getImageView("select_rect20.png"));
 	private Button buttonSet = new Button("Crop", 
 			ResourceImageHolder.getImageView("scisors3-20.png"));	
-	private Button buttonUndo = new Button("Undo Crop", 
-			ResourceImageHolder.getImageView("clear20.png"));
+	private Button buttonUndo = new Button("", 
+			ResourceImageHolder.getImageView("undo.png"));
+	
+	{
+		buttonUndo.setTooltip(new Tooltip("Undo Crop")); 
+	}
 	
 	public TraceCutter() {}
 	

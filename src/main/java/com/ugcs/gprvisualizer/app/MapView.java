@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.intf.Status;
@@ -236,7 +237,11 @@ public class MapView extends Work implements SmthChangeListener {
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
 		
-		toolBar.getItems().add(CommandRegistry.createButton("Tiff", new EventHandler<ActionEvent>() {
+		toolBar.getItems().add(
+				CommandRegistry.createButton("Tiff", 
+						ResourceImageHolder.getImageView("tiffexport.png"),
+						"export map to TIFF image",
+						new EventHandler<ActionEvent>() {
 			
 			@Override
 			public void handle(ActionEvent event) {
@@ -276,7 +281,12 @@ public class MapView extends Work implements SmthChangeListener {
 			}
 		}));
 		
-		toolBar.getItems().add(CommandRegistry.createButton("Kml", new EventHandler<ActionEvent>() {
+		//"ylw-pushpin24"
+		
+		toolBar.getItems().add(CommandRegistry.createButton("Kml", 
+				ResourceImageHolder.getImageView("ylw-pushpin20.png"), 
+				"export marks to KML", 
+				new EventHandler<ActionEvent>() {
 			
 			@Override
 			public void handle(ActionEvent event) {

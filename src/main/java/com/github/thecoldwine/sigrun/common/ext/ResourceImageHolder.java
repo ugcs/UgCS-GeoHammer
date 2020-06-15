@@ -24,6 +24,9 @@ public class ResourceImageHolder {
 	public static Image IMG_GPS;
 	public static Image IMG_CLOSE_FILE;
 	
+	public static Image IMG_SAVE;
+	public static Image IMG_SAVETO;
+	
 	public static javafx.scene.image.Image IMG_LOGO24;
 	
 	public static javafx.scene.image.Image FXIMG_DONE;
@@ -68,10 +71,17 @@ public class ResourceImageHolder {
 			IMG_GPS = ImageIO.read(getClassLoader()
 					.getResourceAsStream("gps32.png"));
 
+			IMG_SAVE = ImageIO.read(getClassLoader()
+					.getResourceAsStream("save.png"));
+			IMG_SAVETO = ImageIO.read(getClassLoader()
+					.getResourceAsStream("save_go.png"));
+			
+			
 			FXIMG_DONE =  new javafx.scene.image.Image(getClassLoader()
 					.getResourceAsStream("done-16.png"));
 			IMG_LOGO24 = new javafx.scene.image.Image(getClassLoader()
-					.getResourceAsStream("logo24.png"));			
+					.getResourceAsStream("logo24.png"));
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();

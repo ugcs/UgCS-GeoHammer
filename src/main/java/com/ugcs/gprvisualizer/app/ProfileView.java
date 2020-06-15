@@ -222,7 +222,9 @@ public class ProfileView implements SmthChangeListener {
 		toolBar.getItems().add(getSpacer());
 		toolBar.getItems().add(showGreenLineBtn);
 
-		toolBar.getItems().add(CommandRegistry.createButton("Ruler", e -> {
+		toolBar.getItems().add(CommandRegistry.createButton("",
+				ResourceImageHolder.getImageView("ruler.png"), 
+				"show ruler", e -> {
 
 			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
 

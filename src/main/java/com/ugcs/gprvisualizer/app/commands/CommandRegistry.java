@@ -19,7 +19,9 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 
 @Component
 public class CommandRegistry {
@@ -182,6 +184,14 @@ public class CommandRegistry {
 		return button;
 	}
 	
+	public static Button createButton(String title, Node img, String tooltip, EventHandler<ActionEvent> action) {
+		
+		Button button = new Button(title, img);
+		button.setTooltip(new Tooltip(tooltip));
+		button.setOnAction(action);
+		
+		return button;
+	}
 	
 	
 }
