@@ -215,76 +215,28 @@ public class MapView extends Work implements SmthChangeListener {
 	};
 	
 	
-	protected BufferedImage drawTiff(int width,	int height) {
-		if (width <= 0 || height <= 0) {
-			return null;
-		}
-		
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		
-		Graphics2D g2 = (Graphics2D) bi.getGraphics();
-		
-		g2.translate(width / 2, height / 2);
-		
-		radarMap.draw(g2);
-		gpsTrackMap.draw(g2);
-		
-		return bi;
-	}
-	
 	public Node getCenter() {
 		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
 		
 		toolBar.getItems().add(
-				CommandRegistry.createButton("Tiff", 
-						ResourceImageHolder.getImageView("tiffexport.png"),
-						"export map to TIFF image",
+				CommandRegistry.createButton("",
+						ResourceImageHolder.getImageView("geotiff.png"),
+						"export map to GeoTIFF image",
 						new EventHandler<ActionEvent>() {
-			
-			@Override
-			public void handle(ActionEvent event) {
-				
-				FileChooser chooser = new FileChooser();
-				
-				chooser.setTitle("Save tiff file");
-				chooser.setInitialFileName("geohammer.tif");
-				
-				File tiffFile = chooser.showSaveDialog(AppContext.stage); 
-
-				if (tiffFile == null) {
-					return;
-				}
-				
-				BufferedImage tiffImg = drawTiff(windowSize.width, windowSize.height);
-				
-				LatLon lt = model.getField().screenTolatLon(
-						new Point2D.Double(
-								-tiffImg.getWidth() / 2,
-								-tiffImg.getHeight() / 2));
-				LatLon rb = model.getField().screenTolatLon(
-						new Point2D.Double(
-								+tiffImg.getWidth() / 2,
-								+tiffImg.getHeight() / 2));
-				
-				try {
-					new TiffImagingCreation().save(
-							tiffFile, 
-							tiffImg, lt, rb);
-				} catch (Exception e) {
-					e.printStackTrace();
-					MessageBoxHelper.showError(
-							"Error", "Can`t save file");
-					
-				}
-			}
-		}));
+							
+							@Override
+							public void handle(ActionEvent event) {
+								
+								new TiffImageExport(model, radarMap).execute();
+								
+							}
+						}));
 		
-		//"ylw-pushpin24"
 		
-		toolBar.getItems().add(CommandRegistry.createButton("Kml", 
-				ResourceImageHolder.getImageView("ylw-pushpin20.png"), 
+		toolBar.getItems().add(CommandRegistry.createButton("", 
+				ResourceImageHolder.getImageView("kml.png"), 
 				"export marks to KML", 
 				new EventHandler<ActionEvent>() {
 			
@@ -295,6 +247,9 @@ public class MapView extends Work implements SmthChangeListener {
 				
 				chooser.setTitle("Save kml file");
 				chooser.setInitialFileName("geohammer.kml");
+				
+				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("KML files (*.kml)", "*.kml");
+				chooser.getExtensionFilters().add(extFilter);
 				
 				File tiffFile = chooser.showSaveDialog(AppContext.stage); 
 

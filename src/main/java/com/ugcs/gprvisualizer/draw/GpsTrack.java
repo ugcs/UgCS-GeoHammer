@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -63,10 +64,17 @@ public class GpsTrack extends BaseLayer {
 	}
 
 	private void drawGpsPath(Graphics2D g2) {
+		
+		MapField field = new MapField(model.getField());
+		
 		if (!isActive()) {
 			return;
 		}
 		
+		draw(g2, field);
+	}
+
+	public void draw(Graphics2D g2, MapField field) {
 		g2.setStroke(new BasicStroke(1.0f));		
 		
 		
@@ -77,7 +85,7 @@ public class GpsTrack extends BaseLayer {
 		
 		// meter to cm
 		double threshold =				
-				model.getField().getSceneCenter().getDistance(ll) * 100.0;
+				field.getSceneCenter().getDistance(ll) * 100.0;
 		
 		//
 		g2.setColor(Color.RED);
@@ -91,7 +99,7 @@ public class GpsTrack extends BaseLayer {
 				
 				if (prevPoint == null) {
 					
-					prevPoint = model.getField().latLonToScreen(
+					prevPoint = field.latLonToScreen(
 							trace.getLatLon());
 					sumdist = 0;
 					
@@ -102,8 +110,7 @@ public class GpsTrack extends BaseLayer {
 					
 					if (sumdist >= threshold) {
 						
-						Point2D pointNext = model.getField()
-								.latLonToScreen(trace.getLatLon());
+						Point2D pointNext = field.latLonToScreen(trace.getLatLon());
 								
 						g2.drawLine((int) prevPoint.getX(),
 								(int) prevPoint.getY(),

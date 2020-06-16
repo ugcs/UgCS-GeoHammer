@@ -127,6 +127,15 @@ public class DblArray {
 			e.printStackTrace();
 		}
 	}
+	
+	public int getWidth() {
+		return width;
+	}
+	
+	public int getHeight() {
+		return height;		
+	}
+
 
 	public static void main(String [] args) {
 		

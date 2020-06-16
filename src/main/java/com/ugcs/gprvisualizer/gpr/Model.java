@@ -234,7 +234,14 @@ public class Model {
 			this.getField().setSceneCenter(
 					new LatLon(latMid.getMid(), lonMid.getMid()));
 			
-			adjustZoom(lonMid, latMid);
+			
+			LatLon lt = new LatLon(latMid.getMin(), lonMid.getMin());
+			LatLon rb = new LatLon(latMid.getMax(), lonMid.getMax());
+			
+			this.getField().setPathEdgeLL(lt, rb);
+			
+			this.getField().adjustZoom(400, 700);
+			
 		} else {
 			Sout.p("GPS coordinates not found");
 			this.getField().setPathCenter(null);
@@ -246,24 +253,6 @@ public class Model {
 		
 		
 		
-	}
-
-	public void adjustZoom(MinMaxAvg lonMid, MinMaxAvg latMid) {
-		LatLon lt = new LatLon(latMid.getMin(), lonMid.getMin());
-		LatLon rb = new LatLon(latMid.getMax(), lonMid.getMax());
-		//double dst = lt.getDistance(rb);
-		
-		int zoom = 18;
-		this.getField().setZoom(zoom);
-		Point2D scr = this.getField().latLonToScreen(rb);
-		while (zoom > 2
-				&& (Math.abs(scr.getX()) > 200 
-				|| Math.abs(scr.getY()) > 350)) {
-			zoom--;
-			this.getField().setZoom(zoom);
-			
-			scr = this.getField().latLonToScreen(rb);
-		}
 	}
 
 	public void init() {

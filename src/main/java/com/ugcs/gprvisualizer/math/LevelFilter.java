@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.LevelClear;
@@ -87,6 +88,8 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 				levelCalculated = false;
 				updateButtons();
 			});
+		
+		buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
 
 
 		return Arrays.asList(

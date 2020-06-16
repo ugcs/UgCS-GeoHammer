@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.draw;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -70,6 +71,12 @@ public class RadarMap extends BaseLayer {
 	private BaseSlider thresholdSlider;
 	private BaseSlider radiusSlider;
 	private BaseCheckBox autoGainCheckbox;
+	private VBox vertBox = new VBox();
+	
+	
+	private ArrayBuilder scaleArrayBuilder;
+	private ArrayBuilder autoArrayBuilder;
+	
 
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
@@ -124,10 +131,6 @@ public class RadarMap extends BaseLayer {
 		
 		showMapListener.handle(null);
 	}
-	
-	private VBox vertBox = new VBox();
-	private ArrayBuilder scaleArrayBuilder;
-	private ArrayBuilder autoArrayBuilder;
 	
 	private final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
@@ -196,17 +199,24 @@ public class RadarMap extends BaseLayer {
 	@Override
 	public void draw(Graphics2D g2) {
 		
+		
+		
 		if (!isActive()) {
 			return;
 		}
 		
-		BufferedImage tmpImg = img;
+		draw(g2, model.getField(), img);
+	}
+	
+	public void draw(Graphics2D g2, MapField field, BufferedImage tmpImg) {
+		
+
 		
 		if (tmpImg == null) {
 			return;
 		}
 		
-		Point2D offst = model.getField().latLonToScreen(imgLatLon);
+		Point2D offst = field.latLonToScreen(imgLatLon);
 		
 		g2.drawImage(tmpImg, 
 			(int) offst.getX() - tmpImg.getWidth() / 2, 
@@ -249,14 +259,11 @@ public class RadarMap extends BaseLayer {
 	}
 
 	// prepare image in thread
-	private BufferedImage createHiRes() {
-		//Sout.p("hires start");
-		
-		MapField field = new MapField(model.getField());
+	public BufferedImage createHiRes(MapField field, int width, int height, double radiusFactor) {
 		
 		imgLatLon = field.getSceneCenter();
 		
-		DblArray da = new DblArray(getDimension().width, getDimension().height);
+		DblArray da = new DblArray(width, height);
 
 		int[] palette;
 		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
@@ -269,20 +276,20 @@ public class RadarMap extends BaseLayer {
 			palette = DblArray.paletteAlg;
 		}
 
-		drawCircles(field, da);
+		drawCircles(field, da, radiusFactor);
 		
 		//Sout.p("hires fin");
 		return da.toImg(palette);
 	}
 
-	public void drawCircles(MapField field, DblArray da) {
+	public void drawCircles(MapField field, DblArray da, double radiusFactor) {
 		for (SgyFile file : model.getFileManager().getFiles()) {
 			
 			ScanProfile profile = getFileScanProfile(file);
 			
 			List<Trace> traces = file.getTraces();
 			if (profile != null) {
-				drawFileCircles(field, da, file, profile, traces);
+				drawFileCircles(field, da, file, profile, traces, radiusFactor);
 			}
 		}
 	}
@@ -298,17 +305,18 @@ public class RadarMap extends BaseLayer {
 	}
 
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
-			ScanProfile profile, List<Trace> traces) {
+			ScanProfile profile, List<Trace> traces,
+			double radiusFactor) {
 		
 		int radius = model.getSettings().radius;
-		int centerX = getDimension().width / 2;
-		int centerY = getDimension().height / 2;
+		int centerX = da.getWidth() / 2;
+		int centerY = da.getHeight() / 2;
 		
 		for (int i = 0; i < file.size(); i++) {
 			Trace trace = traces.get(i);
 			
 			double alpha = profile.intensity[i];
-			int effectRadius = profile.radius != null ? profile.radius[i] : radius;
+			int effectRadius = (int) ((double) (profile.radius != null ? profile.radius[i] : radius) * radiusFactor);
 			
 			if (alpha > MIN_CIRCLE_THRESHOLD) {				
 			
@@ -335,8 +343,8 @@ public class RadarMap extends BaseLayer {
 					return;
 				}
 			
-				img = createHiRes();
-				
+				MapField field = new MapField(model.getField());
+				img = createHiRes(field, getDimension().width, getDimension().height, 1);
 				
 				getRepaintListener().repaint();
 							
@@ -399,5 +407,8 @@ public class RadarMap extends BaseLayer {
 		}
 
 	}
-	
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
 }

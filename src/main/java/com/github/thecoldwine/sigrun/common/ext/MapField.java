@@ -2,9 +2,16 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.geom.Point2D;
 
+import com.ugcs.gprvisualizer.app.Sout;
+import com.ugcs.gprvisualizer.math.MinMaxAvg;
+
 public class MapField {
 
 	private LatLon pathCenter;
+	private LatLon pathLt; 
+	private LatLon pathRb;
+	
+	
 	private LatLon sceneCenter;
 	private int zoom;
 
@@ -16,6 +23,9 @@ public class MapField {
 		this.pathCenter = field.pathCenter;
 		this.sceneCenter = field.sceneCenter;
 		this.zoom = field.zoom;
+		
+		this.pathLt = field.pathLt;
+		this.pathRb = field.pathRb;
 	}
 
 	public boolean isActive() {
@@ -110,5 +120,32 @@ public class MapField {
 	public void setPathCenter(LatLon pathCenter) {
 		this.pathCenter = pathCenter;
 	}	
+
+	
+	public void setPathEdgeLL(LatLon lt, LatLon rb) {
+		this.pathLt = lt;
+		this.pathRb = rb;
+	}
+	
+	public void adjustZoom(int screenWidth, int screenHeight) {
+		
+		int zoom = 28;
+		setZoom(zoom);
+		Point2D scr = latLonToScreen(pathRb);
+		
+		Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
+		
+		while (zoom > 2
+				&& (Math.abs(scr.getX()) > screenWidth / 2
+				|| Math.abs(scr.getY()) > screenHeight / 2)) {
+			zoom--;
+			setZoom(zoom);
+			
+			scr = latLonToScreen(pathRb);
+			
+			Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
+		}
+	}
+
 	
 }
