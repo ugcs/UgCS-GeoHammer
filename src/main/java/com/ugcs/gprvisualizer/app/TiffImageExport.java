@@ -26,10 +26,12 @@ public class TiffImageExport {
 	
 	private Model model;
 	private RadarMap radarMap;
+	private boolean drawTrack;
 	
-	public TiffImageExport(Model model, RadarMap radarMap) {
+	public TiffImageExport(Model model, RadarMap radarMap, boolean drawTrack) {
 		this.model = model;
 		this.radarMap = radarMap;
+		this.drawTrack = drawTrack;
 	}
 	
 	public void execute() {
@@ -114,7 +116,9 @@ public class TiffImageExport {
 		
 		radarMap.draw(g2, field, imgRadar);
 		
-		new GpsTrack(null, model, null).draw(g2, field);
+		if (drawTrack) {
+			new GpsTrack(null, model, null).draw(g2, field);
+		}
 		
 		return bi;
 	}

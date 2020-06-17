@@ -229,7 +229,9 @@ public class MapView extends Work implements SmthChangeListener {
 							@Override
 							public void handle(ActionEvent event) {
 								
-								new TiffImageExport(model, radarMap).execute();
+								new TiffImageExport(model, radarMap, 
+										gpsTrackMap.isActive())
+									.execute();
 								
 							}
 						}));
