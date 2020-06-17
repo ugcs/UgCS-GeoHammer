@@ -2,9 +2,11 @@ package com.ugcs.gprvisualizer.app.commands;
 
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Broadcast;
@@ -162,8 +164,12 @@ public class CommandRegistry {
 		return createButton(command, null);
 	}
 	
-	public Button createButton(Command command, Consumer<Object> finish) {
+	public Button createButton(Command command, String iconName, Consumer<Object> finish) {
 		Button button = new Button(command.getButtonText());
+		
+		if (StringUtils.isNotBlank(iconName)) {
+			button.setGraphic(ResourceImageHolder.getImageView(iconName));
+		}
 		
 		button.setOnAction(e -> {
 			runForFiles(command);
@@ -174,6 +180,10 @@ public class CommandRegistry {
 		});
 		
 		return button;
+	}
+	
+	public Button createButton(Command command, Consumer<Object> finish) {
+		return createButton(command, null, finish);
 	}
 	
 	public static Button createButton(String title, EventHandler<ActionEvent> action) {

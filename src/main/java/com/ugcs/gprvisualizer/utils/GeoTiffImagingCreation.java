@@ -27,7 +27,7 @@ import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 
-public class TiffImagingCreation {
+public class GeoTiffImagingCreation {
 
 	public static void main(String[] args) throws Exception {
 		File f1 = new File("d:/tmp/tiff/created1.tif");
@@ -46,7 +46,7 @@ public class TiffImagingCreation {
 		
 		
 		
-		new TiffImagingCreation().save(f1, img, 
+		new GeoTiffImagingCreation().save(f1, img, 
 				lt, rb);
 	}
 	

@@ -80,7 +80,7 @@ public class GpsTrack extends BaseLayer {
 		
 		double sumdist = 0;
 		
-		LatLon ll = model.getField().screenTolatLon(
+		LatLon ll = field.screenTolatLon(
 				new Point2D.Double(0, 5));
 		
 		// meter to cm

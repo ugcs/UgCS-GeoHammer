@@ -126,6 +126,14 @@ public class MapField {
 		this.pathLt = lt;
 		this.pathRb = rb;
 	}
+
+	public LatLon getPathLeftTop() {
+		return pathLt;
+	}
+	
+	public LatLon getPathRightBottom() {
+		return pathRb;
+	}
 	
 	public void adjustZoom(int screenWidth, int screenHeight) {
 		

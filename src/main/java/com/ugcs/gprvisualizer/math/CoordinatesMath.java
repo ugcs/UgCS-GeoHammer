@@ -6,6 +6,7 @@ public class CoordinatesMath {
 	private static final double  R = 6378.137; 
 
 	// generally used geo measurement function
+	// return value in meters
 	public static double measure(double lat1, double lon1, 
 			double lat2, double lon2) {
 		double deltaLat = toRad(lat2) - toRad(lat1);

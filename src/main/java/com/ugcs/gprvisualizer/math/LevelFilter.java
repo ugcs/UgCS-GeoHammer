@@ -95,7 +95,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		return Arrays.asList(
 			commandRegistry.createButton(new BackgroundNoiseRemover()), 
 		
-			commandRegistry.createButton(new LevelScanner(), 
+			commandRegistry.createButton(new LevelScanner(), "scanLevel.png", 
 					e -> {
 						levelCalculated = true; 
 						updateButtons(); 

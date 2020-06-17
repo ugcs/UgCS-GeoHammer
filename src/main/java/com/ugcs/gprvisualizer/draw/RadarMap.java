@@ -259,7 +259,7 @@ public class RadarMap extends BaseLayer {
 	}
 
 	// prepare image in thread
-	public BufferedImage createHiRes(MapField field, int width, int height, double radiusFactor) {
+	public BufferedImage createHiRes(MapField field, int width, int height) {
 		
 		imgLatLon = field.getSceneCenter();
 		
@@ -276,20 +276,20 @@ public class RadarMap extends BaseLayer {
 			palette = DblArray.paletteAlg;
 		}
 
-		drawCircles(field, da, radiusFactor);
+		drawCircles(field, da);
 		
 		//Sout.p("hires fin");
 		return da.toImg(palette);
 	}
 
-	public void drawCircles(MapField field, DblArray da, double radiusFactor) {
+	public void drawCircles(MapField field, DblArray da) {
 		for (SgyFile file : model.getFileManager().getFiles()) {
 			
 			ScanProfile profile = getFileScanProfile(file);
 			
 			List<Trace> traces = file.getTraces();
 			if (profile != null) {
-				drawFileCircles(field, da, file, profile, traces, radiusFactor);
+				drawFileCircles(field, da, file, profile, traces);
 			}
 		}
 	}
@@ -305,8 +305,7 @@ public class RadarMap extends BaseLayer {
 	}
 
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
-			ScanProfile profile, List<Trace> traces,
-			double radiusFactor) {
+			ScanProfile profile, List<Trace> traces) {
 		
 		int radius = model.getSettings().radius;
 		int centerX = da.getWidth() / 2;
@@ -316,7 +315,8 @@ public class RadarMap extends BaseLayer {
 			Trace trace = traces.get(i);
 			
 			double alpha = profile.intensity[i];
-			int effectRadius = (int) ((double) (profile.radius != null ? profile.radius[i] : radius) * radiusFactor);
+			int effectRadius = 
+					(int) (profile.radius != null ? profile.radius[i] : radius);
 			
 			if (alpha > MIN_CIRCLE_THRESHOLD) {				
 			
@@ -344,7 +344,7 @@ public class RadarMap extends BaseLayer {
 				}
 			
 				MapField field = new MapField(model.getField());
-				img = createHiRes(field, getDimension().width, getDimension().height, 1);
+				img = createHiRes(field, getDimension().width, getDimension().height);
 				
 				getRepaintListener().repaint();
 							

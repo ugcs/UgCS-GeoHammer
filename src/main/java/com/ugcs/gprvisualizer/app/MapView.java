@@ -33,7 +33,7 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.KmlSaver;
-import com.ugcs.gprvisualizer.utils.TiffImagingCreation;
+import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;

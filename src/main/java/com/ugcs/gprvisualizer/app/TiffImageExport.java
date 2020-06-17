@@ -14,7 +14,7 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.utils.TiffImagingCreation;
+import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,6 +22,8 @@ import javafx.stage.FileChooser;
 
 public class TiffImageExport {
 
+	private static final Dimension maxTifSize = new Dimension(1800, 1800);
+	
 	private Model model;
 	private RadarMap radarMap;
 	
@@ -31,34 +33,23 @@ public class TiffImageExport {
 	}
 	
 	public void execute() {
-
-		Dimension dim = new Dimension(1400, 1400);
 		
-		FileChooser chooser = new FileChooser();
-
-		chooser.setTitle("Save tiff file");
-		chooser.setInitialFileName("geohammer.tif");
-		
-		FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TIFF files (*.tif)", "*.tif");
-		chooser.getExtensionFilters().add(extFilter);
-
-		File tiffFile = chooser.showSaveDialog(AppContext.stage); 
+		File tiffFile = askUserChooseFile(); 
 
 		if (tiffFile == null) {
 			return;
 		}
 
+		MapField field = prepareField();
 		
-		MapField field = new MapField(model.getField());
+		Point2D scrrb = field.latLonToScreen(field.getPathRightBottom());
 		
-		field.setSceneCenter(model.getField().getPathCenter());		
-		field.adjustZoom(dim.width, dim.height);
-		
-		double radiusFactor = Math.pow(2, field.getZoom() - model.getField().getZoom());
-		
+		Dimension tiffActualSize = new Dimension(
+				(int) Math.abs(scrrb.getX() * 2) + 100,
+				(int) Math.abs(scrrb.getY() * 2) + 100);
 		
 		BufferedImage tiffImg = drawTiff(field, radarMap, 
-				dim.width, dim.height, radiusFactor);
+				tiffActualSize.width, tiffActualSize.height);
 		
 
 		LatLon lt = field.screenTolatLon(
@@ -72,7 +63,7 @@ public class TiffImageExport {
 
 		try {
 			
-			new TiffImagingCreation().save(
+			new GeoTiffImagingCreation().save(
 					tiffFile, 
 					tiffImg, lt, rb);
 			
@@ -85,9 +76,29 @@ public class TiffImageExport {
 
 		}
 	}
+
+	public MapField prepareField() {
+		MapField field = new MapField(model.getField());
+		field.setSceneCenter(model.getField().getPathCenter());		
+		field.adjustZoom(maxTifSize.width, maxTifSize.height);
+		return field;
+	}
+
+	public File askUserChooseFile() {
+		FileChooser chooser = new FileChooser();
+
+		chooser.setTitle("Save tiff file");
+		chooser.setInitialFileName("geohammer.tif");
+		
+		FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TIFF files (*.tif)", "*.tif");
+		chooser.getExtensionFilters().add(extFilter);
+
+		File tiffFile = chooser.showSaveDialog(AppContext.stage);
+		return tiffFile;
+	}
 	
 	protected BufferedImage drawTiff(MapField field, RadarMap radarMap, 
-			int width, int height, double radiusFactor) {
+			int width, int height) {
 		if (width <= 0 || height <= 0) {
 			return null;
 		}
@@ -98,7 +109,7 @@ public class TiffImageExport {
 		
 		g2.translate(width / 2, height / 2);
 		
-		BufferedImage imgRadar = radarMap.createHiRes(field, width, height, radiusFactor);
+		BufferedImage imgRadar = radarMap.createHiRes(field, width, height);
 		
 		
 		radarMap.draw(g2, field, imgRadar);
