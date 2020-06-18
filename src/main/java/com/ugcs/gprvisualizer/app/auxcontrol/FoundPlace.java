@@ -71,10 +71,20 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			
+			
+			coordinatesToStatus();
+			
 			return true;
 		}
 		
 		return false;
+	}
+
+	public void coordinatesToStatus() {
+		Trace tr = getTrace();
+		if (tr != null) {
+			AppContext.status.showProgressText(tr.getLatLon().toString());
+		}
 	}
 	
 	@Override
@@ -85,6 +95,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
 			
 			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+			
+			coordinatesToStatus();
 			
 			return true;
 		}
@@ -105,6 +117,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		traceInFile = Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace()));
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+		
+		coordinatesToStatus();
 		
 		return true;
 	}

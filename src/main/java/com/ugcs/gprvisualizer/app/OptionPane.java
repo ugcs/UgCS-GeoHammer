@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.util.function.Consumer;
+
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -106,6 +108,28 @@ public class OptionPane extends VBox {
 		
 		return btn;
 	}
+
+	private ToggleButton prepareToggleButton(String title, 
+			String imageName, MutableBoolean bool, Consumer<ToggleButton> consumer ) {
+		
+		ToggleButton btn = new ToggleButton(title, 
+				ResourceImageHolder.getImageView(imageName));
+		
+		btn.setSelected(bool.booleanValue());
+		
+		btn.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				bool.setValue(btn.isSelected());
+				
+				//broadcast.notifyAll(new WhatChanged(change));
+				
+				consumer.accept(btn);
+			}
+		});
+		
+		return btn;
+	}
 	
 	private void prepareTab2(Tab tab2) {
 		VBox t2 = new VBox(10);		
@@ -118,8 +142,12 @@ public class OptionPane extends VBox {
 				
 				prepareToggleButton("Hyperbola detection mode", 
 						"hypLive.png", 
-						model.getSettings().getHyperliveview(), 
-						Change.justdraw),
+						model.getSettings().getHyperliveview(),
+						e -> {
+							broadcast.notifyAll(new WhatChanged(Change.justdraw));
+							
+							profileView.printHoughSlider.requestFocus();
+						}),
 				
 				commandRegistry.createButton(new TraceStacking()), 
 				

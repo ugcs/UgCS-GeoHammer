@@ -560,6 +560,9 @@ public class ProfileView implements SmthChangeListener {
 
 	MutableInt shiftGround = new MutableInt(0);
 
+	
+	public Node printHoughSlider;
+	
 	public List<Node> getRightSearch() {
 
 		return Arrays.asList(hyperbolaSlider.produce(), 
@@ -580,7 +583,7 @@ public class ProfileView implements SmthChangeListener {
 					}
 				}, 20),
 				
-				SliderFactory.create("printHoughAindex", 
+				printHoughSlider = SliderFactory.create("printHoughAindex", 
 						model.getSettings().printHoughAindex, 
 						0, HoughDiscretizer.DISCRET_SIZE - 1, 
 						new ChangeListener<Number>() {
