@@ -61,6 +61,8 @@ public class GprFile extends SgyFile {
 				+ binaryHeader.getSampleInterval());
 		System.out.println("SamplesPerDataTrace " 
 				+ binaryHeader.getSamplesPerDataTrace());
+		
+		
 		setTraces(loadTraces(binFile));
 		
 		//sampleIntervalInMcs
@@ -99,7 +101,7 @@ public class GprFile extends SgyFile {
         
         LatLon latLon = getLatLon(header);
         if (latLon == null) {
-        	return null;
+        	//return null;
         }
         
         Trace trace = new Trace(headerBin, header, values, latLon);

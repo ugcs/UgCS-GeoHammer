@@ -69,10 +69,10 @@ public class TiffImageExport {
 					tiffFile, 
 					tiffImg, lt, rb);
 			
-			AppContext.status.showProgressText("Export to ' " + tiffFile.getName() + "' finished!");
+			AppContext.status.showProgressText("Export to '" + tiffFile.getName() + "' finished!");
 			
 		} catch (Exception e) {
-			AppContext.status.showProgressText("Error during export to ' " + tiffFile.getName() + "'");
+			AppContext.status.showProgressText("Error during export to' " + tiffFile.getName() + "'");
 			
 			e.printStackTrace();
 			

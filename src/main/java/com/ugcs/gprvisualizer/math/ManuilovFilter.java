@@ -15,6 +15,10 @@ public class ManuilovFilter {
 		
 		List<LatLon> smooth = getSmoothCoordinates(list);
 		
+		if (smooth.isEmpty()) {
+			return;
+		}
+		
 		for (int i = 0; i < list.size(); i++) {
 			list.get(i).setLatLon(smooth.get(i));
 		}
@@ -39,7 +43,10 @@ public class ManuilovFilter {
 		
 		List<LatLon> result = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
-			result.add(new LatLon(ll[0][i], ll[1][i]));
+			if (ll[0][i] != 0 
+				&& ll[1][i] != 0) {
+				result.add(new LatLon(ll[0][i], ll[1][i]));
+			}
 		}	
 		
 		return result;

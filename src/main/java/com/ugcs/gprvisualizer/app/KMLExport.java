@@ -45,7 +45,11 @@ public class KMLExport {
 		
 		try {
 			new KmlSaver(model).save(tiffFile);
+			
+			AppContext.status.showProgressText("Export to '" + tiffFile.getName() + "' finished!");
 		} catch (Exception e) {
+			AppContext.status.showProgressText("Error during export to' " + tiffFile.getName() + "'");
+			
 			e.printStackTrace();
 			MessageBoxHelper.showError(
 					"Error", "Can`t save file");

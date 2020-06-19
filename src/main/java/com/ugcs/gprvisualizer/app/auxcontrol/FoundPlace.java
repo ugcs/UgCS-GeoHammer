@@ -82,7 +82,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public void coordinatesToStatus() {
 		Trace tr = getTrace();
-		if (tr != null) {
+		if (tr != null && tr.getLatLon() != null) {
 			AppContext.status.showProgressText(tr.getLatLon().toString());
 		}
 	}
