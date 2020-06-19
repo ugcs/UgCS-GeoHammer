@@ -23,7 +23,7 @@ import javafx.stage.FileChooser;
 public class TiffImageExport {
 
 	private static final Dimension maxTifSize = new Dimension(1800, 1800);
-	
+	 
 	private Model model;
 	private RadarMap radarMap;
 	private boolean drawTrack;
@@ -69,7 +69,10 @@ public class TiffImageExport {
 					tiffFile, 
 					tiffImg, lt, rb);
 			
+			AppContext.status.showProgressText("Export to ' " + tiffFile.getName() + "' finished!");
+			
 		} catch (Exception e) {
+			AppContext.status.showProgressText("Error during export to ' " + tiffFile.getName() + "'");
 			
 			e.printStackTrace();
 			
@@ -90,12 +93,22 @@ public class TiffImageExport {
 		FileChooser chooser = new FileChooser();
 
 		chooser.setTitle("Save tiff file");
+		
+		if (model.getSettings().lastExportFolder != null) {
+			chooser.setInitialDirectory(model.getSettings().lastExportFolder);
+		}
+		
 		chooser.setInitialFileName("geohammer.tif");
 		
 		FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TIFF files (*.tif)", "*.tif");
 		chooser.getExtensionFilters().add(extFilter);
 
 		File tiffFile = chooser.showSaveDialog(AppContext.stage);
+		
+		if (tiffFile != null) {
+			model.getSettings().lastExportFolder = tiffFile.getParentFile();
+		}
+		
 		return tiffFile;
 	}
 	

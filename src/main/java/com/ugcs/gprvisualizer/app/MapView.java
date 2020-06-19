@@ -244,29 +244,7 @@ public class MapView extends Work implements SmthChangeListener {
 			
 			@Override
 			public void handle(ActionEvent event) {
-				
-				FileChooser chooser = new FileChooser();
-				
-				chooser.setTitle("Save kml file");
-				chooser.setInitialFileName("geohammer.kml");
-				
-				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("KML files (*.kml)", "*.kml");
-				chooser.getExtensionFilters().add(extFilter);
-				
-				File tiffFile = chooser.showSaveDialog(AppContext.stage); 
-
-				if (tiffFile == null) {
-					return;
-				}
-
-				try {
-					new KmlSaver(model).save(tiffFile);
-				} catch (Exception e) {
-					e.printStackTrace();
-					MessageBoxHelper.showError(
-							"Error", "Can`t save file");
-
-				}
+				new KMLExport(model).execute();
 			}
 		}));
 				

@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Point2D;
+import java.io.File;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -34,6 +35,8 @@ public class Settings {
 	public int hyperkfc = 100; 
 	public MutableInt hyperSensitivity = new MutableInt(30);
 	public MutableInt printHoughAindex = new MutableInt(0);
+	public MutableInt printHoughVertShift = new MutableInt(0);
+	
 	public int hypermiddleamp = 0;
 	
 	public MutableBoolean showEdge = new MutableBoolean(); 
@@ -62,6 +65,9 @@ public class Settings {
 	public int widthZoomKf = 30;
 	public int heightZoomKf = 100;
 	public int heightStart = 0;
+	
+	
+	public File lastExportFolder = null;
     
 	public int getWidth() {
 		return (int) (width * zoom / 100.0);
