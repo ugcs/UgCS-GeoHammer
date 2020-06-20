@@ -14,7 +14,7 @@ public class ThresholdSlider  extends BaseSlider {
 	}
 
 	public void updateUI() {
-		slider.setDisable(settings.autogain);
+		//slider.setDisable(settings.autogain);
 		slider.setMax(10000);		
 		slider.setMin(0);
 		slider.setValue(settings.threshold);

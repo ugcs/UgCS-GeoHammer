@@ -595,7 +595,21 @@ public class ProfileView implements SmthChangeListener {
 						
 						repaintEvent();
 					}
-				}, 5)
+				}, 5),
+				
+				SliderFactory.create("verticalShift", 
+						model.getSettings().printHoughVertShift, 
+						-70, 70, 
+						new ChangeListener<Number>() {
+					@Override
+					public void changed(
+						ObservableValue<? extends Number> observable, 
+						Number oldValue,
+						Number newValue) {
+						
+						repaintEvent();
+					}
+				}, 5)				
 				);
 	}
 

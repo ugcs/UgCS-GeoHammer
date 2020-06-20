@@ -268,6 +268,8 @@ public class RadarMap extends BaseLayer {
 		int[] palette;
 		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
 				
+			
+			
 			// fill file.amplScan
 			commandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
 			
