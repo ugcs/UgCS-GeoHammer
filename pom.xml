@@ -117,9 +117,10 @@
 			      </goals>
 			      <configuration>
   					<arguments> 
-              			<argument>${project.basedir}/javawrapper.jsmooth</argument>
+              			<!-- <argument>${project.basedir}/javawrapper.jsmooth</argument> -->
+              			<argument>${project.basedir}/launch4j.xml</argument>
               		</arguments>			      
-			        <executable>"c:\Program Files (x86)\JSmooth 0.9.9-7\jsmoothcmd.exe"</executable>			        
+			        <executable>"c:\Program Files (x86)\Launch4j\launch4j.exe"</executable>			        
 			      </configuration>
 			    </execution>
 			  </executions>
