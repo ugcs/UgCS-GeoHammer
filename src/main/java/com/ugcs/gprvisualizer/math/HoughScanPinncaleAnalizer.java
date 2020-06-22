@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.math;
 import java.awt.image.BufferedImage;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 
 public class HoughScanPinncaleAnalizer {
@@ -40,6 +41,9 @@ public class HoughScanPinncaleAnalizer {
 		this.normFactor = normFactor;
 	}
 	
+	
+	int shift;
+	
 	public HoughArray[] processRectAroundPin() {
 		HoughArray[] stores = new HoughArray[5];
 		//init stores
@@ -47,6 +51,8 @@ public class HoughScanPinncaleAnalizer {
 			stores[i] = new HoughArray(threshold);
 		}
 		
+		
+		shift = AppContext.model.getSettings().printHoughVertShift.intValue();
 		//
 		for (int smp = workingRect.getSmpFrom();
 				smp <= workingRect.getSmpTo(); smp++) {
@@ -57,6 +63,9 @@ public class HoughScanPinncaleAnalizer {
 			
 			//1st row is not so significant so we use reducing factor
 			double addValue = (smp == workingRect.getSmpFrom() ? 0.50 : 1.0) * normFactor; 
+			
+			
+			
 			
 			for (int tr = workingRect.getTraceFrom();
 					tr <= workingRect.getTraceTo(); tr++) {
@@ -108,8 +117,9 @@ public class HoughScanPinncaleAnalizer {
 
 	private double getFactorX(SgyFile sgyFile, int pinTr, double pinSmp, int tr, double smp) {
 
-		double diagCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, 0, smp);
-		double verticalCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, 0, pinSmp);
+		double diagCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, shift, smp);
+		double verticalCm = RulerTool.distanceCm(sgyFile, pinTr, pinTr, shift, pinSmp);
+		
 		double idealXCm = Math.sqrt(diagCm * diagCm - verticalCm * verticalCm);
 
 		double realXCm = RulerTool.distanceCm(sgyFile, pinTr, tr, smp, smp);

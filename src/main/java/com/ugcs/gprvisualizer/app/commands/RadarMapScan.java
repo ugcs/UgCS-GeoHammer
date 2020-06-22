@@ -30,6 +30,8 @@ public class RadarMapScan implements Command {
 		int finish = MathUtils.norm(model.getSettings().layer + model.getSettings().hpage,
 				0, model.getMaxHeightInSamples());
 		
+		
+		
 		for (int i = 0; i < file.size(); i++) {
 			
 			Trace trace = file.getTraces().get(i);
@@ -47,13 +49,22 @@ public class RadarMapScan implements Command {
 		start = MathUtils.norm(start, 0, values.length);
 		finish = MathUtils.norm(finish, 0, values.length);
 		
+		double additionalThreshold = model.getSettings().autogain ? model.getSettings().threshold : 0;
+		
+		
 		for (int i = start; i < finish; i++) {
 			double threshold = scaleArray[0][i];
 			double factor = scaleArray[1][i];
 			
 			
 			if (edge[i] != 0) {
-				double val = Math.max(0, Math.abs(values[i]) - threshold) * factor;
+				
+				double av = Math.abs(values[i]);
+				if (av < additionalThreshold) {
+					av = 0;
+				}
+				
+				double val = Math.max(0, av - threshold) * factor;
 				
 				mx = Math.max(mx, val);
 			}

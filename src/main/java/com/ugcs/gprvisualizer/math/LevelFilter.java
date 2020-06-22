@@ -105,11 +105,6 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 						levelCalculated = true; 
 						updateButtons(); 
 					}),
-			commandRegistry.createButton(new LevelScanHP(), 
-					e -> {
-						levelCalculated = true; 
-						updateButtons(); 
-					}),
 			
 				buttonRemoveLevel, buttonLevelGround 
 		

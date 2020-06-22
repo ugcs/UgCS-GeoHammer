@@ -10,12 +10,16 @@ import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
+import com.ugcs.gprvisualizer.app.commands.AlgorithmicScanFull;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
+import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.TraceStacking;
 
 import javafx.event.ActionEvent;
@@ -25,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -52,6 +57,16 @@ public class OptionPane extends VBox {
 	@Autowired
 	private Model model;
 
+	@Autowired
+	private RadarMap radarMap;
+	
+	@Autowired
+	private HoughScan houghScan;
+	
+	
+	private ToggleButton showGreenLineBtn = new ToggleButton("", 
+			ResourceImageHolder.getImageView("level.png"));
+	
 	public OptionPane() {
 		
 	}
@@ -63,8 +78,10 @@ public class OptionPane extends VBox {
 		this.setMinWidth(RIGHT_BOX_WIDTH);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
 		
+		this.getChildren().addAll(profileView.getRight());
+		
         this.getChildren().addAll(prepareTabPane());
-        this.getChildren().addAll(profileView.getRight());
+        
 	}
 	
 	private TabPane prepareTabPane() {
@@ -72,7 +89,7 @@ public class OptionPane extends VBox {
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         
         Tab tab1 = new Tab("Gain");
-        Tab tab2 = new Tab("Search");
+        Tab tab2 = new Tab("Experimental");
         tabPane.getTabs().add(tab1);
         tabPane.getTabs().add(tab2);
         
@@ -132,15 +149,45 @@ public class OptionPane extends VBox {
 	}
 	
 	private void prepareTab2(Tab tab2) {
+		
+		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
+		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
+		showGreenLineBtn.setOnAction(e -> {
+			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
+			broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		});
+		
+		
 		VBox t2 = new VBox(10);		
         t2.getChildren().addAll(profileView.getRightSearch());
         
 		ToggleButton shEdge;
 		t2.getChildren().addAll(
+				new HBox(
+						commandRegistry.createAsinqTaskButton(
+						new AlgorithmicScanFull(),
+						e -> { 
+							radarMap.selectAlgMode();
+						 }
+					),
+					commandRegistry.createAsinqTaskButton(
+						houghScan, 
+						e -> {
+							radarMap.selectAlgMode();
+						}
+					),
+					commandRegistry.createAsinqTaskButton(
+							new PluginRunner(model),
+							e -> {}
+					)
+				),
+
+				
 				commandRegistry.createAsinqTaskButton(
 						new AlgorithmicScan()),				
 				
-				prepareToggleButton("Hyperbola detection mode", 
+				new HBox(
+					prepareToggleButton("Hyperbola detection mode", 
 						"hypLive.png", 
 						model.getSettings().getHyperliveview(),
 						e -> {
@@ -148,6 +195,7 @@ public class OptionPane extends VBox {
 							
 							profileView.printHoughSlider.requestFocus();
 						}),
+					showGreenLineBtn),
 				
 				commandRegistry.createButton(new TraceStacking()), 
 				
@@ -165,7 +213,15 @@ public class OptionPane extends VBox {
 						prepareToggleButton("show good", null, 
 								model.getSettings().showGood, 
 								Change.justdraw)
-						)
+						),
+				
+				commandRegistry.createButton(new LevelScanHP(), 
+						e -> {
+							broadcast.notifyAll(new WhatChanged(Change.justdraw));
+							//levelCalculated = true; 
+							//updateButtons(); 
+						})
+
 				
 			);
 		

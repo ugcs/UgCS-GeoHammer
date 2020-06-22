@@ -116,8 +116,6 @@ public class ProfileView implements SmthChangeListener {
 	private Button zoomOutBtn = new Button("", 
 			ResourceImageHolder.getImageView("zoom-out_20.png"));
 	
-	private ToggleButton showGreenLineBtn = new ToggleButton("", 
-			ResourceImageHolder.getImageView("level.png"));
 
 	private MouseHandler selectedMouseHandler;
 	private MouseHandler scrollHandler;
@@ -196,15 +194,6 @@ public class ProfileView implements SmthChangeListener {
 			zoom(-1, width / 2, height / 2, false);
 		});
 
-		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
-		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
-		showGreenLineBtn.setOnAction(e -> {
-			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
-			//AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			
-			broadcast.notifyAll(new WhatChanged(Change.justdraw));
-		});
 
 		
 	}
@@ -220,7 +209,7 @@ public class ProfileView implements SmthChangeListener {
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(getSpacer());
-		toolBar.getItems().add(showGreenLineBtn);
+		//toolBar.getItems().add(showGreenLineBtn);
 
 		toolBar.getItems().add(CommandRegistry.createButton("",
 				ResourceImageHolder.getImageView("ruler.png"), 
@@ -595,7 +584,21 @@ public class ProfileView implements SmthChangeListener {
 						
 						repaintEvent();
 					}
-				}, 5)
+				}, 5),
+				
+				SliderFactory.create("verticalShift", 
+						model.getSettings().printHoughVertShift, 
+						-70, 70, 
+						new ChangeListener<Number>() {
+					@Override
+					public void changed(
+						ObservableValue<? extends Number> observable, 
+						Number oldValue,
+						Number newValue) {
+						
+						repaintEvent();
+					}
+				}, 5)				
 				);
 	}
 

@@ -53,23 +53,6 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener {
 		
 		getItems().add(getSpacer());
 
-		getItems().addAll(commandRegistry.createAsinqTaskButton(
-					new AlgorithmicScanFull(),
-					e -> { 
-						radarMap.selectAlgMode();
-					 }
-				),
-				commandRegistry.createAsinqTaskButton(
-					houghScan, 
-					e -> {
-						radarMap.selectAlgMode();
-					}
-				),
-				commandRegistry.createAsinqTaskButton(
-						new PluginRunner(model),
-						e -> {}
-				)
-		);
 		
 	}
 	
