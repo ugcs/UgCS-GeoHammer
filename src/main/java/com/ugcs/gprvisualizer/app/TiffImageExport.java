@@ -26,12 +26,15 @@ public class TiffImageExport {
 	 
 	private Model model;
 	private RadarMap radarMap;
+	private GpsTrack gpsTrack;
 	private boolean drawTrack;
 	
-	public TiffImageExport(Model model, RadarMap radarMap, boolean drawTrack) {
+	public TiffImageExport(Model model, RadarMap radarMap,
+			GpsTrack gpsTrack, boolean drawTrack) {
 		this.model = model;
 		this.radarMap = radarMap;
 		this.drawTrack = drawTrack;
+		this.gpsTrack = gpsTrack;
 	}
 	
 	public void execute() {
@@ -50,7 +53,7 @@ public class TiffImageExport {
 				(int) Math.abs(scrrb.getX() * 2) + 100,
 				(int) Math.abs(scrrb.getY() * 2) + 100);
 		
-		BufferedImage tiffImg = drawTiff(field, radarMap, 
+		BufferedImage tiffImg = drawTiff(field, 
 				tiffActualSize.width, tiffActualSize.height);
 		
 
@@ -112,28 +115,28 @@ public class TiffImageExport {
 		return tiffFile;
 	}
 	
-	protected BufferedImage drawTiff(MapField field, RadarMap radarMap, 
+	protected BufferedImage drawTiff(MapField field, 
 			int width, int height) {
 		if (width <= 0 || height <= 0) {
 			return null;
 		}
 		
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		
-		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		Graphics2D g2 = (Graphics2D) img.getGraphics();
 		
 		g2.translate(width / 2, height / 2);
 		
-		BufferedImage imgRadar = radarMap.createHiRes(field, width, height);
+		radarMap.createHiRes(field, img);
 		
 		
-		radarMap.draw(g2, field, imgRadar);
+		//radarMap.draw(g2, field, imgRadar);
 		
 		if (drawTrack) {
-			new GpsTrack(null, model, null).draw(g2, field);
+			gpsTrack.drawTrack(g2, field);
 		}
 		
-		return bi;
+		return img;
 	}
 	
 

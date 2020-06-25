@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.draw;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -45,11 +46,11 @@ public class SatelliteMap extends BaseLayer {
 	
 	@Autowired
 	private Broadcast broadcast;
-	
-	
-	//private BufferedImage img;
-	//private LatLon imgLatLon;
-	//private int imgZoom;
+
+	@Autowired
+	private Dimension wndSize;
+
+
 	private LatLon click;
 	
 	ThrQueue q;
@@ -65,13 +66,13 @@ public class SatelliteMap extends BaseLayer {
 				getRepaintListener().repaint();
 			}
 			
-			private void actualizeBackImg() {
+			protected void actualizeBackImg() {
 				
 			}
 		};
 		
-		q.width = 640*2;
-		q.height = 640*2;
+	//	q.width = 640*2;
+	//	q.height = 640*2;
 	}	
 	
 	
@@ -134,16 +135,7 @@ public class SatelliteMap extends BaseLayer {
 		
 		if (front != null && isActive()) {
 			
-			Point2D offst = currentField.latLonToScreen(front.getField().getSceneCenter());
-			
-			double scale = Math.pow(2, currentField.getZoom() - front.getField().getZoom());
-			BufferedImage tmpImg = front.getImg();
-			g2.drawImage(tmpImg, 
-				(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
-				(int) (offst.getY() - tmpImg.getHeight() / 2 * scale),
-				(int) (tmpImg.getWidth() * scale),
-				(int) (tmpImg.getHeight() * scale),
-				null);
+			q.drawImgOnChangedField(g2, currentField, front);
 		}		
 		
 		if (click != null) {
@@ -152,6 +144,19 @@ public class SatelliteMap extends BaseLayer {
 			g2.drawOval((int) p.getX() - 3, (int) p.getY() - 3, 7, 7);
 		}
 	}
+
+//	public void drawImgOnChangedField(Graphics2D g2, MapField currentField, ThrFront front) {
+//		Point2D offst = currentField.latLonToScreen(front.getField().getSceneCenter());
+//		
+//		double scale = Math.pow(2, currentField.getZoom() - front.getField().getZoom());
+//		BufferedImage tmpImg = front.getImg();
+//		g2.drawImage(tmpImg, 
+//			(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
+//			(int) (offst.getY() - tmpImg.getHeight() / 2 * scale),
+//			(int) (tmpImg.getWidth() * scale),
+//			(int) (tmpImg.getHeight() * scale),
+//			null);
+//	}
 
 	@Override
 	public boolean isReady() {

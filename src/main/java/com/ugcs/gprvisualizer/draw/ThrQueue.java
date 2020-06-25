@@ -1,5 +1,10 @@
 package com.ugcs.gprvisualizer.draw;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -19,13 +24,10 @@ public class ThrQueue {
 	
 	Model model;
 	BufferedImage frontImg;
-	//MapField frontImgField;
-	
+		
 	BufferedImage backImg;
-	int width;
-	int height;
-	
-	
+
+	private Dimension windowSize;
 	
 	ThrFront actual;
 	
@@ -62,8 +64,8 @@ public class ThrQueue {
 					///
 					
 					BufferedImage img = backImg;
-					frontImg = backImg;
-					backImg = img;
+					backImg = frontImg;
+					frontImg = img;
 					
 					
 					actual = new ThrFront(img, field);
@@ -97,41 +99,31 @@ public class ThrQueue {
 		Sout.p("ready");
 	}
 
-	private void actualizeBackImg() {
+	protected void actualizeBackImg() {
 		if (backImg != null 
-				&& backImg.getWidth() == width 
-				&& backImg.getHeight() == height) {
+				&& backImg.getWidth() == windowSize.width 
+				&& backImg.getHeight() == windowSize.height) {
 		
 		} else {
-			backImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+			backImg = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_ARGB);
 		}
-	}
-	
-//	public BufferedImage getFrontImg() {
-//		return frontImg;
-//	}
-	
-	public static void main(String[] args) throws InterruptedException {
-		Model model = new Model();
 		
-		ThrQueue q = new  ThrQueue(model);
 		
-		q.width = 1000;
-		q.height = 800;
+		if (backImg != null) {
+			Graphics2D g2 = (Graphics2D) backImg.getGraphics();
 		
-		q.add();
-		q.add();
-		
-		Thread.sleep(50);
-		
-		q.add();
-		q.add();
-		
-		Thread.sleep(500);
-		
-		q.add();
-		q.add();
-		
+			AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.CLEAR, 0.0f);
+		    g2.setComposite(composite);
+		    g2.setColor(new Color(0, 0, 0, 0));
+		    
+			g2.fillRect(0, 0, backImg.getWidth(), backImg.getHeight());
+			
+			
+			//g2.setColor(new Color(0,  255, 0, 255));			
+			//g2.fillRect(300, 300, 100, 100);
+			
+			g2.dispose();
+		}
 	}
 	
 	public void clear() {
@@ -140,4 +132,24 @@ public class ThrQueue {
 		
 	}
 	
+	public void drawImgOnChangedField(Graphics2D g2, MapField currentField, ThrFront front) {
+		if (front == null) {			
+			return;
+		}
+		
+		Point2D offst = currentField.latLonToScreen(front.getField().getSceneCenter());
+		
+		double scale = Math.pow(2, currentField.getZoom() - front.getField().getZoom());
+		BufferedImage tmpImg = front.getImg();
+		g2.drawImage(tmpImg, 
+			(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
+			(int) (offst.getY() - tmpImg.getHeight() / 2 * scale),
+			(int) (tmpImg.getWidth() * scale),
+			(int) (tmpImg.getHeight() * scale),
+			null);
+	}
+	
+	public void setWindowSize(Dimension windowSize) {
+		this.windowSize = windowSize;
+	}
 }

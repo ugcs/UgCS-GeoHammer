@@ -9,6 +9,11 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -23,23 +28,23 @@ import javafx.scene.Node;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 
+@Component
 public class GpsTrack extends BaseLayer {
 
-	private RepaintListener listener;
+	//private RepaintListener listener;
 	
+	@Autowired
 	private Model model;
 	
-	
-	private BufferedImage img;
-	private LatLon imgLatLon;
-	
-	
+	@Autowired
+	private Dimension wndSize;
+
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
 			setActive(showLayerCheckbox.isSelected());
 			
-			listener.repaint();				
+			getRepaintListener().repaint();				
 		}
 	};
 	
@@ -51,63 +56,79 @@ public class GpsTrack extends BaseLayer {
 		showLayerCheckbox.setSelected(true);
 		showLayerCheckbox.setOnAction(showMapListener);
 	}
+		
 	
-	
-	
-	public GpsTrack(Dimension parentDimension, Model model, RepaintListener listener) {
+	public GpsTrack() {
 		
 		super();
-		this.model = model;
-		this.listener = listener;	
 		
-		setDimension(parentDimension);
+		init();
 	}
 	
+	ThrQueue q;
+	
+	@PostConstruct
+	public void init() {
+		q = new ThrQueue(model) {
+			protected void draw(BufferedImage backImg, MapField field) {
+				
+				Graphics2D g2 = (Graphics2D) backImg.getGraphics();
+				
+				g2.translate(backImg.getWidth() / 2, backImg.getHeight() / 2);
+				
+				drawTrack(g2, field);
+			}
+			
+			public void ready() {
+				getRepaintListener().repaint();
+			}			
+			
+		};
+		
+		q.setWindowSize(wndSize);
+	}
+		
 	@Override
 	public void draw(Graphics2D g2, MapField currentField) {
 		if (currentField.getSceneCenter() == null || !isActive()) {
 			return;
 		}
 		
-		if (img == null) {
-			updateImg(currentField);
-		}
-		
-		drawToScr(g2, currentField, img);
-		//MapField field = new MapField(model.getField());
-		//draw(g2, field);
+
+		q.drawImgOnChangedField(g2, currentField, q.getFront());
+	
 	}
 
-	public void drawToScr(Graphics2D g2, MapField field, BufferedImage tmpImg) {
-		
-		if (tmpImg == null) {
-			return;
-		}
-		
-		Point2D offst = field.latLonToScreen(imgLatLon);
-		
-		g2.drawImage(tmpImg, 
-			(int) offst.getX() - tmpImg.getWidth() / 2, 
-			(int) offst.getY() - tmpImg.getHeight() / 2, 
-			null);
-	}
+//	public void drawToScr(Graphics2D g2, MapField field, BufferedImage tmpImg) {
+//		
+//		if (tmpImg == null) {
+//			return;
+//		}
+//		
+//		Point2D offst = field.latLonToScreen(imgLatLon);
+//		
+//		g2.drawImage(tmpImg, 
+//			(int) offst.getX() - tmpImg.getWidth() / 2, 
+//			(int) offst.getY() - tmpImg.getHeight() / 2, 
+//			null);
+//	}
 
-	public void updateImg(MapField currentField) {
-		img = new BufferedImage(
-				(int) getDimension().getWidth(), 
-				(int) getDimension().getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
-		
-		imgLatLon = currentField.getSceneCenter();
-		
-		
-		Graphics2D g2 = (Graphics2D) img.getGraphics();
-		g2.translate(img.getWidth() / 2,  img.getHeight() / 2);
-		drawTrack(g2, currentField);
-		
-		//Sout.p("GpsTrack cr img");
-		
-	}
+//	public void updateImg(MapField currentField) {
+//		img = new BufferedImage(
+//				(int) getDimension().getWidth(), 
+//				(int) getDimension().getHeight(),
+//				BufferedImage.TYPE_INT_ARGB);
+//		
+//		imgLatLon = currentField.getSceneCenter();
+//		
+//		
+//		Graphics2D g2 = (Graphics2D) img.getGraphics();
+//		g2.translate(img.getWidth() / 2,  img.getHeight() / 2);
+//		drawTrack(g2, currentField);
+//		
+//		//Sout.p("GpsTrack cr img");
+//		
+//	}
 	
 	public void drawTrack(Graphics2D g2, MapField field) {
 		
@@ -178,7 +199,7 @@ public class GpsTrack extends BaseLayer {
 				|| changed.isMapscroll() 
 				|| changed.isWindowresized()) {
 			
-			img = null;
+			q.add();
 		}		
 
 	}

@@ -91,6 +91,10 @@ public class DblArray {
 		
 	    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	    
+	    return toImg(image, palette);
+	}
+	
+	public BufferedImage toImg(BufferedImage image, int[] palette) {
 	    int[] buffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();	    
 	    
 	    for (int x = 0; x < width; x++) {

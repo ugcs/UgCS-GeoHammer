@@ -5,7 +5,7 @@ import java.awt.Dimension;
 public abstract class BaseLayer implements Layer {
 	private boolean active = true;
 	
-	private Dimension parentDimension;
+	//protected Dimension parentDimension;
 	
 	private RepaintListener listener;
 
@@ -21,13 +21,13 @@ public abstract class BaseLayer implements Layer {
 		this.active = active;
 	}
 
-	public void setDimension(Dimension parentDimension) {
-		this.parentDimension = parentDimension;
-	}
-
-	public Dimension getDimension() {
-		return parentDimension;
-	}
+//	public void setDimension(Dimension parentDimension) {
+//		this.parentDimension = parentDimension;
+//	}
+//
+//	public Dimension getDimension() {
+//		return parentDimension;
+//	}
 	
 	public void setRepaintListener(RepaintListener listener) {
 		this.listener = listener;

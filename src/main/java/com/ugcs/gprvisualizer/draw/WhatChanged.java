@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.draw;
 
+import com.ugcs.gprvisualizer.app.Sout;
+
 public class WhatChanged {
 
 	private Change change;
@@ -8,7 +10,8 @@ public class WhatChanged {
 		return change.name();
 	}
 	
-	public WhatChanged(Change change) {
+	public WhatChanged(Change change) {		
+		
 		this.change = change;
 	}
 	

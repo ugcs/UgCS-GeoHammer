@@ -68,7 +68,11 @@ public class MapView extends Work implements SmthChangeListener {
 	@Autowired
 	private RadarMap radarMap;	
 
-	GpsTrack gpsTrackMap;
+	@Autowired
+	private GpsTrack gpsTrackMap;
+	
+	@Autowired
+	private Dimension wndSize;
 	
 	private ToolBar toolBar = new ToolBar();
 	private Dimension windowSize = new Dimension();
@@ -88,15 +92,11 @@ public class MapView extends Work implements SmthChangeListener {
 	@PostConstruct
 	public void init() {
 		
-		//radarMap = new RadarMap(windowSize, model, listener);
-		radarMap.setDimension(windowSize);
 		radarMap.setRepaintListener(listener);
 		
-		satelliteMap.setDimension(windowSize);
 		satelliteMap.setRepaintListener(listener);
-
 		
-		gpsTrackMap = new GpsTrack(windowSize, model, listener);
+		gpsTrackMap.setRepaintListener(listener);
 		
 		getLayers().add(satelliteMap);
 		getLayers().add(radarMap);
@@ -116,6 +116,7 @@ public class MapView extends Work implements SmthChangeListener {
 		super.somethingChanged(changed);
 		
 		if (changed.isFileopened()) {
+			
 			toolBar.setDisable(!model.isActive() || !isGpsPresent());
 			repaintEvent();
 		}
@@ -231,7 +232,7 @@ public class MapView extends Work implements SmthChangeListener {
 							@Override
 							public void handle(ActionEvent event) {
 								
-								new TiffImageExport(model, radarMap, 
+								new TiffImageExport(model, radarMap, gpsTrackMap,
 										gpsTrackMap.isActive())
 									.execute();
 								
@@ -358,6 +359,8 @@ public class MapView extends Work implements SmthChangeListener {
 	public void setSize(int width, int height) {
 		
 		windowSize.setSize(width, height);
+		
+		wndSize.setSize(width, height);
 		
 		//repaintEvent();
 		

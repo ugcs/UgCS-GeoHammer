@@ -21,6 +21,7 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.Broadcast;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
@@ -63,9 +64,6 @@ public class RadarMap extends BaseLayer {
 	@Autowired
 	private CommandRegistry commandRegistry;
 	
-	private BufferedImage img;
-	private LatLon imgLatLon;
-	
 	private BaseSlider gainTopSlider;
 	private BaseSlider gainBottomSlider;
 	private BaseSlider thresholdSlider;
@@ -73,11 +71,11 @@ public class RadarMap extends BaseLayer {
 	private BaseCheckBox autoGainCheckbox;
 	private VBox vertBox = new VBox();
 	
-	
 	private ArrayBuilder scaleArrayBuilder;
 	private ArrayBuilder autoArrayBuilder;
 	
-
+	@Autowired
+	private Dimension wndSize;
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		
@@ -97,8 +95,10 @@ public class RadarMap extends BaseLayer {
 			}
 			
 			if (isActive()) {
-				executor.submit(imgRecalcThread);
+				q.add();
+				
 			} else {
+				q.clear();
 				getRepaintListener().repaint();
 			}
 			
@@ -132,16 +132,12 @@ public class RadarMap extends BaseLayer {
 		showMapListener.handle(null);
 	}
 	
-	private final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>());
-	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, 
 				Number oldValue, Number newValue) {
 			
-			executor.submit(imgRecalcThread);
+			q.add();
 			
 			broadcast.notifyAll(new WhatChanged(Change.adjusting));
 		}
@@ -163,7 +159,8 @@ public class RadarMap extends BaseLayer {
 			gainBottomSlider.updateUI();
 			gainTopSlider.updateUI();
 			thresholdSlider.updateUI();
-			executor.submit(imgRecalcThread);
+
+			q.add();
 		}
 	};
 	
@@ -171,6 +168,26 @@ public class RadarMap extends BaseLayer {
 	public RadarMap() {
 		super();
 	}
+	
+	ThrQueue q;
+	
+	
+	public void initQ() {
+		q = new ThrQueue(model) {
+			protected void draw(BufferedImage backImg, MapField field) {
+				
+				createHiRes(field, backImg);
+			}
+			
+			public void ready() {
+				getRepaintListener().repaint();
+			}			
+			
+		};
+		
+		q.setWindowSize(wndSize);
+	}		
+	
 	
 	@PostConstruct
 	public void init() {
@@ -193,37 +210,21 @@ public class RadarMap extends BaseLayer {
                 + "-fx-border-style: solid;\n";
  
 		vertBox.setStyle(cssLayout);		
+		
+		initQ();
 	}
 	
 	//draw on the map window prepared image
 	@Override
 	public void draw(Graphics2D g2, MapField currentField) {
 		
-		
-		
 		if (!isActive()) {
 			return;
 		}
-		
-		draw(g2, currentField, img);
+				
+		q.drawImgOnChangedField(g2, currentField, q.getFront());
 	}
 	
-	public void draw(Graphics2D g2, MapField field, BufferedImage tmpImg) {
-		
-
-		
-		if (tmpImg == null) {
-			return;
-		}
-		
-		Point2D offst = field.latLonToScreen(imgLatLon);
-		
-		g2.drawImage(tmpImg, 
-			(int) offst.getX() - tmpImg.getWidth() / 2, 
-			(int) offst.getY() - tmpImg.getHeight() / 2, 
-			null);
-	}
-
 	@Override
 	public boolean isReady() {
 		return false;
@@ -235,7 +236,7 @@ public class RadarMap extends BaseLayer {
 		if (changed.isFileopened() 
 				|| changed.isTraceCut() 
 				|| changed.isTraceValues() 
-				|| changed.isTraceValues()) {
+				) {
 			autoArrayBuilder.clear();
 			scaleArrayBuilder.clear();
 		}
@@ -245,13 +246,11 @@ public class RadarMap extends BaseLayer {
 			scaleArrayBuilder.clear();
 		}
 		
-		
-		if (	changed.isFileopened() 
-				|| changed.isZoom() 					
-			) {
+		if (changed.isFileopened()) {
 			
-			img = null;
-		}			
+			q.clear();
+		}
+		
 		if (changed.isTraceCut() 
 				|| changed.isTraceValues() 
 				|| changed.isFileopened() 
@@ -261,16 +260,15 @@ public class RadarMap extends BaseLayer {
 				|| changed.isWindowresized()) {
 			
 			//System.out.println("RadarMap start asinq");
-			executor.submit(imgRecalcThread);
+			q.add();
 		}		
 	}
 
 	// prepare image in thread
-	public BufferedImage createHiRes(MapField field, int width, int height) {
+	public void createHiRes(MapField field, BufferedImage img) {
 		
-		imgLatLon = field.getSceneCenter();
-		
-		DblArray da = new DblArray(width, height);
+				
+		DblArray da = new DblArray(img.getWidth(), img.getHeight());
 
 		int[] palette;
 		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
@@ -287,8 +285,8 @@ public class RadarMap extends BaseLayer {
 
 		drawCircles(field, da);
 		
-		//Sout.p("hires fin");
-		return da.toImg(palette);
+		
+		da.toImg(img, palette);
 	}
 
 	public void drawCircles(MapField field, DblArray da) {
@@ -341,29 +339,6 @@ public class RadarMap extends BaseLayer {
 		}
 	}
 	
-	Thread imgRecalcThread = new Thread() {
-		public void run() {
-			try {
-				if (!model.getFileManager().isActive()) {
-					return;
-				}
-				
-				if (executor.getQueue().size() > 0) {
-					return;
-				}
-			
-				MapField field = new MapField(model.getField());
-				img = createHiRes(field, getDimension().width, getDimension().height);
-				
-				getRepaintListener().repaint();
-							
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}			
-		}
-	};
-
 	@Override
 	public boolean mousePressed(Point2D point) {
 		// TODO Auto-generated method stub

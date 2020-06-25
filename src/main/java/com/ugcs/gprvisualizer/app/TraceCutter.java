@@ -138,7 +138,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		return true;
 	}
 	
-	public void draw(Graphics2D g2) {
+	public void draw(Graphics2D g2, MapField fixedField) {
 		if (points == null) {
 			return;
 		}
