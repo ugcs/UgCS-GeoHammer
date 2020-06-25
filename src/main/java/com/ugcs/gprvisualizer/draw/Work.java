@@ -25,29 +25,7 @@ public class Work {
 		
 	}
 	
-	protected BufferedImage draw(int width,	int height) {
-		if (width <= 0 || height <= 0) {
-			return null;
-		}
-		
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		
-		Graphics2D g2 = (Graphics2D) bi.getGraphics();
-		g2.setPaint(Color.DARK_GRAY);
-		g2.fillRect(0, 0, bi.getWidth(), bi.getHeight());
-		
-		g2.translate(width / 2, height / 2);
-		
-		for (Layer l : getLayers()) {
-			try {
-				l.draw(g2);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		return bi;
-	}
+
 	
 	public Work() {
 

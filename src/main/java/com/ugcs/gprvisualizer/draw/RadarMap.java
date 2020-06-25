@@ -197,7 +197,7 @@ public class RadarMap extends BaseLayer {
 	
 	//draw on the map window prepared image
 	@Override
-	public void draw(Graphics2D g2) {
+	public void draw(Graphics2D g2, MapField currentField) {
 		
 		
 		
@@ -205,7 +205,7 @@ public class RadarMap extends BaseLayer {
 			return;
 		}
 		
-		draw(g2, model.getField(), img);
+		draw(g2, currentField, img);
 	}
 	
 	public void draw(Graphics2D g2, MapField field, BufferedImage tmpImg) {

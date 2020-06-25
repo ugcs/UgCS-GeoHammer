@@ -29,19 +29,19 @@ public class FoundTracesLayer implements Layer {
 	}
 
 	@Override
-	public void draw(Graphics2D g2) {
+	public void draw(Graphics2D g2, MapField fixedField) {
 
 		g2.setColor(pointColor);
 		
 		for (BaseObject bo : model.getAuxElements()) {
 			
-			bo.drawOnMap(g2, model.getField());
+			bo.drawOnMap(g2, fixedField);
 		}
 
 		if(model.getControls() != null) {
 			for (BaseObject bo : model.getControls()) {
 				
-				bo.drawOnMap(g2, model.getField());
+				bo.drawOnMap(g2, fixedField);
 			}
 		}
 		

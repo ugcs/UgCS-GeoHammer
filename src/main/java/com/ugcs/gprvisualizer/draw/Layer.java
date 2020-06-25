@@ -3,9 +3,11 @@ package com.ugcs.gprvisualizer.draw;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
+import com.github.thecoldwine.sigrun.common.ext.MapField;
+
 public interface Layer extends ToolProducer {
 
-	void draw(Graphics2D g2);
+	void draw(Graphics2D g2, MapField field);
 	
 	boolean isReady();
 	

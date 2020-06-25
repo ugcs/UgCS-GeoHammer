@@ -129,14 +129,15 @@ public class SatelliteMap extends BaseLayer {
 	}
 	
 	@Override
-	public void draw(Graphics2D g2) {
-		BufferedImage tmpImg = q.getFrontImg();
-		if (tmpImg != null && isActive()) {
+	public void draw(Graphics2D g2, MapField currentField) {
+		ThrFront front = q.getFront();
+		
+		if (front != null && isActive()) {
 			
-			Point2D offst = model.getField().latLonToScreen(q.getFrontImgField().getSceneCenter());
+			Point2D offst = currentField.latLonToScreen(front.getField().getSceneCenter());
 			
-			double scale = Math.pow(2, model.getField().getZoom() - q.getFrontImgField().getZoom());
-			
+			double scale = Math.pow(2, currentField.getZoom() - front.getField().getZoom());
+			BufferedImage tmpImg = front.getImg();
 			g2.drawImage(tmpImg, 
 				(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
 				(int) (offst.getY() - tmpImg.getHeight() / 2 * scale),
@@ -146,7 +147,7 @@ public class SatelliteMap extends BaseLayer {
 		}		
 		
 		if (click != null) {
-			Point2D p = model.getField().latLonToScreen(click);
+			Point2D p = currentField.latLonToScreen(click);
 			
 			g2.drawOval((int) p.getX() - 3, (int) p.getY() - 3, 7, 7);
 		}

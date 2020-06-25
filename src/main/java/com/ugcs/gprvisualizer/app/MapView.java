@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
@@ -290,7 +291,35 @@ public class MapView extends Work implements SmthChangeListener {
 	private static final String NO_GPS_TEXT = "There are no coordinates in files";
 	
 	
+	protected BufferedImage draw(int width,	int height) {
+		if (width <= 0 || height <= 0) {
+			return null;
+		}
+		
+		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		
+		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		g2.setPaint(Color.DARK_GRAY);
+		g2.fillRect(0, 0, bi.getWidth(), bi.getHeight());
+		
+		g2.translate(width / 2, height / 2);
+		
+		
+		MapField fixedField = new MapField(model.getField());
+		
+		for (Layer l : getLayers()) {
+			try {
+				l.draw(g2, fixedField);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return bi;
+	}	
+	
 	int entercount = 0;
+	
 	protected void repaintEvent() {
 		
 		

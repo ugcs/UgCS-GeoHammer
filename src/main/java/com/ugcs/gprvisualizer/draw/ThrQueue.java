@@ -19,17 +19,24 @@ public class ThrQueue {
 	
 	Model model;
 	BufferedImage frontImg;
-	MapField frontImgField;
+	//MapField frontImgField;
 	
 	BufferedImage backImg;
 	int width;
 	int height;
 	
-	boolean actual = false;
+	
+	
+	ThrFront actual;
+	
+	public ThrFront getFront() {
+		return actual;
+	}
 	
 	public ThrQueue(Model model) {
 		this.model = model;
 	}
+	
 	void add() {
 		executor.submit(getWorker());
 	}
@@ -57,9 +64,9 @@ public class ThrQueue {
 					BufferedImage img = backImg;
 					frontImg = backImg;
 					backImg = img;
-					frontImgField = field;
 					
-					actual = true;
+					
+					actual = new ThrFront(img, field);
 					ready();
 								
 						
@@ -100,14 +107,9 @@ public class ThrQueue {
 		}
 	}
 	
-	public BufferedImage getFrontImg() {
-		return frontImg;
-	}
-	
-	public MapField getFrontImgField() {
-		
-		return actual ? frontImgField : null;
-	}
+//	public BufferedImage getFrontImg() {
+//		return frontImg;
+//	}
 	
 	public static void main(String[] args) throws InterruptedException {
 		Model model = new Model();
@@ -134,7 +136,7 @@ public class ThrQueue {
 	
 	public void clear() {
 		
-		actual = false;
+		actual = null;
 		
 	}
 	

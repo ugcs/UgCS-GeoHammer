@@ -64,16 +64,16 @@ public class GpsTrack extends BaseLayer {
 	}
 	
 	@Override
-	public void draw(Graphics2D g2) {
-		if (model.getField().getSceneCenter() == null || !isActive()) {
+	public void draw(Graphics2D g2, MapField currentField) {
+		if (currentField.getSceneCenter() == null || !isActive()) {
 			return;
 		}
 		
 		if (img == null) {
-			updateImg();
+			updateImg(currentField);
 		}
 		
-		drawToScr(g2, model.getField(), img);
+		drawToScr(g2, currentField, img);
 		//MapField field = new MapField(model.getField());
 		//draw(g2, field);
 	}
@@ -92,24 +92,24 @@ public class GpsTrack extends BaseLayer {
 			null);
 	}
 
-	public void updateImg() {
+	public void updateImg(MapField currentField) {
 		img = new BufferedImage(
 				(int) getDimension().getWidth(), 
 				(int) getDimension().getHeight(),
 				BufferedImage.TYPE_INT_ARGB);
 		
-		imgLatLon = model.getField().getSceneCenter();
+		imgLatLon = currentField.getSceneCenter();
 		
 		
 		Graphics2D g2 = (Graphics2D) img.getGraphics();
 		g2.translate(img.getWidth() / 2,  img.getHeight() / 2);
-		draw(g2, model.getField());
+		drawTrack(g2, currentField);
 		
 		//Sout.p("GpsTrack cr img");
 		
 	}
 	
-	public void draw(Graphics2D g2, MapField field) {
+	public void drawTrack(Graphics2D g2, MapField field) {
 		
 		
 		g2.setStroke(new BasicStroke(1.0f));		
