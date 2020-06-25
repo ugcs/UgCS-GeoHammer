@@ -35,6 +35,7 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.KmlSaver;
 import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -292,49 +293,38 @@ public class MapView extends Work implements SmthChangeListener {
 	int entercount = 0;
 	protected void repaintEvent() {
 		
-		entercount++;
 		
-		if (entercount > 1) {
-			Sout.p("entercount " + entercount);
-		}
+		Platform.runLater(new Runnable() {
+			 @Override
+	         public void run() {		
+				 entercount++;
 		
-		if (isGpsPresent()) {
+				 if (entercount > 1) {
+					 Sout.p("entercount " + entercount);
+				 }	
+
+				if (isGpsPresent()) {
+				
+					img = draw(windowSize.width, windowSize.height);
+					
+				} else {
+					
+					img = drawStub();
+					
+				}
+			
+				toImageView();
+				
+				entercount--;
+			 }
+
+
+		});
 		
-			img = draw(windowSize.width, windowSize.height);
-			
-		} else {
-			
-			BufferedImage noGpsImg = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_RGB);
-			
-			Graphics2D g2 = (Graphics2D)noGpsImg.getGraphics();
-			g2.setColor(Color.LIGHT_GRAY);
-			g2.fillRect(0, 0, windowSize.width, windowSize.height);
-			
-			g2.setColor(Color.DARK_GRAY);
-			
-	        FontMetrics fm = g2.getFontMetrics();
-	        Rectangle2D rect = fm.getStringBounds(NO_GPS_TEXT, g2);
-			
-			int x = (int) ((windowSize.width - rect.getWidth()) / 2);
-			int y = windowSize.height / 2;
-			
-			g2.drawString(NO_GPS_TEXT, x, y);
-			
-			img = noGpsImg;
-			
-		}
 		
-		updateWindow();
 		
-		entercount--;
+		
 	}
-
-	//@Override
-	public void show() {
-
-		repaintEvent();
-	}
-
 
 	public void setSize(int width, int height) {
 		
@@ -346,6 +336,24 @@ public class MapView extends Work implements SmthChangeListener {
 		
 	}
 
-	
+	public BufferedImage drawStub() {
+		BufferedImage noGpsImg = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_RGB);
+		
+		Graphics2D g2 = (Graphics2D)noGpsImg.getGraphics();
+		g2.setColor(Color.LIGHT_GRAY);
+		g2.fillRect(0, 0, windowSize.width, windowSize.height);
+		
+		g2.setColor(Color.DARK_GRAY);
+		
+		FontMetrics fm = g2.getFontMetrics();
+		Rectangle2D rect = fm.getStringBounds(NO_GPS_TEXT, g2);
+		
+		int x = (int) ((windowSize.width - rect.getWidth()) / 2);
+		int y = windowSize.height / 2;
+		
+		g2.drawString(NO_GPS_TEXT, x, y);
+		
+		return noGpsImg;
+	}	
 	
 }

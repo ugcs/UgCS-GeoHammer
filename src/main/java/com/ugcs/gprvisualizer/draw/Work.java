@@ -65,16 +65,20 @@ public class Work {
 		Platform.runLater(new Runnable() {
             @Override
             public void run() {
-            	if (img == null) {
-            		return;
-            	}
-			    Image i = SwingFXUtils.toFXImage(img, null);
-			    
-			    imageView.setImage(i);			    
+            	toImageView();			    
             }
         });
 	}
-
+	
+	public void toImageView() {
+		if (img == null) {
+    		return;
+    	}
+	    Image i = SwingFXUtils.toFXImage(img, null);
+	    
+	    imageView.setImage(i);
+	}
+	
 	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
