@@ -22,7 +22,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		
 		//clear
 		for (Trace t : file.getTraces()) {
-			t.good = new int[t.getNormValues().length];			
+			t.good = new byte[t.getNormValues().length];			
 		}
 		
 		processSgyFile(file);			
@@ -31,7 +31,7 @@ public class AlgorithmicScan implements AsinqCommand {
 	private void processSgyFile(SgyFile sf) {
 		List<Trace> traces = sf.getTraces();
 		int height = traces.get(0).getNormValues().length;
-		int[][] good = new int[traces.size()][height];
+		byte[][] good = new byte[traces.size()][height];
 		
 		if (sf.groundProfile == null) {
 			System.out.println("!!!!groundProfile == null");
@@ -45,7 +45,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		sf.algoScan = saveResultToTraces(traces, good);
 	}
 
-	private ScanProfile saveResultToTraces(List<Trace> traces, int[][] good) {
+	private ScanProfile saveResultToTraces(List<Trace> traces, byte[][] good) {
 		
 		ScanProfile hp = new ScanProfile(traces.size()); 
 		
@@ -53,7 +53,7 @@ public class AlgorithmicScan implements AsinqCommand {
 			hp.intensity[i] = cleversumdst(good, i);
 			
 			if (traces.get(i).good == null) {
-				traces.get(i).good = new int[good[i].length];
+				traces.get(i).good = new byte[good[i].length];
 			}
 			
 			//put to trace.good
@@ -66,7 +66,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		return hp;
 	}
 
-	private int cleversumdst(int[][] good, int tr) {
+	private int cleversumdst(byte[][] good, int tr) {
 		double sum = 0;		
 		
 		double maxsum = 0;
@@ -108,7 +108,7 @@ public class AlgorithmicScan implements AsinqCommand {
 
 	
 	
-	private int getAtLeastOneGood(int[][] good, int tr, int margin, int smp) {
+	private int getAtLeastOneGood(byte[][] good, int tr, int margin, int smp) {
 		int r = 0;
 		
 		for (int chtr = Math.max(0, tr - margin); 
@@ -120,7 +120,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		return r;
 	}
 
-	private double processTrace(SgyFile sgyFile, int tr, int[][] good) {
+	private double processTrace(SgyFile sgyFile, int tr, byte[][] good) {
 		
 		double thr = getThreshold();
 		
@@ -137,15 +137,15 @@ public class AlgorithmicScan implements AsinqCommand {
 		for (int smp = AppContext.model.getSettings().layer;				
 			smp < maxSmp; smp++) {			
 			
-			int exists = checkAllVariantsForPoint(sgyFile, tr, thr, smp);
+			byte exists = checkAllVariantsForPoint(sgyFile, tr, thr, smp);
 			
-			good[tr][smp] = good[tr][smp] | exists;
+			good[tr][smp] = (byte) (good[tr][smp] | exists);
 		}
 		
 		return goodSmpCnt;
 	}
 
-	public static int checkAllVariantsForPoint(SgyFile sgyFile, int tr, double thr, int smp) {
+	public static byte checkAllVariantsForPoint(SgyFile sgyFile, int tr, double thr, int smp) {
 		int exists = 0;
 		// reduce x distance for hyperbola calculation
 		for (double factorX = X_FACTOR_FROM;
@@ -157,7 +157,7 @@ public class AlgorithmicScan implements AsinqCommand {
 				break;
 			}
 		}
-		return exists;
+		return (byte) exists;
 	}
 
 	public double getThreshold() {

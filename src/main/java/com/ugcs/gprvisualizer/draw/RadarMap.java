@@ -245,6 +245,13 @@ public class RadarMap extends BaseLayer {
 			scaleArrayBuilder.clear();
 		}
 		
+		
+		if (	changed.isFileopened() 
+				|| changed.isZoom() 					
+			) {
+			
+			img = null;
+		}			
 		if (changed.isTraceCut() 
 				|| changed.isTraceValues() 
 				|| changed.isFileopened() 

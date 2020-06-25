@@ -7,6 +7,7 @@ public enum Change {
 	windowresized,
 	justdraw,
 	mapscroll,
+	profilescroll,
 	mapzoom,
 	
 	adjusting,

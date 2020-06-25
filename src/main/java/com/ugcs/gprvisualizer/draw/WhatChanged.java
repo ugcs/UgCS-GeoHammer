@@ -32,6 +32,10 @@ public class WhatChanged {
 		return change == Change.mapscroll;
 	}
 	
+	public boolean isProfilescroll() {
+		return change == Change.profilescroll;
+	}
+	
 	public boolean isJustdraw() {
 		return change == Change.justdraw;
 	}

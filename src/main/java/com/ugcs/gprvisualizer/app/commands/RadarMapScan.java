@@ -43,7 +43,7 @@ public class RadarMapScan implements Command {
 		
 	}
 
-	private double calcAlpha(float[] values, int[] edge, int start, int finish) {
+	private double calcAlpha(float[] values, byte[] edge, int start, int finish) {
 		double mx = 0;
 
 		start = MathUtils.norm(start, 0, values.length);

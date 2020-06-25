@@ -48,6 +48,7 @@ public class ProfileField {
 		this.selectedTrace = copy.selectedTrace;
 		this.startSample = copy.startSample;
 		this.zoom = copy.zoom;
+		this.vertScale = copy.vertScale;
 		this.aspect = copy.aspect;
 		this.realAspect = copy.realAspect;
 		
@@ -169,11 +170,12 @@ public class ProfileField {
 		this.startSample = Math.max(0, startSample);
 	}
 
+	double vertScale = 1;
 	public double getVScale() {
 		
-		double s = Math.pow(ZOOM_A, getZoom());
 		
-		return s;
+		
+		return vertScale;
 	}
 
 	public double getHScale() {
@@ -227,7 +229,10 @@ public class ProfileField {
 	}
 
 	public void setZoom(int zoom) {
+		
 		this.zoom = zoom;
+		
+		vertScale = Math.pow(ZOOM_A, getZoom());
 	}
 
 	private int getTopMargin() {

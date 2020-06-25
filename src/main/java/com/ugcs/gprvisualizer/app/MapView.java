@@ -288,7 +288,16 @@ public class MapView extends Work implements SmthChangeListener {
 	
 	private static final String NO_GPS_TEXT = "There are no coordinates in files";
 	
+	
+	int entercount = 0;
 	protected void repaintEvent() {
+		
+		entercount++;
+		
+		if (entercount > 1) {
+			Sout.p("entercount " + entercount);
+		}
+		
 		if (isGpsPresent()) {
 		
 			img = draw(windowSize.width, windowSize.height);
@@ -316,6 +325,8 @@ public class MapView extends Work implements SmthChangeListener {
 		}
 		
 		updateWindow();
+		
+		entercount--;
 	}
 
 	//@Override

@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -26,6 +28,11 @@ public class GpsTrack extends BaseLayer {
 	private RepaintListener listener;
 	
 	private Model model;
+	
+	
+	private BufferedImage img;
+	private LatLon imgLatLon;
+	
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
@@ -51,30 +58,60 @@ public class GpsTrack extends BaseLayer {
 		
 		super();
 		this.model = model;
-		this.listener = listener;		
+		this.listener = listener;	
+		
+		setDimension(parentDimension);
 	}
 	
 	@Override
 	public void draw(Graphics2D g2) {
-		if (model.getField().getSceneCenter() == null) {
+		if (model.getField().getSceneCenter() == null || !isActive()) {
 			return;
 		}
 		
-		drawGpsPath(g2);
+		if (img == null) {
+			updateImg();
+		}
+		
+		drawToScr(g2, model.getField(), img);
+		//MapField field = new MapField(model.getField());
+		//draw(g2, field);
 	}
 
-	private void drawGpsPath(Graphics2D g2) {
+	public void drawToScr(Graphics2D g2, MapField field, BufferedImage tmpImg) {
 		
-		MapField field = new MapField(model.getField());
-		
-		if (!isActive()) {
+		if (tmpImg == null) {
 			return;
 		}
 		
-		draw(g2, field);
+		Point2D offst = field.latLonToScreen(imgLatLon);
+		
+		g2.drawImage(tmpImg, 
+			(int) offst.getX() - tmpImg.getWidth() / 2, 
+			(int) offst.getY() - tmpImg.getHeight() / 2, 
+			null);
 	}
 
+	public void updateImg() {
+		img = new BufferedImage(
+				(int) getDimension().getWidth(), 
+				(int) getDimension().getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		
+		imgLatLon = model.getField().getSceneCenter();
+		
+		
+		Graphics2D g2 = (Graphics2D) img.getGraphics();
+		g2.translate(img.getWidth() / 2,  img.getHeight() / 2);
+		draw(g2, model.getField());
+		
+		//Sout.p("GpsTrack cr img");
+		
+	}
+	
 	public void draw(Graphics2D g2, MapField field) {
+		
+		
 		g2.setStroke(new BasicStroke(1.0f));		
 		
 		
@@ -133,7 +170,17 @@ public class GpsTrack extends BaseLayer {
 
 	@Override
 	public void somethingChanged(WhatChanged changed) {
-		
+		if (changed.isTraceCut() 
+				|| changed.isTraceValues() 
+				|| changed.isFileopened() 
+				|| changed.isZoom() 
+				|| changed.isAdjusting() 
+				|| changed.isMapscroll() 
+				|| changed.isWindowresized()) {
+			
+			img = null;
+		}		
+
 	}
 
 	@Override

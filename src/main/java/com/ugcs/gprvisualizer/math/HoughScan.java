@@ -70,7 +70,7 @@ public class HoughScan implements AsinqCommand {
 			}
 			
 			Trace tr = file.getTraces().get(pinTr);
-			tr.good = new int[file.getMaxSamples()];
+			tr.good = new byte[file.getMaxSamples()];
 
 			for (int pinSmp = AppContext.model.getSettings().layer; 
 					pinSmp < maxSmp; pinSmp++) {

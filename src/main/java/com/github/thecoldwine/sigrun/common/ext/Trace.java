@@ -32,7 +32,7 @@ public class Trace {
     public int indexInFile;
     public int indexInSet;
     
-    public int[] good;
+    public byte[] good;
     
     
     /*
@@ -43,7 +43,7 @@ public class Trace {
      * 4 - max
      *  
      */
-    public int[] edge;
+    public byte[] edge;
     
     public Set<Integer> max = new HashSet<>();
     
@@ -56,8 +56,8 @@ public class Trace {
         this.latLon = latLon;
         this.latLonOrigin = latLon;
         
-        this.good = new int[originalvalues.length];
-        this.edge = new int[originalvalues.length];
+        this.good = new byte[originalvalues.length];
+        this.edge = new byte[originalvalues.length];
     }
     
     public TraceHeader getHeader() {

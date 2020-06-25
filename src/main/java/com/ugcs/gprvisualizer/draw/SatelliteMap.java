@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,17 +47,41 @@ public class SatelliteMap extends BaseLayer {
 	private Broadcast broadcast;
 	
 	
-	private BufferedImage img;
-	private LatLon imgLatLon;
-	private int imgZoom;
+	//private BufferedImage img;
+	//private LatLon imgLatLon;
+	//private int imgZoom;
 	private LatLon click;
+	
+	ThrQueue q;
+	
+	@PostConstruct
+	public void init() {
+		q = new ThrQueue(model) {
+			protected void draw(BufferedImage backImg, MapField field) {
+				this.backImg = loadimg(field);
+			}
+			
+			public void ready() {
+				getRepaintListener().repaint();
+			}
+			
+			private void actualizeBackImg() {
+				
+			}
+		};
+		
+		q.width = 640*2;
+		q.height = 640*2;
+	}	
+	
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
 			setActive(showLayerCheckbox.isSelected());
 			if (isActive()) {
-				loadMap();
+				//loadMap();
+				q.add();
 			} else {
 				getRepaintListener().repaint();
 			}
@@ -105,12 +130,12 @@ public class SatelliteMap extends BaseLayer {
 	
 	@Override
 	public void draw(Graphics2D g2) {
-		BufferedImage tmpImg = img;
+		BufferedImage tmpImg = q.getFrontImg();
 		if (tmpImg != null && isActive()) {
 			
-			Point2D offst = model.getField().latLonToScreen(imgLatLon);
+			Point2D offst = model.getField().latLonToScreen(q.getFrontImgField().getSceneCenter());
 			
-			double scale = Math.pow(2, model.getField().getZoom() - imgZoom);
+			double scale = Math.pow(2, model.getField().getZoom() - q.getFrontImgField().getZoom());
 			
 			g2.drawImage(tmpImg, 
 				(int) (offst.getX() - tmpImg.getWidth() / 2 * scale), 
@@ -140,20 +165,21 @@ public class SatelliteMap extends BaseLayer {
 		if (changed.isFileopened() || changed.isZoom()) {
 			
 			if (model.isActive()) {
-				loadMap();
+				//loadMap();
+				q.add();
 			} else {
-				this.img = null;
+				q.clear();
 			}			
 		}		
 	}
 
-	private void loadMap() {
-		if (isActive() && StringUtils.isNotBlank(GOOGLE_API_KEY)) {
-			new Calc().start();
-		}
-	}
+//	private void loadMap() {
+//		if (isActive() && StringUtils.isNotBlank(GOOGLE_API_KEY)) {
+//			new Calc().start();
+//		}
+//	}
 	
-	protected void loadimg() {
+	protected BufferedImage loadimg(MapField field) {
 		
 		BufferedImage img = null;
 		
@@ -162,8 +188,8 @@ public class SatelliteMap extends BaseLayer {
 		map.setScale(MapField.MAP_SCALE);
 		map.setMaptype(Maptype.hybrid);
 		
-		LatLon midlPoint = model.getField().getSceneCenter();
-		int imgZoom = model.getField().getZoom();
+		LatLon midlPoint = field.getSceneCenter();
+		int imgZoom = field.getZoom();
 		map.setLocation(new Location(
 				midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); 
 		map.setMaptype(Maptype.hybrid);
@@ -184,19 +210,17 @@ public class SatelliteMap extends BaseLayer {
 			e.printStackTrace();
 		}
 		
-		this.img = img;
-		this.imgLatLon = midlPoint;
-		this.imgZoom = imgZoom;
+		return img;
 	}
 	
-	class Calc extends Thread {
-		public void run() {
-		
-			loadimg();
-			
-			getRepaintListener().repaint();
-		}
-	}
+//	class Calc extends Thread {
+//		public void run() {
+//		
+//			loadimg();
+//			
+//			getRepaintListener().repaint();
+//		}
+//	}
 
 	MapField dragField = null;
 	
