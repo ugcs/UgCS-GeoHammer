@@ -219,8 +219,8 @@ public class GprFile extends SgyFile {
 		double lat = retrieveVal(header.getLatitude(), header.getSourceY()); 
 		
 		if (Double.isNaN(lon) || Double.isNaN(lat) 
-				|| Math.abs(lon) < 0.1 
-				|| Math.abs(lat) < 0.1 
+				|| Math.abs(lon) < 0.0001 
+				|| Math.abs(lat) < 0.0001 
 				|| Math.abs(lon) > 18000 
 				|| Math.abs(lat) > 18000) {
 		
@@ -256,6 +256,37 @@ public class GprFile extends SgyFile {
 			
 			traces.add(trace);
 		}
+		
+		
+		//fill latlon where null
+		Integer fstEmp = null;
+		LatLon ll = null;
+		for (int index = 0; index < traces.size(); index++) {
+			Trace t = traces.get(index) ;
+			
+			if (t.getLatLon() == null) {
+				if (ll != null) {
+					t.setLatLon(ll);
+				} else if (fstEmp == null) {
+					fstEmp = index;
+				}
+			}
+			
+			if (t.getLatLon() != null) {
+				ll = t.getLatLon();
+				
+				if (fstEmp != null) {
+			
+					for (int i = fstEmp; i < index; i++) {
+						traces.get(i).setLatLon(t.getLatLon());
+					}
+					fstEmp = null;
+				}
+			}
+		}
+		
+		
+		
 		
 		return traces;
 	}
