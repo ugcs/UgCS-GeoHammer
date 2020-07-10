@@ -588,7 +588,7 @@ public class ProfileView implements SmthChangeListener {
 				
 				SliderFactory.create("verticalShift", 
 						model.getSettings().printHoughVertShift, 
-						-70, 70, 
+						-150, 150, 
 						new ChangeListener<Number>() {
 					@Override
 					public void changed(

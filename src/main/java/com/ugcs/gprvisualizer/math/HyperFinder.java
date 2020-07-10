@@ -11,6 +11,7 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -30,6 +31,8 @@ public class HyperFinder {
 	        new BasicStroke(2.0f);
 	private static final BasicStroke line4 =
 	        new BasicStroke(4.0f);
+	private static final BasicStroke line8 =
+	        new BasicStroke(8.0f);
 	
 	Color plusBest = new Color(100, 255, 100);
 	Color plusGood = new Color(70, 180, 70); 
@@ -107,12 +110,12 @@ public class HyperFinder {
 		
 		hs.isPrintLog = true;
 		
-		double threshold = model.getSettings().hyperSensitivity.doubleValue();
-		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample(), threshold);
-		
-		if (hs.getHoughDrawer() != null) {
-			hs.getHoughDrawer().drawOnCut(g2, profField);
-		}
+//		double threshold = model.getSettings().hyperSensitivity.doubleValue();
+//		hs.scan(file, tr - file.getOffset().getStartTrace(), ts.getSample(), threshold);
+//		
+//		if (hs.getHoughDrawer() != null) {
+//			hs.getHoughDrawer().drawOnCut(g2, profField);
+//		}
 		
 		double hyperkf = model.getSettings().hyperkfc / 100.0;		
 		float example2 = values[ts.getSample()];
@@ -140,15 +143,31 @@ public class HyperFinder {
 				+ " " + fl(right2.oppositeBelowPerc),
 				lt.x - 100, lt.y - 30);
 		
-		g2.setColor(Color.CYAN);
-		g2.setStroke(line4);
+		g2.setColor(new Color(60, 140, 150, 170));
+		g2.setStroke(line8);
 		
+		
+		
+		HoughExperimentsAnalizer hea = new HoughExperimentsAnalizer(file);
+		
+		HoughExperiments he = hea.debug(
+				tr - file.getOffset().getStartTrace(), 
+				ts.getSample(), 
+				model.getSettings().printHoughVertShift.doubleValue());
+				
+//		HoughExperiments he = HoughExperiments.f(file, tr - file.getOffset().getStartTrace(), ts.getSample(), 
+//				model.getSettings().printHoughVertShift.doubleValue(), 4);
+		
+		he.draw(g2, profField);
+//		Sout.p("good c " + he.criteriaGoodCount());
+//		Sout.p("real w " + he.criteriaRealWidth());
+//		Sout.p("gb rat " + he.criteriaGoodBadRatio());
 		
 		//drawHalfHyperLine(g2, profField, left2, 1);
 		//drawHalfHyperLine(g2, profField, right2, 1);
 	}
 	
-	public void drawHalfHyperLine(Graphics2D g2, ProfileField profField, 
+	protected void drawHalfHyperLine(Graphics2D g2, ProfileField profField, 
 			HalfHyper hh, int voffst) {
 		
 		
@@ -196,7 +215,7 @@ public class HyperFinder {
 		
 	public static double THRESHOLD = 0.7;
 	
-	public void drawHyperbolaLine2(Graphics2D g2, ProfileField profField) {
+	protected void drawHyperbolaLine2(Graphics2D g2, ProfileField profField) {
 		
 		double thr = getThreshold();
 		
@@ -218,7 +237,7 @@ public class HyperFinder {
 		
 	}
 
-	public void drawHyperSingleLine(Graphics2D g2, 
+	protected void drawHyperSingleLine(Graphics2D g2, 
 			ProfileField profField, double thr, 
 			int smp, SgyFile sgyFile,
 			int traceInFile, double factorX) {
@@ -246,7 +265,7 @@ public class HyperFinder {
 		drawHypDst(g2, profField, sgyFile.getOffset(), rht);
 	}
 
-	public void drawHypDst(Graphics2D g2, ProfileField profField, 
+	protected void drawHypDst(Graphics2D g2, ProfileField profField, 
 			VerticalCutPart  offset, HalfHyperDst lft) {
 		Point prev = null;
 		for (int i = 0; i < lft.length; i++) {

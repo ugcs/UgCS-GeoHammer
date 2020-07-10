@@ -52,7 +52,7 @@ public class HoughScanPinncaleAnalizer {
 		}
 		
 		
-		shift = AppContext.model.getSettings().printHoughVertShift.intValue();
+		shift = 0;//AppContext.model.getSettings().printHoughVertShift.intValue();
 		//
 		for (int smp = workingRect.getSmpFrom();
 				smp <= workingRect.getSmpTo(); smp++) {

@@ -19,6 +19,7 @@ import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.ExpHoughScan;
 import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.TraceStacking;
 
@@ -63,6 +64,8 @@ public class OptionPane extends VBox {
 	@Autowired
 	private HoughScan houghScan;
 	
+	@Autowired
+	private ExpHoughScan expHoughScan;
 	
 	private ToggleButton showGreenLineBtn = new ToggleButton("", 
 			ResourceImageHolder.getImageView("level.png"));
@@ -164,17 +167,20 @@ public class OptionPane extends VBox {
 		ToggleButton shEdge;
 		t2.getChildren().addAll(
 				new HBox(
-						commandRegistry.createAsinqTaskButton(
-						new AlgorithmicScanFull(),
-						e -> { 
-							radarMap.selectAlgMode();
-						 }
-					),
+						
 					commandRegistry.createAsinqTaskButton(
 						houghScan, 
-						e -> {
-							radarMap.selectAlgMode();
-						}
+						e -> radarMap.selectAlgMode()						
+					),
+					commandRegistry.createAsinqTaskButton(
+						expHoughScan,
+						e -> radarMap.selectAlgMode()
+					)
+				),
+				new HBox(
+						commandRegistry.createAsinqTaskButton(
+						new AlgorithmicScanFull(),
+						e -> radarMap.selectAlgMode()
 					),
 					commandRegistry.createAsinqTaskButton(
 							new PluginRunner(model),
@@ -183,8 +189,8 @@ public class OptionPane extends VBox {
 				),
 
 				
-				commandRegistry.createAsinqTaskButton(
-						new AlgorithmicScan()),				
+				//commandRegistry.createAsinqTaskButton(
+				//		new AlgorithmicScan()),				
 				
 				new HBox(
 					prepareToggleButton("Hyperbola detection mode", 
@@ -197,14 +203,14 @@ public class OptionPane extends VBox {
 						}),
 					showGreenLineBtn),
 				
-				commandRegistry.createButton(new TraceStacking()), 
 				
-				new HBox(
-						commandRegistry.createButton(
-								new EdgeFinder()),
-						commandRegistry.createButton(
-								new EdgeSubtractGround())
-						),
+				
+				//new HBox(
+				//		commandRegistry.createButton(
+				//				new EdgeFinder()),
+				//		commandRegistry.createButton(
+				//				new EdgeSubtractGround())
+				//		),
 				new HBox(
 						shEdge = prepareToggleButton("show edge", null, 
 								model.getSettings().showEdge, 
@@ -214,7 +220,7 @@ public class OptionPane extends VBox {
 								model.getSettings().showGood, 
 								Change.justdraw)
 						),
-				
+				commandRegistry.createButton(new TraceStacking()), 
 				commandRegistry.createButton(new LevelScanHP(), 
 						e -> {
 							broadcast.notifyAll(new WhatChanged(Change.justdraw));

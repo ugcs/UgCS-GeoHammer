@@ -204,7 +204,21 @@ public abstract class SgyFile {
 		double fract = org - dgr;
 		double rx = dgr + fract / 60.0 * 100.0;
 		return rx;
+	}
+
+	public int getGood(int tr, int s) {
+		
+		return getTraces().get(tr).good[s];
 	}	
-	
-	
+
+	public int getEdge(int tr, int s) {
+		
+		return getTraces().get(tr).edge[s];
+	}	
+
+	public float getVal(int tr, int s) {
+		
+		return getTraces().get(tr).getNormValues()[s];
+	}	
+
 }
