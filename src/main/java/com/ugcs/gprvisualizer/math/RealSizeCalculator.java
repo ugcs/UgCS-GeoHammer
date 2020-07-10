@@ -46,7 +46,7 @@ public 	class RealSizeCalculator {
 		sb.append(start).append(" - ");
 		for (int i = start; i < exst.length; i++) {
 			if (print) {
-				sb.append(exst[i]).append(" ");
+				//sb.append(exst[i]).append(" ");
 			}
 			
 			if (exst[i] == 1) {
@@ -61,7 +61,7 @@ public 	class RealSizeCalculator {
 		}
 		
 		if (print) {
-			Sout.p(sb.toString());
+			//Sout.p(sb.toString());
 		}
 		return lastgood;
 	}

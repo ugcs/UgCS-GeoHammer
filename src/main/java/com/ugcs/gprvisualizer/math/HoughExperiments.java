@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.math;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.io.File;
@@ -74,7 +76,7 @@ public class HoughExperiments {
 		
 		boolean res = good > compare;
 		if (print) {
-			Sout.p("criteriaGoodCount " + good + "  <>  " + compare + " = " + res);
+			Sout.p("criteriaGoodCount         " + good + "  <>  " + compare + " = " + res);
 		}
 		
 		return res;
@@ -84,17 +86,57 @@ public class HoughExperiments {
 		
 		int min = getMaxWidth() * 65 / 100;
 		
+		//add header
+		for (int i = leftStart[0]; i <= rightFinish[0]; i++) {
+			if (file.getEdge(i, smpPin) == lookingEdge 
+				|| file.getEdge(i, smpPin - 1) == lookingEdge ) {
+				rsc.add(i);
+			}
+		}
+		
 		realTraceFrom = tracePin - rsc.getLeft();
 		realTraceTo = tracePin + rsc.getRight();
+		
 		int realWidth = realTraceTo - realTraceFrom + 1;
 		
 		boolean res = realWidth > min;
 		if (print) {
-			Sout.p("criteriaReal widt mxgp " + maxgap + "  realw " + realWidth + "(" + realTraceFrom + " - " + realTraceTo + ")" + "  <>  " + min + " = " + res);
+			Sout.p("criteriaRealW " + maxgap + "(" + realTraceFrom + " - " + realTraceTo + ")"+ "  rw " + realWidth  + "  <>  " + min + " = " + res);
 		}
 		
 		return res;
 	}
+	
+	public boolean criteriaRealMinLeft() {
+		
+	
+		int lft = tracePin - realTraceFrom;
+		int rgh = realTraceTo - tracePin;
+		
+		int min = (tracePin - traceFrom) / 2;
+		
+		boolean res = lft > min;
+		if (print) {
+			Sout.p("criteriaRealMinLeft " + lft + "  <>  " + min + " = " + res);
+		}
+		
+		return res;
+	}	
+
+	public boolean criteriaRealMinRight() {
+		
+		
+		int rgh = realTraceTo - tracePin;
+		
+		int min = (traceTo - tracePin) / 2;
+		
+		boolean res = rgh > min;
+		if (print) {
+			Sout.p("criteriaRealMinRight " + rgh + "  <>  " + min + " = " + res);
+		}
+		
+		return res;
+	}	
 	
 	public boolean criteriaGoodBadRatio() {
 		good = 0;
@@ -120,7 +162,7 @@ public class HoughExperiments {
 		boolean res = good > compare; 
 			
 		if (print) {
-			Sout.p("criteria gd/bad " + good + "  <>  " + compare + " = " + res);
+			Sout.p("criteria gd/bad    " + good + "  <>  " + compare + " = " + res);
 		}
 		
 		return res;
@@ -172,7 +214,7 @@ public class HoughExperiments {
 		
 		
 		
-		rsc = new RealSizeCalculator(tracePin, traceFrom, traceTo, maxgap, leftFinish[1], rightStart[1]);
+		rsc = new RealSizeCalculator(tracePin, traceFrom, traceTo, maxgap, tracePin, tracePin);//leftFinish[1], rightStart[1]);
 		rsc.print = print;
 	}
 	
@@ -274,6 +316,19 @@ public class HoughExperiments {
 					p1.x, p1.y, 
 					p2.x, p2.y);
 		}
+		
+		g2.setColor(Color.BLUE);
+		g2.setStroke(new BasicStroke(1));
+		//draw real tr
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceFrom), smpPin));
+		g2.drawLine(
+				p1.x, p1.y, 
+				p1.x, p1.y-12);
+		
+		p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceTo), smpPin));
+		g2.drawLine(
+				p1.x, p1.y, 
+				p1.x, p1.y-12);
 	}
 	
 	public int getLeft(int smp, double shift) {

@@ -48,6 +48,8 @@ public class HoughExperimentsAnalizer {
 		
 		he.criteriaGoodCount();
 		he.criteriaRealWidth();
+		he.criteriaRealMinLeft();
+		he.criteriaRealMinRight();
 		he.criteriaGoodBadRatio();				
 		
 //		Sout.p("gc  " + he.criteriaGoodCount());
@@ -84,18 +86,15 @@ public class HoughExperimentsAnalizer {
 		while (it.hasNext()) {
 			HoughExperiments he = it.next();
 			
-			if(!he.criteriaGoodCount()) {
-				it.remove();
+			if(he.criteriaGoodCount()
+				&& he.criteriaRealWidth()
+				&& he.criteriaRealMinLeft()
+				&& he.criteriaRealMinRight()
+				&& he.criteriaGoodBadRatio()) {
+				//good
+			} else {
+				it.remove();			
 				
-				//Sout.p("goodcnt");
-			} else if (!he.criteriaRealWidth()) {
-				it.remove();
-				
-				//Sout.p("realw ");
-			} else if (!he.criteriaGoodBadRatio()) {
-				it.remove();
-				
-				//Sout.p("gbratio ");
 			}			
 		}		
 	}

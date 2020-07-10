@@ -554,7 +554,9 @@ public class ProfileView implements SmthChangeListener {
 	
 	public List<Node> getRightSearch() {
 
-		return Arrays.asList(hyperbolaSlider.produce(), 
+		
+		//Slider s;
+		List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
 				hyperGoodSizeSlider.produce(), 
 				middleAmplitudeSlider.produce(),
 
@@ -588,7 +590,7 @@ public class ProfileView implements SmthChangeListener {
 				
 				SliderFactory.create("verticalShift", 
 						model.getSettings().printHoughVertShift, 
-						-150, 150, 
+						-50, 250, 
 						new ChangeListener<Number>() {
 					@Override
 					public void changed(
@@ -600,6 +602,9 @@ public class ProfileView implements SmthChangeListener {
 					}
 				}, 5)				
 				);
+		
+		
+		return lst;
 	}
 
 	protected void initImageView() {
