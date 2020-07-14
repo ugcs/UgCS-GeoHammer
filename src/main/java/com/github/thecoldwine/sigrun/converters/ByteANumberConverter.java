@@ -11,6 +11,8 @@ public final class ByteANumberConverter {
     private static final Logger log = LoggerFactory.getLogger(ByteANumberConverter.class.getName());
     private static final int BYTE = 0x000000FF;
     private static final int LENGTH_32 = 4;
+    
+    static ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
 
     /**
      * Converts a range of byte array to unsigned short (Integer in Java).
@@ -89,8 +91,8 @@ public final class ByteANumberConverter {
         if (offset < 0)
             throw new IllegalArgumentException("Offset cannot be less than zero");
 
-        short res = ByteBuffer.wrap(source, offset, SeismicValuesConverter.SHORT_SIZE).order(ByteOrder.LITTLE_ENDIAN).getShort();
-
+        //short res = ByteBuffer.wrap(source, offset, SeismicValuesConverter.SHORT_SIZE).order(ByteOrder.LITTLE_ENDIAN).getShort();
+        short res = ByteBuffer.wrap(source, offset, SeismicValuesConverter.SHORT_SIZE).order(byteOrder).getShort();
         return res;
     }
 
@@ -126,13 +128,13 @@ public final class ByteANumberConverter {
             throw new IllegalArgumentException("Offset cannot be less than zero");
 
         //im
-        return ByteBuffer.wrap(source, offset, SeismicValuesConverter.INT_SIZE).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        return ByteBuffer.wrap(source, offset, SeismicValuesConverter.INT_SIZE).order(byteOrder).getInt();
     }
 
     public static float byteAToFloatIEEE754(byte[] buffer, int offset) {
          float f = ByteBuffer
         	.wrap(buffer, offset, SeismicValuesConverter.FLOAT_SIZE)
-        	.order(ByteOrder.LITTLE_ENDIAN)
+        	.order(byteOrder)
         	.getFloat();
          
          return f;
@@ -141,7 +143,7 @@ public final class ByteANumberConverter {
 	public static Double byteToDbl(byte[] source, int offset) {
 		return ByteBuffer
     	.wrap(source, offset, 8)
-    	.order(ByteOrder.LITTLE_ENDIAN)
+    	.order(byteOrder)
     	.getDouble();	
 	}
 }

@@ -22,7 +22,7 @@ public class IEEEConverter implements SeismicValuesConverter {
         FloatBuffer floatBuffer = ByteBuffer.wrap(bytes).asFloatBuffer();
 
         for (int i = 0; i < result.length; i++) {
-            result[i] = floatBuffer.get();
+            result[i] = floatBuffer.get() * 10000;
         }
 
         return result;
