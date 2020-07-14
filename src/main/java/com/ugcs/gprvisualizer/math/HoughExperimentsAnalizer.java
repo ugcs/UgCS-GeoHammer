@@ -156,7 +156,7 @@ public class HoughExperimentsAnalizer {
 		left = tr;
 		right = tr;
 		bottom = smp;
-		for (double heightShift = 0; heightShift < 140; heightShift += 10) {
+		for (double heightShift = -30; heightShift < 140; heightShift += 5) {
 			HoughExperiments he = HoughExperiments.f(file, tr, smp, heightShift, goodHeadEdge, false);
 			
 			

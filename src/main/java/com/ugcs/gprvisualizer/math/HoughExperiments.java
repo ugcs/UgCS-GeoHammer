@@ -24,6 +24,7 @@ public class HoughExperiments {
 	private static final int BAD_INCR = 2;
 
 	private static final double HYP_MAX = 0.25;
+	private double effectHypMax;
 	
 	public boolean print = false; 
 	private SgyFile file;
@@ -64,6 +65,8 @@ public class HoughExperiments {
 		he.y = RulerTool.distanceCm(file, he.tracePin, he.tracePin, 0, he.smpPin);		
 		he.shift = heightShift;
 		he.lookingEdge = lookingEdge;
+		
+		he.effectHypMax = HYP_MAX - (heightShift / 150) * 0.075;
 		
 		he.init();
 		
@@ -335,7 +338,7 @@ public class HoughExperiments {
 		
 		double x = getXDist(smp, shift);
 		
-		if (x > (y + shift ) * HYP_MAX) {
+		if (x > (y + shift ) * effectHypMax) {
 			return -1;
 		}
 		
@@ -347,7 +350,7 @@ public class HoughExperiments {
 		
 		double x = getXDist(smp, shift);
 		
-		if (x > (y + shift ) * HYP_MAX) {
+		if (x > (y + shift ) * effectHypMax) {
 			return -1;
 		}
 		
