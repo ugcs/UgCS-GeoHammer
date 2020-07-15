@@ -24,6 +24,8 @@ public class TaskRunner implements ProgressListener {
 	
 	private Button closeButton = new Button("Close");
 	
+	private String message = "";
+	
 	public TaskRunner(Status status, ProgressTask task) {
 		this.status = status;
 		
@@ -87,6 +89,12 @@ public class TaskRunner implements ProgressListener {
 
 	@Override
 	public void progressMsg(String msg) {
+		this.message = msg;
+		
+		show(message);
+	}
+	
+	protected void show(String msg) {
 		
 		Platform.runLater(new Runnable() {
 			@Override
@@ -98,6 +106,12 @@ public class TaskRunner implements ProgressListener {
 
 	@Override
 	public void progressPercent(int percent) {
+		
+	}
+
+	@Override
+	public void progressSubMsg(String msg) {
+		show(message + " " + msg);
 		
 	}
 

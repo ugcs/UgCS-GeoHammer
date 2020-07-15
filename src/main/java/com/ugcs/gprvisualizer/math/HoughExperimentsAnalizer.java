@@ -50,6 +50,7 @@ public class HoughExperimentsAnalizer {
 		he.criteriaRealWidth();
 		he.criteriaRealMinLeft();
 		he.criteriaRealMinRight();
+		he.criteriaRealMinHight();
 		he.criteriaGoodBadRatio();				
 		
 //		Sout.p("gc  " + he.criteriaGoodCount());
@@ -90,6 +91,7 @@ public class HoughExperimentsAnalizer {
 				&& he.criteriaRealWidth()
 				&& he.criteriaRealMinLeft()
 				&& he.criteriaRealMinRight()
+				&& he.criteriaRealMinHight()
 				&& he.criteriaGoodBadRatio()) {
 				//good
 			} else {
@@ -156,7 +158,7 @@ public class HoughExperimentsAnalizer {
 		left = tr;
 		right = tr;
 		bottom = smp;
-		for (double heightShift = -30; heightShift < 140; heightShift += 5) {
+		for (double heightShift = -30; heightShift < 150; heightShift += 5) {
 			HoughExperiments he = HoughExperiments.f(file, tr, smp, heightShift, goodHeadEdge, false);
 			
 			

@@ -58,9 +58,13 @@ public class MainGeoHammer extends Application {
 		
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
-		Scene scene = new Scene(rootControls.getSceneContent(), screenSize.getWidth(), 768);
+		Scene scene = new Scene(rootControls.getSceneContent(), screenSize.getWidth()-80, 700);
+		//scene.set
 		stage.setScene(scene);
 		//stage.setMaximized(true);
+		
+		stage.setX(0);
+		stage.setY(0);
 		stage.show();
 
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -93,6 +97,12 @@ public class MainGeoHammer extends Application {
 		
 		@Override
 		public void progressMsg(String msg) {}
+
+		@Override
+		public void progressSubMsg(String msg) {
+			// TODO Auto-generated method stub
+			
+		}
 	};
 
 }

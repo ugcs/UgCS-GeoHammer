@@ -8,6 +8,7 @@ import java.util.Queue;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.HalfHyperDst;
@@ -78,7 +79,7 @@ public class EdgeSubtractGround implements Command {
 	private static final int MARGIN = 5;
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		if (file.groundProfile == null) {
 			System.out.println("!!!!!!!!!!!!!1 file.groundProfile == null");
 			return;

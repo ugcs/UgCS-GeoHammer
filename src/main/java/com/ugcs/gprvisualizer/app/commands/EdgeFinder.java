@@ -5,6 +5,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -16,7 +17,7 @@ public class EdgeFinder implements Command {
 	private Model model = AppContext.model;
 	
 	
-	public void execute(SgyFile sgyFile) {
+	public void execute(SgyFile sgyFile, ProgressListener listener) {
 		
 		List<Trace> traces = sgyFile.getTraces();
 		

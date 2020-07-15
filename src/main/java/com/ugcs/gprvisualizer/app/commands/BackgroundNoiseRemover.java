@@ -5,6 +5,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.BackgroundRemovalFilter;
@@ -16,7 +17,7 @@ public class BackgroundNoiseRemover implements Command {
 	
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		BackgroundRemovalFilter brf = new BackgroundRemovalFilter();
 		
 		List<Trace> lst = file.getTraces();

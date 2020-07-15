@@ -16,6 +16,7 @@ import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.AsinqCommand;
@@ -48,13 +49,13 @@ public class HoughScan implements AsinqCommand {
 	}
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 
 		if (file.groundProfile == null) {
-			new LevelScanner().execute(file);
+			new LevelScanner().execute(file, listener);
 		}
-		new EdgeFinder().execute(file);
-		new EdgeSubtractGround().execute(file);
+		new EdgeFinder().execute(file, listener);
+		new EdgeSubtractGround().execute(file, listener);
 
 		//
 		int maxSmp = Math.min(AppContext.model.getSettings().layer 
@@ -83,7 +84,7 @@ public class HoughScan implements AsinqCommand {
 			}
 		}
 		
-		new ScanGood().execute(file);
+		new ScanGood().execute(file, listener);
 	}	
 
 	public boolean scan(SgyFile sgyFile, 

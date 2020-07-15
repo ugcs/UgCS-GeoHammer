@@ -5,6 +5,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.AmplitudeMatrix;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 
 /**
@@ -15,13 +16,13 @@ import com.ugcs.gprvisualizer.draw.Change;
 public class LevelScanner implements Command {
 
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		
 		// copy sgyfile
 		SgyFile file2 = file.copy(); 
 		
 		// remove noise
-		new BackgroundNoiseRemover().execute(file2);
+		new BackgroundNoiseRemover().execute(file2, listener);
 		
 		
 		List<Trace> lst = file2.getTraces();
@@ -32,8 +33,8 @@ public class LevelScanner implements Command {
 		
 		
 		//aux tasks 
-		new EdgeFinder().execute(file);
-		new EdgeSubtractGround().execute(file);		
+		new EdgeFinder().execute(file, listener);
+		new EdgeSubtractGround().execute(file, listener);		
 		
 	}
 

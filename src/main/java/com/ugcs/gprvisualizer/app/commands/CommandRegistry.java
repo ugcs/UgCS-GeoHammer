@@ -48,6 +48,12 @@ public class CommandRegistry {
 		public void progressMsg(String msg) {
 			
 		}
+
+		@Override
+		public void progressSubMsg(String msg) {
+			// TODO Auto-generated method stub
+			
+		}
 	};
 	
 	public void runForFiles(Command command) {
@@ -57,13 +63,16 @@ public class CommandRegistry {
 	
 	public void runForFiles(Command command, ProgressListener listener) {
 	
+		int number = 1;
+		int count = model.getFileManager().getFiles().size();
+		
 		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
 			
 			try {
 				listener.progressMsg("process file '" 
-						+ sgyFile.getFile().getName() + "'");
+						+ sgyFile.getFile().getName() + "' (" + number++ + "/" + count + ")"  );
 				
-				command.execute(sgyFile);
+				command.execute(sgyFile, listener);
 				
 			} catch (Exception e) {
 				e.printStackTrace();

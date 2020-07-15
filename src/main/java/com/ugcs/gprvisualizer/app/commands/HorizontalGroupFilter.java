@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
@@ -16,7 +17,7 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 public class HorizontalGroupFilter implements Command {
 
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		System.out.println("  -- -HorizontalGroupFilter- " + file.getFile().getName());
 		
 		List<HorizontalProfile> tmpStraight = new ArrayList<>();

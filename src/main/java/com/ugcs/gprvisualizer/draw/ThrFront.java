@@ -12,6 +12,10 @@ public class ThrFront {
 	private MapField field;
 
 	public ThrFront(BufferedImage img, MapField field) {
+		if (img == null) {
+			throw new RuntimeException("img == null");
+		}
+		
 		this.img = img;
 		this.field = field;
 	}

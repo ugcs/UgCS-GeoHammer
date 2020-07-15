@@ -7,11 +7,14 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.AsinqCommand;
+import com.ugcs.gprvisualizer.app.commands.Command;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
+import com.ugcs.gprvisualizer.app.commands.ProgressCommand;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -23,14 +26,14 @@ public class ExpHoughScan  implements AsinqCommand {
 	private Model model;
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		Sout.p("start");
 		
 		if (file.groundProfile == null) {
-			new LevelScanner().execute(file);
+			new LevelScanner().execute(file, listener);
 		}
-		new EdgeFinder().execute(file);
-		new EdgeSubtractGround().execute(file);
+		new EdgeFinder().execute(file, listener);
+		new EdgeSubtractGround().execute(file, listener);
 
 		//
 		int maxSmp = Math.min(AppContext.model.getSettings().layer 
@@ -42,10 +45,8 @@ public class ExpHoughScan  implements AsinqCommand {
 		for (int pinTr = 0; pinTr < file.size(); pinTr++) {
 			//log progress
 			if (pinTr % 100 == 0) {
-				Sout.p("tr " + pinTr + " / " + file.size());
+				listener.progressSubMsg(" -  traces processed: " + pinTr + "/" + file.size());
 			}
-			
-			
 			
 			Trace tr = file.getTraces().get(pinTr);
 			tr.good = new byte[file.getMaxSamples()];
@@ -61,7 +62,7 @@ public class ExpHoughScan  implements AsinqCommand {
 			}
 		}
 		
-		new ScanGood().execute(file);	
+		new ScanGood().execute(file, listener);	
 		
 		Sout.p("finish");
 	}

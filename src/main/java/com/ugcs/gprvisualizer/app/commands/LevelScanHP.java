@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
@@ -15,14 +16,14 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 public class LevelScanHP implements Command {
 
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 
 		
 		// find edges
-		new EdgeFinder().execute(file);
+		new EdgeFinder().execute(file, listener);
 		
 		// find HPs
-		new HorizontalGroupScan().execute(file);
+		new HorizontalGroupScan().execute(file, listener);
 		
 		// lines  
 //		List<HorizontalProfile> lines = findStraightLines(file);
@@ -38,13 +39,13 @@ public class LevelScanHP implements Command {
 		SgyFile file2 = file.copy(); 
 		
 		// remove noise
-		new BackgroundNoiseRemover().execute(file2);
+		new BackgroundNoiseRemover().execute(file2, listener);
 
 		// find edges
-		new EdgeFinder().execute(file2);
+		new EdgeFinder().execute(file2, listener);
 		
 		// find HPs
-		new HorizontalGroupScan().execute(file2);
+		new HorizontalGroupScan().execute(file2, listener);
 		
 		// select curve lines
 		List<HorizontalProfile> lines2 = findCurveLines(file2);
@@ -70,8 +71,8 @@ public class LevelScanHP implements Command {
 		
 		
 		//aux tasks 
-		new EdgeFinder().execute(file);
-		new EdgeSubtractGround().execute(file);		
+		new EdgeFinder().execute(file, listener);
+		new EdgeSubtractGround().execute(file, listener);		
 		
 	}
 

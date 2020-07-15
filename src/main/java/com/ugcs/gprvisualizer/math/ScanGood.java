@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.math;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.Command;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -27,7 +28,7 @@ public class ScanGood implements Command {
 	}
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		
 		// | ___ |
 		

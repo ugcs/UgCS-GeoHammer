@@ -6,6 +6,9 @@ public 	class RealSizeCalculator {
 	public boolean print;
 	int[] columnExistsLeft;	
 	int[] columnExistsRight;
+	int[] smpLeft;	
+	int[] smpRight;
+	
 	int pin;
 	int gap;
 	
@@ -17,22 +20,26 @@ public 	class RealSizeCalculator {
 		this.gap = gap;
 		columnExistsLeft = new int[pin - from + 1];	
 		columnExistsRight = new int[to - pin + 1];
+		smpLeft = new int[pin - from + 1];	
+		smpRight = new int[to - pin + 1];
 		
 		this.startleft = pin - startleft;
 		this.startright = startright - pin;
 		
 	}
 	
-	public void add(int tr) {
+	public void add(int tr, int smp) {
 		if (tr < pin) {
 			int ind = pin - tr;
 			if (ind < columnExistsLeft.length) {
 				columnExistsLeft[ind] = 1;
+				smpLeft[ind] = Math.max(smpLeft[ind], smp);
 			}
 		} else {
 			int ind = tr - pin;
 			if (ind < columnExistsRight.length) {
 				columnExistsRight[ind] = 1;
+				smpRight[ind] = Math.max(smpRight[ind], smp);
 			}				
 		}
 	}
@@ -72,6 +79,14 @@ public 	class RealSizeCalculator {
 	
 	public int getRight() {
 		return getContinuous(columnExistsRight, startright);
+	}
+	
+	public int getLeftSmp(int i) {
+		return smpLeft[i];
+	}
+	
+	public int getRightSmp(int i) {
+		return smpRight[i];
 	}
 	
 }

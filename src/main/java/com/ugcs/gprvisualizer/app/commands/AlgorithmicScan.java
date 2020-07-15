@@ -5,6 +5,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HalfHyperDst;
 import com.ugcs.gprvisualizer.math.ScanProfile;
@@ -18,7 +19,7 @@ public class AlgorithmicScan implements AsinqCommand {
 	
 	
 	@Override
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 		
 		//clear
 		for (Trace t : file.getTraces()) {

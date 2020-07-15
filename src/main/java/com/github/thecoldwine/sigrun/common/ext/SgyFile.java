@@ -131,7 +131,7 @@ public abstract class SgyFile {
 
 	public void setTraces(List<Trace> traces) {
 		this.traces = traces;
-		new EdgeFinder().execute(this);
+		new EdgeFinder().execute(this, null);
 	}
 
 	public File getFile() {

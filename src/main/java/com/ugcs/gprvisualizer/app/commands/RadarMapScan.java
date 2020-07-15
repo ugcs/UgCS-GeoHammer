@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app.commands;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -19,7 +20,7 @@ public class RadarMapScan implements Command {
 		scaleArray = builder.build();
 	}
 	
-	public void execute(SgyFile file) {
+	public void execute(SgyFile file, ProgressListener listener) {
 
 		if (file.amplScan == null) {
 			file.amplScan = new ScanProfile(file.size());
