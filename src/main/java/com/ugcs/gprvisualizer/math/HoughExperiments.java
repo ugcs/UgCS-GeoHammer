@@ -153,9 +153,9 @@ public class HoughExperiments {
 		int minHt = Math.min(lh, rh) - smpPin;
 		
 		
-		int min = 1 + (lastSmp - smpPin) / 5;
+		int min = 1 + (lastSmp - smpPin) / 9;
 		
-		boolean res = minHt >= min;
+		boolean res = minHt > min;
 		if (print) {
 			Sout.p("criteriaRealMinHeight " + minHt + "  <>  " + min + " = " + res);
 		}
