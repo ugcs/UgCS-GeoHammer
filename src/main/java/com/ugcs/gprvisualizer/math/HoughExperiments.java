@@ -169,14 +169,27 @@ public class HoughExperiments {
 		for (int smp = smpPin ; smp < lastSmp; smp++) {
 
 			int fromMin = Math.max(realTraceFrom - BAD_INCR, 0);
-			int from = leftStart[smp - smpPin] - badMargin;
+			int lfrom = leftStart[smp - smpPin] - badMargin;
+			int lto = leftFinish[smp - smpPin] + badMargin;
+			if (smp <= smpPin + 2) {
+				lto = tracePin;
+			}
+			
+			checkRow(smp, 
+					Math.max(fromMin, lfrom), 
+					Math.min(lto , file.size()-1));
 
-			checkRow(smp, Math.max(fromMin, from), 
-					Math.min(leftFinish[smp - smpPin] + badMargin, file.size()-1) );
-
+			//
 			int toMax = Math.min(realTraceTo + BAD_INCR, file.size() - 1);
 			int to = rightStart[smp - smpPin] + badMargin;
-			checkRow(smp, rightStart[smp - smpPin] - badMargin, Math.min(toMax, to));
+			int rfrom = rightStart[smp - smpPin] - badMargin;
+			if (smp <= smpPin + 2) {
+				rfrom = tracePin;
+			}
+						
+			checkRow(smp, 
+					rfrom, 
+					Math.min(toMax, to));
 
 		}
 
@@ -264,25 +277,49 @@ public class HoughExperiments {
 
 	public void addPoint(int tr, int smp) {
 
-		if (inGood(tr, smp, 0)) {
+		if (inGood(tr, smp)) {
 			good++;
 
 			rsc.add(tr, smp);
-		} else if (inGood(tr, smp, badMargin)) {
+		} else if (inBad(tr, smp, badMargin)) {
 			bad++;
 		}
 
 	}
-
-	private boolean inGood(int tr, int smp, int range) {
+	
+	private boolean inBad(int tr, int smp, int range) {
 		int index = smp - smpPin;
 
 		if (index < 0 || index >= lastSmp) {
 			return false;
 		}
 
-		return tr >= leftStart[smp - smpPin] - range && tr <= leftFinish[smp - smpPin] + range
-				|| tr >= rightStart[smp - smpPin] - range && tr <= rightFinish[smp - smpPin] + range;
+		int smpInd = smp - smpPin; 
+		if (smpInd <= 2) {
+			return tr >= leftStart[smpInd] - range 
+				&& tr <= rightFinish[smpInd] + range;
+		}
+		
+		return tr >= leftStart[smpInd] - range 
+				&& tr <= leftFinish[smpInd] + range
+				|| tr >= rightStart[smpInd] - range 
+				&& tr <= rightFinish[smpInd] + range;
+	}
+	
+
+	private boolean inGood(int tr, int smp) {
+		int index = smp - smpPin;
+
+		if (index < 0 || index >= lastSmp) {
+			return false;
+		}
+
+		int smpInd = smp - smpPin; 
+		
+		return tr >= leftStart[smpInd] 
+				&& tr <= leftFinish[smpInd]
+				|| tr >= rightStart[smpInd]
+				&& tr <= rightFinish[smpInd];
 	}
 
 //	public static void main(String[] args) throws Exception {
