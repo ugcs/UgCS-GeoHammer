@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.math;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -21,9 +23,22 @@ public class HoughExperimentsAnalizer {
 	}
 	
 	public HoughExperiments debug(int tr, int smp, double heightShift) {
+		
+		Set<HoughExperiments> st = findGoodHypList(tr, smp);
+		
+		
 		print = true;
-		int goodHeadEdge = findHeaderEdge(tr, smp);
-		Sout.p("goodHeadEdge = " + goodHeadEdge);
+		int goodHeadEdge;
+		
+		if (st.isEmpty()) {
+			goodHeadEdge = findHeaderEdge(tr, smp);
+		} else {
+			HoughExperiments hp = st.iterator().next();
+			heightShift = hp.shift;
+			goodHeadEdge = hp.lookingEdge;
+		}
+		
+		Sout.p("goodHeadEdge = " + goodHeadEdge + "  shift = " + heightShift);
 		if (goodHeadEdge == 0) {
 			
 			goodHeadEdge = 4;
@@ -46,28 +61,29 @@ public class HoughExperimentsAnalizer {
 		
 		addPoints(s, tr, left, right, smp + 1, bottom, goodHeadEdge);
 		
-		he.criteriaGoodCount();
-		he.criteriaRealWidth();
-		he.criteriaRealMinLeft();
-		he.criteriaRealMinRight();
-		he.criteriaRealMinHight();
-		he.criteriaGoodBadRatio();				
 		
-//		Sout.p("gc  " + he.criteriaGoodCount());
-//		Sout.p("rw  " + he.criteriaRealWidth());
-//		Sout.p("gbr " + he.criteriaGoodBadRatio());				
+		
 	
 		return he;
 	}
-	
+			
+			
+
 	public boolean analize(int tr, int smp) {
 		
 		
 		//1 
+		Set<HoughExperiments> l = findGoodHypList(tr, smp);
+		
+		return !l.isEmpty();
+		
+	}
+
+	public Set<HoughExperiments> findGoodHypList(int tr, int smp) {
 		int goodHeadEdge = findHeaderEdge(tr, smp);
 		
 		if (goodHeadEdge == 0) {
-			return false;
+			return Collections.EMPTY_SET;
 		}
 		
 		Set<HoughExperiments> l = initHE(tr, smp, goodHeadEdge);
@@ -76,9 +92,7 @@ public class HoughExperimentsAnalizer {
 		addPoints(l, tr, left, right, smp + 1, bottom, goodHeadEdge);
 		 
 		filterByGoodBadCount(l);
-		
-		return !l.isEmpty();
-		
+		return l;
 	}
 
 	private void filterByGoodBadCount(Set<HoughExperiments> l) {

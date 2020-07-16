@@ -42,7 +42,7 @@ public class HoughExperiments {
 
 	// real dist to pin
 	private double y;
-	private double shift;
+	public double shift;
 
 	int[] leftStart = new int[50];
 	int[] leftFinish = new int[50];
@@ -115,7 +115,7 @@ public class HoughExperiments {
 
 		boolean res = realWidth > min;
 		if (print) {
-			Sout.p("criteriaRealW " + maxgap + "(" + realTraceFrom + " - " + realTraceTo + ")" + "  rw " + realWidth
+			Sout.p("criteriaRealW " + maxgap + "(" + realTraceFrom + "-" + realTraceTo + ")" + "  rw " + realWidth
 					+ "  <>  " + min + " = " + res);
 		}
 
@@ -203,6 +203,15 @@ public class HoughExperiments {
 		return res;
 	}
 
+	public boolean callAll() {
+		return criteriaGoodCount() 
+			&& criteriaRealWidth()
+			&& criteriaRealMinLeft()
+			&& criteriaRealMinRight()
+			&& criteriaRealMinHight()
+			&& criteriaGoodBadRatio();		
+	}
+	
 	private void checkRow(int smp, int from, int to) {
 		for (int t = from; t <= to; t++) {
 			if (file.getEdge(t, smp) == lookingEdge) {
@@ -340,6 +349,11 @@ public class HoughExperiments {
 //	}
 
 	public void draw(Graphics2D g2, ProfileField field) {
+		
+		boolean good = callAll();
+		
+		g2.setColor(good ? new Color(60, 170, 100, 170) : new Color(60, 140, 150, 170));
+		
 		VerticalCutPart of = file.getOffset();
 
 		for (int smp = smpPin; smp < lastSmp; smp++) {
@@ -362,13 +376,13 @@ public class HoughExperiments {
 		}
 
 		g2.setColor(Color.BLUE);
-		g2.setStroke(new BasicStroke(1));
+		g2.setStroke(new BasicStroke(2));
 		// draw real tr
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceFrom), smpPin));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 12);
+		Point p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceFrom), lftInd));
+		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 22);
 
 		p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceTo), smpPin));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 12);
+		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 22);
 	}
 
 	public int getLeft(int smp, double shift) {
