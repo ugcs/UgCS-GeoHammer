@@ -166,7 +166,9 @@ public class HoughExperiments {
 	public boolean criteriaGoodBadRatio() {
 		good = 0;
 		bad = 0;
-		for (int smp = smpPin ; smp < lastSmp; smp++) {
+		
+		//left
+		for (int smp = smpPin ; smp <= rsc.getLeftSmp(lftInd); smp++) {
 
 			int fromMin = Math.max(realTraceFrom - BAD_INCR, 0);
 			int lfrom = leftStart[smp - smpPin] - badMargin;
@@ -178,7 +180,11 @@ public class HoughExperiments {
 			checkRow(smp, 
 					Math.max(fromMin, lfrom), 
 					Math.min(lto , file.size()-1));
-
+		}
+		
+		
+		//right
+		for (int smp = smpPin ; smp <= rsc.getRightSmp(rghInd); smp++) {
 			//
 			int toMax = Math.min(realTraceTo + BAD_INCR, file.size() - 1);
 			int to = rightStart[smp - smpPin] + badMargin;
@@ -213,6 +219,7 @@ public class HoughExperiments {
 	}
 	
 	private void checkRow(int smp, int from, int to) {
+		//Sout.p("checkRow " + smp + " (" + from + " - " + to + ")");
 		for (int t = from; t <= to; t++) {
 			if (file.getEdge(t, smp) == lookingEdge) {
 				addPoint(t, smp);
@@ -250,8 +257,10 @@ public class HoughExperiments {
 			rightFinish[i] = rightfinish;
 		}
 
-		badMargin = (leftFinish[1] - leftStart[1]) * 130 / 100;
-		
+		badMargin = (leftFinish[1] - leftStart[1] + 1) * 130 / 100;
+		if (print) {
+			Sout.p("badMargin " + badMargin);
+		}
 		maxgap = getMaxWidth() / 15;
 
 		rsc = new RealSizeCalculator(tracePin, traceFrom, traceTo, maxgap, tracePin, tracePin);// leftFinish[1],
@@ -291,6 +300,10 @@ public class HoughExperiments {
 
 			rsc.add(tr, smp);
 		} else if (inBad(tr, smp, badMargin)) {
+			//if (print) {
+			//	Sout.p("b: "+  smp +  ", " + tr );
+			//}
+			
 			bad++;
 		}
 
@@ -348,6 +361,8 @@ public class HoughExperiments {
 //		
 //	}
 
+	
+	private static final int borderSize = 24;
 	public void draw(Graphics2D g2, ProfileField field) {
 		
 		boolean good = callAll();
@@ -378,11 +393,16 @@ public class HoughExperiments {
 		g2.setColor(Color.BLUE);
 		g2.setStroke(new BasicStroke(2));
 		// draw real tr
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceFrom), lftInd));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 22);
+		Point p1 = field.traceSampleToScreen(new TraceSample(
+				of.localToGlobal(realTraceFrom), rsc.getLeftSmp(lftInd) + 1));
+		g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
+		g2.drawLine(p1.x, p1.y, p1.x + borderSize, p1.y);
 
-		p1 = field.traceSampleToScreenCenter(new TraceSample(of.localToGlobal(realTraceTo), smpPin));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - 22);
+		p1 = field.traceSampleToScreen(new TraceSample(
+				of.localToGlobal(realTraceTo + 1), 
+				rsc.getRightSmp(rghInd) + 1));
+		g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
+		g2.drawLine(p1.x, p1.y, p1.x - borderSize, p1.y);
 	}
 
 	public int getLeft(int smp, double shift) {
