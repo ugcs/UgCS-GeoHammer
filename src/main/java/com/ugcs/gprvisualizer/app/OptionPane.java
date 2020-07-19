@@ -169,13 +169,14 @@ public class OptionPane extends VBox {
 				new HBox(
 						
 					commandRegistry.createAsinqTaskButton(
-						houghScan, 
+						expHoughScan, 
 						e -> radarMap.selectAlgMode()						
-					),
-					commandRegistry.createAsinqTaskButton(
-						expHoughScan,
-						e -> radarMap.selectAlgMode()
 					)
+				//	,
+				//	commandRegistry.createAsinqTaskButton(
+				//		houghScan,
+				//		e -> radarMap.selectAlgMode()
+				//	)
 				),
 				new HBox(
 						commandRegistry.createAsinqTaskButton(

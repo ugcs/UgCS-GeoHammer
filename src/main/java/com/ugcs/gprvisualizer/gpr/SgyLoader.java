@@ -89,8 +89,13 @@ public class SgyLoader {
 
     public static TraceHeaderFormat makeTraceHeaderFormat() {
         return TraceHeaderFormatBuilder.aTraceHeaderFormat()
+        		//.withTr
         		.withTraceSequenceNumberWLFormat(FormatEntry.create(0, 4))
         		.withEnsembleNumberFormat(FormatEntry.create(20, 24))
+        		
+        		.withScalarForElevationsFormat(FormatEntry.create(68, 70))
+        		.withScalarForCoordinatesFormat(FormatEntry.create(70, 72))
+        		
         		.withCoordinateUnitsCodeFormat(FormatEntry.create(70, 72))
         		.withSourceXFormat(FormatEntry.create(72, 76))
         		.withSourceYFormat(FormatEntry.create(76, 80))

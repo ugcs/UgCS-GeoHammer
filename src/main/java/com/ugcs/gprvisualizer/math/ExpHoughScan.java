@@ -77,7 +77,7 @@ public class ExpHoughScan  implements AsinqCommand {
 	@Override
 	public String getButtonText() {
 		
-		return "exp hough scan";
+		return "Hough scan v.2";
 	}
 
 	@Override

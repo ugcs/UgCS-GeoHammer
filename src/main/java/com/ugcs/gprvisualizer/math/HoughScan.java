@@ -432,7 +432,7 @@ public class HoughScan implements AsinqCommand {
 	@Override
 	public String getButtonText() {
 
-		return "Hough scan";
+		return "old Hough scan";
 	}
 
 	@Override

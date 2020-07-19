@@ -167,8 +167,23 @@ public class HoughExperiments {
 		good = 0;
 		bad = 0;
 		
+		
+		//top
+		int tfrom = leftStart[0] - badMargin;
+		int tto = rightFinish[0] + badMargin;
+
+		checkRow(smpPin - 2, 
+				Math.max(0, tfrom), 
+				Math.min(tto , file.size() - 1));
+		checkRow(smpPin - 1, 
+				Math.max(0, tfrom), 
+				Math.min(tto , file.size() - 1));
+		checkRow(smpPin, 
+				Math.max(0, tfrom), 
+				Math.min(tto , file.size() - 1));
+		
 		//left
-		for (int smp = smpPin ; smp <= rsc.getLeftSmp(lftInd); smp++) {
+		for (int smp = smpPin + 1 ; smp <= rsc.getLeftSmp(lftInd); smp++) {
 
 			int fromMin = Math.max(realTraceFrom - BAD_INCR, 0);
 			int lfrom = leftStart[smp - smpPin] - badMargin;
@@ -294,16 +309,13 @@ public class HoughExperiments {
 	}
 
 	public void addPoint(int tr, int smp) {
-
+		
 		if (inGood(tr, smp)) {
 			good++;
 
 			rsc.add(tr, smp);
-		} else if (inBad(tr, smp, badMargin)) {
-			//if (print) {
-			//	Sout.p("b: "+  smp +  ", " + tr );
-			//}
 			
+		} else if (inBad(tr, smp, badMargin)) {
 			bad++;
 		}
 
@@ -312,11 +324,15 @@ public class HoughExperiments {
 	private boolean inBad(int tr, int smp, int range) {
 		int index = smp - smpPin;
 
-		if (index < 0 || index >= lastSmp) {
+		if (index < -2) {
+			return false;
+		}
+		
+		if (index >= lastSmp) {
 			return false;
 		}
 
-		int smpInd = smp - smpPin; 
+		int smpInd = Math.max(0, smp - smpPin); 
 		if (smpInd <= 2) {
 			return tr >= leftStart[smpInd] - range 
 				&& tr <= rightFinish[smpInd] + range;
@@ -332,11 +348,11 @@ public class HoughExperiments {
 	private boolean inGood(int tr, int smp) {
 		int index = smp - smpPin;
 
-		if (index < 0 || index >= lastSmp) {
+		if (index < -1 || index >= lastSmp) {
 			return false;
 		}
 
-		int smpInd = smp - smpPin; 
+		int smpInd = Math.max(0, smp - smpPin); 
 		
 		return tr >= leftStart[smpInd] 
 				&& tr <= leftFinish[smpInd]
@@ -344,24 +360,7 @@ public class HoughExperiments {
 				&& tr <= rightFinish[smpInd];
 	}
 
-//	public static void main(String[] args) throws Exception {
-//		HoughExperiments h = new HoughExperiments();
-//		
-//		GprFile file = new GprFile();
-//		file.open(new File("c:\\work\\geodata\\balozi3\\8\\2020-03-05-14-10-01-ch2-gpr_004.sgy"));
-//		new LevelScanner().execute(file);
-//		
-//		h.file = file;
-//		h.smpPin = 100;
-//		h.tracePin = 550;
-//		h.y = RulerTool.distanceCm(file, h.tracePin, h.tracePin, 0, h.smpPin);
-//		
-//		System.out.println("h.y "+h.y);
-//		//h.scan();
-//		
-//	}
 
-	
 	private static final int borderSize = 24;
 	public void draw(Graphics2D g2, ProfileField field) {
 		
