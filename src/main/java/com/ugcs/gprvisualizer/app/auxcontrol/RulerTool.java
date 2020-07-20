@@ -195,6 +195,26 @@ public class RulerTool extends BaseObjectImpl
 
 	
 
+	public static double distanceVCm(SgyFile file, int tr, double smp1, double smp2) {
+		double grndLevel = 0;
+		if (file.groundProfile != null) {
+			grndLevel = file.groundProfile.deep[tr];
+		}
+
+		double h1 = Math.min(smp1, smp2); 
+		double h2 = Math.max(smp1, smp2);
+		
+		double hair = Math.max(0,  Math.min(grndLevel, h2) - h1); 
+		double hgrn = h2 - h1 - hair;
+		
+		double vertDistCm =  file.getSamplesToCmAir() * hair 
+				+ file.getSamplesToCmGrn() * hgrn;
+		
+		
+		return vertDistCm;
+		
+	}
+	
 	public static double distanceCm(SgyFile file, int tr1, int tr2, double smp1, double smp2) {
 		double grndLevel = 0;
 		if (file.groundProfile != null) {

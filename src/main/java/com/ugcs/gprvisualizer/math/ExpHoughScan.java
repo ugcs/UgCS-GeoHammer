@@ -27,7 +27,6 @@ public class ExpHoughScan  implements AsinqCommand {
 	
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
-		Sout.p("start");
 		
 		if (file.groundProfile == null) {
 			new LevelScanner().execute(file, listener);
@@ -42,6 +41,10 @@ public class ExpHoughScan  implements AsinqCommand {
 
 		double threshold = model.getSettings().hyperSensitivity.doubleValue();
 
+		long tm = System.currentTimeMillis();
+		
+		HoughExperimentsAnalizer hea = new HoughExperimentsAnalizer(file);
+		
 		for (int pinTr = 0; pinTr < file.size(); pinTr++) {
 			//log progress
 			if (pinTr % 100 == 0) {
@@ -54,7 +57,7 @@ public class ExpHoughScan  implements AsinqCommand {
 			for (int pinSmp = AppContext.model.getSettings().layer; 
 					pinSmp < maxSmp; pinSmp++) {
 				
-				boolean isGood = scan(file, pinTr, pinSmp, threshold);
+				boolean isGood = scan(hea, pinTr, pinSmp, threshold);
 
 				if (isGood) {
 					tr.good[pinSmp] = 3;
@@ -62,14 +65,18 @@ public class ExpHoughScan  implements AsinqCommand {
 			}
 		}
 		
+		
+		
+		Sout.p("scan " + (System.currentTimeMillis() - tm) + "    inithe " + hea.fulltm);
+		
 		new ScanGood().execute(file, listener);	
 		
-		Sout.p("finish");
+		
 	}
 
-	private boolean scan(SgyFile file, int pinTr, int pinSmp, double threshold) {
+	private boolean scan(HoughExperimentsAnalizer hea, int pinTr, int pinSmp, double threshold) {
 
-		HoughExperimentsAnalizer hea = new HoughExperimentsAnalizer(file);
+		
 		
 		return hea.analize(pinTr, pinSmp);
 	}

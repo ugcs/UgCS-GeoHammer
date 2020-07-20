@@ -95,7 +95,7 @@ public abstract class SgyFile {
 	}
 
 	public void updateInternalDist() {
-		traces.get(0).setPrevDist(0);
+		
 				
 		for (int i = 1; i < traces.size(); i++) {
 			Trace tracePrev = traces.get(i - 1);
@@ -117,8 +117,43 @@ public abstract class SgyFile {
 				trace.setPrevDist(10.0);
 			}
 		}		
+		traces.get(0).setPrevDist(traces.get(1).getPrevDist());
+		// smooth
+		
+		double[] dst = new double[traces.size()]; 
+		for (int i = 0; i < dst.length; i++) {
+			dst[i] = traces.get(i).getPrevDist();
+		}
+		
+		double[] dst2 = new double[traces.size()]; 
+		for (int i = 0; i < dst.length; i++) {
+			dst2[i] = avg(dst, i);
+		}
+		dst = dst2;
+		
+		for (int i = 0; i < dst.length; i++) {
+			traces.get(i).setPrevDist(dst[i]);
+		}
+		
+		
 	}
 
+
+	int AVG_R = 4;
+	protected double avg(double[] dst, int i) {
+		double s = 0;
+		double c = 0;
+		for (
+			int j = Math.max(0, i - AVG_R); 
+			j <= Math.min(size() - 1, i + AVG_R);
+			j++) {
+			
+			s += dst[j];
+			c += 1;
+		}
+		
+		return s / c;
+	}
 
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) 
 			throws IOException {
@@ -174,28 +209,35 @@ public abstract class SgyFile {
 	
 	public int getLeftDistTraceIndex(int traceIndex, double distCm) {
 		
-		double sumDist = 0;
-		
-		while (traceIndex > 0 && sumDist < distCm) {
-			
-			sumDist += getTraces().get(traceIndex).getPrevDist();
-			traceIndex--;
-		}
-		
-		return traceIndex;
+		return 
+			Math.max(0,
+			traceIndex - (int) (distCm / getTraces().get(traceIndex).getPrevDist()));
+//		double sumDist = 0;
+//		
+//		while (traceIndex > 0 && sumDist < distCm) {
+//			
+//			sumDist += getTraces().get(traceIndex).getPrevDist();
+//			traceIndex--;
+//		}
+//		
+//		return traceIndex;
 	}
 
 	public int getRightDistTraceIndex(int traceIndex, double distCm) {
 		
-		double sumDist = 0;
+		return 
+			Math.min(size()-1, 	
+			traceIndex + (int) (distCm / getTraces().get(traceIndex).getPrevDist()));
 		
-		while (traceIndex < size() - 1 && sumDist < distCm) {
-			traceIndex++;
-			sumDist += getTraces().get(traceIndex).getPrevDist();
-			
-		}
-		
-		return traceIndex;
+//		double sumDist = 0;
+//		
+//		while (traceIndex < size() - 1 && sumDist < distCm) {
+//			traceIndex++;
+//			sumDist += getTraces().get(traceIndex).getPrevDist();
+//			
+//		}
+//		
+//		return traceIndex;
 	}
 
 	public static double convertDegreeFraction(double org) {

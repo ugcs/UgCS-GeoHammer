@@ -25,23 +25,23 @@ public class HoughExperiments {
 
 	private static final int BAD_INCR = 3;
 
-	private static final double HYP_MAX = 0.25;
-	private double effectHypMax;
+	public static final double HYP_MAX = 0.25;
+	public double effectHypMax;
 
 	public boolean print = false;
-	private SgyFile file;
+	public SgyFile file;
 	public int traceFrom;
 	public int traceTo;
 	public int realTraceFrom;
 	public int realTraceTo;
 
-	private int tracePin;
-	private int smpPin;
+	public int tracePin;
+	public int smpPin;
 
 	int lookingEdge;
 
 	// real dist to pin
-	private double y;
+	public double y;
 	public double shift;
 
 	int[] leftStart = new int[50];
@@ -54,27 +54,28 @@ public class HoughExperiments {
 
 	RealSizeCalculator rsc;
 
-	static public HoughExperiments f(SgyFile file, int tr, int smp, double heightShift, int lookingEdge,
-			boolean print) {
-		HoughExperiments he = new HoughExperiments();
-		he.print = print;
-
-		he.file = file;
-		// he.edge = edge;
-
-		he.smpPin = smp;
-		he.tracePin = tr;
-		he.y = RulerTool.distanceCm(file, he.tracePin, he.tracePin, 0, he.smpPin);
-		he.shift = heightShift;
-		he.lookingEdge = lookingEdge;
-
-		he.effectHypMax = HYP_MAX - (heightShift / 150) * 0.075;
-
-		he.init();
-
-		return he;
-	}
-	
+//	static public HoughExperiments f(SgyFile file, int tr, int smp, double heightShift, int lookingEdge,
+//			boolean print) {
+//		
+//		HoughExperiments he = new HoughExperiments();
+//		he.print = print;
+//
+//		he.file = file;
+//		// he.edge = edge;
+//
+//		he.smpPin = smp;
+//		he.tracePin = tr;
+//		he.y = RulerTool.distanceCm(file, he.tracePin, he.tracePin, 0, he.smpPin);
+//		he.shift = heightShift;
+//		he.lookingEdge = lookingEdge;
+//
+//		he.effectHypMax = HYP_MAX - (heightShift / 150) * 0.075;
+//
+//		he.init();
+//
+//		return he;
+//	}
+//	
 	
 	
 
@@ -429,7 +430,7 @@ public class HoughExperiments {
 	}
 
 	private double getXDist(int smp, double shift) {
-		double c = RulerTool.distanceCm(file, tracePin, tracePin, 0, smp);
+		double c = RulerTool.distanceVCm(file, tracePin, 0, smp);
 
 		double cs = c + shift;
 		double ys = y + shift;
