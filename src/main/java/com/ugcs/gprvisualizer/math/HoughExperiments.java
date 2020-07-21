@@ -54,28 +54,18 @@ public class HoughExperiments {
 
 	RealSizeCalculator rsc;
 
-//	static public HoughExperiments f(SgyFile file, int tr, int smp, double heightShift, int lookingEdge,
-//			boolean print) {
-//		
-//		HoughExperiments he = new HoughExperiments();
-//		he.print = print;
-//
-//		he.file = file;
-//		// he.edge = edge;
-//
-//		he.smpPin = smp;
-//		he.tracePin = tr;
-//		he.y = RulerTool.distanceCm(file, he.tracePin, he.tracePin, 0, he.smpPin);
-//		he.shift = heightShift;
-//		he.lookingEdge = lookingEdge;
-//
-//		he.effectHypMax = HYP_MAX - (heightShift / 150) * 0.075;
-//
-//		he.init();
-//
-//		return he;
-//	}
-//	
+	public HoughExperiments(SgyFile file, int tracePin, int smpPin, double shift, int lookingEdge) {
+		this.file = file;
+		this.tracePin = tracePin;
+		this.smpPin = smpPin;
+		this.shift = shift;
+		this.lookingEdge = lookingEdge;
+		
+		y = RulerTool.distanceVCm(file, tracePin, 0, smpPin);
+		
+		effectHypMax = HoughExperiments.HYP_MAX - (shift / 150) * 0.075;
+	
+	}
 	
 	
 
@@ -246,8 +236,16 @@ public class HoughExperiments {
 	// getRealSizeTraces()
 	// getRealSizeRelative()
 
-	public void init() {
+	public int get1stRowLeft() {
+		int leftstart = getLeft(smpPin + 1, shift * 1.25);
 
+		return leftstart;
+		
+	}
+	
+	public void init() {
+		
+		
 		traceFrom = tracePin;
 		traceTo = tracePin;
 
@@ -363,6 +361,7 @@ public class HoughExperiments {
 
 
 	private static final int borderSize = 24;
+	
 	public void draw(Graphics2D g2, ProfileField field) {
 		
 		boolean good = callAll();
@@ -442,6 +441,14 @@ public class HoughExperiments {
 
 	public int getMaxWidth() {
 		return traceTo - traceFrom + 1;
+	}
+
+
+	private static final int MARGIN = 3;
+	public boolean criteriaHead(int low, int hi) {
+		int hs = tracePin - get1stRowLeft();
+		
+		return hs >= low - MARGIN && hs <= hi + MARGIN;
 	}
 
 }

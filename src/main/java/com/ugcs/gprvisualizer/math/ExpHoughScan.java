@@ -67,8 +67,8 @@ public class ExpHoughScan  implements AsinqCommand {
 		
 		
 		
-		Sout.p("scan " + (System.currentTimeMillis() - tm) + "    inithe " + hea.fulltm);
-		
+		Sout.p("scan " + (System.currentTimeMillis() - tm) + "    inithe tm " + hea.fulltm);
+		Sout.p(" bad " + hea.cr1badcount + "   good " + hea.cr1count);
 		new ScanGood().execute(file, listener);	
 		
 		
