@@ -68,12 +68,15 @@ public class HoughExperiments {
 	}
 	
 	
-
-	public boolean criteriaHeader() {
-
-		// TODO:
-		return true;
+	private static final int MARGIN = 2;
+	
+	public boolean criteriaHead(int low, int hi) {
+		int hs = tracePin - get1stRowLeft();
+		
+		return hs >= low - MARGIN && hs <= hi + MARGIN;
 	}
+
+
 
 	public boolean criteriaGoodCount() {
 		int compare = getMaxWidth() * 21 / 100;
@@ -216,12 +219,15 @@ public class HoughExperiments {
 	}
 
 	public boolean callAll() {
-		return criteriaGoodCount() 
-			&& criteriaRealWidth()
-			&& criteriaRealMinLeft()
-			&& criteriaRealMinRight()
-			&& criteriaRealMinHight()
-			&& criteriaGoodBadRatio();		
+		 
+		boolean c1 = criteriaGoodCount(); 
+		boolean c2 = criteriaRealWidth();
+		boolean c3 = criteriaRealMinLeft();
+		boolean c4 = criteriaRealMinRight();
+		boolean c5 = criteriaRealMinHight();
+		boolean c6 = criteriaGoodBadRatio();
+				
+		return c1 && c2 && c3 && c4 && c5 && c6;
 	}
 	
 	private void checkRow(int smp, int from, int to) {
@@ -389,19 +395,21 @@ public class HoughExperiments {
 			g2.drawLine(p1.x, p1.y, p2.x, p2.y);
 		}
 
-		g2.setColor(Color.BLUE);
-		g2.setStroke(new BasicStroke(2));
-		// draw real tr
-		Point p1 = field.traceSampleToScreen(new TraceSample(
-				of.localToGlobal(realTraceFrom), rsc.getLeftSmp(lftInd) + 1));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
-		g2.drawLine(p1.x, p1.y, p1.x + borderSize, p1.y);
-
-		p1 = field.traceSampleToScreen(new TraceSample(
-				of.localToGlobal(realTraceTo + 1), 
-				rsc.getRightSmp(rghInd) + 1));
-		g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
-		g2.drawLine(p1.x, p1.y, p1.x - borderSize, p1.y);
+		if (rsc != null) {
+			g2.setColor(Color.BLUE);
+			g2.setStroke(new BasicStroke(2));
+			// draw real tr
+			Point p1 = field.traceSampleToScreen(new TraceSample(
+					of.localToGlobal(realTraceFrom), rsc.getLeftSmp(lftInd) + 1));
+			g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
+			g2.drawLine(p1.x, p1.y, p1.x + borderSize, p1.y);
+	
+			p1 = field.traceSampleToScreen(new TraceSample(
+					of.localToGlobal(realTraceTo + 1), 
+					rsc.getRightSmp(rghInd) + 1));
+			g2.drawLine(p1.x, p1.y, p1.x, p1.y - borderSize);
+			g2.drawLine(p1.x, p1.y, p1.x - borderSize, p1.y);
+		}
 	}
 
 	public int getLeft(int smp, double shift) {
@@ -444,11 +452,5 @@ public class HoughExperiments {
 	}
 
 
-	private static final int MARGIN = 3;
-	public boolean criteriaHead(int low, int hi) {
-		int hs = tracePin - get1stRowLeft();
-		
-		return hs >= low - MARGIN && hs <= hi + MARGIN;
-	}
 
 }

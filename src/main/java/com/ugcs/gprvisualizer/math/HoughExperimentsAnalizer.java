@@ -95,7 +95,7 @@ public class HoughExperimentsAnalizer {
 		foundEdge = 0;
 		
 		int mintr = 5;
-		int maxtr = 18;
+		int maxtr = 24;
 		for (int edge = 1; edge <= 4; edge++) {
 			
 			int leftc =  tr - find(-1, edge, tr, smp);
@@ -114,11 +114,10 @@ public class HoughExperimentsAnalizer {
 			headHi = Math.max(leftc, rightc);
 			foundEdge = edge;
 			
-			break;
-			
+			break;			
 		}
 		
-		return 0;
+		return foundEdge;
 	}
 	
 	private int find(int step, int edge, int tr, int smp) {
@@ -142,7 +141,7 @@ public class HoughExperimentsAnalizer {
 
 	private boolean bigDiff(int left, int right) {
 		
-		return left > right * 3 || right > left * 3;
+		return left > right * 2 || right > left * 2;
 	}
 	
 	public int findHeaderEdge(int tr, int smp) {
@@ -165,7 +164,7 @@ public class HoughExperimentsAnalizer {
 		
 		int val = edge[bestIndex];
 		
-		if (print) { Sout.p("hdr edge val " + val);}
+		//if (print) { Sout.p("hdr edge val " + val);}
 		
 		if (val > r * 2 * 3 / 4) {
 			return bestIndex;
@@ -208,7 +207,7 @@ public class HoughExperimentsAnalizer {
 		left = tr;
 		right = tr;
 		bottom = smp;
-		for (double heightShift = -30; heightShift < 160; heightShift += 5) {
+		for (double heightShift = -30; heightShift < 240; heightShift += 5) {
 				
 			HoughExperiments he = new HoughExperiments(file, tr, smp, heightShift, goodHeadEdge);
 			
@@ -262,11 +261,11 @@ public class HoughExperimentsAnalizer {
 		
 		List<HoughExperiments> st = findGoodHypList(tr, smp);
 		
-		
 		print = true;
 		int goodHeadEdge;
 		
 		if (st.isEmpty()) {
+			Sout.p("~~ head criteria false");
 			goodHeadEdge = findHeaderEdge(tr, smp);
 		} else {
 			HoughExperiments hp = st.iterator().next();
@@ -274,7 +273,7 @@ public class HoughExperimentsAnalizer {
 			goodHeadEdge = hp.lookingEdge;
 		}
 		
-		Sout.p("goodHeadEdge = " + goodHeadEdge + "  shift = " + heightShift);
+		Sout.p("goodHeadEdge     = " + goodHeadEdge + "      shift = " + heightShift);
 		if (goodHeadEdge == 0) {
 			
 			goodHeadEdge = 4;
@@ -287,11 +286,13 @@ public class HoughExperimentsAnalizer {
 		HoughExperiments he = new HoughExperiments(file, tr, smp, heightShift, goodHeadEdge);
 		he.print = true;
 				
+		he.init();
+		
 		left = Math.min(left, he.traceFrom);
 		right = Math.max(right, he.traceTo);
 		bottom = Math.max(bottom, he.lastSmp);		
 		
-		Sout.p(" l " + left + " r " + right + "  b " + bottom );
+		//Sout.p(" l " + left + " r " + right + "  b " + bottom );
 		
 		List<HoughExperiments> s = new ArrayList<>();
 		s.add(he);
