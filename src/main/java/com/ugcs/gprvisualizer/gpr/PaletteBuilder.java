@@ -46,7 +46,7 @@ public class PaletteBuilder {
 			int r = ((int) ((Math.sin(34 + t * 1.68) + 1.4) / 2.8 * 255.0)) & 0xff;
 			int g = ((int) ((Math.cos(t * 1.43) + 1.1) / 2.8 * 255.0)) & 0xff;
 			int b = ((int) ((Math.sin(0.32 + t * 0.88) + 1) / 2 * 255.0)) & 0xff;
-			int alpha = (int) (i < 30.0 ? i / 30.0 * 180.0 : 180.0);
+			int alpha = (int) (i < 20.0 ? i / 20.0 * 180.0 : 180.0);
 			
 			palette[i] = (r << 16) + (g << 8) + (b << 0) + (alpha << 24);
 		}		

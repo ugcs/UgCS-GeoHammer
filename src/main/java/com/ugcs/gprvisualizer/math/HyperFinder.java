@@ -147,7 +147,7 @@ public class HyperFinder {
 		g2.setStroke(line8);
 		
 		
-		
+		HoughExperiments.HYP_MAX = (double) model.getSettings().hyperkfc / 100.0;
 		HoughExperimentsAnalizer hea = new HoughExperimentsAnalizer(file);
 		
 		HoughExperiments he = hea.debug(

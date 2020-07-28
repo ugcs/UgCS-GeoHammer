@@ -25,7 +25,7 @@ public class HoughExperiments {
 
 	private static final int BAD_INCR = 3;
 
-	public static final double HYP_MAX = 0.25;
+	public static double HYP_MAX = 0.25;
 	public double effectHypMax;
 
 	public boolean print = false;

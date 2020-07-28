@@ -43,6 +43,8 @@ public class ExpHoughScan  implements AsinqCommand {
 
 		long tm = System.currentTimeMillis();
 		
+		HoughExperiments.HYP_MAX = (double) model.getSettings().hyperkfc / 100.0;
+		
 		HoughExperimentsAnalizer hea = new HoughExperimentsAnalizer(file);
 		
 		for (int pinTr = 0; pinTr < file.size(); pinTr++) {

@@ -47,9 +47,9 @@ public class ScanGood implements Command {
 		
 		for (int tr = 0; tr < file.size(); tr++) {
 		
-			Trace trace = file.getTraces().get(tr);
 			
-			scanTraceGood(trace, resHld, fromSmp, toSmp);
+			
+			scanTraceGood(file, tr, resHld, fromSmp, toSmp);
 		
 			if (resHld.goodCount > 0) {
 				
@@ -66,9 +66,10 @@ public class ScanGood implements Command {
 
 	}
 
-	private void scanTraceGood(Trace trace, TraceResult resHld, int fromSmp, int toSmp) {
+	private void scanTraceGood(SgyFile file, int tr, TraceResult resHld, int fromSmp, int toSmp) {
 		resHld.goodCount = 0;
 		resHld.maxAmp = 0;
+		Trace trace = file.getTraces().get(tr);
 		for (int smp = fromSmp; smp < toSmp; smp++) {
 			
 			//dblside good hyperbola
@@ -77,10 +78,14 @@ public class ScanGood implements Command {
 				resHld.goodCount++;
 				
 				float val = 0; 
-				if (trace.edge[smp] >= 3) {
-					val = Math.abs(trace.getNormValues()[smp]);
-				} else {
-					val = getMaxAround(trace.getNormValues(), smp, toSmp);
+//				if (trace.edge[smp] >= 3) {
+//					val = Math.abs(trace.getNormValues()[smp]);
+//				} else {
+				for (int tri = Math.max(0, tr-TR); 
+					tri <= Math.min(file.size(), tr+TR); 
+					tri++) {
+					
+					val = Math.max(val, getMaxAround(file.getTraces().get(tri).getNormValues(), smp, toSmp));
 				}
 				
 				resHld.maxAmp = Math.max(resHld.maxAmp, val);
@@ -89,7 +94,8 @@ public class ScanGood implements Command {
 		
 	}
 
-	private static final int R = 6;
+	private static final int R = 4;
+	private static final int TR = 4;
 	
 	private float getMaxAround(float[] values, int smp, int maxSmp) {
 

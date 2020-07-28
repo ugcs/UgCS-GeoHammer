@@ -32,7 +32,7 @@ public class Settings {
 	public int layer = 80; 
 	
 	
-	public int hyperkfc = 100; 
+	public int hyperkfc = 25; 
 	public MutableInt hyperSensitivity = new MutableInt(30);
 	public MutableInt printHoughAindex = new MutableInt(0);
 	public MutableInt printHoughVertShift = new MutableInt(0);
