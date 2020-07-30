@@ -14,6 +14,7 @@ import com.ugcs.gprvisualizer.app.commands.LevelGround;
 import com.ugcs.gprvisualizer.app.commands.LevelManualSetter;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
+import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -35,6 +36,8 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	private Button buttonRemoveLevel;
 	private Button buttonLevelGround;
 
+	private Button buttonSpreadCoord;
+	
 	private boolean levelCalculated = false;
 	
 
@@ -91,6 +94,13 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		
 		buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
 
+		
+		buttonSpreadCoord = commandRegistry.createButton(new SpreadCoordinates(), 
+				e -> {					
+					//updateButtons();
+					
+					buttonSpreadCoord.setVisible(false);
+				});
 
 		return Arrays.asList(
 			commandRegistry.createButton(new BackgroundNoiseRemover()), 
@@ -106,7 +116,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 						updateButtons(); 
 					}),
 			
-				buttonRemoveLevel, buttonLevelGround 
+				buttonRemoveLevel, buttonLevelGround, buttonSpreadCoord
 		
 		);				
 					
@@ -131,7 +141,9 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		if (changed.isFileopened()) {
 			
 			clearForNewFile();
-		}		
+			
+			buttonSpreadCoord.setVisible(model.isSpreadCoordinatesNecessary());
+		}
 	}
 
 }

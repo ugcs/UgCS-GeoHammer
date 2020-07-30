@@ -59,6 +59,8 @@ public class Model {
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
 	
+	private boolean spreadCoordinatesNecessary = false;
+	
 	public Model() {
 		Sout.p("create model");
 	}
@@ -299,6 +301,20 @@ public class Model {
 			}
     	}
 		return false;
+	}
+
+	public boolean isSpreadCoordinatesNecessary() {
+		
+		for (SgyFile file : getFileManager().getFiles()) {
+			if (file.isSpreadCoordinatesNecessary()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void setSpreadCoordinatesNecessary(boolean spreadCoordinatesNecessary) {
+		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
 	}
 	
 }

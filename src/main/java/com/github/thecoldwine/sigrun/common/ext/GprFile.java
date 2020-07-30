@@ -2,6 +2,8 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,12 +15,14 @@ import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ConverterFactory;
 import com.github.thecoldwine.sigrun.common.TraceHeader;
 import com.github.thecoldwine.sigrun.common.ext.BinFile.BinTrace;
+import com.github.thecoldwine.sigrun.converters.ByteANumberConverter;
 import com.github.thecoldwine.sigrun.converters.SeismicValuesConverter;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
+import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
@@ -77,7 +81,7 @@ public class GprFile extends SgyFile {
 		
 		markToAux();		
 		
-		new ManuilovFilter().filter(getTraces());
+		//new ManuilovFilter().filter(getTraces());
 		
 		updateInternalDist();
 		
@@ -127,6 +131,15 @@ public class GprFile extends SgyFile {
 			BinTrace binTrace = new BinTrace();
 			
 			binTrace.header = trace.getBinHeader();
+			//upd coordinates
+						
+			ByteBuffer bb = ByteBuffer.wrap(binTrace.header);
+			bb.order(ByteOrder.LITTLE_ENDIAN);
+	        //traceHeader.setLongitude(ByteANumberConverter.byteToDbl(buffer, 182));
+	        //traceHeader.setLatitude(ByteANumberConverter.byteToDbl(buffer, 190));
+
+			bb.putDouble(190, convertBackDegreeFraction(trace.getLatLon().getLatDgr()));
+			bb.putDouble(182, convertBackDegreeFraction(trace.getLatLon().getLonDgr()));
 			
 			//set or clear marks
 			binTrace.header[MARK_BYTE_POS] = 

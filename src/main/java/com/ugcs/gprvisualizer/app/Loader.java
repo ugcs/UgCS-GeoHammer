@@ -161,7 +161,21 @@ public class Loader {
 		model.init();			
 		
 		//when open file by dnd (not after save)
-		model.initField();		
+		model.initField();	
+		
+		
+		//
+		
+		SgyFile file = model.getFileManager().getFiles().get(0);
+		if (file.getSampleInterval() < 105) {
+			model.getSettings().hyperkfc = 25;
+			
+		} else {
+			double i = file.getSampleInterval() / 104.0;
+			
+			model.getSettings().hyperkfc = (int) (25.0 + i * 1.25);
+		}
+		
 	}
 
 	private boolean isConstPointsFile(final List<File> files) {

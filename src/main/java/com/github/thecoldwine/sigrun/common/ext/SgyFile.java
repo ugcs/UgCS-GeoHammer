@@ -21,9 +21,13 @@ import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
+import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.commands.DistCalculator;
+import com.ugcs.gprvisualizer.app.commands.DistancesSmoother;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
+import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
@@ -53,7 +57,7 @@ public abstract class SgyFile {
     public ScanProfile amplScan;
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
-	
+	private boolean spreadCoordinatesNecessary = false;
 	
 	protected static double SPEED_SM_NS_VACUUM = 30.0;
 	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
@@ -95,65 +99,23 @@ public abstract class SgyFile {
 	}
 
 	public void updateInternalDist() {
+	//	calcDistances();
 		
-				
-		for (int i = 1; i < traces.size(); i++) {
-			Trace tracePrev = traces.get(i - 1);
-			Trace trace 	= traces.get(i);
-			
-			if (tracePrev.getLatLon() != null 
-					&& trace.getLatLon() != null) {
-			
-				double dist = CoordinatesMath.measure(
-					tracePrev.getLatLon().getLatDgr(), 
-					tracePrev.getLatLon().getLonDgr(), 
-					trace.getLatLon().getLatDgr(), 
-					trace.getLatLon().getLonDgr());
-				
-				//to cm
-				trace.setPrevDist(dist * 100.0);
-			} else {
-				//some not null value. For example 10 cm.
-				trace.setPrevDist(10.0);
-			}
-		}		
-		traces.get(0).setPrevDist(traces.get(1).getPrevDist());
-		// smooth
 		
-		double[] dst = new double[traces.size()]; 
-		for (int i = 0; i < dst.length; i++) {
-			dst[i] = traces.get(i).getPrevDist();
-		}
+	//	prolongDistances();
 		
-		double[] dst2 = new double[traces.size()]; 
-		for (int i = 0; i < dst.length; i++) {
-			dst2[i] = avg(dst, i);
-		}
-		dst = dst2;
 		
-		for (int i = 0; i < dst.length; i++) {
-			traces.get(i).setPrevDist(dst[i]);
-		}
+		new DistCalculator().execute(this, null);
 		
+		setSpreadCoordinatesNecessary(SpreadCoordinates.isSpreadingNecessary(this));
+		
+		//smoothDistances();
+		new DistancesSmoother().execute(this, null);
 		
 	}
 
+	
 
-	int AVG_R = 4;
-	protected double avg(double[] dst, int i) {
-		double s = 0;
-		double c = 0;
-		for (
-			int j = Math.max(0, i - AVG_R); 
-			j <= Math.min(size() - 1, i + AVG_R);
-			j++) {
-			
-			s += dst[j];
-			c += 1;
-		}
-		
-		return s / c;
-	}
 
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) 
 			throws IOException {
@@ -248,6 +210,16 @@ public abstract class SgyFile {
 		return rx;
 	}
 
+	public static double convertBackDegreeFraction(double org) {
+		
+		int dgr = (int) org;
+		double fr = org - dgr;
+		double fr2 = fr * 60.0 / 100.0;
+		double r = 100.0 * (dgr + fr2);
+		
+		return r;
+	}
+
 	public int getGood(int tr, int s) {
 		
 		return getTraces().get(tr).good[s];
@@ -261,6 +233,14 @@ public abstract class SgyFile {
 	public float getVal(int tr, int s) {
 		
 		return getTraces().get(tr).getNormValues()[s];
+	}
+
+	public boolean isSpreadCoordinatesNecessary() {
+		return spreadCoordinatesNecessary;
+	}
+
+	public void setSpreadCoordinatesNecessary(boolean spreadCoordinatesNecessary) {
+		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
 	}	
 
 }

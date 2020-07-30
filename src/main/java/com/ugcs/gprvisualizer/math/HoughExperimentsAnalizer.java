@@ -16,6 +16,8 @@ import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 
 public class HoughExperimentsAnalizer {
 	
+	public static final int SHIFT_TO = 240;
+	public static final int SHIFT_FROM = -30;
 	public boolean print = false;
 	SgyFile file;
 	
@@ -24,9 +26,9 @@ public class HoughExperimentsAnalizer {
 	int bottom;
 	
 	
-	int headLow;
-	int headHi;
-	int foundEdge = 0;
+//	int headLow;
+//	int headHi;
+//	int foundEdge = 0;
 
 	
 	public HoughExperimentsAnalizer(SgyFile file) {
@@ -46,28 +48,37 @@ public class HoughExperimentsAnalizer {
 	}
 
 	public List<HoughExperiments> findGoodHypList(int tr, int smp) {
-		//int goodHeadEdge = findHeaderEdge(tr, smp);
 		
-		findHeaderEdge2(tr, smp);
-		int goodHeadEdge = foundEdge;
-		
-		if (goodHeadEdge == 0) {
-			return Collections.EMPTY_LIST;
-		}
-				
-		List<HoughExperiments> l = initHE(tr, smp, goodHeadEdge);
-		
-		if (l.isEmpty()) {
-			//Sout.p("e");
+		if (!findHeaderEdge2(tr, smp)) {
+			if (print) {
+				Sout.p("~~ !findHeaderEdge2");
+			}
 			return Collections.EMPTY_LIST;
 		}
 		
-		//return Arrays.asList(new HoughExperiments(file, tr, smp, 40, 2));
+		for (Header hdr : foundHeader) {
+			List<HoughExperiments> l = initHE(tr, smp, hdr);
+			
+			if (l.isEmpty()) {
+				continue;
+			}
+
+			addPoints(l, tr, left, right, smp + 1, bottom, hdr.edge);
+			 
+			filterByGoodBadCount(l);
+
+			if (!l.isEmpty()) {
+				return l;
+			}
+			
+			
+		}
 		
-		addPoints(l, tr, left, right, smp + 1, bottom, goodHeadEdge);
-		 
-		filterByGoodBadCount(l);
-		return l;
+		if (print) {
+			Sout.p("~~ all filtered");
+		}
+		
+		return Collections.EMPTY_LIST;
 	}
 
 	private void filterByGoodBadCount(List<HoughExperiments> l) {
@@ -89,17 +100,42 @@ public class HoughExperimentsAnalizer {
 			}			
 		}		
 	}
-
-	public int findHeaderEdge2(int tr, int smp) {
-
-		foundEdge = 0;
+	
+	static class Header {
+		int edge;
+		int headLow;
+		int headHi; 	
 		
-		int mintr = 5;
-		int maxtr = 24;
+		public Header(int edge, int headLow, int headHi) {
+			this.edge = edge;
+			this.headLow = headLow;
+			this.headHi = headHi; 				
+		}
+	}
+
+	List<Header> foundHeader = new LinkedList<>();
+	
+	public boolean findHeaderEdge2(int tr, int smp) {
+
+		
+		//foundEdge = 0;
+		foundHeader.clear();
+		
+		boolean f = false;
+		
+		int mintr = (tr - new HoughExperiments(file, tr, smp, SHIFT_FROM, 0).get1stRowLeft()) * 75 / 100;
+		int maxtr = (tr - new HoughExperiments(file, tr, smp, SHIFT_TO, 0).get1stRowLeft()) * 130 / 100;
+		
+		
 		for (int edge = 1; edge <= 4; edge++) {
 			
 			int leftc =  tr - find(-1, edge, tr, smp);
 			int rightc = find(+1, edge, tr, smp) - tr;
+			
+			if (print) {
+				Sout.p("mn: " + mintr + " l: " + leftc + " r: " + rightc + " mx: " + maxtr );
+			}
+			
 			if (leftc < mintr || rightc < mintr || leftc > maxtr || rightc > maxtr) {
 				continue;
 			}
@@ -110,14 +146,15 @@ public class HoughExperimentsAnalizer {
 			
 			
 			// shift - size
-			headLow = Math.min(leftc, rightc);
-			headHi = Math.max(leftc, rightc);
-			foundEdge = edge;
+			//headLow = ;
+			//headHi = ;
+			//foundEdge = edge;
 			
-			break;			
+			foundHeader.add(new Header(edge, Math.min(leftc, rightc), Math.max(leftc, rightc)));	
+			f = true;
 		}
 		
-		return foundEdge;
+		return f;
 	}
 	
 	private int find(int step, int edge, int tr, int smp) {
@@ -199,7 +236,7 @@ public class HoughExperimentsAnalizer {
 	long fulltm = 0;
 	long cr1count = 0;
 	long cr1badcount = 0;
-	private List<HoughExperiments> initHE(int tr, int smp, int goodHeadEdge) {
+	private List<HoughExperiments> initHE(int tr, int smp, Header hdr) {
 		
 		
 		prepareList();		
@@ -207,11 +244,11 @@ public class HoughExperimentsAnalizer {
 		left = tr;
 		right = tr;
 		bottom = smp;
-		for (double heightShift = -30; heightShift < 240; heightShift += 5) {
+		for (double heightShift = SHIFT_FROM; heightShift < SHIFT_TO; heightShift += 5) {
 				
-			HoughExperiments he = new HoughExperiments(file, tr, smp, heightShift, goodHeadEdge);
+			HoughExperiments he = new HoughExperiments(file, tr, smp, heightShift, hdr.edge);
 			
-			if (!he.criteriaHead(headLow, headHi)) {
+			if (!he.criteriaHead(hdr.headLow, hdr.headHi)) {
 				cr1badcount++;
 				continue;
 			}
@@ -258,10 +295,10 @@ public class HoughExperimentsAnalizer {
 	
 	
 	public HoughExperiments debug(int tr, int smp, double heightShift) {
-		
+		print = true;
 		List<HoughExperiments> st = findGoodHypList(tr, smp);
 		
-		print = true;
+		
 		int goodHeadEdge;
 		
 		if (st.isEmpty()) {

@@ -223,7 +223,7 @@ public class AmplitudeMatrix {
 		}
 		maxzerocount = Math.max(maxzerocount, zerocount);
 		
-		if (maxzerocount > row.size() / 8) {
+		if (maxzerocount > row.size() / 4) {
 			//it s strait line - can`t be the ground.  
 			//Most probable it is background const noise
 			return 10000000;

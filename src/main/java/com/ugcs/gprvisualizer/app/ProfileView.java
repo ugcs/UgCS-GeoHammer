@@ -828,6 +828,8 @@ public class ProfileView implements SmthChangeListener {
 		if (changed.isFileopened()) {
 			profileScroll.setVisible(model.isActive());
 			toolBar.setDisable(!model.isActive());
+			
+			hyperbolaSlider.updateUI();
 		}
 
 		repaintEvent();
@@ -900,14 +902,14 @@ public class ProfileView implements SmthChangeListener {
 
 		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
-			name = "Hyperbola";
+			name = "Hyp.size";
 			units = "";
-			tickUnits = 200;
+			tickUnits = 10;
 		}
 
 		public void updateUI() {
-			slider.setMax(400);
-			slider.setMin(2);
+			slider.setMax(70);
+			slider.setMin(10);
 			slider.setValue(settings.hyperkfc);
 		}
 

@@ -141,7 +141,7 @@ public class MapField {
 		setZoom(zoom);
 		Point2D scr = latLonToScreen(pathRb);
 		
-		Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
+		//Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
 		
 		while (zoom > 2
 				&& (Math.abs(scr.getX()) > screenWidth / 2
@@ -151,7 +151,7 @@ public class MapField {
 			
 			scr = latLonToScreen(pathRb);
 			
-			Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
+			//Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
 		}
 	}
 
