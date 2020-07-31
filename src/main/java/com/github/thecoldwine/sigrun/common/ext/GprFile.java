@@ -15,18 +15,15 @@ import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ConverterFactory;
 import com.github.thecoldwine.sigrun.common.TraceHeader;
 import com.github.thecoldwine.sigrun.common.ext.BinFile.BinTrace;
-import com.github.thecoldwine.sigrun.converters.ByteANumberConverter;
 import com.github.thecoldwine.sigrun.converters.SeismicValuesConverter;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
-import com.ugcs.gprvisualizer.math.ManuilovFilter;
 
 public class GprFile extends SgyFile {
 	
