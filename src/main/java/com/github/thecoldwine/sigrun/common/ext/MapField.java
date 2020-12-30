@@ -80,7 +80,7 @@ public class MapField {
 		return GoogleCoord.llFromP(p, getZoom());
 	}
 	
-	public static final int MAP_SCALE = 2;
+	public static final int MAP_SCALE = 1;
 	private static final double tileSize = 256 * MAP_SCALE;
 	private static final double R = 6378137;
 	private static final double initialResolution = 2 * Math.PI * R / tileSize;
