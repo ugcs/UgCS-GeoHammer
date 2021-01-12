@@ -3,6 +3,8 @@ package com.github.thecoldwine.sigrun.common.ext;
 import java.awt.geom.Point2D;
 
 import com.ugcs.gprvisualizer.app.Sout;
+import com.ugcs.gprvisualizer.draw.HereMapProvider;
+import com.ugcs.gprvisualizer.draw.MapProvider;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 public class MapField {
@@ -14,7 +16,13 @@ public class MapField {
 	
 	private LatLon sceneCenter;
 	private int zoom;
+	
+	MapProvider mapProvider = new HereMapProvider();//new GoogleMapProvider();
 
+	public MapProvider getMapProvider() {
+		return mapProvider;
+	}
+	
 	public MapField() {
 		
 	}
@@ -64,8 +72,8 @@ public class MapField {
 		Point2D p2d = GoogleCoord.createInfoWindowContent(latlon, getZoom());
 		
 		Point2D result = new Point2D.Double(
-			(p2d.getX() - psc.getX()) * MAP_SCALE, 
-			(p2d.getY() - psc.getY()) * MAP_SCALE);
+			(p2d.getX() - psc.getX()) * mapProvider.getMapScale(), 
+			(p2d.getY() - psc.getY()) * mapProvider.getMapScale());
 		
 		return result;		
 	}
@@ -74,19 +82,23 @@ public class MapField {
 		
 		Point2D psc = GoogleCoord.createInfoWindowContent(getSceneCenter(), getZoom());
 		Point2D p = new Point2D.Double(
-			psc.getX() + point.getX() / MAP_SCALE, 
-			psc.getY() + point.getY() / MAP_SCALE);
+			psc.getX() + point.getX() / mapProvider.getMapScale(), 
+			psc.getY() + point.getY() / mapProvider.getMapScale());
 		
 		return GoogleCoord.llFromP(p, getZoom());
 	}
 	
-	public static final int MAP_SCALE = 2;
-	private static final double tileSize = 256 * MAP_SCALE;
+	//public static final int MAP_SCALE = 1;
+	private double getTileSize() {
+		return 256 * mapProvider.getMapScale();
+	}
 	private static final double R = 6378137;
-	private static final double initialResolution = 2 * Math.PI * R / tileSize;
+	private double getInitialResolution() {
+		return 2 * Math.PI * R / getTileSize();
+	}
 
 	double resolution(double zoom) { 
-		return initialResolution / (Math.pow(2, zoom));
+		return getInitialResolution() / (Math.pow(2, zoom));
 	}
 	
 	private static double toRad(double degree) {
@@ -98,7 +110,7 @@ public class MapField {
 	}
 	
 	public void setZoom(int zoom) {
-		this.zoom = Math.max(0, Math.min(30, zoom));
+		this.zoom = Math.max(0, Math.min(mapProvider.getMaxZoom(), zoom));
 	}
 
 	public LatLon getSceneCenter() {
