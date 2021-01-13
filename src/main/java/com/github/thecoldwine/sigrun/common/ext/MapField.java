@@ -17,12 +17,8 @@ public class MapField {
 	private LatLon sceneCenter;
 	private int zoom;
 	
-	MapProvider mapProvider = new HereMapProvider();//new GoogleMapProvider();
+	private MapProvider mapProvider = new HereMapProvider();//new GoogleMapProvider();
 
-	public MapProvider getMapProvider() {
-		return mapProvider;
-	}
-	
 	public MapField() {
 		
 	}
@@ -34,6 +30,8 @@ public class MapField {
 		
 		this.pathLt = field.pathLt;
 		this.pathRb = field.pathRb;
+		
+		this.mapProvider = field.mapProvider;
 	}
 
 	public boolean isActive() {
@@ -167,5 +165,15 @@ public class MapField {
 		}
 	}
 
+	public void setMapProvider(MapProvider mapProvider) {
+		this.mapProvider = mapProvider;
+		
+		setZoom(getZoom());
+	}
+
+	public MapProvider getMapProvider() {
+		return mapProvider;
+	}
+	
 	
 }

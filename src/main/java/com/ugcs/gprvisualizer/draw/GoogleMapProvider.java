@@ -46,11 +46,11 @@ public class GoogleMapProvider implements MapProvider {
 		
 		StaticMap map = new StaticMap(640, 640, GOOGLE_API_KEY);
 		
-		map.setScale(getMapScale());
+		map.setScale(2);
 		map.setMaptype(Maptype.hybrid);
 		
 		LatLon midlPoint = field.getSceneCenter();
-		int imgZoom = field.getZoom();
+		int imgZoom = field.getZoom() - 1;
 		map.setLocation(new Location(
 				midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); 
 		map.setMaptype(Maptype.hybrid);
@@ -85,7 +85,7 @@ public class GoogleMapProvider implements MapProvider {
 	@Override
 	public int getMapScale() {
 		
-		return 2;
+		return 1;
 	}
 	
 }
