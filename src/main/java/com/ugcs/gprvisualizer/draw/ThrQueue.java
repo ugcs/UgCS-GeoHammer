@@ -67,7 +67,13 @@ public class ThrQueue {
 					backImg = frontImg;
 					frontImg = img;
 					
-					
+					if (img == null) {
+						backImg = null;
+						frontImg = null;
+						
+						clear();
+						return;
+					}
 					actual = new ThrFront(img, field);
 					ready();
 								

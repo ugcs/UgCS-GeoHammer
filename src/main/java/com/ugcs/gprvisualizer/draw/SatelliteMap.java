@@ -43,8 +43,6 @@ import javafx.scene.layout.HBox;
 @Component
 public class SatelliteMap extends BaseLayer {
 
-	
-	
 	@Autowired
 	protected Model model; 
 	
@@ -56,19 +54,16 @@ public class SatelliteMap extends BaseLayer {
 
 	@Autowired
 	private Dimension wndSize;
-
-
 	private LatLon click;
-	
-	ThrQueue q;
-	
-	
+	private ThrQueue recalcQueue;
 	
 	@PostConstruct
 	public void init() {
-		q = new ThrQueue(model) {
+		recalcQueue = new ThrQueue(model) {
 			protected void draw(BufferedImage backImg, MapField field) {
-				this.backImg = field.getMapProvider().loadimg(field);
+				if (field.getMapProvider() != null) {
+					this.backImg = field.getMapProvider().loadimg(field);
+				}
 			}
 			
 			public void ready() {
@@ -79,53 +74,62 @@ public class SatelliteMap extends BaseLayer {
 				
 			}
 		};
-		
-	//	q.width = 640*2;
-	//	q.height = 640*2;
 	}	
 	
-	
-	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
-		@Override
-		public void handle(ActionEvent event) {
-			setActive(showLayerCheckbox.isSelected());
-			if (isActive()) {
-				//loadMap();
-				q.add();
-			} else {
-				getRepaintListener().repaint();
-			}
-				
-		}
-	};
+//	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
+//		@Override
+//		public void handle(ActionEvent event) {
+//			setActive(showLayerCheckbox.isSelected());
+//			if (isActive()) {
+//				q.add();
+//			} else {
+//				getRepaintListener().repaint();
+//			}
+//				
+//		}
+//	};
 	
 	
 	
-	RadioMenuItem menuItem1 = new RadioMenuItem("Google Maps");
-	RadioMenuItem menuItem2 = new RadioMenuItem("Here.com");
-	//MenuItem menuItem3 = new MenuItem("Option 3");
+	RadioMenuItem menuItem1 = new RadioMenuItem("google maps");
+	RadioMenuItem menuItem2 = new RadioMenuItem("here.com");
+	RadioMenuItem menuItem3 = new RadioMenuItem("turn off");
 	
-	private MenuButton optionsMenuBtn = new MenuButton("", null, 
-			//ResourceImageHolder.getImageView("arrow-down-20.png"),
+	private MenuButton optionsMenuBtn = new MenuButton("", ResourceImageHolder.getImageView("gmap-20.png"), 
 			menuItem1,
-			menuItem2);
+			menuItem2,
+			menuItem3);
 	{
 		
 		ToggleGroup toggleGroup = new ToggleGroup();
 		menuItem1.setToggleGroup(toggleGroup);
 		menuItem2.setToggleGroup(toggleGroup);
+		menuItem3.setToggleGroup(toggleGroup);
+		
 		menuItem2.setSelected(true);
+		
 		
 		menuItem1.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        model.getField().setMapProvider(new GoogleMapProvider());
-		        
-		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));
+		        setActive(model.getField().getMapProvider() != null);
+		        recalcQueue.clear();
+		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));		        
 		    }
 		});
 		menuItem2.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 		        model.getField().setMapProvider(new HereMapProvider());
+		        setActive(model.getField().getMapProvider() != null);
+		        recalcQueue.clear();
+		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));
+		    }
+		});
+		menuItem3.setOnAction(new EventHandler<ActionEvent>() {
+		    @Override public void handle(ActionEvent e) {
+		        model.getField().setMapProvider(null);
+		        setActive(model.getField().getMapProvider() != null);
+		        recalcQueue.clear();
 		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 		    }
 		});
@@ -134,17 +138,17 @@ public class SatelliteMap extends BaseLayer {
 		
 	}
 	
-	private ToggleButton showLayerCheckbox = 
-			new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
-	
-	{
-		//boolean apiExists = StringUtils.isNotBlank(GOOGLE_API_KEY);
-		
-		showLayerCheckbox.setTooltip(new Tooltip("Toggle satellite map layer"));
-		//showLayerCheckbox.setDisable(!apiExists);
-		//showLayerCheckbox.setSelected(apiExists);
-		showLayerCheckbox.setOnAction(showMapListener);
-	}
+//	private ToggleButton showLayerCheckbox = 
+//			new ToggleButton("", ResourceImageHolder.getImageView("gmap-20.png"));
+//	
+//	{
+//		//boolean apiExists = StringUtils.isNotBlank(GOOGLE_API_KEY);
+//		
+//		showLayerCheckbox.setTooltip(new Tooltip("Toggle satellite map layer"));
+//		//showLayerCheckbox.setDisable(!apiExists);
+//		//showLayerCheckbox.setSelected(apiExists);
+//		showLayerCheckbox.setOnAction(showMapListener);
+//	}
 	
 	public SatelliteMap() {
 		super();		
@@ -152,11 +156,11 @@ public class SatelliteMap extends BaseLayer {
 	
 	@Override
 	public void draw(Graphics2D g2, MapField currentField) {
-		ThrFront front = q.getFront();
+		ThrFront front = recalcQueue.getFront();
 		
 		if (front != null && isActive()) {
 			
-			q.drawImgOnChangedField(g2, currentField, front);
+			recalcQueue.drawImgOnChangedField(g2, currentField, front);
 		}		
 		
 		if (click != null) {
@@ -180,9 +184,9 @@ public class SatelliteMap extends BaseLayer {
 			
 			if (model.isActive()) {
 				//loadMap();
-				q.add();
+				recalcQueue.add();
 			} else {
-				q.clear();
+				recalcQueue.clear();
 			}			
 		}		
 	}
@@ -241,7 +245,7 @@ public class SatelliteMap extends BaseLayer {
 
 	@Override
 	public List<Node> getToolNodes() {
-		HBox cnt = new HBox(showLayerCheckbox, optionsMenuBtn);
+		HBox cnt = new HBox(/*showLayerCheckbox,*/ optionsMenuBtn);
 		return Arrays.asList(cnt);
 	}
 	

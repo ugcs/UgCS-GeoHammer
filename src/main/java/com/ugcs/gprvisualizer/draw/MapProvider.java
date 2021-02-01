@@ -9,5 +9,4 @@ public interface MapProvider {
 	
 	int getMaxZoom();
 	
-	int getMapScale();
 }

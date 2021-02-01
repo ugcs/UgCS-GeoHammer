@@ -70,8 +70,8 @@ public class MapField {
 		Point2D p2d = GoogleCoord.createInfoWindowContent(latlon, getZoom());
 		
 		Point2D result = new Point2D.Double(
-			(p2d.getX() - psc.getX()) * mapProvider.getMapScale(), 
-			(p2d.getY() - psc.getY()) * mapProvider.getMapScale());
+			(p2d.getX() - psc.getX()), 
+			(p2d.getY() - psc.getY()));
 		
 		return result;		
 	}
@@ -80,15 +80,15 @@ public class MapField {
 		
 		Point2D psc = GoogleCoord.createInfoWindowContent(getSceneCenter(), getZoom());
 		Point2D p = new Point2D.Double(
-			psc.getX() + point.getX() / mapProvider.getMapScale(), 
-			psc.getY() + point.getY() / mapProvider.getMapScale());
+			psc.getX() + point.getX(), 
+			psc.getY() + point.getY());
 		
 		return GoogleCoord.llFromP(p, getZoom());
 	}
 	
 	//public static final int MAP_SCALE = 1;
 	private double getTileSize() {
-		return 256 * mapProvider.getMapScale();
+		return 256;
 	}
 	private static final double R = 6378137;
 	private double getInitialResolution() {
@@ -108,7 +108,8 @@ public class MapField {
 	}
 	
 	public void setZoom(int zoom) {
-		this.zoom = Math.max(0, Math.min(mapProvider.getMaxZoom(), zoom));
+		this.zoom = Math.max(0, Math.min(30, zoom));
+		//this.zoom = Math.max(0, zoom);
 	}
 
 	public LatLon getSceneCenter() {
@@ -151,8 +152,6 @@ public class MapField {
 		setZoom(zoom);
 		Point2D scr = latLonToScreen(pathRb);
 		
-		//Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
-		
 		while (zoom > 2
 				&& (Math.abs(scr.getX()) > screenWidth / 2
 				|| Math.abs(scr.getY()) > screenHeight / 2)) {
@@ -160,8 +159,6 @@ public class MapField {
 			setZoom(zoom);
 			
 			scr = latLonToScreen(pathRb);
-			
-			//Sout.p("t " + scr.getX() + "  " +  scr.getY() + " z " + zoom );
 		}
 	}
 

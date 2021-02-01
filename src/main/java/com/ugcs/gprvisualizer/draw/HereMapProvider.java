@@ -24,6 +24,10 @@ public class HereMapProvider implements MapProvider {
 	
 	@Override
 	public BufferedImage loadimg(MapField field) {
+		System.out.println(field.getZoom());
+		if (field.getZoom() > getMaxZoom()) {
+			field.setZoom(getMaxZoom());
+		}
 		
 		BufferedImage img = null;
 		
@@ -58,12 +62,6 @@ public class HereMapProvider implements MapProvider {
 		}
 		
 		return img;
-	}
-
-	@Override
-	public int getMapScale() {
-		
-		return 1;
 	}
 
 }

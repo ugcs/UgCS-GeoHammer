@@ -42,6 +42,11 @@ public class GoogleMapProvider implements MapProvider {
 	
 	public BufferedImage loadimg(MapField field) {
 		
+		if (field.getZoom() > getMaxZoom()) {
+			field.setZoom(getMaxZoom());
+		}
+
+		
 		BufferedImage img = null;
 		
 		StaticMap map = new StaticMap(640, 640, GOOGLE_API_KEY);
@@ -78,14 +83,7 @@ public class GoogleMapProvider implements MapProvider {
 	@Override
 	public int getMaxZoom() {
 		
-		return 30;
+		return 20;
 	}
 
-
-	@Override
-	public int getMapScale() {
-		
-		return 1;
-	}
-	
 }
