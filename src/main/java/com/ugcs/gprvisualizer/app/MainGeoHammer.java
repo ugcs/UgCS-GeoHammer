@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -22,7 +23,7 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application {
 
-	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.0";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.1";
 	
 	private Model model;
 	private RootControls rootControls;
@@ -39,8 +40,8 @@ public class MainGeoHammer extends Application {
 	@Override
     public void init() {
 		//create all classes
-		context = new ClassPathXmlApplicationContext("spring.xml");
-		 
+		//context = new ClassPathXmlApplicationContext("spring.xml");
+		 context = new AnnotationConfigApplicationContext("com.ugcs");
 		model = context.getBean(Model.class);
 		  
 		rootControls = context.getBean(RootControls.class);

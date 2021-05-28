@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <name>UgCS GeoHammer</name>
     <url>https://github.com/ugsc/geohammer</url>
     <description>UgCS GeoHammer</description>
@@ -72,7 +72,7 @@
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 			    <artifactId>maven-compiler-plugin</artifactId>
-			    <version>3.2</version>
+			    <version>3.8.1</version>
 			    <configuration>
 			        <source>1.8</source>
 			        <target>1.8</target>
@@ -117,11 +117,15 @@
 			        <goal>exec</goal>
 			      </goals>
 			      <configuration>
-  					<arguments> 
-              			<!-- <argument>${project.basedir}/javawrapper.jsmooth</argument> -->
-              			<argument>${project.basedir}/launch4j.xml</argument>
-              		</arguments>			      
-			        <executable>"c:\Program Files (x86)\Launch4j\launch4j.exe"</executable>			        
+                    <executable>java</executable>
+                    <!-- optional -->
+                    <workingDirectory>/tmp</workingDirectory>
+                    <arguments>
+                        <argument>-jar</argument>
+                        <argument>c:\Program Files (x86)\Launch4j\launch4j.jar</argument>
+						<argument>${project.basedir}/launch4j.xml</argument>
+                    </arguments>				  
+				    
 			      </configuration>
 			    </execution>
 			  </executions>
@@ -166,16 +170,7 @@
 	    <name>Repo 1</name>
 	    <url>https://repo.osgeo.org/repository/release/</url>
 	  </repository>
-	
-
-	  <!-- <repository>
-	    <id>matsim</id>
-	    <name>matsim</name>
-	    <url>https://dl.bintray.com/matsim/matsim/</url>
-	  </repository>-->
 	</repositories> 
-
-
 
     <dependencies>
         <dependency>
@@ -260,6 +255,11 @@
 		</dependency>
 
 
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-javafx</artifactId>
+            <version>5.0</version>
+        </dependency>
 
 
     </dependencies>
@@ -278,7 +278,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
+                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
