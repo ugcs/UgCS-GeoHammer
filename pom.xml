@@ -15,7 +15,6 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-
 	
     <developers>
         <developer>
@@ -38,8 +37,6 @@
 
     <build>
 		<finalName>${project.artifactId}</finalName>
-		
-
         <plugins>
 			<plugin>
             	<groupId>org.apache.maven.plugins</groupId>
@@ -156,22 +153,18 @@
       </plugins>
     </build>
 
-	<repositories>
-	
-	
+	<repositories>	
 	  <repository>
 	    <id>centr</id>
 	    <name>central</name>
 	    <url>https://repo1.maven.org/maven2/</url>
-	  </repository>
-	
+	  </repository>	
 	  <repository>
 	    <id>repo1</id>
 	    <name>Repo 1</name>
 	    <url>https://repo.osgeo.org/repository/release/</url>
 	  </repository>
-	</repositories> 
-
+	</repositories>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
