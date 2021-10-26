@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
+import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -62,37 +63,32 @@ public class Loader {
         		return;
         	}
         	
+         	final List<File> files = db.getFiles();  
+         	
+			if (isConstPointsFile(files)) {
+				
+				openConstPointFile(files);				
+				return;				
+			} 
+			
+			if (isPositionFile(files)) {
+				
+				openPositionFile(files);
+				return;
+			}        	
+        	
         	if (model.stopUnsaved()) {
         		return;
-        	}        	
-        	
-        	
-        	final List<File> files = db.getFiles();
+        	}
+
         	
         	ProgressTask loadTask = new ProgressTask() {
 				@Override
 				public void run(ProgressListener listener) {
-					try {
-					
-						if (isConstPointsFile(files)) {
-							
-							ConstPointsFile cpf = new ConstPointsFile();
-							cpf.load(files.get(0));
-							
-							for (SgyFile sgyFile : 
-								model.getFileManager().getFiles()) {
-								
-								cpf.calcVerticalCutNearestPoints(
-										sgyFile);
-							}
-							
-							model.updateAuxElements();
-							
-						} else {
-							
-							loadWithNotify(files, listener);
-							
-						}
+					try {  
+						
+						loadWithNotify(files, listener);
+				
 					} catch (Exception e) {
 						e.printStackTrace();
 						
@@ -118,6 +114,58 @@ public class Loader {
             event.setDropCompleted(true);
             event.consume();
         }
+
+		private void openConstPointFile(final List<File> files) {
+			ConstPointsFile cpf = new ConstPointsFile();
+			cpf.load(files.get(0));
+			
+			for (SgyFile sgyFile : 
+				model.getFileManager().getFiles()) {
+				
+				cpf.calcVerticalCutNearestPoints(
+						sgyFile);
+			}
+			
+			model.updateAuxElements();
+		}
+
+		private void openPositionFile(List<File> files) {
+			if (model.getFileManager().getFiles().size() == 0) {
+				
+				MessageBoxHelper.showError(
+						"Can`t open position file", 
+						"Open GPR file at first");
+				
+				return;
+			}
+			if (model.getFileManager().getFiles().size() > 1) {
+				MessageBoxHelper.showError(
+						"Can`t open position file", 
+						"Only one GPR file must be opened");
+				
+				return;
+			}
+			if (files.size() > 1) {
+				MessageBoxHelper.showError(
+						"Can`t open position file", 
+						"Only one position file must be opened");
+				
+				return;
+			}
+				
+			try {
+				new PositionFile().load(model.getFileManager().getFiles().get(0), files.get(0));
+			} catch (Exception e) {
+				
+				e.printStackTrace();
+				MessageBoxHelper.showError(
+						"Can`t open position file", 
+						"Probably file has incorrect format");
+			}
+			
+			broadcast.notifyAll(new WhatChanged(Change.updateButtons));				
+			
+		}
 
     };
 
@@ -182,6 +230,11 @@ public class Loader {
 		return files.size() == 1 
 				&& files.get(0).getName().endsWith(".constPoints");
 	}
-
+	
+	private boolean isPositionFile(final List<File> files) {
+		return !files.isEmpty() 
+				&& files.get(0).getName().endsWith(".csv");
+	}
+	
 	
 }

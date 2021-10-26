@@ -20,7 +20,7 @@ public class FileManager {
 
 	//public boolean levelCalculated = false;
 	
-	private List<SgyFile> files;
+	private List<SgyFile> files = new ArrayList<>();
 
 	private List<Trace> traces = null;
 
@@ -71,7 +71,7 @@ public class FileManager {
 			sgyFile = new GprFile();
 		} else if (fl.getName().toLowerCase().endsWith("dzt")) {
 			sgyFile = new DztFile();
-		}
+		} 
 		
 		
 		sgyFile.open(fl);
@@ -80,6 +80,8 @@ public class FileManager {
 
 		try {	
 			new MarkupFile().load(sgyFile);
+			
+			//new PositionFile().load(sgyFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

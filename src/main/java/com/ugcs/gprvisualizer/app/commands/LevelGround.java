@@ -12,7 +12,11 @@ public class LevelGround implements Command {
 	public void execute(SgyFile file, ProgressListener listener) {
 
 		HorizontalProfile hp = file.groundProfile;
-		int level = (file.groundProfile.minDeep + file.groundProfile.maxDeep) / 2;
+		if (hp == null) {
+			return;
+		}
+		
+		int level = (hp.minDeep + hp.maxDeep) / 2;
 		
 		for (int i = 0; i < file.getTraces().size(); i++) {
 			

@@ -14,6 +14,7 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Application;
+//import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -23,7 +24,7 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application {
 
-	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.1";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.3";
 	
 	private Model model;
 	private RootControls rootControls;

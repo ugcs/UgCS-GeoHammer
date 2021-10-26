@@ -15,6 +15,9 @@ public class Settings {
 	
 	public RadarMapMode radarMapMode = RadarMapMode.AMPLITUDE;
 	
+	//
+	
+	
 	public boolean showGreenLine = true;
 	
 	
@@ -41,7 +44,9 @@ public class Settings {
 	
 	public MutableBoolean showEdge = new MutableBoolean(); 
 	public MutableBoolean showGood = new MutableBoolean();
-	private MutableBoolean hyperliveview = new MutableBoolean();
+	public MutableBoolean hyperliveview = new MutableBoolean();
+	public MutableBoolean levelPreview = new MutableBoolean(false);
+	public MutableInt levelPreviewShift = new MutableInt(0);
 	
 	public int topscale = 200;
 	public int bottomscale = 250;

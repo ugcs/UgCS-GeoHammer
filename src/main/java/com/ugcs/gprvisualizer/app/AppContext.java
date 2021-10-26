@@ -13,6 +13,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class AppContext {
+	
+	public static boolean PRODUCTION = true;
 
 	public static Stage stage;
 	public static Scene scene;

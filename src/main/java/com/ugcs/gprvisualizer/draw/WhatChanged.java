@@ -31,6 +31,10 @@ public class WhatChanged {
 		return change == Change.fileopened;
 	}
 	
+	public boolean isUpdateButtons() {
+		return change == Change.updateButtons;
+	}
+	
 	public boolean isMapscroll() {
 		return change == Change.mapscroll;
 	}

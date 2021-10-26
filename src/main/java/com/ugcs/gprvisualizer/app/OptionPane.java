@@ -48,6 +48,9 @@ public class OptionPane extends VBox {
 	
 	@Autowired
 	private Broadcast broadcast; 
+	
+	@Autowired
+	private UiUtils uiUtils;
 
 	@Autowired
 	private ProfileView profileView;
@@ -94,7 +97,10 @@ public class OptionPane extends VBox {
         Tab tab1 = new Tab("Gain");
         Tab tab2 = new Tab("Experimental");
         tabPane.getTabs().add(tab1);
-        tabPane.getTabs().add(tab2);
+        
+        if (!AppContext.PRODUCTION) {
+        	tabPane.getTabs().add(tab2);
+        }
         
         prepareTab1(tab1);
 
@@ -109,25 +115,7 @@ public class OptionPane extends VBox {
         tab1.setContent(t1);
 	}
 
-	private ToggleButton prepareToggleButton(String title, 
-			String imageName, MutableBoolean bool, Change change) {
-		
-		ToggleButton btn = new ToggleButton(title, 
-				ResourceImageHolder.getImageView(imageName));
-		
-		btn.setSelected(bool.booleanValue());
-		
-		btn.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				bool.setValue(btn.isSelected());
-				
-				broadcast.notifyAll(new WhatChanged(change));
-			}
-		});
-		
-		return btn;
-	}
+
 
 	private ToggleButton prepareToggleButton(String title, 
 			String imageName, MutableBoolean bool, Consumer<ToggleButton> consumer ) {
@@ -213,11 +201,12 @@ public class OptionPane extends VBox {
 				//				new EdgeSubtractGround())
 				//		),
 				new HBox(
-						shEdge = prepareToggleButton("show edge", null, 
+						shEdge = 
+							uiUtils.prepareToggleButton("show edge", null, 
 								model.getSettings().showEdge, 
 								Change.justdraw),
 						
-						prepareToggleButton("show good", null, 
+							uiUtils.prepareToggleButton("show good", null, 
 								model.getSettings().showGood, 
 								Change.justdraw)
 						),

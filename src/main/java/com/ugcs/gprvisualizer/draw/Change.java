@@ -12,6 +12,7 @@ public enum Change {
 	
 	adjusting,
 	fileopened,
-	auxOnMapSelected;
+	auxOnMapSelected,
+	updateButtons;
 	
 }

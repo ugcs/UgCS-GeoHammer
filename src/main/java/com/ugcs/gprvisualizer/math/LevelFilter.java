@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.math;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.UiUtils;
 import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.LevelClear;
@@ -15,6 +18,7 @@ import com.ugcs.gprvisualizer.app.commands.LevelManualSetter;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -22,23 +26,29 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ToggleButton;
 
 
 @Component
 public class LevelFilter implements ToolProducer, SmthChangeListener { 
 
 	@Autowired
-	private Model model;
+	private Model model;	
+	
+	@Autowired
+	private UiUtils uiUtils;
 
 	@Autowired
 	private CommandRegistry commandRegistry;
 	
 	private Button buttonRemoveLevel;
 	private Button buttonLevelGround;
+	private ToggleButton levelPreview;
+	Node slider;
 
 	private Button buttonSpreadCoord;
 	
-	private boolean levelCalculated = false;
+	private boolean levelCalculated = true;
 	
 
 	
@@ -101,9 +111,20 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 					
 					buttonSpreadCoord.setVisible(false);
 				});
+		
+		levelPreview = uiUtils.prepareToggleButton("Level preview", null, 
+				model.getSettings().levelPreview, 
+				Change.justdraw);
+		
+		slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, Change.justdraw, -50, 50, "shift");
 
-		return Arrays.asList(
-			commandRegistry.createButton(new BackgroundNoiseRemover()), 
+
+		List<Node> result = new ArrayList<Node>();
+		result.add(commandRegistry.createButton(new BackgroundNoiseRemover()));
+		
+		if (!AppContext.PRODUCTION) {
+		    result.addAll(Arrays.asList(
+			 
 		
 			commandRegistry.createButton(new LevelScanner(), "scanLevel.png", 
 					e -> {
@@ -116,29 +137,46 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 						updateButtons(); 
 					}),
 			
-				buttonRemoveLevel, buttonLevelGround, buttonSpreadCoord
+				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord
 		
-		);				
+		    	));		
+		} else {		
+			
+			
+			result.addAll(Arrays.asList(
+					buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord
 					
+					
+					));
+		}
+		
+		return result;			
 			
 		
 	}
 
 	protected void updateButtons() {
-		buttonLevelGround.setDisable(!levelCalculated);
-		buttonRemoveLevel.setDisable(!levelCalculated);
+		buttonLevelGround.setDisable(!isGroundProfileExists());
+		buttonRemoveLevel.setDisable(!isGroundProfileExists());
+		levelPreview.setDisable(!isGroundProfileExists());
+		slider.setDisable(!isGroundProfileExists());
+	}
+	
+	protected boolean isGroundProfileExists() {
+		return !model.getFileManager().getFiles().isEmpty() &&
+				model.getFileManager().getFiles().get(0).groundProfile != null;
 	}
 	
 	public void clearForNewFile() {
 		
-		levelCalculated = false; 
+		levelCalculated = true; 
 		updateButtons(); 
 	}
 	
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 
-		if (changed.isFileopened()) {
+		if (changed.isFileopened() || changed.isUpdateButtons() || changed.isTraceCut()) {
 			
 			clearForNewFile();
 			
