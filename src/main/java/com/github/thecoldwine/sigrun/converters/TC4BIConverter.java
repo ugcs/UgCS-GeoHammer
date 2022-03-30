@@ -13,15 +13,14 @@ public class TC4BIConverter implements SeismicValuesConverter{
 
         ByteBuffer bits = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         
-        for (int i = 0; i < result.length; i++) {
+        bits.getInt();
+        for (int i = 1; i < result.length; i++) {
         	
         	int val = bits.getInt();
-        	//System.out.print(", " + val);
-            result[i] = val;
+        	
+            result[i] = (val + 33_554_432) / 8192.0f;
             
         }
-		
-		//int i = ByteBuffer.wrap(bytes, 0, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
 		
 		return result;
 	}
@@ -29,8 +28,12 @@ public class TC4BIConverter implements SeismicValuesConverter{
 	public ByteBuffer valuesToByteBuffer(float values[]) {
 		
 		ByteBuffer bb = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
-		for(int i =0; i < values.length; i++) {
-			bb.putInt((int)values[i]);
+		for(int i = 0; i < values.length; i++) {
+			
+			//(val + 33_554_432) / 8192.0f  
+			int v = (int) (values[i] * 8192.0f) - 33_554_432;
+			
+			bb.putInt(v);
 		}
 		
 		return bb;

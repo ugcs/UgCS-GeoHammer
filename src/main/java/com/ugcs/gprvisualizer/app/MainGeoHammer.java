@@ -24,7 +24,7 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application {
 
-	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.3";
+	private static final String TITLE_VERSION = "UgCS GeoHammer v.1.1.4";
 	
 	private Model model;
 	private RootControls rootControls;

@@ -40,11 +40,13 @@ public class HorizontalProfile {
 			
 			int d = deep[i];
 			
-			if (list != null && d >= 0) {
+			if (list != null) {
 				float[] values = list.get(i).getNormValues();
-				valsum += values[d];
-			}			
-						
+				
+				if (d >= 0 && d < values.length) {
+					valsum += values[d];
+				}
+			}
 			deepsum += d;
 		}
 		

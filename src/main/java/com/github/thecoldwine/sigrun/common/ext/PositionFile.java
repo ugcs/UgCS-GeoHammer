@@ -52,10 +52,7 @@ public class PositionFile {
 		    
    		    int posCount = 0;
 		    while ((values = csvReader.readNext()) != null) {
-		    	if (posCount > 63640) {
-		    		System.out.println(Arrays.toString(values));
-		    	}
-		    	
+ 	
 	    	    //skip empty row or traces less than positions
 		    	if(values.length >= 3 && posCount < sgyFile.getTraces().size()) {
 		    		hp.deep[posCount] = (int)(Double.valueOf(values[altAltIndex]) * hair);
