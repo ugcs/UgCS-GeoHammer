@@ -50,17 +50,24 @@ public class PositionFile {
 		    
 		    double hair =  100 / sgyFile.getSamplesToCmAir();
 		    
-   		    int posCount = 0;
-		    while ((values = csvReader.readNext()) != null) {
+   		    StretchArray altArr = new StretchArray();
+   		    StretchArray altAltArr = new StretchArray();
+   		    while ((values = csvReader.readNext()) != null) {
  	
+		    	
 	    	    //skip empty row or traces less than positions
-		    	if(values.length >= 3 && posCount < sgyFile.getTraces().size()) {
-		    		hp.deep[posCount] = (int)(Double.valueOf(values[altAltIndex]) * hair);
-		    		hp2.deep[posCount] = (int)(Double.valueOf(values[altIndex]) * hair);
+		    	if(values.length >= 3) {
+//		    		hp.deep[posCount] = (int)(Double.valueOf(values[altAltIndex]) * hair);
+//		    		hp2.deep[posCount] = (int)(Double.valueOf(values[altIndex]) * hair);
+		    		altAltArr.add((int)(Double.valueOf(values[altAltIndex]) * hair));
+		    		altArr.add((int)(Double.valueOf(values[altIndex]) * hair));
 		    	}
-		    	posCount++;		    	
 		    }
-		    		    
+
+    		hp.deep = altAltArr.stretchToArray(sgyFile.getTraces().size());
+    		hp2.deep = altArr.stretchToArray(sgyFile.getTraces().size());
+   		    
+   		    
 		    hp.finish(sgyFile.getTraces());			
 			hp.color = Color.red;
 			
@@ -70,12 +77,14 @@ public class PositionFile {
 			hp2.finish(sgyFile.getTraces());			
 			hp2.color = Color.green;
 			
-			System.out.println(posCount + " <> " + sgyFile.getTraces().size());
-			if (posCount != sgyFile.getTraces().size()) {
+			System.out.println(altAltArr.size() + " <> " + sgyFile.getTraces().size());
+			if (altAltArr.size() != sgyFile.getTraces().size()) {
 				
 				MessageBoxHelper.showError(
 						"Warning", 
-						"Count of traces in GPR file is " + sgyFile.getTraces().size() + " and count of traces in position file is " + posCount);
+						"Count of traces in GPR file is " + sgyFile.getTraces().size() 
+						+ " and count of traces in position file is " + altAltArr.size()
+						+ ". \nPositions array is stretched to fit trace count.");
 			}
 			
 			//sgyFile.profiles = new ArrayList<>();
