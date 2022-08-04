@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.app.commands;
 
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.SampleNormalizer;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
@@ -31,7 +32,9 @@ public class BackgroundNoiseRemover implements Command {
 			subteProfile = brf.prepareNoiseProfile(lst, deep);
 			brf.subtractProfile(lst, subteProfile);
 		}
-		
+
+		//new SampleNormalizer().normalize(lst);
+
 		file.setUnsaved(true);
 		
 	}

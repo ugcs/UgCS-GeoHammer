@@ -1,7 +1,6 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -45,7 +44,9 @@ public class GprFile extends SgyFile {
     private byte[] txtHdr;
     private byte[] binHdr;
     
-    private BinaryHeader binaryHeader; 
+    private BinaryHeader binaryHeader;
+
+    private SampleNormalizer sampleNormalizer = new SampleNormalizer();
 
 
 	public void open(File file) throws Exception {
@@ -66,19 +67,9 @@ public class GprFile extends SgyFile {
 		
 		setTraces(loadTraces(binFile));
 		
-		//sampleIntervalInMcs
-		Trace t = getTraces().get(getTraces().size() / 2);
-		System.out.println("SampleIntervalInMcs: " 
-				+ t.getHeader().getSampleIntervalInMcs());
-		
-		System.out.println(" sgyFile.SamplesToCmAir: " + getSamplesToCmAir());
-		System.out.println(" sgyFile.SamplesToCmGrn: " + getSamplesToCmGrn());
-		
 		updateInternalIndexes();
 		
 		markToAux();		
-		
-		//new ManuilovFilter().filter(getTraces());
 		
 		updateInternalDist();
 		
@@ -90,14 +81,11 @@ public class GprFile extends SgyFile {
 	}
     
 
-	public Trace next(BinTrace binTrace) throws IOException {
+	public Trace next(BinTrace binTrace, SeismicValuesConverter converter) {
 		
 		byte[] headerBin = binTrace.header;		
         TraceHeader header = traceHeaderReader.read(headerBin);
-        
-        SeismicValuesConverter converter = 
-        		ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-        
+
         final float[] values = converter.convert(binTrace.data);        
         
         LatLon latLon = getLatLon(header);
@@ -123,7 +111,9 @@ public class GprFile extends SgyFile {
 		
 		SeismicValuesConverter converter = 
 				ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
-		
+
+		sampleNormalizer.back(traces);
+
 		for (Trace trace : traces) {
 			BinTrace binTrace = new BinTrace();
 			
@@ -132,8 +122,6 @@ public class GprFile extends SgyFile {
 						
 			ByteBuffer bb = ByteBuffer.wrap(binTrace.header);
 			bb.order(ByteOrder.LITTLE_ENDIAN);
-	        //traceHeader.setLongitude(ByteANumberConverter.byteToDbl(buffer, 182));
-	        //traceHeader.setLatitude(ByteANumberConverter.byteToDbl(buffer, 190));
 
 			bb.putDouble(190, convertBackDegreeFraction(trace.getLatLon().getLatDgr()));
 			bb.putDouble(182, convertBackDegreeFraction(trace.getLatLon().getLonDgr()));
@@ -151,12 +139,12 @@ public class GprFile extends SgyFile {
 	}
 
 	public SgyFile copy() {
-
-		
-		SgyFile file2 = new GprFile();
+		GprFile file2 = new GprFile();
 		
 		file2.setFile(this.getFile());
-		
+
+		file2.sampleNormalizer.copyFrom(this.sampleNormalizer);
+
 		List<Trace> traces = new ArrayList<>();
 		for (Trace org : this.getTraces()) {
 			
@@ -253,12 +241,15 @@ public class GprFile extends SgyFile {
 		return v2;
 	}
 
-	private List<Trace> loadTraces(BinFile binFile) throws Exception {
+	private List<Trace> loadTraces(BinFile binFile) {
 		List<Trace> traces = new ArrayList<>();
+
+		SeismicValuesConverter converter = ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
+
 
 		for (BinTrace binTrace : binFile.getTraces()) {
 			
-			Trace trace = next(binTrace);
+			Trace trace = next(binTrace, converter);
 			
 			if (trace == null) {
 				continue;
@@ -266,14 +257,24 @@ public class GprFile extends SgyFile {
 			
 			traces.add(trace);
 		}
-		
+
+		sampleNormalizer.normalize(traces);
+
+
 		
 		//fill latlon where null
+		fillLatLon(traces);
+
+
+		return traces;
+	}
+
+	private void fillLatLon(List<Trace> traces) {
 		Integer fstEmp = null;
 		LatLon ll = null;
 		for (int index = 0; index < traces.size(); index++) {
 			Trace t = traces.get(index) ;
-			
+
 			if (t.getLatLon() == null) {
 				if (ll != null) {
 					t.setLatLon(ll);
@@ -281,12 +282,12 @@ public class GprFile extends SgyFile {
 					fstEmp = index;
 				}
 			}
-			
+
 			if (t.getLatLon() != null) {
 				ll = t.getLatLon();
-				
+
 				if (fstEmp != null) {
-			
+
 					for (int i = fstEmp; i < index; i++) {
 						traces.get(i).setLatLon(t.getLatLon());
 					}
@@ -294,13 +295,8 @@ public class GprFile extends SgyFile {
 				}
 			}
 		}
-		
-		
-		
-		
-		return traces;
 	}
-	
+
 	public int getSampleInterval() {
 		return getBinaryHeader().getSampleInterval();
 	}
@@ -313,7 +309,9 @@ public class GprFile extends SgyFile {
 		gprFile.setBinHdr(this.getBinHdr());
 		gprFile.setTxtHdr(this.getTxtHdr());		
 		gprFile.setBinaryHeader(this.getBinaryHeader());
-		
+
+		gprFile.sampleNormalizer.copyFrom(this.sampleNormalizer);
+
 		return gprFile;
 	}
 

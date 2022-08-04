@@ -58,7 +58,7 @@ public class HereMapProvider implements MapProvider {
 			img = ImageIO.read(new URL(url));
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 		
 		return img;

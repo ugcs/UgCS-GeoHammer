@@ -3,7 +3,7 @@ package com.github.thecoldwine.sigrun.converters;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class TC4BIConverter implements SeismicValuesConverter{
+public class TC4BIConverter implements SeismicValuesConverter {
 
 	@Override
 	public float[] convert(byte[] bytes) {
@@ -18,8 +18,8 @@ public class TC4BIConverter implements SeismicValuesConverter{
         	
         	int val = bits.getInt();
         	
-            result[i] = (val + 33_554_432) / 8192.0f;
-            
+            result[i] = val;
+            //(val + 33_554_432) / 8192.0f;
         }
 		
 		return result;
@@ -31,8 +31,9 @@ public class TC4BIConverter implements SeismicValuesConverter{
 		for(int i = 0; i < values.length; i++) {
 			
 			//(val + 33_554_432) / 8192.0f  
-			int v = (int) (values[i] * 8192.0f) - 33_554_432;
-			
+			//int v = (int) (values[i] * 8192.0f) - 33_554_432;
+			int v = (int) (values[i]);
+
 			bb.putInt(v);
 		}
 		

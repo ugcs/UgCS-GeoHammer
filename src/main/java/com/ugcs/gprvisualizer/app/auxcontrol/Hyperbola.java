@@ -17,8 +17,6 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
-import sun.security.action.GetLongAction;
-
 public class Hyperbola extends BaseObjectImpl implements BaseObject {
 
 	private int leftWidth = 100;

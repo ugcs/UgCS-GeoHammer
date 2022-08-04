@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,12 @@ public class PositionFile {
 			
 			//эллипсоидная относительно уровня моря
 			int altRtkIndex = ArrayUtils.indexOf(header, "Altitude RTK");
-			
+
+			//колонка "номер трейса". может называться по разному
+			int gprTrace = IntStream.range(0, header.length)
+				.filter(i -> StringUtils.containsIgnoreCase(header[i], "GPR:Trace"))
+				.findFirst().getAsInt();
+
 		    String[] values = null;
 		    
 		    HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());
@@ -56,7 +62,7 @@ public class PositionFile {
  	
 		    	
 	    	    //skip empty row or traces less than positions
-		    	if(values.length >= 3) {
+		    	if(values.length >= 3 && StringUtils.isNotBlank(values[gprTrace])) {
 //		    		hp.deep[posCount] = (int)(Double.valueOf(values[altAltIndex]) * hair);
 //		    		hp2.deep[posCount] = (int)(Double.valueOf(values[altIndex]) * hair);
 		    		altAltArr.add((int)(Double.valueOf(values[altAltIndex]) * hair));

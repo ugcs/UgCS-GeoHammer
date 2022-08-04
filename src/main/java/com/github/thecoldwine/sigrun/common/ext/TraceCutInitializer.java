@@ -1,11 +1,9 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.org.apache.bcel.internal.classfile.Field;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class TraceCutInitializer {

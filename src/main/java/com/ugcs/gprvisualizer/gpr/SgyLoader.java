@@ -1,25 +1,13 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ParseProgressListener;
-import com.github.thecoldwine.sigrun.common.SEGYStream;
-import com.github.thecoldwine.sigrun.common.SEGYStreamFactory;
-import com.github.thecoldwine.sigrun.common.SeismicTrace;
-import com.github.thecoldwine.sigrun.common.TextHeader;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormatBuilder;
 import com.github.thecoldwine.sigrun.serialization.FormatEntry;
@@ -113,12 +101,7 @@ public class SgyLoader {
                 .build();
     }
 
-    public static SEGYStreamFactory streamFactory = SEGYStreamFactory.create(
-			Charset.forName("UTF8"),
-	        makeBinHeaderFormat(),
-	        makeTraceHeaderFormat());
-	
-    
+
     public static FilenameFilter filter = new FilenameFilter() {
 	    public boolean accept(File dir, String name) {
 	        return name.toLowerCase().endsWith(".sgy");
@@ -132,22 +115,6 @@ public class SgyLoader {
         //binaryHeader.getTraceSequenceNumberWL();
     }
 
-    private static void printTraceInfo(SeismicTrace trace) {
-        System.out.println("Trace Header info.    " 
-        	+ trace.getHeader().getNumberOfSamples() 
-        	+ " samples. " + trace.getHeader().getPositionInFile() 
-        	+ " . " + trace.getHeader().getEnsembleNumber());
-        
-        System.out.println("   gps " + trace.getHeader().getSourceX() 
-        		+ " " + trace.getHeader().getSourceY() 
-        		+ " " + trace.getHeader().getCoordinateUnitsCode());
-        System.out.println(" group " + trace.getHeader().getGroupX() 
-        		+ " " + trace.getHeader().getGroupY());
-        
-        
-        
-    }
-    
     static void printF(float[] ar) {
     	StringBuilder sb = new StringBuilder();
     	for (float f : ar) {
