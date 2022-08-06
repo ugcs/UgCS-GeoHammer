@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.io.File;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.kml.KmlReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -75,9 +76,15 @@ public class Loader {
 				
 				openPositionFile(files);
 				return;
-			}        	
-        	
-        	if (model.stopUnsaved()) {
+			}
+
+			if (isKmlFile(files)) {
+
+				openKmlFile(files);
+				return;
+			}
+
+			if (model.stopUnsaved()) {
         		return;
         	}
 
@@ -169,8 +176,41 @@ public class Loader {
 
     };
 
-    
-	public void loadWithNotify(final List<File> files, ProgressListener listener) 
+	private void openKmlFile(List<File> files) {
+		if (model.getFileManager().getFiles().size() == 0) {
+
+			MessageBoxHelper.showError(
+				"Can`t open kml file",
+				"Open GPR file at first");
+
+			return;
+		}
+		if (files.size() > 1) {
+			MessageBoxHelper.showError(
+				"Can`t open position file",
+				"Only one position file must be opened");
+
+			return;
+		}
+
+		try {
+			new KmlReader().read(files.get(0), model);
+		} catch (Exception e) {
+
+			e.printStackTrace();
+			MessageBoxHelper.showError(
+				"Can`t open position file",
+				"Probably file has incorrect format");
+		}
+
+		broadcast.notifyAll(new WhatChanged(Change.updateButtons));
+		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+
+	}
+
+
+
+	public void loadWithNotify(final List<File> files, ProgressListener listener)
 			throws Exception {
 		
 		load(files, listener);
@@ -233,8 +273,11 @@ public class Loader {
 	
 	private boolean isPositionFile(final List<File> files) {
 		return !files.isEmpty() 
-				&& files.get(0).getName().endsWith(".csv");
+				&& files.get(0).getName().toLowerCase().endsWith(".csv");
 	}
-	
-	
+
+	private boolean isKmlFile(final List<File> files) {
+		return !files.isEmpty()
+			&& files.get(0).getName().toLowerCase().endsWith(".kml");
+	}
 }

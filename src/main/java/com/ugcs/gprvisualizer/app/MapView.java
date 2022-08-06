@@ -7,12 +7,13 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import com.ugcs.gprvisualizer.app.kml.KMLExport;
+import com.ugcs.gprvisualizer.utils.TraceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,8 +34,6 @@ import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.utils.KmlSaver;
-import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -45,7 +44,6 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.stage.FileChooser;
 
 @Component
 public class MapView extends Work implements SmthChangeListener {
@@ -109,7 +107,6 @@ public class MapView extends Work implements SmthChangeListener {
 
 		initImageView();
 		
-		//AppContext.smthListener.add(this);
 	}
 	
 	public void somethingChanged(WhatChanged changed) {
@@ -187,7 +184,7 @@ public class MapView extends Work implements SmthChangeListener {
         		
         		LatLon ll = model.getField().screenTolatLon(p);
         		
-        		int traceIndex = findNearestTraceIndex(
+        		int traceIndex = TraceUtils.findNearestTraceIndex(
         				model.getFileManager().getTraces(), ll);
         		
         		model.getVField().setSelectedTrace(traceIndex);
@@ -196,24 +193,7 @@ public class MapView extends Work implements SmthChangeListener {
         	}
         }
 
-		private int findNearestTraceIndex(List<Trace> traces, LatLon ll) {
-			
-			int resultIndex = 0;
-			double mindst = ll.getDistance(traces.get(0).getLatLon());
-			
-			for (int i = 0; i < traces.size(); i++) {
-				
-				double dst = ll.getDistance(traces.get(i).getLatLon());
-				if (dst < mindst) {
-					resultIndex = i;
-					
-					mindst = dst;
-				}
-				
-			}
-			
-			return resultIndex;
-		}
+
 
 	};
 	

@@ -80,8 +80,7 @@ public class MainGeoHammer extends Application {
 		        System.exit(0);
 		    }
 		});		
-		
-		
+
 		//load files if they were given in parameters 
 		if (!getParameters().getRaw().isEmpty()) {
 			String name = getParameters().getRaw().get(0);

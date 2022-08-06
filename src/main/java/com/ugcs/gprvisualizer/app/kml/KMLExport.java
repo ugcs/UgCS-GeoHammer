@@ -1,9 +1,10 @@
-package com.ugcs.gprvisualizer.app;
+package com.ugcs.gprvisualizer.app.kml;
 
 import java.io.File;
 
+import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.MessageBoxHelper;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.utils.KmlSaver;
 
 import javafx.stage.FileChooser;
 
@@ -32,7 +33,7 @@ public class KMLExport {
 		FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("KML files (*.kml)", "*.kml");
 		chooser.getExtensionFilters().add(extFilter);
 		
-		File tiffFile = chooser.showSaveDialog(AppContext.stage); 
+		File tiffFile = chooser.showSaveDialog(AppContext.stage);
 
 		if (tiffFile == null) {
 			return;

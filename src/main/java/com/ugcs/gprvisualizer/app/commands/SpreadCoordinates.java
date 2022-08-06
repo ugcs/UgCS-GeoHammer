@@ -61,8 +61,6 @@ public class SpreadCoordinates implements Command {
 		double[] dst2 = new double[traces.size()]; 
 		
 		int lastGoodIndex = 0;
-		//int prevGoodIndex = 0;
-		//int lastZeroIndex = 0;
 		double thr = 0.0001;
 		LatLon ll1 = traces.get(0).getLatLon();
 		for (int i = 0; i < dst.length; i++) {
@@ -88,21 +86,10 @@ public class SpreadCoordinates implements Command {
 				ll1 = ll2;
 				thr = dst[i] / 10;
 				
-				//prevGoodIndex = lastGoodIndex;
-				lastGoodIndex = i;				
+				lastGoodIndex = i;
 			}
-			//dst2[i] = avg(dst, i);
 		}
 		
-//		dst = dst2;
-//		
-//		Sout.p("-----");
-//		for (int i = 0; i < dst.length; i++) {
-//			traces.get(i).setPrevDist(dst[i]);
-//			if (traces.get(i).getPrevDist() > 0.001) {
-//				Sout.p("d: " + traces.get(i).getPrevDist());
-//			}
-//		}
 	}
 
 	public static boolean isSpreadingNecessary(List<SgyFile> files) {

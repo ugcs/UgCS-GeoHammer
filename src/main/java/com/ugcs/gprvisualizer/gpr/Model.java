@@ -49,8 +49,6 @@ public class Model {
 	private Settings settings = new Settings();
 	private LeftRulerController leftRulerController = new LeftRulerController(this);
 	
-	//private List<Trace> foundTrace = new ArrayList<>();
-	//private Map<SgyFile, List<Integer>> foundIndexes = new HashMap<>();
 	private Set<FileChangeType> changes = new HashSet<>();
 	
 	private List<BaseObject> auxElements = new ArrayList<>();
@@ -59,7 +57,7 @@ public class Model {
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
 	
-	private boolean spreadCoordinatesNecessary = false;
+	private boolean kmlToFlagAvailable = false;
 	
 	public Model() {
 		Sout.p("create model");
@@ -313,8 +311,12 @@ public class Model {
 		return false;
 	}
 
-	public void setSpreadCoordinatesNecessary(boolean spreadCoordinatesNecessary) {
-		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
+
+	public boolean isKmlToFlagAvailable() {
+		return kmlToFlagAvailable;
 	}
-	
+
+	public void setKmlToFlagAvailable(boolean kmlToFlagAvailable) {
+		this.kmlToFlagAvailable = kmlToFlagAvailable;
+	}
 }

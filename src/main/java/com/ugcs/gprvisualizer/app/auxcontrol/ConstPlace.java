@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -26,8 +27,9 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	private LatLon latLon;
 	private int traceInFile;
 	private VerticalCutPart offset;
-	static int R_HOR = 8;
-	static int R_VER = 5;
+	static int R_HOR = ShapeHolder.flag2.getBounds().width / 2;
+	static int R_VER = ShapeHolder.flag2.getBounds().height / 2;
+
 		
 	public static ConstPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
 		int traceNum = (int) (long) (Long) json.get("trace");
@@ -60,16 +62,16 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
 		
-		Rectangle r = getRect(field);
-		if (r.contains(point)) {
-			
-			AppContext.model.getVField().setSelectedTrace(
-					offset.localToGlobal(traceInFile));
-		
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			return true;
-		}
+//		Rectangle r = getRect(field);
+//		if (r.contains(point)) {
+//
+//			AppContext.model.getVField().setSelectedTrace(
+//					offset.localToGlobal(traceInFile));
+//
+//			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+//
+//			return true;
+//		}
 		
 		return false;
 	}
@@ -102,43 +104,51 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	public void drawOnMap(Graphics2D g2, MapField mapField) {
 		
 		
+//		Rectangle rect = getRect(mapField);
+//
+//		g2.setColor(Color.BLACK);
+//		g2.fillOval(rect.x + 1, rect.y + 1, rect.width, rect.height);
+//
+//		g2.setColor(Color.ORANGE);
+//		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
+
+
+
 		Rectangle rect = getRect(mapField);
 
-		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x + 1, rect.y + 1, rect.width, rect.height);
-		
-		g2.setColor(Color.ORANGE);
-		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
+		g2.setColor(Color.DARK_GRAY);
+
+		g2.translate(rect.x, rect.y + rect.height);
+
+		g2.fill(ShapeHolder.flag2);
+
+		g2.setColor(Color.WHITE);
+		g2.draw(ShapeHolder.flag2);
+		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		setClip(g2, profField.getClipTopMainRect());
-		
-		Rectangle rect = getRect(profField);
-		
-		g2.setColor(Color.BLACK);
-		g2.fillOval(rect.x + 2, rect.y + 2, rect.width, rect.height);
-		
-		g2.setColor(Color.ORANGE);
-		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
+
 	}
 	
 	public Rectangle getRect(ProfileField profField) {
-		
+
+		if (offset == null) {
+			return null;//new Rectangle(0,0,1,1);
+		}
 		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
 				
-		Rectangle rect = new Rectangle(x - R_HOR, 5, R_HOR * 2, R_VER * 2);
+		Rectangle rect = new Rectangle(x - R_HOR, R_VER, R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 	
 	public Rectangle getRect(MapField mapField) {
 		
 		Point2D p =  mapField.latLonToScreen(latLon);
-		
-		Rectangle rect = new Rectangle(
-				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
-				R_HOR * 2, R_VER * 2);
+
+		Rectangle rect = new Rectangle((int) p.getX(), (int) p.getY() - R_VER * 2,
+			R_HOR * 2, R_VER * 2);
 		return rect;
 	}
 
@@ -149,10 +159,8 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		
-		Rectangle rect = getRect(profField);
-		
-		return rect.contains(localPoint);
+
+		return false;
 	}
 
 	@Override
@@ -168,6 +176,10 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	@Override
 	public boolean saveTo(JSONObject json) {
 		return false;
+	}
+
+	public LatLon getLatLon() {
+		return latLon;
 	}
 
 

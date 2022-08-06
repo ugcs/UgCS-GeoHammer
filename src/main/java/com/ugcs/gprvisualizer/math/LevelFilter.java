@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
+import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +49,9 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	Node slider;
 
 	private Button buttonSpreadCoord;
-	
+	private Button buttonKmlToFlag;
+	private Button buttonCancelKmlToFlag;
+
 	private boolean levelCalculated = true;
 	
 
@@ -106,12 +110,19 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 		
 		buttonSpreadCoord = commandRegistry.createButton(new SpreadCoordinates(), 
-				e -> {					
-					//updateButtons();
-					
-					buttonSpreadCoord.setVisible(false);
-				});
-		
+			e -> {
+				buttonSpreadCoord.setVisible(false);
+			});
+
+		buttonKmlToFlag = commandRegistry.createButton(new KmlToFlag(),
+			e -> {
+				//buttonKmlToFlag.setVisible(false);
+			});
+		buttonCancelKmlToFlag = commandRegistry.createButton(new CancelKmlToFlag(),
+			e -> {
+
+			});
+
 		levelPreview = uiUtils.prepareToggleButton("Level preview", null, 
 				model.getSettings().levelPreview, 
 				Change.justdraw);
@@ -137,14 +148,14 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 						updateButtons(); 
 					}),
 			
-				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord
+				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord, buttonKmlToFlag, buttonCancelKmlToFlag
 		
 		    	));		
 		} else {		
 			
 			
 			result.addAll(Arrays.asList(
-					buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord
+					buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord, buttonKmlToFlag, buttonCancelKmlToFlag
 					
 					
 					));
@@ -181,6 +192,13 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			clearForNewFile();
 			
 			buttonSpreadCoord.setVisible(model.isSpreadCoordinatesNecessary());
+			buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+
+			buttonKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+			buttonKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+			buttonCancelKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+			buttonCancelKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+
 		}
 	}
 
