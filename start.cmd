@@ -1,1 +1,1 @@
-java -Xmx2g -cp geohammer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainGeoHammer
+"c:\Program Files\Java\jre1.8.0_321\bin\java" -Xmx2g -cp geohammer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainGeoHammer
