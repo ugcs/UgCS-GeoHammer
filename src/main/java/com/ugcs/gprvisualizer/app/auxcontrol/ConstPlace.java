@@ -102,28 +102,17 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField mapField) {
-		
-		
-//		Rectangle rect = getRect(mapField);
-//
-//		g2.setColor(Color.BLACK);
-//		g2.fillOval(rect.x + 1, rect.y + 1, rect.width, rect.height);
-//
-//		g2.setColor(Color.ORANGE);
-//		g2.fillOval(rect.x, rect.y, rect.width, rect.height);
-
-
 
 		Rectangle rect = getRect(mapField);
 
-		g2.setColor(Color.DARK_GRAY);
+		g2.setColor(Color.ORANGE);
 
 		g2.translate(rect.x, rect.y + rect.height);
 
-		g2.fill(ShapeHolder.flag2);
+		g2.fill(ShapeHolder.flag3);
 
-		g2.setColor(Color.WHITE);
-		g2.draw(ShapeHolder.flag2);
+		g2.setColor(Color.BLACK);
+		g2.draw(ShapeHolder.flag3);
 		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
