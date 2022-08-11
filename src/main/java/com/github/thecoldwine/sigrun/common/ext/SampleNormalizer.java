@@ -26,13 +26,13 @@ public class SampleNormalizer {
 
         reduceFactor = dispersion / 500;
 
-        if (avg / reduceFactor < 1) {
-            //avg = 0;
-        }
-
-        if (reduceFactor > 0.6 || reduceFactor < 1.8) {
-            reduceFactor = 1;
-        }
+//        if (avg / reduceFactor < 1) {
+//            //avg = 0;
+//        }
+//
+//        if (reduceFactor > 0.6 && reduceFactor < 1.8) {
+//            reduceFactor = 1;
+//        }
 
         normalize(traces, avg, reduceFactor);
 
