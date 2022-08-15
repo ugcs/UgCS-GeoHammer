@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>c:\work\ugcs\target\geohammer-jar-with-dependencies.jar</jar>
-  <outfile>c:\work\ugcs\target\geohammer.exe</outfile>
+  <jar>${PROJECT_DIR}\target\geohammer-jar-with-dependencies.jar</jar>
+  <outfile>${PROJECT_DIR}\target\geohammer.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
