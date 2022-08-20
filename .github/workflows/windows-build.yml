@@ -1,8 +1,8 @@
-name: UgCS GeoHammer build for Ubuntu Linux
+name: UgCS GeoHammer build for MS Windows
 on: [push, workflow_dispatch]
 jobs:
-  GeoHammer-Linux-Build:
-    runs-on: ubuntu-latest
+  GeoHammer-Windows-Build:
+    runs-on: windows-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -14,14 +14,14 @@ jobs:
           java-package: 'jdk+fx'
           architecture: 'x64'
       - name: Bundle platform-specific JRE
-        run: jlink --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules javafx.controls,javafx.swing --output target/jre17
+        run: jlink --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules javafx.controls,javafx.swing --output target\jre17
       - name: Build with Maven
-        run: mvn --batch-mode install -P linux-build
+        run: mvn --batch-mode install -P windows-build
       - name: Staging artifacts
-        run: mkdir staging && copy target/*.zip staging
+        run: mkdir staging && copy target\*.zip staging
       - name: Store artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Linux-Package
+          name: Windows-Package
           path: staging
           retention-days: 5

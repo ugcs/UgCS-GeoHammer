@@ -1,8 +1,8 @@
-name: UgCS GeoHammer build for Ubuntu Linux
+name: UgCS GeoHammer build for MacOS
 on: [push, workflow_dispatch]
 jobs:
   GeoHammer-Linux-Build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -22,6 +22,6 @@ jobs:
       - name: Store artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: Linux-Package
+          name: MacOS-Package
           path: staging
           retention-days: 5
