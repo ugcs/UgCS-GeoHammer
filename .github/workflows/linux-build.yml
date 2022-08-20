@@ -1,0 +1,28 @@
+name: UgCS GeoHammer build for MS Windows
+on: [push, workflow_dispatch]
+jobs:
+  GeoHammer-Windows-Build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'liberica'
+          java-package: 'jdk+fx'
+          architecture: 'x64'
+      - name: Bundle platform-specific JRE
+        run: jlink --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules javafx.controls,javafx.swing --output target\jre17
+      - name: Build with Maven
+        run: mvn --batch-mode install -P windows-build
+      - name: Staging artifacts
+        run: mkdir staging
+        run: copy target\*.zip staging
+      - name: Store artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Windows-Package
+          path: staging
+          retention-days: 5
