@@ -18,8 +18,7 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode install -P windows-build
       - name: Staging artifacts
-        run: mkdir staging
-        run: copy target\*.zip staging
+        run: mkdir staging && copy target\*.zip staging
       - name: Store artifacts
         uses: actions/upload-artifact@v3
         with:
