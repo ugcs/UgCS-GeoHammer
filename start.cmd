@@ -1,1 +1,2 @@
-"c:\Program Files\Java\jre1.8.0_321\bin\java" -Xmx2g -cp geohammer-jar-with-dependencies.jar com.ugcs.gprvisualizer.app.MainGeoHammer
+set INSTALL_PATH=%~dp0
+"%INSTALL_PATH%jre17\bin\java" -Xmx2g -cp "%INSTALL_PATH%geohammer-jar-with-dependencies.jar" com.ugcs.gprvisualizer.app.MainGeoHammer
