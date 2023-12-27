@@ -31,6 +31,11 @@
 		<!-- Default values. These should be overloaded by profile choice -->
 		<platform.suffix>windows-x86_64</platform.suffix>
         <zip.content>src/main/assembly/zip.xml</zip.content>
+
+		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
+		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
+
 	</properties>
 
 	<build>
@@ -70,14 +75,11 @@
 						link to' -->
 					<linkXRef>false</linkXRef>
 				</configuration>
-			</plugin>
-			
-
-
+			</plugin>			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>${maven-assembly-plugin.version}</version>
 				<configuration>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
@@ -126,7 +128,6 @@
 		            <mainClass>MainGeoHammer.app.gprvisualizer.ugcs.com</mainClass>
 		        </configuration>
 		    </plugin>
-
 		</plugins>
 	</build>
 
@@ -282,8 +283,22 @@
        		<build>
 	       		<plugins>
 					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<version>${build-helper-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>parse-version</id>
+								<goals>
+									<goal>parse-version</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 					  <groupId>com.akathist.maven.plugins.launch4j</groupId>
 					  <artifactId>launch4j-maven-plugin</artifactId>
+					  <version>${launch4j-maven-plugin.version}</version>
 					  <executions>
 						<execution>
 							<id>l4j-gui</id>
@@ -308,7 +323,7 @@
 								<txtFileVersion>${project.version}</txtFileVersion>
 								<fileDescription>UgCS GeoHammer</fileDescription>
 								<copyright>SPH Engeneering 2022</copyright>
-								<productVersion>${project.version}.0</productVersion>
+								<productVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.0</productVersion>
 								<txtProductVersion>${project.version}</txtProductVersion>
 								<productName>GeoHammer</productName>
 								<internalName>geohammer</internalName>
