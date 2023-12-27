@@ -104,13 +104,13 @@
 					</execution>
 					<!-- zip -->
 					<execution>
-						<phase>install</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 						<configuration>
 							<finalName>${project.artifactId}_${project.version}_${platform.suffix}</finalName>
-							<appendAssemblyId>false</appendAssemblyId>
+							<!--<appendAssemblyId>false</appendAssemblyId>-->
 							<descriptors>
 								<descriptor>${zip.content}</descriptor>
 							</descriptors>
@@ -227,7 +227,6 @@
 			<artifactId>JavaAPIforKml</artifactId>
 			<version>2.2.0</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>com.miglayout</groupId>
