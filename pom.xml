@@ -18,7 +18,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
 		<maven.compiler.release>17</maven.compiler.release>
+		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
 
 		<checkstyle.version>8.32</checkstyle.version>
 		<checkstyle.plugin.version>3.1.1</checkstyle.plugin.version>
@@ -34,6 +36,13 @@
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<parameters>true</parameters>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
