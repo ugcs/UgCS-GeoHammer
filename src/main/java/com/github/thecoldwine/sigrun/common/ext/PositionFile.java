@@ -3,9 +3,6 @@ package com.github.thecoldwine.sigrun.common.ext;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -17,8 +14,7 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class PositionFile {
 
-	public void load(SgyFile sgyFile, File posfile) throws Exception {
-		
+	public void load(SgyFile sgyFile, File posfile) throws Exception {		
 		
 		File file = sgyFile.getFile();
 		//File mkupfile = getPositionFileBySgy(file);
@@ -26,7 +22,6 @@ public class PositionFile {
 			System.out.println(" not exists " + posfile.getAbsolutePath());
 			return;
 		}
-		
 		
 		//[Elapsed, Date, Time, Pitch, Roll, Yaw, Latitude, Longitude, Altitude, Velocity, RTK Status, Latitude RTK, Longitude RTK, Altitude RTK, ALT:Altitude, ALT:Filtered Altitude, GPR:Trace]
 		//[309793, 2021/05/12, 07:48:58.574, -6.03, -0.73, 137.52, 56.86301828, 24.11194153, 3.60, 5.20, OFF, , , , 2.91, 2.91, 999]
@@ -98,9 +93,6 @@ public class PositionFile {
 		}
 
 	}
-	
-	
-	
 	
 	private File getPositionFileBySgy(File file) {
 		

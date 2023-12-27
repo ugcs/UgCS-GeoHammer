@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +20,8 @@ import com.github.thecoldwine.sigrun.common.TraceHeader;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.BinFile.BinTrace;
-import com.google.common.collect.ImmutableMap;
+
 import com.ugcs.gprvisualizer.app.Sout;
-import com.ugcs.gprvisualizer.math.ManuilovFilter;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 import com.ugcs.gprvisualizer.obm.ObjectByteMapper;
 
@@ -88,10 +88,7 @@ public class DztFile extends SgyFile {
 	}
 	
 	private static final Map<Integer, SampleValues> valueGetterMap = 
-			ImmutableMap.<Integer, SampleValues>builder()
-			.put(16, new Sample16Bit())
-			.put(32, new Sample32Bit())
-			.build();
+			Map.of(16, new Sample16Bit(),32, new Sample32Bit());
 	
 	@Override
 	public void open(File file) throws Exception {
@@ -101,34 +98,17 @@ public class DztFile extends SgyFile {
 		
 		dzg.load(getDsgFile(file));
 		
-		
-		FileInputStream is = null;
-
-		try {
-			is = new FileInputStream(file);
+		try (SeekableByteChannel datachan = Files.newByteChannel(file.toPath(), StandardOpenOption.READ)) {
+			ByteBuffer buf = loadHeader(datachan);
 			
-			ByteBuffer buf = loadHeader(is);
-			
-			/////		
 			ObjectByteMapper obm = new ObjectByteMapper();
 			obm.readObject(header, buf);
 			
-			logHeader();
-			
-			FileChannel datachan = is.getChannel();
-	
+			logHeader();			
+
 			datachan.position(getDataPosition());
-			
-			setTraces(loadTraces(
-					getValueBufferMediator(), 
-					datachan));
-			
-			//datachan.close();
-		} finally {
-			
-			is.close();			
-		} 
-		
+			setTraces(loadTraces(getValueBufferMediator(), datachan));
+		}
 		
 		if (traces.isEmpty()) {
 			throw new RuntimeException("Corrupted file");
@@ -159,13 +139,10 @@ public class DztFile extends SgyFile {
 		
 	}
 
-	private ByteBuffer loadHeader(FileInputStream is) throws IOException {
-		FileChannel chan = is.getChannel();
-		
+	private ByteBuffer loadHeader(SeekableByteChannel chan) throws IOException {		
 		ByteBuffer buf = ByteBuffer.allocate(1024).order(ByteOrder.LITTLE_ENDIAN);
 		chan.position(0);
 		chan.read(buf);
-		//chan.close();
 		return buf;
 	}
 
@@ -197,7 +174,7 @@ public class DztFile extends SgyFile {
 	}
 
 	private List<Trace> loadTraces(SampleValues valueGetter, 
-			FileChannel datachan) throws Exception {
+	SeekableByteChannel datachan) throws Exception {
 
 		List<Trace> traces = new ArrayList<>();
 		int counter = 0;
@@ -234,7 +211,7 @@ public class DztFile extends SgyFile {
 	int rotateAmount = 0;
 	
 	public Trace next(SampleValues valueGetter, 
-			FileChannel datachan, int number) throws IOException {
+	SeekableByteChannel datachan, int number) throws IOException {
 		
         int bufferSize = getTraceBufferSize();
         

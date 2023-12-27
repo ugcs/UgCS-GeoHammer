@@ -73,6 +73,9 @@ public class FileManager {
 			sgyFile = new DztFile();
 		} 
 		
+		if (sgyFile == null) {
+			return;
+		}
 		
 		sgyFile.open(fl);
 		

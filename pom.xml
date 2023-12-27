@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.7</version>
+    <version>1.1.8-SNAPSHOT</version>
     <name>UgCS GeoHammer</name>
     <url>https://github.com/ugsc/geohammer</url>
     <description>UgCS GeoHammer</description>
@@ -15,19 +15,10 @@
         </license>
     </licenses>
 	
-    <developers>
-        <developer>
-            <id>UgCS</id>
-            <name>Innokenty Manuilov</name>
-            <email>imanuilov@croc.ru</email>
-        </developer>
-    </developers>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>15</maven.compiler.source>
-    	<maven.compiler.target>15</maven.compiler.target>
+		<maven.compiler.release>17</maven.compiler.release>
 
 		<checkstyle.version>8.32</checkstyle.version>
 		<checkstyle.plugin.version>3.1.1</checkstyle.plugin.version>
@@ -142,6 +133,7 @@
 			<url>https://repo.osgeo.org/repository/release/</url>
 		</repository>
 	</repositories>
+	
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -155,11 +147,6 @@
 			<version>1.7.21</version>
 		</dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-		</dependency>
 		<dependency>
 			<groupId>gov.nist.math</groupId>
 			<artifactId>jama</artifactId>
@@ -189,13 +176,6 @@
 			<version>1.1.1</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>18.0</version>
-		</dependency>
-
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
@@ -219,7 +199,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>5.3.22</version>
+			<version>5.3.27</version>
 		</dependency>
 
 
@@ -246,11 +226,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.5.1</version>
+		    <groupId>com.opencsv</groupId>
+		    <artifactId>opencsv</artifactId>
+		    <version>5.9</version>
 		</dependency>
-
+		
 	</dependencies>
 
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -27,7 +28,7 @@ import com.ugcs.gprvisualizer.gpr.SgyLoader;
 public class GprFile extends SgyFile {
 	
 	private static final int MARK_BYTE_POS = 238;
-	private static final Charset charset = Charset.forName("UTF8");
+	private static final Charset charset = StandardCharsets.UTF_8;
     private static final BinaryHeaderFormat binaryHeaderFormat 
     	= SgyLoader.makeBinHeaderFormat();
     private static final TraceHeaderFormat traceHeaderFormat 

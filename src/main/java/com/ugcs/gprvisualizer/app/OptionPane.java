@@ -81,7 +81,7 @@ public class OptionPane extends VBox {
 	public void postConstruct() {
 		this.setPadding(new Insets(3, 13, 3, 3));
 		this.setPrefWidth(RIGHT_BOX_WIDTH);
-		this.setMinWidth(RIGHT_BOX_WIDTH);
+		this.setMinWidth(0);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
 		
 		this.getChildren().addAll(profileView.getRight());
