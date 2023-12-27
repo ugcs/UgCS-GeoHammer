@@ -111,7 +111,7 @@ public class ThrQueue {
 				&& backImg.getHeight() == windowSize.height) {
 		
 		} else {
-			backImg = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_ARGB);
+			backImg = new BufferedImage(Math.max(1, windowSize.width), Math.max(1, windowSize.height), BufferedImage.TYPE_INT_ARGB);
 		}
 		
 		

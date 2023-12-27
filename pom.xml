@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.7</version>
+    <version>1.1.8-SNAPSHOT</version>
     <name>UgCS GeoHammer</name>
     <url>https://github.com/ugsc/geohammer</url>
     <description>UgCS GeoHammer</description>
@@ -15,19 +15,12 @@
         </license>
     </licenses>
 	
-    <developers>
-        <developer>
-            <id>UgCS</id>
-            <name>Innokenty Manuilov</name>
-            <email>imanuilov@croc.ru</email>
-        </developer>
-    </developers>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>15</maven.compiler.source>
-    	<maven.compiler.target>15</maven.compiler.target>
+
+		<maven.compiler.release>17</maven.compiler.release>
+		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
 
 		<checkstyle.version>8.32</checkstyle.version>
 		<checkstyle.plugin.version>3.1.1</checkstyle.plugin.version>
@@ -38,11 +31,23 @@
 		<!-- Default values. These should be overloaded by profile choice -->
 		<platform.suffix>windows-x86_64</platform.suffix>
         <zip.content>src/main/assembly/zip.xml</zip.content>
+
+		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
+		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
+
 	</properties>
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<parameters>true</parameters>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -70,14 +75,11 @@
 						link to' -->
 					<linkXRef>false</linkXRef>
 				</configuration>
-			</plugin>
-			
-
-
+			</plugin>			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>${maven-assembly-plugin.version}</version>
 				<configuration>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
@@ -126,7 +128,6 @@
 		            <mainClass>MainGeoHammer.app.gprvisualizer.ugcs.com</mainClass>
 		        </configuration>
 		    </plugin>
-
 		</plugins>
 	</build>
 
@@ -142,6 +143,7 @@
 			<url>https://repo.osgeo.org/repository/release/</url>
 		</repository>
 	</repositories>
+	
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -155,11 +157,6 @@
 			<version>1.7.21</version>
 		</dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-		</dependency>
 		<dependency>
 			<groupId>gov.nist.math</groupId>
 			<artifactId>jama</artifactId>
@@ -189,13 +186,6 @@
 			<version>1.1.1</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>18.0</version>
-		</dependency>
-
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
@@ -219,7 +209,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>5.3.22</version>
+			<version>5.3.27</version>
 		</dependency>
 
 
@@ -246,11 +236,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.5.1</version>
+		    <groupId>com.opencsv</groupId>
+		    <artifactId>opencsv</artifactId>
+		    <version>5.9</version>
 		</dependency>
-
+		
 	</dependencies>
 
 
@@ -293,8 +283,22 @@
        		<build>
 	       		<plugins>
 					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<version>${build-helper-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>parse-version</id>
+								<goals>
+									<goal>parse-version</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
 					  <groupId>com.akathist.maven.plugins.launch4j</groupId>
 					  <artifactId>launch4j-maven-plugin</artifactId>
+					  <version>${launch4j-maven-plugin.version}</version>
 					  <executions>
 						<execution>
 							<id>l4j-gui</id>
@@ -319,7 +323,7 @@
 								<txtFileVersion>${project.version}</txtFileVersion>
 								<fileDescription>UgCS GeoHammer</fileDescription>
 								<copyright>SPH Engeneering 2022</copyright>
-								<productVersion>${project.version}.0</productVersion>
+								<productVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.0</productVersion>
 								<txtProductVersion>${project.version}</txtProductVersion>
 								<productName>GeoHammer</productName>
 								<internalName>geohammer</internalName>

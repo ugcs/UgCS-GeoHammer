@@ -111,25 +111,16 @@ public class MarkupFile {
 		sampleObject.put("markup", objects);
 		 
 
-		try {
-			 File jsonFile = getMarkupFileBySgy(nfile);
-			 
-			 FileWriter file = new FileWriter(jsonFile);
-			 
-			 Gson gson = new GsonBuilder().setPrettyPrinting().create(); //
-			 JsonParser jp = new JsonParser();
-			 JsonElement je = jp.parse(sampleObject.toJSONString());
-			 String prettyJsonString = gson.toJson(je);
-			 
-			 file.write(prettyJsonString);
-			 
-		        file.flush();
-		        file.close();			 
-		        
+		try (FileWriter file = new FileWriter(getMarkupFileBySgy(nfile))) {
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			JsonElement je = JsonParser.parseString(sampleObject.toJSONString());
+			String prettyJsonString = gson.toJson(je);
+			
+			file.write(prettyJsonString);	
+			file.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}		
-		
 	}
 
 	public void deleteMarkup(File nfile) {

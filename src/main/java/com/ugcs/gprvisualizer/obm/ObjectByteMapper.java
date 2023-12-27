@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
 import com.ugcs.gprvisualizer.app.Sout;
 
 public class ObjectByteMapper {
@@ -43,18 +42,16 @@ public class ObjectByteMapper {
 				ByteBuffer buffer, int size) throws Exception;
 	}
 	
-	private static final Map<Class<?>, Setter> map = ImmutableMap.<Class<?>, Setter>builder()
-			.put(Short.class, new ShortSetter())
-			.put(short.class, new ShortSetter())
-			.put(byte.class, new ByteSetter())
-			.put(char.class, new CharSetter())
-			.put(Float.class, new FloatSetter())
-			.put(float.class, new FloatSetter())
+	private static final Map<Class<?>, Setter> map = Map.of(
+			Short.class, new ShortSetter(),
+			short.class, new ShortSetter(),
+			byte.class, new ByteSetter(),
+			char.class, new CharSetter(),
+			Float.class, new FloatSetter(),
+			float.class, new FloatSetter(),
 			
-			.put(byte[].class, new ByteArraySetter())
-			.put(String.class, new StringSetter())
-			
-			.build();
+			byte[].class, new ByteArraySetter(),
+			String.class, new StringSetter());
 	
 	static class ShortSetter implements Setter {
 

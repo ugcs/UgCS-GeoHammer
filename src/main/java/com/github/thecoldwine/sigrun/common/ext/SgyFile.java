@@ -4,34 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import com.github.thecoldwine.sigrun.common.BinaryHeader;
-import com.github.thecoldwine.sigrun.common.ConverterFactory;
-import com.github.thecoldwine.sigrun.common.TraceHeader;
-import com.github.thecoldwine.sigrun.common.ext.BinFile.BinTrace;
-import com.github.thecoldwine.sigrun.converters.SeismicValuesConverter;
-import com.github.thecoldwine.sigrun.serialization.BinaryHeaderFormat;
-import com.github.thecoldwine.sigrun.serialization.BinaryHeaderReader;
-import com.github.thecoldwine.sigrun.serialization.TextHeaderReader;
-import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
-import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.commands.DistCalculator;
 import com.ugcs.gprvisualizer.app.commands.DistancesSmoother;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
-import com.ugcs.gprvisualizer.gpr.SgyLoader;
-import com.ugcs.gprvisualizer.math.CoordinatesMath;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
-import com.ugcs.gprvisualizer.math.ManuilovFilter;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public abstract class SgyFile {

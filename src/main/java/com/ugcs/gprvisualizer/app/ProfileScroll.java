@@ -2,7 +2,6 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.beans.value.ChangeListener;
@@ -122,9 +121,8 @@ public class ProfileScroll extends Canvas {
 		}
 	};	
 	
-	
 	MouseSInput selected;
-	Set<MouseSInput> bars = ImmutableSet.of(centerInput, leftInput, rightInput); 
+	Set<MouseSInput> bars = Set.of(centerInput, leftInput, rightInput); 
  
 	
 	public ProfileScroll(Model model) {
