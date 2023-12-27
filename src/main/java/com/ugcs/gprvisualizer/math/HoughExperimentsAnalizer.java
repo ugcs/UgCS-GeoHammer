@@ -1,18 +1,13 @@
 package com.ugcs.gprvisualizer.math;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.Sout;
-import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 
 public class HoughExperimentsAnalizer {
 	
@@ -53,7 +48,7 @@ public class HoughExperimentsAnalizer {
 			if (print) {
 				Sout.p("~~ !findHeaderEdge2");
 			}
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		
 		for (Header hdr : foundHeader) {
@@ -78,7 +73,7 @@ public class HoughExperimentsAnalizer {
 			Sout.p("~~ all filtered");
 		}
 		
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	private void filterByGoodBadCount(List<HoughExperiments> l) {

@@ -17,7 +17,7 @@ import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 
-public class Hyperbola extends BaseObjectImpl implements BaseObject {
+public class Hyperbola extends BaseObjectImpl {
 
 	private int leftWidth = 100;
 	private int rightWidth = 100;
@@ -31,10 +31,9 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	private DragAnchor thick;
 	private DragAnchor hyperkfc;
 	
-	private Hyperbola(){
-		
+	private Hyperbola() {
 	}
-	
+
 	public Hyperbola(int trace, int sample, VerticalCutPart offset) {
 		this.offset = offset;
 		initDragAnchors();
@@ -117,11 +116,13 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 			}
 		};
 		thick = new DragAnchor(
-				ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {
+				ResourceImageHolder.IMG_HOR_SLIDER, AlignRect.CENTER, offset) {			
+			@Override
 			public void signal(Object obj) {
 				thickness = thick.getSample() - pinacle.getSample();
 			}
 			
+			@Override
 			public int getTrace() {
 				return pinacle.getTrace();
 			}
@@ -141,20 +142,17 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 
 	@Override
 	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField mapField) {
-		// TODO Auto-generated method stub
-		
+		// do nothing
 	}
 
 	@Override
@@ -193,6 +191,7 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked") 
 	public boolean saveTo(JSONObject json) {
 		json.put("tracePinacle", pinacle.getTrace());
 		json.put("samplePinacle", pinacle.getSample());
@@ -307,8 +306,6 @@ public class Hyperbola extends BaseObjectImpl implements BaseObject {
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		
-
 		return left.getTrace() >= begin && right.getTrace() <= end;
 	}
 }

@@ -12,7 +12,7 @@ public class CmdTest {
 			System.out.println(System.getenv().get("SGYPROC"));
 			String line;
 			
-			Process p = Runtime.getRuntime().exec(RUN_CMD);
+			Process p = new ProcessBuilder(RUN_CMD).start();
 			BufferedReader input = new BufferedReader(
 					new InputStreamReader(p.getInputStream()));
 			while ((line = input.readLine()) != null) {

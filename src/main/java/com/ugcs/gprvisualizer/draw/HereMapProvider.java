@@ -2,7 +2,8 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -11,10 +12,6 @@ import javax.imageio.ImageIO;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-
-import de.pentabyte.googlemaps.Location;
-import de.pentabyte.googlemaps.StaticMap;
-import de.pentabyte.googlemaps.StaticMap.Maptype;
 
 public class HereMapProvider implements MapProvider {
 
@@ -55,9 +52,9 @@ public class HereMapProvider implements MapProvider {
 			System.out.println(url);
 			
 			System.setProperty("java.net.useSystemProxies", "true");
-			img = ImageIO.read(new URL(url));
+			img = ImageIO.read(new URI(url).toURL());
 			
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			System.err.println(e.getMessage());
 		}
 		

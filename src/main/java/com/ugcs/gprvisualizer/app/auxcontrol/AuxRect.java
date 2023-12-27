@@ -25,7 +25,8 @@ import com.ugcs.gprvisualizer.math.NumberUtils;
 
 import javafx.scene.control.ChoiceDialog;
 
-public class AuxRect extends BaseObjectImpl implements BaseObject {
+@SuppressWarnings("unchecked")
+public class AuxRect extends BaseObjectImpl {
 	
 	public static final Color maskColor = new Color(50, 0, 255, 70);
 	
