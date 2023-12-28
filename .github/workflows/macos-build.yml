@@ -14,7 +14,7 @@ jobs:
           java-package: 'jdk+fx'
           architecture: 'x64'
       - name: Build with Maven
-        run: mvn --batch-mode package -P macos-build
+        run: mvn --batch-mode install -P macos-build
       - name: Staging artifacts
         run: mkdir staging && cp target/*.zip staging
       - name: Store artifacts
