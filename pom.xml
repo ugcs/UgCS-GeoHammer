@@ -19,7 +19,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
 
 		<checkstyle.version>8.32</checkstyle.version>
@@ -35,6 +35,7 @@
 		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
 		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
 		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
+		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>
 
 	</properties>
 
@@ -75,7 +76,39 @@
 						link to' -->
 					<linkXRef>false</linkXRef>
 				</configuration>
-			</plugin>			
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>${exec-maven-plugin.version}</version>
+				<configuration>
+					<longModulepath>false</longModulepath>
+				</configuration>
+				<executions>
+					<execution>
+						<id>jlink</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<executable>${java.home}/bin/jlink</executable>
+							<arguments>
+								<argument>--module-path</argument>
+								<argument>${project.build.directory}/*.jar</argument>
+								<argument>--add-modules</argument>
+								<argument>javafx.controls,javafx.swing</argument>
+								<argument>--output</argument>
+								<argument>${project.build.directory}/jre21</argument>
+								<argument>--no-header-files</argument>
+								<argument>--no-man-pages</argument>
+								<argument>--vm=server</argument>
+							</arguments>
+							<workingDirectory>../</workingDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -228,7 +261,6 @@
 			<version>2.2.0</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-javafx</artifactId>
@@ -315,8 +347,8 @@
 							<addDependencies>false</addDependencies>
 							</classPath>
 							<jre>
-								<minVersion>1.17.0</minVersion>
-								<path>jre17</path>
+								<minVersion>21.0.1</minVersion>
+								<path>jre21</path>
 							</jre>
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>

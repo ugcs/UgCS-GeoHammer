@@ -19,6 +19,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 
+@SuppressWarnings("unchecked") 
 public class MarkupFile {
 
 	
@@ -123,17 +124,17 @@ public class MarkupFile {
 		}		
 	}
 
-	public void deleteMarkup(File nfile) {
+	public boolean deleteMarkup(File nfile) {
 		//try to delete
 		File mrkpFile = getMarkupFileBySgy(nfile);
 		if (mrkpFile.exists()) {
 			try {
-				mrkpFile.delete();
+				return mrkpFile.delete();
 			} catch (Exception e) {
 				e.printStackTrace();					
 			}
 		}
-	}
-	
+		return false;
+	}	
 	
 }

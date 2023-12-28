@@ -5,22 +5,20 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: Set JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/checkout@v4
+      - name: Set JDK 21
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'liberica'
           java-package: 'jdk+fx'
           architecture: 'x64'
-      - name: Bundle platform-specific JRE
-        run: jlink --no-header-files --no-man-pages --compress=2 --strip-debug --add-modules javafx.controls,javafx.swing --output target/jre17
       - name: Build with Maven
         run: mvn --batch-mode install -P linux-build
       - name: Staging artifacts
         run: mkdir staging && cp target/*.zip staging
       - name: Store artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Linux-Package
           path: staging

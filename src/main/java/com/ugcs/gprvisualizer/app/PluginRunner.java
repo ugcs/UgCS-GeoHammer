@@ -55,8 +55,7 @@ public class PluginRunner implements SingleCommand {
 					+ "\\model.pb\" --no_progressbar";
 			
 			System.out.println(cmd);
-			Process p = Runtime.getRuntime().exec(cmd);
-			
+			Process p = new ProcessBuilder(cmd).start();		
 			//
 			BufferedReader input = new BufferedReader(
 					new InputStreamReader(p.getInputStream()));

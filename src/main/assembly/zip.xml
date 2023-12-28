@@ -9,9 +9,9 @@
     </formats>
 	<fileSets>
     	<fileSet>
-      		<directory>${project.build.directory}/jre17</directory>
+      		<directory>${project.build.directory}/jre21</directory>
 			<useDefaultExcludes>true</useDefaultExcludes>
-			<outputDirectory>/jre17</outputDirectory>
+			<outputDirectory>/jre21</outputDirectory>
 		</fileSet>
 	</fileSets>
     <files>

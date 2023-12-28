@@ -3,7 +3,8 @@ package com.ugcs.gprvisualizer.draw;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.imageio.ImageIO;
 
@@ -70,9 +71,9 @@ public class GoogleMapProvider implements MapProvider {
 			System.out.println(url);
 			
 			System.setProperty("java.net.useSystemProxies", "true");
-			img = ImageIO.read(new URL(url));
+			img = ImageIO.read(new URI(url).toURL());
 			
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			e.printStackTrace();
 		}
 		
