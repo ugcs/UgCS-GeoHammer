@@ -347,8 +347,8 @@
 							<addDependencies>false</addDependencies>
 							</classPath>
 							<jre>
-								<minVersion>1.17.0</minVersion>
-								<path>jre17</path>
+								<minVersion>21.0.1</minVersion>
+								<path>jre21</path>
 							</jre>
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>
