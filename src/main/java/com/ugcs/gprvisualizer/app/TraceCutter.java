@@ -14,7 +14,6 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -30,8 +29,6 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.dzt.DztFile;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
@@ -369,13 +366,7 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		
 		initButtons();
 		
-		buttonCutMode.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		        
-		    	updateCutMode();
-		    	
-		    }
-		});
+		buttonCutMode.setOnAction(e -> updateCutMode());
 		
 		buttonSet.setOnAction(e -> {
 	    	apply();
