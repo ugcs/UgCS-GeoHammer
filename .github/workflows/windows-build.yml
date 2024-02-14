@@ -1,4 +1,4 @@
-name: UgCS GeoHammer build for MS Windows
+name: GeoHammer build for MS Windows
 on: [push, workflow_dispatch]
 jobs:
   GeoHammer-Windows-Build:

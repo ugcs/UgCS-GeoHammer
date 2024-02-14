@@ -1,4 +1,4 @@
-name: UgCS GeoHammer build for MacOS
+name: GeoHammer build for MacOS
 on: [push, workflow_dispatch]
 jobs:
   GeoHammer-MacOS-Build:
