@@ -37,7 +37,7 @@ public class HereMapProvider implements MapProvider {
 		DecimalFormat df = new DecimalFormat("#.0000000", DecimalFormatSymbols.getInstance(Locale.US));
 		
 		try {
-			String HERE_API_KEY = "mX93tKDhNQW4jB9qWR7U8njVda4OWZu9S8t7Q1blkCs";
+			String HERE_API_KEY = "X7tvrjXJcKIau2jnnNstT2vCk1l1g1TN3v-PcRx31h8";
 			String url = String.format("https://image.maps.ls.hereapi.com/mia/1.6/mapview?"
 					+ "apiKey=%s"
 					+ "&c=%s,%s"
