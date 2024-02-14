@@ -109,29 +109,25 @@ public class SatelliteMap extends BaseLayer {
 		menuItem2.setSelected(true);
 		
 		
-		menuItem1.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		        model.getField().setMapProvider(new GoogleMapProvider());
-		        setActive(model.getField().getMapProvider() != null);
-		        recalcQueue.clear();
-		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));		        
-		    }
+		menuItem1.setOnAction(e -> {
+			model.getField().setMapProvider(new GoogleMapProvider());
+			setActive(model.getField().getMapProvider() != null);
+			recalcQueue.clear();
+			broadcast.notifyAll(new WhatChanged(Change.mapzoom));		        
 		});
-		menuItem2.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		        model.getField().setMapProvider(new HereMapProvider());
-		        setActive(model.getField().getMapProvider() != null);
-		        recalcQueue.clear();
-		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));
-		    }
+
+		menuItem2.setOnAction(e -> {
+			model.getField().setMapProvider(new HereMapProvider());
+			setActive(model.getField().getMapProvider() != null);
+			recalcQueue.clear();
+			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 		});
-		menuItem3.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-		        model.getField().setMapProvider(null);
-		        setActive(model.getField().getMapProvider() != null);
-		        recalcQueue.clear();
-		        broadcast.notifyAll(new WhatChanged(Change.mapzoom));
-		    }
+
+		menuItem3.setOnAction(e -> {
+			model.getField().setMapProvider(null);
+			setActive(model.getField().getMapProvider() != null);
+			recalcQueue.clear();
+			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 		});
 		
 		///optionsMenuBtn.setStyle("padding-left: 2px; padding-right: 2px");
