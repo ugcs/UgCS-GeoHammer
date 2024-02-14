@@ -78,13 +78,21 @@ public class TraceCutInitializer {
 				Math.sin(ang) * maxrad + center.getY())));
 		
 		ang += Math.PI / 2;
-		
+				
 		points.add(f.screenTolatLon(new Point2D.Double(
 				Math.cos(ang) * maxrad + center.getX(),
 				Math.sin(ang) * maxrad + center.getY())));
+				
+		points.add(1, getMiddleOf(points.get(0), points.get(1)));
+		points.add(3, getMiddleOf(points.get(2), points.get(3)));		
+		points.add(5, getMiddleOf(points.get(4), points.get(5)));		
+		points.add(7, getMiddleOf(points.get(6), points.get(0)));				
 		
 		return points;
 	}
-	
+
+	private LatLon getMiddleOf(LatLon latLon, LatLon latLon2) {
+		return new LatLon((latLon.getLatDgr() + latLon2.getLatDgr()) / 2, (latLon.getLonDgr() + latLon2.getLonDgr()) / 2);
+	}
 	
 }
