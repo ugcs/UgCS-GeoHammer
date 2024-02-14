@@ -1,4 +1,4 @@
-UgCS GeoHammer is a simple to use tool to quickly assess and pre-process GPR (ground penetrating radar) data.
+GeoHammer is a simple to use tool to quickly assess and pre-process GPR (ground penetrating radar) data.
 
 User manual - https://github.com/ugcs/UgCS-GeoHammer/wiki
 

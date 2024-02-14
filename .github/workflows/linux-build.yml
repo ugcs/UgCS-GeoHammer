@@ -1,4 +1,4 @@
-name: UgCS GeoHammer build for Ubuntu Linux
+name: GeoHammer build for Ubuntu Linux
 on: [push, workflow_dispatch]
 jobs:
   GeoHammer-Linux-Build:

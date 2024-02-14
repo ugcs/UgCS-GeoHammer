@@ -4,9 +4,9 @@
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
     <version>1.1.9-SNAPSHOT</version>
-    <name>UgCS GeoHammer</name>
-    <url>https://github.com/ugsc/geohammer</url>
-    <description>UgCS GeoHammer</description>
+    <name>GeoHammer</name>
+    <url>https://github.com/ugcs/UgCS-GeoHammer</url>
+    <description>GeoHammer</description>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -161,6 +161,14 @@
 		            <mainClass>MainGeoHammer.app.gprvisualizer.ugcs.com</mainClass>
 		        </configuration>
 		    </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<configuration>
+					<!-- This is an app, so we don't want to install it in the local Maven repository -->
+					<skip>true</skip>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -353,8 +361,8 @@
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>
 								<txtFileVersion>${project.version}</txtFileVersion>
-								<fileDescription>UgCS GeoHammer</fileDescription>
-								<copyright>SPH Engeneering 2022</copyright>
+								<fileDescription>GeoHammer</fileDescription>
+								<copyright>SPH Engeneering 2024</copyright>
 								<productVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.0</productVersion>
 								<txtProductVersion>${project.version}</txtProductVersion>
 								<productName>GeoHammer</productName>
