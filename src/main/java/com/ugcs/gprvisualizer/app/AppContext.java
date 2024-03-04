@@ -29,9 +29,7 @@ public class AppContext {
 	
 	public static void notifyAll(WhatChanged changed) {
 		
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
+		Platform.runLater(() -> {
 				for (SmthChangeListener lst : AppContext.smthListener) {
 					try {
 						lst.somethingChanged(changed);
@@ -39,7 +37,6 @@ public class AppContext {
 						e.printStackTrace();
 					}
 				}
-			}
 		});		
 	}	
 }

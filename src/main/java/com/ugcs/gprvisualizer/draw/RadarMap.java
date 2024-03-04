@@ -10,8 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +50,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
 @Component
-public class RadarMap extends BaseLayer {
+public class RadarMap extends BaseLayer implements InitializingBean {
 
 	private static final double MIN_CIRCLE_THRESHOLD = 2.0;
 	
@@ -188,10 +187,8 @@ public class RadarMap extends BaseLayer {
 		q.setWindowSize(wndSize);
 	}		
 	
-	
-	@PostConstruct
-	public void init() {
-		
+	@Override
+	public void afterPropertiesSet() throws Exception {		
 		
 		autoArrayBuilder = new MedianScaleBuilder(model);
 		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
@@ -395,4 +392,5 @@ public class RadarMap extends BaseLayer {
 	public void setModel(Model model) {
 		this.model = model;
 	}
+
 }

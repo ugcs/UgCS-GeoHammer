@@ -9,8 +9,7 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +28,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 
 @Component
-public class GpsTrack extends BaseLayer {
+public class GpsTrack extends BaseLayer implements InitializingBean {
 
 	//private RepaintListener listener;
 	
@@ -56,19 +55,11 @@ public class GpsTrack extends BaseLayer {
 		showLayerCheckbox.setSelected(true);
 		showLayerCheckbox.setOnAction(showMapListener);
 	}
-		
-	
-	public GpsTrack() {
-		
-		super();
-		
-		init();
-	}
 	
 	ThrQueue q;
 	
-	@PostConstruct
-	public void init() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		q = new ThrQueue(model) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				

@@ -10,13 +10,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +41,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 
 @Component
-public class SatelliteMap extends BaseLayer {
+public class SatelliteMap extends BaseLayer implements InitializingBean {
 
 	@Autowired
 	protected Model model; 
@@ -57,8 +57,8 @@ public class SatelliteMap extends BaseLayer {
 	private LatLon click;
 	private ThrQueue recalcQueue;
 	
-	@PostConstruct
-	public void init() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		recalcQueue = new ThrQueue(model) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				if (field.getMapProvider() != null) {

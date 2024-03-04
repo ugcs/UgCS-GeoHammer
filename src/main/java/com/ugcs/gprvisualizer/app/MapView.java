@@ -10,10 +10,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
 @Component
-public class MapView extends Work implements SmthChangeListener {
+public class MapView extends Work implements SmthChangeListener, InitializingBean {
 	
 	@Autowired
 	private TraceCutter traceCutter;
@@ -87,8 +87,8 @@ public class MapView extends Work implements SmthChangeListener {
 		}
 	};
 	
-	@PostConstruct
-	public void init() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		
 		radarMap.setRepaintListener(listener);
 		
@@ -366,6 +366,6 @@ public class MapView extends Work implements SmthChangeListener {
 		g2.drawString(NO_GPS_TEXT, x, y);
 		
 		return noGpsImg;
-	}	
+	}
 	
 }

@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 
 @Component
-public class SceneContent extends BorderPane {
+public class SceneContent extends BorderPane implements InitializingBean {
 
 	@Autowired
 	private Loader loader;
@@ -30,13 +29,8 @@ public class SceneContent extends BorderPane {
 	@Autowired
 	private OptionPane optionPane;
 	
-	
-	public SceneContent() {
-		
-	}
-	
-	@PostConstruct
-	public void postConstruct() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		this.setOnDragOver(loader.getDragHandler());
 		this.setOnDragDropped(loader.getDropHandler());
 
@@ -61,6 +55,5 @@ public class SceneContent extends BorderPane {
 		
 		return sp;
 	}
-	
 	
 }

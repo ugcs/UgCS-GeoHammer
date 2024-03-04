@@ -2,9 +2,8 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.function.Consumer;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +39,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 @Component
-public class OptionPane extends VBox {
+public class OptionPane extends VBox implements InitializingBean {
+	
 	private static final int RIGHT_BOX_WIDTH = 330;
 	
 	@Autowired
@@ -77,8 +77,9 @@ public class OptionPane extends VBox {
 		
 	}
 	
-	@PostConstruct
-	public void postConstruct() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
+
 		this.setPadding(new Insets(3, 13, 3, 3));
 		this.setPrefWidth(RIGHT_BOX_WIDTH);
 		this.setMinWidth(0);
@@ -229,4 +230,5 @@ public class OptionPane extends VBox {
 		
         tab2.setContent(t2);
 	}
+
 }

@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
@@ -33,7 +32,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 
 @Component
-public class Model {
+public class Model implements InitializingBean {
 
 	public static final int TOP_MARGIN = 50;
 	
@@ -61,11 +60,6 @@ public class Model {
 	
 	public Model() {
 		Sout.p("create model");
-	}
-	
-	@PostConstruct
-	public void postConstruct() {
-		AppContext.model = this;
 	}
 	
 	public int getTracesCount() {
@@ -318,5 +312,10 @@ public class Model {
 
 	public void setKmlToFlagAvailable(boolean kmlToFlagAvailable) {
 		this.kmlToFlagAvailable = kmlToFlagAvailable;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		AppContext.model = this;
 	}
 }

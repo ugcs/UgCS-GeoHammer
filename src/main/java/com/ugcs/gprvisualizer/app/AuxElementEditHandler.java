@@ -5,8 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +32,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
+public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, InitializingBean {
 
 	@Autowired
 	private Model model;
@@ -70,10 +69,9 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener {
 		
 	}
 
-	@PostConstruct
-	public void init() {
-		field = profileView.getField();
-		
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		field = profileView.getField();		
 		initButtons();		
 	}
 
