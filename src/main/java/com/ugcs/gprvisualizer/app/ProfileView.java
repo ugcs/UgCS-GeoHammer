@@ -16,9 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +64,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class ProfileView implements SmthChangeListener {
+public class ProfileView implements SmthChangeListener, InitializingBean {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
@@ -148,8 +147,9 @@ public class ProfileView implements SmthChangeListener {
 
 	}
 	
-	@PostConstruct
-	public void init() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
+
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 
@@ -193,9 +193,6 @@ public class ProfileView implements SmthChangeListener {
 		zoomOutBtn.setOnAction(e -> {
 			zoom(-1, width / 2, height / 2, false);
 		});
-
-
-		
 	}
 
 	public void prepareToolbar() {
@@ -1001,5 +998,5 @@ public class ProfileView implements SmthChangeListener {
 	public AuxElementEditHandler getAuxEditHandler() {
 		return auxEditHandler;
 	}
-
+	
 }

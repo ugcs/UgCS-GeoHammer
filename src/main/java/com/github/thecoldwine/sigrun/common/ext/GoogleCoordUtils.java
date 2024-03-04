@@ -2,11 +2,15 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.geom.Point2D;
 
-public class GoogleCoord {
+public class GoogleCoordUtils {
 
-	static int TILE_SIZE = 256;
+	public static final int TILE_SIZE = 256;
+
+	private GoogleCoordUtils() {
+
+	}
 	
-	static public LatLon llFromP(Point2D p, int zoom) {
+	public static LatLon llFromP(Point2D p, int zoom) {
 	
 		int scale = 1 << zoom;
 		
@@ -18,7 +22,7 @@ public class GoogleCoord {
 		
 	}
 
-	static public Point2D createInfoWindowContent(LatLon latLng, int zoom) {
+	public static Point2D createInfoWindowContent(LatLon latLng, int zoom) {
 		int scale = 1 << zoom;
 
 		Point2D worldCoordinate = project(latLng);

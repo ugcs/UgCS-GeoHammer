@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.layout.Region;
 
 @Component
-public class GeoHammerToolbar extends ToolBar implements SmthChangeListener {
+public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, InitializingBean {
 
 	@Autowired
 	private Model model; 
@@ -41,8 +40,8 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener {
 	@Autowired
 	private CommandRegistry commandRegistry;
 	
-	@PostConstruct
-	public void postConstruct() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		setDisable(true);
 		
 		getItems().addAll(saver.getToolNodes());

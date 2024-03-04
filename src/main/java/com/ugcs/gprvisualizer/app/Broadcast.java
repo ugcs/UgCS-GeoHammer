@@ -2,8 +2,7 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +12,13 @@ import com.ugcs.gprvisualizer.draw.WhatChanged;
 import javafx.application.Platform;
 
 @Component
-public class Broadcast {
+public class Broadcast implements InitializingBean {
 
 	@Autowired
 	private Set<SmthChangeListener> items;
 	
-	@PostConstruct
-	public void init() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		AppContext.setItems(getItems());
 	}
 	
@@ -43,6 +42,6 @@ public class Broadcast {
 		
 			}
 		});		
-	}	
+	}
 	
 }

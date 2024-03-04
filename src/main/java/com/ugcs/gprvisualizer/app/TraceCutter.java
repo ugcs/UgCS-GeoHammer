@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +35,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 
 @Component
-public class TraceCutter implements Layer, SmthChangeListener {
+public class TraceCutter implements Layer, SmthChangeListener, InitializingBean {
+
 	private static final int RADIUS = 5;
 	
 	private MapField field;
@@ -62,10 +62,8 @@ public class TraceCutter implements Layer, SmthChangeListener {
 		buttonUndo.setTooltip(new Tooltip("Undo Crop")); 
 	}
 	
-	public TraceCutter() {}
-	
-	@PostConstruct
-	public void init2ndConstuct() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		this.field = model.getField();
 	}
 	
