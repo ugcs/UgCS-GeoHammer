@@ -19,8 +19,7 @@ public class MapField {
 	
 	private MapProvider mapProvider = new HereMapProvider();//new GoogleMapProvider();
 
-	public MapField() {
-		
+	public MapField() {		
 	}
 	
 	public MapField(MapField field) {
@@ -66,8 +65,8 @@ public class MapField {
 	
 	public Point2D latLonToScreen(LatLon latlon) {
 		
-		Point2D psc = GoogleCoord.createInfoWindowContent(getSceneCenter(), getZoom());
-		Point2D p2d = GoogleCoord.createInfoWindowContent(latlon, getZoom());
+		Point2D psc = GoogleCoordUtils.createInfoWindowContent(getSceneCenter(), getZoom());
+		Point2D p2d = GoogleCoordUtils.createInfoWindowContent(latlon, getZoom());
 		
 		Point2D result = new Point2D.Double(
 			(p2d.getX() - psc.getX()), 
@@ -78,12 +77,12 @@ public class MapField {
 	
 	public LatLon screenTolatLon(Point2D point) {
 		
-		Point2D psc = GoogleCoord.createInfoWindowContent(getSceneCenter(), getZoom());
+		Point2D psc = GoogleCoordUtils.createInfoWindowContent(getSceneCenter(), getZoom());
 		Point2D p = new Point2D.Double(
 			psc.getX() + point.getX(), 
 			psc.getY() + point.getY());
 		
-		return GoogleCoord.llFromP(p, getZoom());
+		return GoogleCoordUtils.llFromP(p, getZoom());
 	}
 	
 	//public static final int MAP_SCALE = 1;
