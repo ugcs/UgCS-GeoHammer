@@ -14,7 +14,7 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -27,7 +27,7 @@
 		<sevntu.checkstyle.plugin.version>1.37.1</sevntu.checkstyle.plugin.version>
 
 		<gt.version>22.2</gt.version>
-		
+
 		<!-- Default values. These should be overloaded by profile choice -->
 		<platform.suffix>windows-x86_64</platform.suffix>
         <zip.content>src/main/assembly/zip.xml</zip.content>
@@ -68,13 +68,13 @@
 					</dependency>
 				</dependencies>
 				<!-- https://maven.apache.org/plugins/maven-checkstyle-plugin/checkstyle-mojo.html -->
-				<!-- Properties for "mvn checkstyle:checkstyle" to execute without mvn 
+				<!-- Properties for "mvn checkstyle:checkstyle" to execute without mvn
 					build -->
 				<configuration>
 					<configLocation>checkstyle.xml</configLocation>
 					<consoleOutput>false</consoleOutput>
 					<failsOnError>false</failsOnError>
-					<!-- linkXRef=false to avoid WARNING 'Unable to locate Source XRef to 
+					<!-- linkXRef=false to avoid WARNING 'Unable to locate Source XRef to
 						link to' -->
 					<linkXRef>false</linkXRef>
 				</configuration>
@@ -186,7 +186,7 @@
 			<url>https://repo.osgeo.org/repository/release/</url>
 		</repository>
 	</repositories>
-	
+
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -275,7 +275,23 @@
 		    <artifactId>opencsv</artifactId>
 		    <version>5.9</version>
 		</dependency>
-		
+
+        <!-- Add JUnit 5 dependencies -->
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+
 	</dependencies>
 
 

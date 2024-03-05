@@ -3,6 +3,7 @@ package com.github.thecoldwine.sigrun.common.ext;
 import java.awt.geom.Point2D;
 
 import com.ugcs.gprvisualizer.app.Sout;
+import com.ugcs.gprvisualizer.draw.GoogleMapProvider;
 import com.ugcs.gprvisualizer.draw.HereMapProvider;
 import com.ugcs.gprvisualizer.draw.MapProvider;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
@@ -17,7 +18,7 @@ public class MapField {
 	private LatLon sceneCenter;
 	private int zoom;
 	
-	private MapProvider mapProvider = new HereMapProvider();//new GoogleMapProvider();
+	private MapProvider mapProvider = new GoogleMapProvider();
 
 	public MapField() {		
 	}

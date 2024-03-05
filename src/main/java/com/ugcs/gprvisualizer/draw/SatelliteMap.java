@@ -4,18 +4,12 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javafx.scene.control.MenuButton;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,12 +21,6 @@ import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-import de.pentabyte.googlemaps.Location;
-import de.pentabyte.googlemaps.StaticMap;
-import de.pentabyte.googlemaps.StaticMap.Maptype;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
@@ -54,6 +42,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 
 	@Autowired
 	private Dimension wndSize;
+
 	private LatLon click;
 	private ThrQueue recalcQueue;
 	
@@ -106,8 +95,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		menuItem2.setToggleGroup(toggleGroup);
 		menuItem3.setToggleGroup(toggleGroup);
 		
-		menuItem2.setSelected(true);
-		
+		menuItem1.setSelected(true);		
 		
 		menuItem1.setOnAction(e -> {
 			model.getField().setMapProvider(new GoogleMapProvider());
@@ -145,10 +133,6 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 //		//showLayerCheckbox.setSelected(apiExists);
 //		showLayerCheckbox.setOnAction(showMapListener);
 //	}
-	
-	public SatelliteMap() {
-		super();		
-	}
 	
 	@Override
 	public void draw(Graphics2D g2, MapField currentField) {
