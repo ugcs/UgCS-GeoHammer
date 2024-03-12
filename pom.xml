@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.10</version>
+    <version>1.1.11-SNAPSHOT</version>
     <name>GeoHammer</name>
     <url>https://github.com/ugcs/UgCS-GeoHammer</url>
     <description>GeoHammer</description>
