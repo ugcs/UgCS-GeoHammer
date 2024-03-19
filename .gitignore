@@ -10,7 +10,6 @@
 /bin/
 src/main/resources/googleapikey
 gpr-viewer-tasklist.txt
-*.log
 .idea
 .DS_Store
 .classpath
