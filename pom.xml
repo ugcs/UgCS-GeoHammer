@@ -7,6 +7,7 @@
     <name>GeoHammer</name>
     <url>https://github.com/ugcs/UgCS-GeoHammer</url>
     <description>GeoHammer</description>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -14,6 +15,13 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.2.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,10 +43,7 @@
 		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
 		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
 		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
-		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>
-
-		<springframework.version>6.0.16</springframework.version>
-
+		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>	
 	</properties>
 
 	<build>
@@ -99,7 +104,7 @@
 								<argument>--module-path</argument>
 								<argument>${project.build.directory}/*.jar</argument>
 								<argument>--add-modules</argument>
-								<argument>javafx.controls,javafx.swing,jdk.crypto.cryptoki</argument>
+								<argument>javafx.controls,javafx.swing,jdk.crypto.cryptoki,java.logging</argument>
 								<argument>--output</argument>
 								<argument>${project.build.directory}/jre21</argument>
 								<argument>--no-header-files</argument>
@@ -192,13 +197,11 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.25</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.25</version>
-		</dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>gov.nist.math</groupId>
@@ -210,6 +213,12 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.13</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 			<!-- compile time dependency is necessary for URL building -->
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
@@ -239,13 +248,11 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>${springframework.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>${springframework.version}</version>
 		</dependency>
 
 
@@ -256,12 +263,11 @@
 			<version>1.0-alpha1</version>
 		</dependency>
 
-
-		<!-- https://mvnrepository.com/artifact/de.micromata.jak/JavaAPIforKml -->
+		<!-- https://mvnrepository.com/artifact/uk.m0nom/javaapiforkml -->
 		<dependency>
-			<groupId>de.micromata.jak</groupId>
-			<artifactId>JavaAPIforKml</artifactId>
-			<version>2.2.0</version>
+			<groupId>uk.m0nom</groupId>
+			<artifactId>javaapiforkml</artifactId>
+			<version>3.0.8</version>
 		</dependency>
 
 		<dependency>
@@ -274,6 +280,11 @@
 		    <groupId>com.opencsv</groupId>
 		    <artifactId>opencsv</artifactId>
 		    <version>5.9</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
 		</dependency>
 
         <!-- Add JUnit 5 dependencies -->
