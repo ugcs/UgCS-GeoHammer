@@ -43,6 +43,7 @@ public class DztFile extends SgyFile {
 	
 	interface SampleValues {
 		int next(ByteBuffer buffer);
+		//add method that read from buffer
 		
 		void put(ByteBuffer buffer, int value);
 	}

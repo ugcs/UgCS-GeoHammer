@@ -96,11 +96,11 @@ public class GoogleMapProvider implements MapProvider {
 
 		public static BufferedImage getTileImage(TileUtils.Tile tile) throws IOException, URISyntaxException {
 			String urlPattern = "https://mt1.google.com/vt/lyrs=y&x=%s&y=%s&z=%s";
-			String url = String.format(urlPattern, tile.x, tile.y, tile.z);
+			String url = String.format(urlPattern, tile.x(), tile.y(), tile.z());
 	
 			// Check if the image already exists in the temporary folder
 			String tempFolderPath = System.getProperty("java.io.tmpdir");
-			String imageFileName = String.format("tile_%s_%s_%s.png", tile.x, tile.y, tile.z);
+			String imageFileName = String.format("tile_%s_%s_%s.png", tile.x(), tile.y(), tile.z());
 			String imagePath = tempFolderPath + File.separator + imageFileName;
 			File imageFile = new File(imagePath);
 	

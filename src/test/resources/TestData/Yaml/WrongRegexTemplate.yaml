@@ -1,0 +1,18 @@
+﻿  name: "SkyHub"
+  code: "skyhub" 
+  file-type: CSV 
+  match-regex:
+  file-format:
+    has-header: true
+    comment-prefix: '#'
+    decimal-separator: '.'
+    separator: ','
+  data-mapping:
+    latitude:
+      header: Latitude
+    longitude:
+      header: Longitude
+    timestamp:
+      header: Time
+    trace-number:
+      header: "GPR:Trace"

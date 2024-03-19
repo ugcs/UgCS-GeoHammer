@@ -22,7 +22,8 @@ public class KmlReader {
 
     public static void main(String[] args) {
 
-        new KmlReader().read(new File("c:\\work\\gpr-data\\2022-04-28 Cobra Plug-In\\DAT_0010.kml"), new Model());
+        //TODO: remove this main method and create a test for this class
+        //new KmlReader().read(new File("c:\\work\\gpr-data\\2022-04-28 Cobra Plug-In\\DAT_0010.kml"), new Model());
 
     }
 

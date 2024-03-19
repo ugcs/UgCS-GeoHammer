@@ -1,6 +1,5 @@
 package com.ugcs.gprvisualizer.gpr;
 
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
-import com.github.thecoldwine.sigrun.common.ext.FileManager;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -24,6 +22,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
+import com.ugcs.gprvisualizer.app.ext.FileManager;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
@@ -41,7 +40,7 @@ public class Model implements InitializingBean {
 	private MapField field = new MapField();
 	private ProfileField profField = new ProfileField(this);
 	
-	private FileManager fileManager = new FileManager();
+	private FileManager fileManager; // = new FileManager();
 	private List<SgyFile> undoFiles = null;
 	
 	
@@ -58,8 +57,9 @@ public class Model implements InitializingBean {
 	
 	private boolean kmlToFlagAvailable = false;
 	
-	public Model() {
+	public Model(FileManager fileManager) {
 		Sout.p("create model");
+		this.fileManager = fileManager;
 	}
 	
 	public int getTracesCount() {
