@@ -1,0 +1,22 @@
+  name: "SkyHub"
+  code: "skyhub" 
+  file-type: CSV 
+  match-regex: >-
+    ^\s*#Elapsed,Time,Pitch,Roll,Yaw,Latitude,Longitude,Altitude,RTK Status,ALT:Altitude,GPR:Trace$
+  file-format:
+    has-header: false
+    comment-prefix: '#'
+    decimal-separator: '.'
+    separator: ','
+  data-mapping:
+    latitude:
+      index: 5
+    longitude:
+      index: 6
+    date:
+      source: FileName
+      regex: '\d{4}-\d{2}-\d{2}'
+      format: 'yyyy-MM-dd'
+    time:
+      index: 1
+      format: 'HH:mm:ss.fff'

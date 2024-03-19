@@ -1,4 +1,4 @@
-package com.github.thecoldwine.sigrun.common.ext;
+package com.ugcs.gprvisualizer.app.ext;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -8,10 +8,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.springframework.stereotype.Component;
+
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
+import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
+import com.github.thecoldwine.sigrun.common.ext.PositionFile;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ProgressListener;
+import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
 import com.ugcs.gprvisualizer.dzt.DztFile;
 
+@Component
 public class FileManager {
+
 	public static FilenameFilter FILTER = new FilenameFilter() {
 		public boolean accept(File dir, String name) {
 			return name.toLowerCase().endsWith(".sgy");
@@ -25,6 +35,13 @@ public class FileManager {
 	private List<Trace> traces = null;
 
 	private File topFolder = null;
+
+	private FileTemplates fileTemplates;
+
+
+	FileManager(FileTemplates fileTemplates) {
+		this.fileTemplates = fileTemplates;		 
+	}
 
 	public boolean isActive() {
 		return files != null && !files.isEmpty();
@@ -83,8 +100,7 @@ public class FileManager {
 
 		try {	
 			new MarkupFile().load(sgyFile);
-			
-			//new PositionFile().load(sgyFile);
+			new PositionFile(fileTemplates).load(sgyFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -134,6 +150,10 @@ public class FileManager {
 		}
 		
 		return false;
+	}
+
+	public FileTemplates getFileTemplates() {
+		return fileTemplates;
 	}
 
 }

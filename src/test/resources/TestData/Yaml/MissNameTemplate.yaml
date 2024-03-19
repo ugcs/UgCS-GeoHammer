@@ -1,0 +1,16 @@
+﻿  code: "skyhub" 
+  file-type: CSV
+  match-regex: >-
+    ^\s*Elapsed,Time,Pitch,Roll,Yaw,Latitude,Longitude,Altitude,RTK Status,ALT:Altitude,GPR:Trace$
+  file-format:
+    has-header: true
+    decimal-separator: '.'
+  data-mapping:
+    latitude:
+      header: Latitude
+    longitude:
+      header: Longitude
+    timestamp:
+      header: Time
+    trace-number:
+      header: "GPR:Trace"

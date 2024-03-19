@@ -1,0 +1,10 @@
+﻿  name: "invalid sysnax"
+  code: "skyhub"
+  file-type: CSV 
+  match-regex: 'regex'
+  file-format:
+    has-header: true
+    comment-prefix: '#'
+    decimal-separator: '.'
+    separator: ','
+    date-regex: '\d{4}-\d{2}-\d{2}'

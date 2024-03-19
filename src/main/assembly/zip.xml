@@ -13,6 +13,11 @@
 			<useDefaultExcludes>true</useDefaultExcludes>
 			<outputDirectory>/jre21</outputDirectory>
 		</fileSet>
+        <fileSet>
+      		<directory>${project.basedir}/mapping</directory>
+            <useDefaultExcludes>false</useDefaultExcludes>
+            <outputDirectory>/mapping</outputDirectory>
+        </fileSet>    
 	</fileSets>
     <files>
         <file>

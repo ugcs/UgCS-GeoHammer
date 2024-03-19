@@ -1,19 +1,26 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.app.kml.KmlReader;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
+import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
+
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.StretchArray;
+
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 import javafx.event.EventHandler;
 import javafx.scene.input.DragEvent;
@@ -23,17 +30,14 @@ import javafx.scene.input.TransferMode;
 @Component
 public class Loader {
 
-	@Autowired
-	private Model model;
-	
-	@Autowired
-	private Status status; 
-	
-	@Autowired
-	private Broadcast broadcast;
-	
-	public Loader() {		
-		
+	private final Model model;
+	private final Status status; 
+	private final Broadcast broadcast;
+
+	public Loader(Model model, Status status, Broadcast broadcast) {
+		this.model = model;
+		this.status = status;
+		this.broadcast = broadcast;
 	}
 	
 	public EventHandler<DragEvent> getDragHandler() {
@@ -161,7 +165,8 @@ public class Loader {
 			}
 				
 			try {
-				new PositionFile().load(model.getFileManager().getFiles().get(0), files.get(0));
+				new PositionFile(model.getFileManager().getFileTemplates())
+					.load(model.getFileManager().getFiles().get(0), files.get(0));
 			} catch (Exception e) {
 				
 				e.printStackTrace();
