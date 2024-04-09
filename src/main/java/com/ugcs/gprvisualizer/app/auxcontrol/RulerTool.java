@@ -22,7 +22,6 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.math.MathUtils;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
 public class RulerTool extends BaseObjectImpl 
