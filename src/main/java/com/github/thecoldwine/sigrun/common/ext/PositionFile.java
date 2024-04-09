@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.opencsv.CSVReader;
 import com.ugcs.gprvisualizer.app.MessageBoxHelper;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
 import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
@@ -30,15 +31,19 @@ public class PositionFile {
 	public void load(SgyFile sgyFile) throws Exception {
 		var posFile = getPositionFileBySgy(sgyFile.getFile());
 		if (posFile.isPresent()) {
-			load(sgyFile, posFile.get());
+			load(sgyFile, posFile.get(), true);
 		} else {
 			System.out.println("Position file not found for " + sgyFile.getFile().getAbsolutePath());
 		}
 	}
 
-	public void load(SgyFile sgyFile, File posfile) {
+	public void load(SgyFile sgyFile, File csvFile) {
+		load(sgyFile, csvFile, false);
+	}
 
-		String logPath = posfile.getAbsolutePath();
+	public void load(SgyFile sgyFile, File csvFile, boolean loadAltOnly) {
+
+		String logPath = csvFile.getAbsolutePath();
 		var fileTemplate = fileTemplates.findTemplate(fileTemplates.getTemplates(), logPath);
 
 			if (fileTemplate == null) {
@@ -51,16 +56,28 @@ public class PositionFile {
 			System.out.println("template: " + fileTemplate.getName());
 			CsvParser parser = new CSVParsersFactory().createCSVParser(fileTemplate);
 
+			sgyFile.addGeoData(csvFile);
+
 			try {				
 				List<GeoCoordinates> coordinates = parser.parse(logPath);
+				
+				if (sgyFile.getFile() == null) {
+					sgyFile.setFile(csvFile);
+				}
 
-				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());
-		    
-		    	double hair =  100 / sgyFile.getSamplesToCmAir();
-		    
+				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());		    
    		    	StretchArray altArr = new StretchArray();
+
 				for (GeoCoordinates coord : coordinates) {
-					altArr.add((int) (coord.getAltitude() * hair));
+					if (loadAltOnly) {
+						double hair =  100 / sgyFile.getSamplesToCmAir();
+						altArr.add((int) (coord.getAltitude() * hair));
+					} else {
+						sgyFile.getTraces().add(new Trace(null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
+						if(coord instanceof GeoData) {
+							sgyFile.getGeoData(csvFile).add((GeoData)coord);
+						}
+					}
 				}	
 				
     			hp.deep = altArr.stretchToArray(sgyFile.getTraces().size());	    

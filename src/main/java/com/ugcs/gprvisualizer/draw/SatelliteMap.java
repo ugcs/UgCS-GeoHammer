@@ -40,10 +40,8 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	@Autowired
 	private Broadcast broadcast;
 
-	@Autowired
-	private Dimension wndSize;
-
 	private LatLon click;
+
 	private ThrQueue recalcQueue;
 	
 	@Override

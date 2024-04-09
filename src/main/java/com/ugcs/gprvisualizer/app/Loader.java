@@ -12,6 +12,7 @@ import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.StretchArray;
@@ -77,7 +78,7 @@ public class Loader {
 			} 
 			
 			if (isPositionFile(files)) {
-				
+				model.setLoading(true);
 				openPositionFile(files);
 				return;
 			}
@@ -108,6 +109,7 @@ public class Loader {
 							"Probably file has incorrect format");
 						
 						model.getFileManager().getFiles().clear();
+						model.getChartsContainer().getChildren().clear();
 						model.updateAuxElements();
 						model.initField();
 						model.getVField().clear();
@@ -141,32 +143,46 @@ public class Loader {
 		}
 
 		private void openPositionFile(List<File> files) {
-			if (model.getFileManager().getFiles().size() == 0) {
+			//if (model.getFileManager().getFiles().size() == 0) {
 				
-				MessageBoxHelper.showError(
-						"Can`t open position file", 
-						"Open GPR file at first");
+			//	MessageBoxHelper.showError(
+			//			"Can`t open position file", 
+			//			"Open GPR file at first");
 				
-				return;
-			}
-			if (model.getFileManager().getFiles().size() > 1) {
-				MessageBoxHelper.showError(
-						"Can`t open position file", 
-						"Only one GPR file must be opened");
+			//	return;
+			//}
+			//if (model.getFileManager().getFiles().size() > 1) {
+			//	MessageBoxHelper.showError(
+			//			"Can`t open position file", 
+			//			"Only one GPR file must be opened");
 				
-				return;
-			}
-			if (files.size() > 1) {
-				MessageBoxHelper.showError(
-						"Can`t open position file", 
-						"Only one position file must be opened");
+			//	return;
+			//}
+			//if (files.size() > 1) {
+			//	MessageBoxHelper.showError(
+			//			"Can`t open position file", 
+			//			"Only one position file must be opened");
 				
-				return;
-			}
+			//	return;
+			//}
 				
 			try {
+				//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
+				//	model.getFileManager().getFiles().get(0) : new GprFile();
+
+				SgyFile sgyFile = new GprFile();
+	
 				new PositionFile(model.getFileManager().getFileTemplates())
-					.load(model.getFileManager().getFiles().get(0), files.get(0));
+					.load(sgyFile, files.get(0));
+				model.getFileManager().getFiles().add(sgyFile);	
+
+				//model.init();			
+		
+				//when open file by dnd (not after save)
+				model.initField();
+
+				model.initChart(files.get(0));
+
 			} catch (Exception e) {
 				
 				e.printStackTrace();
@@ -176,7 +192,8 @@ public class Loader {
 			}
 			
 			broadcast.notifyAll(new WhatChanged(Change.updateButtons));				
-			
+			broadcast.notifyAll(new WhatChanged(Change.fileopened));
+			//broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		}
 
     };

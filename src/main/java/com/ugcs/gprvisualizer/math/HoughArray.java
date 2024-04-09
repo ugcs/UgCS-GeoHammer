@@ -68,8 +68,8 @@ public class HoughArray {
 			return;
 		}
 
-		from = MathUtils.norm(from, 0, DISCRET_SIZE);
-		to = MathUtils.norm(to, 0, DISCRET_SIZE);
+		from = Math.clamp(from, 0, DISCRET_SIZE - 1);
+		to = Math.clamp(to, 0, DISCRET_SIZE - 1);
 
 		for (int i = from; i <= to; i++) {
 			ar[i] += value * FACTOR[i];

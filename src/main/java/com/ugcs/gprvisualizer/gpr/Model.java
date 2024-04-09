@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.SensorLineChart;
 import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
@@ -29,6 +31,7 @@ import com.ugcs.gprvisualizer.math.MinMaxAvg;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.layout.VBox;
 
 @Component
 public class Model implements InitializingBean {
@@ -154,6 +157,13 @@ public class Model implements InitializingBean {
 		
 		return 0;
 	}
+
+	private final VBox chartsContainer = new VBox(); // Charts container
+
+	public VBox getChartsContainer() {
+		return chartsContainer;
+	}
+
 	
 	public ProfileField getVField() {
 		return profField;
@@ -317,5 +327,12 @@ public class Model implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		AppContext.model = this;
+	}
+
+	public void initChart(File csvFile) {
+		var plotData = SensorLineChart.generatePlotData(this, csvFile);
+		for (String fileName: plotData.keySet()) {
+			chartsContainer.getChildren().add(new SensorLineChart().createChartWithMultipleYAxes(fileName, plotData.get(fileName)));
+		}
 	}
 }

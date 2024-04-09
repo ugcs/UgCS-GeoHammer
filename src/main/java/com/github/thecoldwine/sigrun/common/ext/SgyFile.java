@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
@@ -13,13 +15,14 @@ import com.ugcs.gprvisualizer.app.commands.DistCalculator;
 import com.ugcs.gprvisualizer.app.commands.DistancesSmoother;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
+import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public abstract class SgyFile {
 	
 
-    protected List<Trace> traces; 
+    protected List<Trace> traces = new ArrayList<>(); 
     
     private VerticalCutPart offset = new VerticalCutPart();
     
@@ -43,6 +46,8 @@ public abstract class SgyFile {
 	
 	protected static double SPEED_SM_NS_VACUUM = 30.0;
 	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
+
+	private Map<File, List<GeoData>> geoData = new HashMap<>();
 
 	public abstract void open(File file) throws Exception;
 	
@@ -223,6 +228,13 @@ public abstract class SgyFile {
 
 	public void setSpreadCoordinatesNecessary(boolean spreadCoordinatesNecessary) {
 		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
-	}	
+	}
 
+    public List<GeoData> getGeoData(File csvFile) {
+		return geoData.get(csvFile);
+    }
+
+	public void addGeoData(File csvFile) {
+		geoData.put(csvFile, new ArrayList<>());
+	}
 }

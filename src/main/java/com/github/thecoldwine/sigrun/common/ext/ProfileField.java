@@ -40,7 +40,6 @@ public class ProfileField {
 
 	public ProfileField(Model model) {
 		this.model  = model;		
-		
 	}
 
 	public ProfileField(ProfileField copy) {
@@ -63,8 +62,7 @@ public class ProfileField {
 		this.clipMainRect = copy.clipMainRect ;
 		this.clipLeftMainRect = copy.clipLeftMainRect; 
 		this.clipTopMainRect = copy.clipTopMainRect; 
-		this.clipInfoRect = copy.clipInfoRect; 
-		
+		this.clipInfoRect = copy.clipInfoRect; 	
 	}
 
 	public void clear() {
@@ -124,21 +122,14 @@ public class ProfileField {
 		return t2.getTrace();
 	}
 	
-	public int getFirstVisibleTrace() {
-		
-		return 
-			Math.max(
-			Math.min(
-				screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
-				model.getFileManager().getTraces().size() - 1), 0);
+	public int getFirstVisibleTrace() {		
+		return Math.clamp(screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
+				0, model.getFileManager().getTraces().size() - 1);
 	}
 
 	public int getLastVisibleTrace() {
-		return 
-			Math.max(
-			Math.min(
-				screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
-				model.getFileManager().getTraces().size() - 1), 0);					
+		return Math.clamp(screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
+				0, model.getFileManager().getTraces().size() - 1);
 	}
 
 	public int getLastVisibleSample(int height) {
@@ -152,8 +143,7 @@ public class ProfileField {
 
 	public void setSelectedTrace(int selectedTrace) {
 		this.selectedTrace =
-			Math.min(
-				Math.max(0, selectedTrace),
+			Math.clamp(selectedTrace, 0, 
 				model.getFileManager().getTraces().size() - 1);
 	}
 
@@ -171,10 +161,8 @@ public class ProfileField {
 	}
 
 	double vertScale = 1;
-	public double getVScale() {
-		
-		
-		
+
+	public double getVScale() {	
 		return vertScale;
 	}
 
@@ -256,8 +244,7 @@ public class ProfileField {
 	}
 
 	public Rectangle getClipMainRect() {
-		return clipMainRect;
-		
+		return clipMainRect;		
 	}
 	
 	public Rectangle getClipLeftMainRect() {
@@ -280,12 +267,13 @@ public class ProfileField {
 		clipTopMainRect = new Rectangle(
 				-getMainRect().width / 2, 0, 
 				getMainRect().width, getMainRect().y + getMainRect().height);
+
 		clipLeftMainRect = new Rectangle(
 				-getMainRect().x - getMainRect().width / 2, getMainRect().y, 
 				getMainRect().x + getMainRect().width, getMainRect().height);
+
 		clipInfoRect = new Rectangle(
 				-getMainRect().x - getMainRect().width / 2, 0, getInfoRect().width, getInfoRect().height);
 				
 	}
 }
-

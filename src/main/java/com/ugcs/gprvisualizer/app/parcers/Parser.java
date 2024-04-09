@@ -78,6 +78,14 @@ public abstract class Parser implements IGeoCoordinateParser {
         return null;
     }
 
+    protected Number parseNumber(BaseData data, String column) {
+        if (StringUtils.hasText(column) && column.indexOf(getTemplate().getFileFormat().getDecimalSeparator()) > 0) {
+            return parseDouble(data, column);
+        } else {
+            return parseInt(data, column);
+        }
+    }
+
     protected Double parseDouble(BaseData data, String column) {
         Double result;
         if (StringUtils.hasText(data.getRegex())) {

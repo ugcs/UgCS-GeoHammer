@@ -7,7 +7,6 @@ import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.MathUtils;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public class RadarMapScan implements Command {
@@ -26,9 +25,9 @@ public class RadarMapScan implements Command {
 			file.amplScan = new ScanProfile(file.size());
 		}		
 		
-		int start = MathUtils.norm(model.getSettings().layer,
+		int start = Math.clamp(model.getSettings().layer,
 				0, model.getMaxHeightInSamples());
-		int finish = MathUtils.norm(model.getSettings().layer + model.getSettings().hpage,
+		int finish = Math.clamp(model.getSettings().layer + model.getSettings().hpage,
 				0, model.getMaxHeightInSamples());
 		
 		
@@ -47,31 +46,25 @@ public class RadarMapScan implements Command {
 	private double calcAlpha(float[] values, byte[] edge, int start, int finish) {
 		double mx = 0;
 
-		start = MathUtils.norm(start, 0, values.length);
-		finish = MathUtils.norm(finish, 0, values.length);
+		start = Math.clamp(start, 0, values.length);
+		finish = Math.clamp(finish, 0, values.length);
 		
 		double additionalThreshold = model.getSettings().autogain ? model.getSettings().threshold : 0;
 		
-		
 		for (int i = start; i < finish; i++) {
 			double threshold = scaleArray[0][i];
-			double factor = scaleArray[1][i];
-			
+			double factor = scaleArray[1][i];		
 			
 			if (edge[i] != 0) {
-				
 				double av = Math.abs(values[i]);
 				if (av < additionalThreshold) {
 					av = 0;
 				}
-				
 				double val = Math.max(0, av - threshold) * factor;
-				
 				mx = Math.max(mx, val);
 			}
-		}	
-
-		return MathUtils.norm(mx, 0.0, 200.0);
+		}
+		return Math.clamp(mx, 0, 200);
 	}
 
 	@Override

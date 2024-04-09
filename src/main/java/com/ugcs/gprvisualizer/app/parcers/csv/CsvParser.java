@@ -17,11 +17,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.ugcs.gprvisualizer.app.parcers.*;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 import org.springframework.util.StringUtils;
 
-import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
-import com.ugcs.gprvisualizer.app.parcers.Parser;
-import com.ugcs.gprvisualizer.app.parcers.Result;
 import com.ugcs.gprvisualizer.app.parcers.exceptions.ColumnsMatchingException;
 import com.ugcs.gprvisualizer.app.parcers.exceptions.IncorrectDateFormatException;
 import com.ugcs.gprvisualizer.app.yaml.Template;
@@ -90,7 +89,8 @@ public class CsvParser extends Parser {
 
                     var alt = template.getDataMapping().getAltitude() != null 
                               && template.getDataMapping().getAltitude().getIndex() != null
-                              && template.getDataMapping().getAltitude().getIndex() != -1 
+                              && template.getDataMapping().getAltitude().getIndex() != -1
+                              && template.getDataMapping().getAltitude().getIndex() < data.length 
                               && StringUtils.hasText(data[template.getDataMapping().getAltitude().getIndex()]) 
                         ? parseDouble(template.getDataMapping().getAltitude(), data[template.getDataMapping().getAltitude().getIndex()]) 
                         : null;
@@ -101,12 +101,21 @@ public class CsvParser extends Parser {
                         && template.getDataMapping().getTraceNumber().getIndex() < data.length) {
                         traceNumber = parseInt(template.getDataMapping().getTraceNumber(), data[template.getDataMapping().getTraceNumber().getIndex()]);
                     }
-                    traceNumber = traceNumber != null ? traceNumber : traceCount; 
+                    traceNumber = traceNumber != null ? traceNumber : traceCount;
+
+                    List<SensorValue> sensorValues = new ArrayList<>();
+                    if (template.getDataMapping().getSensors() != null) {
+                        for (SensorData sensor : template.getDataMapping().getSensors()) {
+                            String sensorData = (sensor.getIndex() != null && sensor.getIndex() != -1 && sensor.getIndex() < data.length) ? data[sensor.getIndex()] : null;
+                            sensorValues.add(new SensorValue(sensor.getSemantic(), sensor.getUnits(), parseNumber(sensor, sensorData)));
+                        }    
+                    }
 
                     traceCount++;
 
                     var date = parseDateTime(data);
-                    coordinates.add(new GeoCoordinates(date, lat, lon, alt, traceNumber));
+
+                    coordinates.add(new GeoData(sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -275,6 +284,12 @@ public class CsvParser extends Parser {
             setIndexIfHeaderNotNull(template.getDataMapping().getTimestamp(), headers);
             setIndexIfHeaderNotNull(template.getDataMapping().getTraceNumber(), headers);
             setIndexIfHeaderNotNull(template.getDataMapping().getAltitude(), headers);
+
+            if (template.getDataMapping().getSensors() != null) {
+                for (var sensor: template.getDataMapping().getSensors()) {
+                    setIndexIfHeaderNotNull(sensor, headers);
+                }
+            }
 
             if (template.getDataMapping().getLatitude().getIndex() == -1 
                 || template.getDataMapping().getLongitude().getIndex() == -1) {

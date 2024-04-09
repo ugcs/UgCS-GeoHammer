@@ -310,6 +310,10 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
 			ScanProfile profile, List<Trace> traces) {
+
+		if (file.getFile().getName().toLowerCase().endsWith(".csv"))	{
+			return;
+		}	
 		
 		int radius = model.getSettings().radius;
 		int centerX = da.getWidth() / 2;

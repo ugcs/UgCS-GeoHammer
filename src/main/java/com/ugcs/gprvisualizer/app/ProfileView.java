@@ -38,7 +38,6 @@ import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HoughDiscretizer;
-import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
@@ -51,6 +50,8 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
@@ -142,10 +143,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			repaintEvent();
 		}
 	};
-
-	public ProfileView() {
-
-	}
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -291,7 +288,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-	public void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
+	private void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
 		int startTrace = field.getFirstVisibleTrace();
 		int finishTrace = field.getLastVisibleTrace();
 
@@ -303,7 +300,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		drawAmplitudeMapLevels(field, g2);
 	}
 
-	public void drawFileProfiles(ProfileField field, Graphics2D g2, 
+	private void drawFileProfiles(ProfileField field, Graphics2D graphicsContext,
 			int startTrace, int finishTrace) {
 
 		int f1 = model.getFileManager().getFiles().indexOf(
@@ -313,34 +310,38 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 				model.getSgyFileByTrace(finishTrace));
 
 		for (int i = f1; i <= f2; i++) {
-			SgyFile f = model.getFileManager().getFiles().get(i);
+			SgyFile currentFile = model.getFileManager().getFiles().get(i);
+			
+			if (currentFile.getFile().getName().toLowerCase().endsWith(".csv")) {
+				continue;
+			}
 
-			if (f.profiles != null) {
+			if (currentFile.profiles != null) {
 				// pf
-				g2.setColor(new Color(50, 200, 250));
-				g2.setStroke(AMP_STROKE);
-				for (HorizontalProfile pf : f.profiles) {
-					drawHorizontalProfile(field, g2, 
-							f.getOffset().getStartTrace(), pf, 0);
+				graphicsContext.setColor(new Color(50, 200, 250));
+				graphicsContext.setStroke(AMP_STROKE);
+				for (HorizontalProfile pf : currentFile.profiles) {
+					drawHorizontalProfile(field, graphicsContext,
+							currentFile.getOffset().getStartTrace(), pf, 0);
 				}
 			}
 
 			// ground
-			if (f.groundProfile != null) {
-				g2.setColor(new Color(210, 105, 30));
-				g2.setStroke(LEVEL_STROKE);
-				drawHorizontalProfile(field, g2, 
-						f.getOffset().getStartTrace(), f.groundProfile,
+			if (currentFile.groundProfile != null) {
+				graphicsContext.setColor(new Color(210, 105, 30));
+				graphicsContext.setStroke(LEVEL_STROKE);
+				drawHorizontalProfile(field, graphicsContext,
+						currentFile.getOffset().getStartTrace(), currentFile.groundProfile,
 						shiftGround.intValue());
 			}
 
-			if (model.getSettings().showGreenLine && f.algoScan != null) {
+			if (model.getSettings().showGreenLine && currentFile.algoScan != null) {
 
-				g2.setColor(Color.GREEN);
-				g2.setStroke(AMP_STROKE);
+				graphicsContext.setColor(Color.GREEN);
+				graphicsContext.setStroke(AMP_STROKE);
 
-				drawScanProfile(field, g2, 
-						f.getOffset().getStartTrace(), f.algoScan);
+				drawScanProfile(field, graphicsContext,
+						currentFile.getOffset().getStartTrace(), currentFile.algoScan);
 			}
 
 		}
@@ -524,18 +525,33 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-
+	//center
 	public Node getCenter() {
 
+		VBox center = new VBox();
+        ScrollPane centerScrollPane = new ScrollPane();
+        centerScrollPane.setFitToWidth(true);
+
+        centerScrollPane.setContent(model.getChartsContainer());
+
+		center.getChildren().add(centerScrollPane);
+
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			this.setSize((int) (topPane.getWidth()), (int) (topPane.getHeight()));
+			this.setSize((int) (topPane.getWidth()), (int) (400)); //topPane.getHeight()));
 		};
 		topPane.widthProperty().addListener(sp2SizeListener);
-		topPane.heightProperty().addListener(sp2SizeListener);
+		//topPane.heightProperty().addListener(sp2SizeListener);
 
-		topPane.getChildren().add(vbox);
+		ScrollPane scrollPane = new ScrollPane(vbox);
+		scrollPane.setFitToWidth(true);
+		//scrollPane.setFitToHeight(true);
 
-		return topPane;
+		topPane.getChildren().addAll(scrollPane);
+
+		model.getChartsContainer().getChildren().add(topPane);
+
+		//return topPane;
+        return center;
 	}
 
 	public List<Node> getRight() {

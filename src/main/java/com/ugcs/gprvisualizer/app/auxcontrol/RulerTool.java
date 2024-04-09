@@ -276,7 +276,7 @@ public class RulerTool extends BaseObjectImpl
 		double grndCm = distanceCm(file, tr, tr, 0, grn);
 		double f = grndCm / fullCm;
 		
-		f = MathUtils.norm(f, 0, 1);
+		f = Math.clamp(f, 0, 1);
 		
 		double diagAir = c * f;
 		double diagGrn = c * (1 - f);
