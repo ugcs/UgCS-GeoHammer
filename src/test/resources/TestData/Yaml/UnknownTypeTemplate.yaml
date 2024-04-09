@@ -1,0 +1,20 @@
+﻿  name: "SkyHub"
+  code: "skyhub" 
+  file-type: PNG 
+  match-regex: >-
+    ^\s*Elapsed,Time,Pitch,Roll,Yaw,Latitude,Longitude,Altitude,RTK Status,ALT:Altitude,GPR:Trace$
+  file-format:
+    has-header: true
+    comment-prefix: '#'
+    decimal-separator: '.'
+    separator: ','
+    date-regex: '\d{4}-\d{2}-\d{2}'
+  columns:
+    latitude:
+      header: Latitude
+    longitude:
+      header: Longitude
+    timestamp:
+      header: Time
+    trace-number:
+      header: "GPR:Trace"

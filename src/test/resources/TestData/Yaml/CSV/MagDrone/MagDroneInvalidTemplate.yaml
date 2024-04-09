@@ -1,0 +1,23 @@
+  name: "MagDrone"
+  code: "magdrone" 
+  file-type: CSV 
+  match-regex: >-
+    ^\s*MagDroneR3:
+  skip-lines-to:
+    match-regex: >-
+     ^\s*Timestamp
+    skip-matched-line: false
+  file-format:
+    has-header: true
+    comment-prefix: '%'
+    decimal-separator: '.'
+    separator: ';'
+  data-mapping:
+    latitude:
+      header: ' Latitude [Decimal Degrees]'
+    longitude:
+      header: ' Longitude [Decimal Degrees]'
+    time:
+      header: ' GPSTime [hh:mm:ss.sss]'
+    date:
+      header: ' GPSDate'
