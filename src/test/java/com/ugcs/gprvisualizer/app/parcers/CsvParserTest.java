@@ -101,10 +101,13 @@ class CsvParserTest extends BaseParsersTest {
         Template template = deserializer.load(file);
         CsvParser parser = new CsvParser(template);
 
-        assertThrows(Exception.class, () -> {
-            parser.parse(Paths.get(CSVTestDataFolder + "2020-07-29-14-37-42-position-invalid.csv").toAbsolutePath()
-                    .toString());
-        });
+        // invalid csv also parcing if possible
+        try {
+            parser.parse(
+                Paths.get(CSVTestDataFolder + "2020-07-29-14-37-42-position-invalid.csv").toAbsolutePath().toString());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }        
     }
 
     @Test
