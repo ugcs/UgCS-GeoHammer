@@ -31,7 +31,7 @@ public class FileTemplates implements InitializingBean {
 
     private static Logger logger = LoggerFactory.getLogger(FileTemplates.class);
 
-    private static final String TEMPLATES_FOLDER = "mapping/templates";
+    private static final String TEMPLATES_FOLDER = "templates";
 
     private final List<Template> templates = new ArrayList<>();
 
