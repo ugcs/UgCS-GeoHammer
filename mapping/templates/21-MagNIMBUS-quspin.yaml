@@ -1,4 +1,3 @@
-  # Mapping for positioning solution file
   # Displayable name of Template
   name: "Quspin"
   # Code of template
@@ -7,7 +6,7 @@
   file-type: CSV
   # Applies to the first 10 not empty lines of the file to detect template
   match-regex: >-
-    ^\s*Counter,Date,Time,Sensor ID,Latitude,Longitude,Heading,Altitude,Altitude AGL,Data valid,TMI.*
+    ^\s*Date,Time,Sensor ID,Latitude,Longitude,Heading,Next WP,Altitude,Altitude AGL,Data valid,TMI.*
   file-format:
   # Applies to CSV type. 'true' if file has headers, otherwise false
     has-header: true
@@ -31,13 +30,17 @@
     date:
       header: Date
       format: 'yyyy/MM/dd'
-    trace-number:
-      header: Counter
 
     sensors:
       - header: "TMI"
         semantic: "TMI"
-        units: ""
+        units: "nT"
       - header: "ScSensitivity"
         semantic: "Sensitivity"
         units: ""
+      - header: "Altitude"
+        semantic: "Altitude"
+        units: "m"
+      - header: "Altitude AGL"
+        semantic: "Altitude AGL"
+        units: "m"

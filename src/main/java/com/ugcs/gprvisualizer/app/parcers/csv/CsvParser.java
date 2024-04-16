@@ -87,6 +87,10 @@ public class CsvParser extends Parser {
 
                     var lon = parseDouble(template.getDataMapping().getLongitude(), data[template.getDataMapping().getLongitude().getIndex()]);
 
+                    if (lat == null || lon == null) {
+                        continue;
+                    } 
+
                     var alt = template.getDataMapping().getAltitude() != null 
                               && template.getDataMapping().getAltitude().getIndex() != null
                               && template.getDataMapping().getAltitude().getIndex() != -1

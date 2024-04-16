@@ -68,6 +68,7 @@ public class SensorLineChart {
         return Map.of(csvFile.getName(), plotDataList);
     }
     public static List<Number> calculateAverages(List<Number> sourceList) {
+        if (sourceList.isEmpty()) return sourceList;
         var scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
         return IntStream.range(0, sourceList.size() / scale) // Create an index stream from 0 to 999
                 .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale)) // Transform each index into a sublist of 100 elements
