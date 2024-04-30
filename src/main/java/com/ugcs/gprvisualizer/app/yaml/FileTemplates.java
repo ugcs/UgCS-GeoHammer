@@ -2,8 +2,14 @@ package com.ugcs.gprvisualizer.app.yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -15,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -35,7 +42,10 @@ public class FileTemplates implements InitializingBean {
 
     private final List<Template> templates = new ArrayList<>();
 
+    private Yaml yaml;
+
     @Override
+    @Async
     public void afterPropertiesSet() throws Exception {
 
         logger.info("Loading templates...");
@@ -62,18 +72,23 @@ public class FileTemplates implements InitializingBean {
         });
 
         c.getPropertyUtils().setSkipMissingProperties(true);
-        Yaml yaml = new Yaml(c);
+        yaml = new Yaml(c);
 
-        loadTemplates(yaml, TEMPLATES_FOLDER, templates);
+        Path templatesPath = loadTemplates(yaml, TEMPLATES_FOLDER, templates);
+        watchTemplates(templatesPath);
     }
 
-    private void loadTemplates(Yaml yaml, String path, List<Template> templates) {
+    private Path loadTemplates(Yaml yaml, String path, List<Template> templates) {
         try {
             // Get all resources ending with .yaml from path
             Resource[] resources = new PathMatchingResourcePatternResolver()
                     .getResources("file:" + path + "/*.yaml");
+            
+            Path templatesPath = null;        
 
             for (Resource resource : resources) {
+                templatesPath = templatesPath == null ? resource.getFile().getParentFile().toPath() : templatesPath;
+                System.err.println(templatesPath);
                 try (InputStream inputStream = resource.getInputStream()) {
                     try {
                         Template template = yaml.load(inputStream);
@@ -91,9 +106,71 @@ public class FileTemplates implements InitializingBean {
             if (templates.isEmpty()) {
                 logger.error("No templates found in " + path);
             }
+            return templatesPath;
         } catch (IOException e) {
             logger.error("Error reading template: " + e.getMessage());
         }
+        return null;
+    }
+
+    @Async
+    private void watchTemplates(Path templatesPath) {
+        
+        if (templatesPath == null) {
+            return;
+        }
+
+        new Thread() {
+            public void run() {
+
+        try {
+                    // Create a WatchService
+                    WatchService watchService = FileSystems.getDefault().newWatchService();
+ 
+                    // Register the directory for specific events
+                    templatesPath.register(watchService,
+                            StandardWatchEventKinds.ENTRY_CREATE,
+                            StandardWatchEventKinds.ENTRY_DELETE,
+                            StandardWatchEventKinds.ENTRY_MODIFY);
+         
+                    //System.out.println("Watching directory: " + directoryPath);
+         
+                    // Infinite loop to continuously watch for events
+                    while (true) {
+                        System.out.println("watch started");
+                        WatchKey key = watchService.take();
+         
+                        for (WatchEvent<?> event : key.pollEvents()) 
+                        {
+                            // Handle the specific event
+                            if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) 
+                            {
+                                System.out.println("File created: " + event.context());
+                            } 
+                            else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) 
+                            {
+                                System.out.println("File deleted: " + event.context());
+                            } 
+                            else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) 
+                            {
+                                System.out.println("File modified: " + event.context());
+                                if (event.context() instanceof Path) {
+                                    System.out.println(((Path) event.context()).toAbsolutePath());
+                                }
+                            }
+                            templates.clear();
+                            loadTemplates(yaml, TEMPLATES_FOLDER, templates);
+                        }
+         
+                        // To receive further events, reset the key
+                        key.reset();
+                    }
+        
+                } catch (IOException | InterruptedException e) {
+                    logger.error("Error reading template: " + e.getMessage());
+                }
+            };
+        }.start();
     }
 
     public List<Template> getTemplates() {
