@@ -5,18 +5,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javafx.scene.control.skin.ComboBoxListViewSkin;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import org.springframework.util.StringUtils;
 
+import com.ugcs.gprvisualizer.app.SensorLineChart.SeriesData;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -87,6 +96,13 @@ public class SensorLineChart {
             return series.getName();
         }
     }
+
+    public BooleanProperty getItemBooleanProperty(SeriesData item) {
+        return itemBooleanMap.get(item);
+    }
+
+    private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
+
     public VBox createChartWithMultipleYAxes(String fileName, List<PlotData> plotData) {
         // X-axis, common for both charts
         NumberAxis xAxis = new NumberAxis();
@@ -138,8 +154,14 @@ public class SensorLineChart {
             for (int j = 0; j < plotData.get(i).data().size(); j++) {
                 series.getData().add(new XYChart.Data<>(j, plotData.get(i).data().get(j)));
             }
-            seriesList.add(new SeriesData(series));
+
+            SeriesData item = new SeriesData(series);
+            seriesList.add(item);
+
             seriesCheckBoxMap.put(series, getCheckboxForSeries(series));
+
+            itemBooleanMap.put(item, createBooleanProperty(item));
+
             // Set random color for series
             lineChart.getData().add(series);
             setColorForSeries(series, generateRandomColor());
@@ -147,33 +169,28 @@ public class SensorLineChart {
             stackPane.getChildren().add(lineChart);
         }
         // ComboBox with checkboxes
-        ComboBox<SeriesData> comboBox = new ComboBox<>();
-        comboBox.setItems(seriesList);
+        ComboBox<SeriesData> comboBox = new ComboBox<>(seriesList) {
+            @Override
+            protected javafx.scene.control.Skin<?> createDefaultSkin() {
+                var skin = super.createDefaultSkin();
+                ((ComboBoxListViewSkin) skin).setHideOnClick(false);
+                return skin;
+            }
+        };
         comboBox.setValue(seriesList.isEmpty() ? null : seriesList.get(0));
+        
         comboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             oldVal.series().getChart().getYAxis().setOpacity(0);
             newVal.series().getChart().getYAxis().setOpacity(1);
             customizeLineChart(newVal.series(), true);
             customizeLineChart(oldVal.series(), false);
         });
-        comboBox.setCellFactory(new Callback<>() {
-            @Override
-            public ListCell<SeriesData> call(ListView<SeriesData> param) {
-                return new ListCell<>() {
-                    @Override
-                    protected void updateItem(SeriesData item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item == null || empty) {
-                            setGraphic(null);
-                        } else {
-                            HBox hBox = new HBox(seriesCheckBoxMap.get(item.series()), new javafx.scene.control.Label(item.toString()));
-                            hBox.setSpacing(10);
-                            setGraphic(hBox);
-                        }
-                    }
-                };
-            }
+
+        comboBox.setCellFactory(listView -> {
+            CheckBoxListCell<SeriesData> checkBoxListCell = new CheckBoxListCell<>(this::getItemBooleanProperty);
+            return checkBoxListCell;
         });
+
         if (lastLineChart != null) {
             LineChart<Number, Number> finalLastLineChart = lastLineChart;
             lastLineChart.setOnScroll((ScrollEvent event) -> {
@@ -240,6 +257,7 @@ public class SensorLineChart {
         });
         return root;
     }
+
     private int getFloorMin(List<Number> data) {
         int min = data.stream().mapToInt(n -> n.intValue()).min().orElse(0);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(min), 0, 3));
@@ -250,6 +268,28 @@ public class SensorLineChart {
         int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
         return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
     }
+
+    private BooleanProperty createBooleanProperty(SeriesData item) {
+        final BooleanProperty booleanProperty = new SimpleBooleanProperty(item, "visible", true);
+
+        booleanProperty.addListener((observable, oldValue, newValue) -> {
+            System.out.println("values:" + oldValue + " " + newValue);
+            if (item.series().getNode() != null) {
+                item.series().getNode().setVisible(newValue);
+                //if (isSelected && series.getChart().getYAxis().getOpacity() > 0) {
+                    //((LineChart) series.getChart()).setCreateSymbols(true);
+                //}
+            }
+            item.series().getData().forEach(data -> {
+                if (data.getNode() != null) {
+                    data.getNode().setVisible(newValue);
+                }
+            });
+        });
+
+        return booleanProperty;
+    }
+
     private CheckBox getCheckboxForSeries(XYChart.Series<Number, Number> series) {
         final CheckBox checkBox = new CheckBox();
         checkBox.setSelected(true);
@@ -268,6 +308,7 @@ public class SensorLineChart {
         });
         return checkBox;
     }
+
     private void customizeLineChart(Series<Number, Number> series, boolean isVisible) {
         LineChart<Number, Number> lineChart = (LineChart) series.getChart();
         //lineChart.setCreateSymbols(series.getNode().isVisible() && isVisible);
