@@ -181,7 +181,7 @@ public class Loader {
 				//when open file by dnd (not after save)
 				model.initField();
 
-				model.initChart(files.get(0));
+				model.initChart(files.get(0), broadcast);
 
 			} catch (Exception e) {
 				

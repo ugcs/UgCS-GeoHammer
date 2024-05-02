@@ -18,6 +18,7 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.SensorLineChart;
 import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
@@ -329,10 +330,11 @@ public class Model implements InitializingBean {
 		AppContext.model = this;
 	}
 
-	public void initChart(File csvFile) {
-		var plotData = SensorLineChart.generatePlotData(this, csvFile);
-		for (String fileName: plotData.keySet()) {
-			chartsContainer.getChildren().add(new SensorLineChart().createChartWithMultipleYAxes(fileName, plotData.get(fileName)));
+	public void initChart(File csvFile, Broadcast broadcast) {
+		var sensorLineChart = new SensorLineChart(this, broadcast);
+		var plotData = sensorLineChart.generatePlotData(csvFile);
+		for (SgyFile file: plotData.keySet()) {
+			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(file, plotData.get(file)));
 		}
 	}
 }

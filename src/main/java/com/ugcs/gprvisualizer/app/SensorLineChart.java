@@ -11,6 +11,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import org.springframework.util.StringUtils;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.SensorLineChart.SeriesData;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
@@ -31,7 +32,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.util.Callback;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -39,7 +39,16 @@ import javafx.scene.chart.XYChart.Series;
 
 
 public class SensorLineChart {
-    public static Map<String, List<PlotData>> generatePlotData(Model model, File csvFile) {
+
+    private final Model model;
+    private final Broadcast broadcast;
+
+    public SensorLineChart(Model model, Broadcast broadcast) {
+        this.model = model;
+        this.broadcast = broadcast;
+    }
+
+    public Map<SgyFile, List<PlotData>> generatePlotData(File csvFile) {
         //TODO: design it better
         var file = model.getFileManager().getFiles().stream().filter(f -> {
             return f.getFile() != null && Objects.equals(csvFile.getName(), f.getFile().getName());
@@ -74,8 +83,9 @@ public class SensorLineChart {
         //        new PlotData("Semantic 3", "Sm", List.of(10, 93, 833, 73, 63, 53, 43, 33, 23, 13)),
         //        new PlotData("Semantic 4", "SS", List.of(20, 40, 66, 88, 100, 120, 777, 80, 90, 1023))
         //);
-        return Map.of(csvFile.getName(), plotDataList);
+        return Map.of(file, plotDataList);
     }
+
     public static List<Number> calculateAverages(List<Number> sourceList) {
         if (sourceList.isEmpty()) return sourceList;
         var scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
@@ -103,7 +113,7 @@ public class SensorLineChart {
 
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
 
-    public VBox createChartWithMultipleYAxes(String fileName, List<PlotData> plotData) {
+    public VBox createChartWithMultipleYAxes(SgyFile file, List<PlotData> plotData) {
         // X-axis, common for both charts
         NumberAxis xAxis = new NumberAxis();
         //xAxis.setLabel("Common X Axis");
@@ -168,6 +178,7 @@ public class SensorLineChart {
             // Add chart to container
             stackPane.getChildren().add(lineChart);
         }
+
         // ComboBox with checkboxes
         ComboBox<SeriesData> comboBox = new ComboBox<>(seriesList) {
             @Override
@@ -233,7 +244,7 @@ public class SensorLineChart {
         }
 
         Button close = new Button("x");
-        HBox top = new HBox(close, new Label(fileName), comboBox);
+        HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
 
@@ -243,16 +254,14 @@ public class SensorLineChart {
         root.setPadding(new Insets(10));
         close.setOnMouseClicked(event -> {
             if (root.getParent() instanceof VBox) {
+                // remove charts
                 VBox parent = (VBox) root.getParent();
                 parent.getChildren().remove(root);
-                // // model.getFileManager().getFiles().remove()
-                //        model.updateAuxElements();
-                // // model.initField();
-                //        model.getVField().clear();
 
-
-                //        broadcast.notifyAll(
-                //                new WhatChanged(Change.fileopened));
+                // remove files and traces from map
+                model.getFileManager().getFiles().remove(file);
+                model.initField();
+                broadcast.notifyAll(new WhatChanged(Change.fileopened));
             }
         });
         return root;
@@ -263,6 +272,7 @@ public class SensorLineChart {
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(min), 0, 3));
         return baseMin == 1 ? 0 : Math.floorDiv(min, baseMin) * baseMin;
     }
+
     private int getCeilMax(List<Number> data) {
         int max = data.stream().mapToInt(n -> n.intValue()).max().orElse(0);
         int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
@@ -271,9 +281,7 @@ public class SensorLineChart {
 
     private BooleanProperty createBooleanProperty(SeriesData item) {
         final BooleanProperty booleanProperty = new SimpleBooleanProperty(item, "visible", true);
-
         booleanProperty.addListener((observable, oldValue, newValue) -> {
-            System.out.println("values:" + oldValue + " " + newValue);
             if (item.series().getNode() != null) {
                 item.series().getNode().setVisible(newValue);
                 //if (isSelected && series.getChart().getYAxis().getOpacity() > 0) {
