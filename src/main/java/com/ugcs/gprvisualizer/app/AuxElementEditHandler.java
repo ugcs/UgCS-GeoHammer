@@ -12,10 +12,8 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -46,12 +44,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	private ProfileField field;	
 	private BaseObject selected;
 	private MouseHandler mouseInput;
-	
-	private Button addBtn = new Button("", 
-			ResourceImageHolder.getImageView("addRect.png"));
-	
-	private Button addHypBtn = new Button("", 
-			ResourceImageHolder.getImageView("addHyp.png"));
 	
 	private Button addSurfaceBtn = new Button("", 
 			ResourceImageHolder.getImageView("addSurf.png"));
@@ -110,14 +102,14 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 	
 	public List<Node> getRightPanelTools() {
-		return Arrays.asList(addBtn, addHypBtn, addFoundBtn, 
+		return Arrays.asList(addFoundBtn, 
 				getSpacer(), delBtn, clearBtn);	
 	}
 	
 	private Region getSpacer() {
-		Region r3 = new Region();
-		r3.setPrefWidth(7);
-		return r3;
+		Region region = new Region();
+		region.setPrefWidth(7);
+		return region;
 	}
 	
 	public Node getRight() {
@@ -125,9 +117,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 	
 	protected void initButtons() {
-		
-		addBtn.setTooltip(new Tooltip("Create rectangle with mask"));
-		addHypBtn.setTooltip(new Tooltip("Create parametric hyperbola"));
 		addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
 		addFoundBtn.setTooltip(new Tooltip("Create mark"));
 		delBtn.setTooltip(new Tooltip("Delete selected element"));
@@ -168,46 +157,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			
 			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
-		
-		addBtn.setOnAction(e -> {				
-				SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-				
-				if (sf == null) {
-					return;
-				}
-				
-				AuxRect rect = new AuxRect(field.getSelectedTrace(), 
-						field.getStartSample() + 30, sf.getOffset());
-				
-				sf.getAuxElements().add(rect);
-				sf.setUnsaved(true);
-				model.updateAuxElements();
-				
-				selectControl(rect);
-				
-				profileView.repaintEvent();
-			}
-		);
-		
-		addHypBtn.setOnAction(e -> {				
-			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-			
-			if (sf == null) {
-				return;
-			}
-
-			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), 
-					field.getStartSample() + 30, sf.getOffset());
-			sf.getAuxElements().add(rect);
-			sf.setUnsaved(true);
-			
-			model.updateAuxElements();			
-			
-			selectControl(rect);
-			
-			profileView.repaintEvent();
-		}
-	);
 		
 		addFoundBtn.setOnAction(e -> {				
 			

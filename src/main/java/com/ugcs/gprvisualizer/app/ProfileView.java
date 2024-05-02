@@ -193,35 +193,16 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 	public void prepareToolbar() {
 		toolBar.setDisable(true);
+		
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
 
 		toolBar.getItems().addAll(navigator.getToolNodes());
-
 		toolBar.getItems().add(getSpacer());
+
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(getSpacer());
-		//toolBar.getItems().add(showGreenLineBtn);
-
-		toolBar.getItems().add(CommandRegistry.createButton("",
-				ResourceImageHolder.getImageView("ruler.png"), 
-				"show ruler", e -> {
-
-			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
-
-			RulerTool fp = RulerTool.createRulerTool(getField(), file);
-
-			fp.setSelected(true);
-
-			List<BaseObject> lst = new ArrayList<>();
-			lst.addAll(fp.getControls());
-			lst.add(fp);
-			model.setControls(lst);
-
-			repaintEvent();
-
-		}));
 	}
 
 	protected BufferedImage draw(int width, int height) {

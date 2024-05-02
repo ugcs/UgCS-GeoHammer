@@ -17,7 +17,6 @@ import com.google.gson.JsonParser;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 
 @SuppressWarnings("unchecked") 
 public class MarkupFile {
@@ -47,16 +46,10 @@ public class MarkupFile {
 			
 			String clazz = (String) ob.get("clazz");
 			BaseObject obj = null;
-			if (clazz.equals(Hyperbola.class.getSimpleName())) {
-				
-				obj = new Hyperbola(ob, sgyFile.getOffset());
-				
-			} else if (clazz.equals(AuxRect.class.getSimpleName())) {
-				
+			
+			if (clazz.equals(AuxRect.class.getSimpleName())) {	
 				obj = new AuxRect(ob, sgyFile.getOffset());
-				
-			} else if (clazz.equals(FoundPlace.class.getSimpleName())){
-				
+			} else if (clazz.equals(FoundPlace.class.getSimpleName())) {
 				//save in sgy file
 				//obj = FoundPlace.loadFromJson(ob, sgyFile); 
 			}
