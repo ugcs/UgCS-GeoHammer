@@ -33,8 +33,7 @@
       format: 'yyyy/MM/dd'
     trace-number:
       header: "GPR:Trace"
-
-    sensors:
+    data-values:
       - header: "MD:Value"
         semantic: "semantic1"
         units: "u1"

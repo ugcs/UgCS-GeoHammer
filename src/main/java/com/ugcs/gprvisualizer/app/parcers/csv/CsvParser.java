@@ -108,8 +108,8 @@ public class CsvParser extends Parser {
                     traceNumber = traceNumber != null ? traceNumber : traceCount;
 
                     List<SensorValue> sensorValues = new ArrayList<>();
-                    if (template.getDataMapping().getSensors() != null) {
-                        for (SensorData sensor : template.getDataMapping().getSensors()) {
+                    if (template.getDataMapping().getDataValues() != null) {
+                        for (SensorData sensor : template.getDataMapping().getDataValues()) {
                             String sensorData = (sensor.getIndex() != null && sensor.getIndex() != -1 && sensor.getIndex() < data.length) ? data[sensor.getIndex()] : null;
                             sensorValues.add(new SensorValue(sensor.getSemantic(), sensor.getUnits(), parseNumber(sensor, sensorData)));
                         }    
@@ -289,8 +289,8 @@ public class CsvParser extends Parser {
             setIndexIfHeaderNotNull(template.getDataMapping().getTraceNumber(), headers);
             setIndexIfHeaderNotNull(template.getDataMapping().getAltitude(), headers);
 
-            if (template.getDataMapping().getSensors() != null) {
-                for (var sensor: template.getDataMapping().getSensors()) {
+            if (template.getDataMapping().getDataValues() != null) {
+                for (var sensor: template.getDataMapping().getDataValues()) {
                     setIndexIfHeaderNotNull(sensor, headers);
                 }
             }

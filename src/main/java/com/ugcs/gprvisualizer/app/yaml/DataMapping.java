@@ -18,15 +18,15 @@ public class DataMapping {
     private BaseData timestamp;
     private BaseData traceNumber;
 
-    private List<SensorData> sensors;
+    private List<SensorData> dataValues;
 
     /**
      * Gets the sensors of the template.
      *
      * @return the sensors of the template.
      */
-    public List<SensorData> getSensors() {
-        return sensors;
+    public List<SensorData> getDataValues() {
+        return dataValues;
     }
 
     /**
@@ -34,8 +34,8 @@ public class DataMapping {
      *
      * @param sensors the sensors of the template.
      */
-    public void setSensors(List<SensorData> sensors) {
-        this.sensors = sensors;
+    public void setDataValues(List<SensorData> dataValues) {
+        this.dataValues = dataValues;
     }
 
     public BaseData getLatitude() {

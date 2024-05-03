@@ -47,10 +47,7 @@ public class PositionFile {
 		var fileTemplate = fileTemplates.findTemplate(fileTemplates.getTemplates(), logPath);
 
 			if (fileTemplate == null) {
-				MessageBoxHelper.showError(
-						"Can`t open position file", 
-						"Can`t find template for position file");
-				return;
+				throw new RuntimeException("Can`t find template for file " + csvFile.getName());
 			}
 
 			System.out.println("template: " + fileTemplate.getName());

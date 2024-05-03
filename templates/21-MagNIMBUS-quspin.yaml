@@ -30,8 +30,7 @@
     date:
       header: Date
       format: 'yyyy/MM/dd'
-
-    sensors:
+    data-values:
       - header: "TMI"
         semantic: "TMI"
         units: "nT"

@@ -184,10 +184,9 @@ public class Loader {
 				model.initChart(files.get(0), broadcast);
 
 			} catch (Exception e) {
-				
 				e.printStackTrace();
 				MessageBoxHelper.showError(
-						"Can`t open position file", 
+						"Can`t open file", e.getMessage() != null ? e.getMessage() :
 						"Probably file has incorrect format");
 			}
 			
