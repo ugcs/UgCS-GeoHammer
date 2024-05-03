@@ -201,19 +201,15 @@ public class SensorLineChart {
                 // scroll amount
                 double translateY = event.getDeltaY()/40;
                 for(LineChart<Number, Number> chart: charts) {
-                    NumberAxis axis;
-                    double mous;
-                    if(event.isControlDown()) {
+                    NumberAxis axis = (NumberAxis) chart.getXAxis();
+                    double mous = axis.getValueForDisplay(event.getX() - axis.getLayoutX()).doubleValue();
+                    zoom(axis, mous, translateY, zoomFactor);
+
+                    if(!event.isControlDown()) {
                         axis = (NumberAxis) chart.getYAxis();
                         mous = axis.getValueForDisplay(event.getY() - axis.getLayoutY()).doubleValue();
-                    } else {
-                        axis = (NumberAxis) chart.getXAxis();
-                        mous = axis.getValueForDisplay(event.getX() - axis.getLayoutX()).doubleValue();
+                        zoom(axis, mous, translateY, zoomFactor);
                     }
-                    ZoomDeltas zoom = getZoomDeltas(axis, mous, translateY, zoomFactor);
-                    axis.setAutoRanging(false);
-                    axis.setLowerBound(mous - zoom.deltaLower);
-                    axis.setUpperBound(mous + zoom.deltaUpper);
                 }
             });
         }
@@ -240,6 +236,13 @@ public class SensorLineChart {
             }
         });
         return root;
+    }
+
+    private static void zoom(NumberAxis axis, double mous, double translateY, double zoomFactor) {
+        ZoomDeltas zoom = getZoomDeltas(axis, mous, translateY, zoomFactor);
+        axis.setAutoRanging(false);
+        axis.setLowerBound(mous - zoom.deltaLower);
+        axis.setUpperBound(mous + zoom.deltaUpper);
     }
 
     private static @NotNull ZoomDeltas getZoomDeltas(NumberAxis axis, double mous, double translateY, double zoomFactor) {
