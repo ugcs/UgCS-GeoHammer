@@ -6,13 +6,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javafx.scene.control.skin.ComboBoxListViewSkin;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.util.StringUtils;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.SensorLineChart.SeriesData;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -114,22 +111,17 @@ public class SensorLineChart {
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
 
     public VBox createChartWithMultipleYAxes(SgyFile file, List<PlotData> plotData) {
-        // X-axis, common for both charts
-        NumberAxis xAxis = new NumberAxis();
-        //xAxis.setLabel("Common X Axis");
-        xAxis.setMinorTickVisible(false);
-        xAxis.setTickMarkVisible(false);
-        xAxis.setTickLabelsVisible(false);
-        xAxis.setAutoRanging(false);
-        xAxis.setUpperBound(2000);
-        xAxis.setTickUnit(200);
         // Using StackPane to overlay charts
         StackPane stackPane = new StackPane();
         ObservableList<SeriesData> seriesList = FXCollections.observableArrayList();
         Map<XYChart.Series<Number, Number>, CheckBox> seriesCheckBoxMap = new HashMap<>();
         LineChart<Number, Number> lastLineChart = null;
+        Set<LineChart<Number,Number>> charts = new HashSet<>();
 
         for (int i = 0; i < plotData.size(); i++) {
+            // X-axis, common for all charts
+            NumberAxis xAxis = getXAxis();
+
             // Y-axis
             NumberAxis yAxis = new NumberAxis();
             yAxis.setLabel(plotData.get(i).units());
@@ -148,6 +140,7 @@ public class SensorLineChart {
 
             // Creating chart
             LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+            charts.add(lineChart);
             lastLineChart = lineChart;
             lineChart.setLegendVisible(false); // Hide legend
             lineChart.setCreateSymbols(false); // Disable symbols
@@ -203,47 +196,29 @@ public class SensorLineChart {
         });
 
         if (lastLineChart != null) {
-            LineChart<Number, Number> finalLastLineChart = lastLineChart;
+            double zoomFactor = 1.01;
             lastLineChart.setOnScroll((ScrollEvent event) -> {
-                NumberAxis axis;
                 // scroll amount
-                double translateX = (event.getDeltaX())/40;
                 double translateY = event.getDeltaY()/40;
-
-                double mousX = finalLastLineChart.getXAxis().getValueForDisplay(event.getX() - finalLastLineChart.getXAxis().getLayoutX()).doubleValue();
-                double mousY = finalLastLineChart.getYAxis().getValueForDisplay(event.getY() - finalLastLineChart.getYAxis().getLayoutY()).doubleValue();
-                //if (zoomX.isSelected()) {
-                axis = (NumberAxis) finalLastLineChart.getXAxis();
-                axis.setAutoRanging(false);
-                double delta  = (mousX - axis.getLowerBound());
-                double delta1 = (axis.getUpperBound() - mousX);
-                double zoomFactor = 2;
-                if (translateY > 0) {
-                    delta = delta / zoomFactor;
-                    delta1 = delta1 / zoomFactor;
+                for(LineChart<Number, Number> chart: charts) {
+                    NumberAxis axis;
+                    double mous;
+                    if(event.isControlDown()) {
+                        axis = (NumberAxis) chart.getYAxis();
+                        mous = axis.getValueForDisplay(event.getY() - axis.getLayoutY()).doubleValue();
+                    } else {
+                        axis = (NumberAxis) chart.getXAxis();
+                        mous = axis.getValueForDisplay(event.getX() - axis.getLayoutX()).doubleValue();
+                    }
+                    ZoomDeltas zoom = getZoomDeltas(axis, mous, translateY, zoomFactor);
+                    axis.setAutoRanging(false);
+                    axis.setLowerBound(mous - zoom.deltaLower);
+                    axis.setUpperBound(mous + zoom.deltaUpper);
                 }
-                else {
-                    delta = delta * zoomFactor;
-                    delta1 = delta1 * zoomFactor;
-                }
-                axis.setLowerBound(mousX - delta);
-                axis.setUpperBound(mousX + delta1);
-                //}
-                //    double deltaY = event.getDeltaY();
-                //    double scaleX = lineChart1.getXAxis().getScaleX();
-                //    lineChart1.getXAxis().setAutoRanging(false);
-                //double scaleY = lineChart.getYAxis().getScale();
-                //    if (deltaY < 0) {
-                //        lineChart1.getXAxis().setScaleX(scaleX / 1.1);
-                //lineChart.getYAxis().setScale(scaleY / 1.1);
-                //    } else {
-                //        lineChart1.getXAxis().setScaleX(scaleX * 1.1);
-                //lineChart.getYAxis().setScale(scaleY * 1.1);
-                //    }
             });
         }
 
-        Button close = new Button("x");
+        Button close = new Button("X");
         HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
@@ -265,6 +240,35 @@ public class SensorLineChart {
             }
         });
         return root;
+    }
+
+    private static @NotNull ZoomDeltas getZoomDeltas(NumberAxis axis, double mous, double translateY, double zoomFactor) {
+        double deltaLower  = (mous - axis.getLowerBound());
+        double deltaUpper = (axis.getUpperBound() - mous);
+        if (translateY > 0) {
+            deltaLower = deltaLower / zoomFactor;
+            deltaUpper = deltaUpper / zoomFactor;
+        } else {
+            deltaLower = deltaLower * zoomFactor;
+            deltaUpper = deltaUpper * zoomFactor;
+        }
+        ZoomDeltas zoom = new ZoomDeltas(deltaLower, deltaUpper);
+        return zoom;
+    }
+
+    private record ZoomDeltas(double deltaLower, double deltaUpper) {
+    }
+
+    private NumberAxis getXAxis() {
+        NumberAxis xAxis = new NumberAxis();
+        //xAxis.setLabel("Common X Axis");
+        xAxis.setMinorTickVisible(false);
+        xAxis.setTickMarkVisible(false);
+        xAxis.setTickLabelsVisible(false);
+        xAxis.setAutoRanging(false);
+        xAxis.setUpperBound(2000);
+        xAxis.setTickUnit(200);
+        return xAxis;
     }
 
     private int getFloorMin(List<Number> data) {
