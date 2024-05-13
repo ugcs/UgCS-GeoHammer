@@ -212,7 +212,7 @@ public abstract class Parser implements IGeoCoordinateParser {
     private LocalDate parseDate(DateTime data, String column) {
         LocalDate result;
         if (StringUtils.hasText(data.getRegex())) {
-            var match = findByRegex(data.getRegex(), column);
+            var match = findByRegex(data.getRegex(), column.trim());
             if (match.matches()) {
                 try {
                     result = LocalDate.parse(match.group(), DateTimeFormatter.ofPattern(data.getFormat()));
@@ -224,7 +224,7 @@ public abstract class Parser implements IGeoCoordinateParser {
         }
 
         try {
-            result = LocalDate.parse(column, DateTimeFormatter.ofPattern(data.getFormat()));
+            result = LocalDate.parse(column.trim(), DateTimeFormatter.ofPattern(data.getFormat()));
             return result;
         } catch (DateTimeParseException e) {
             return null;

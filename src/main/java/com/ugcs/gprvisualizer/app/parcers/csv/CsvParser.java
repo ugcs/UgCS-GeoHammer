@@ -52,7 +52,7 @@ public class CsvParser extends Parser {
                 throw new IllegalArgumentException("Template is not set");
             }
 
-            if (Source.FileName.equals(template.getDataMapping().getDate().getSource())) {
+            if (template.getDataMapping().getDate() != null && Source.FileName.equals(template.getDataMapping().getDate().getSource())) {
                 parseDateFromNameOfFile(new File(logPath).getName());
             }
 

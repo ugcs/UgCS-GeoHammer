@@ -1,12 +1,9 @@
 package com.ugcs.gprvisualizer.app.yaml;
 
-import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.springframework.util.StringUtils;
-
-import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 
 /**
  * Represents a template for processing files.
