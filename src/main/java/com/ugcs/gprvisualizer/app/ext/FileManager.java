@@ -156,4 +156,9 @@ public class FileManager {
 		return fileTemplates;
 	}
 
+	public void addFile(SgyFile sgyFile) {
+		files.add(sgyFile);
+		traces = null;
+	}
+
 }

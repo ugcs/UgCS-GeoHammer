@@ -94,7 +94,7 @@ public class GprFile extends SgyFile {
         	//return null;
         }
         
-        Trace trace = new Trace(headerBin, header, values, latLon);
+        Trace trace = new Trace(this, headerBin, header, values, latLon);
         if (headerBin[MARK_BYTE_POS] != 0) {
         	trace.setMarked(true);
         }
@@ -152,7 +152,7 @@ public class GprFile extends SgyFile {
 			float[] values = Arrays.copyOf(
 					org.getNormValues(), org.getNormValues().length);
 			
-			Trace tr = new Trace(org.getBinHeader(), 
+			Trace tr = new Trace(file2, org.getBinHeader(), 
 					org.getHeader(), values, org.getLatLon());
 			traces.add(tr);
 		}		

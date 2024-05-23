@@ -266,7 +266,7 @@ public class DztFile extends SgyFile {
         
         byte[] headerBin = null;
 		TraceHeader trheader = null;
-		Trace trace = new Trace(headerBin, trheader, values, latLon);
+		Trace trace = new Trace(this, headerBin, trheader, values, latLon);
         
         return trace;
 	}
@@ -346,7 +346,7 @@ public class DztFile extends SgyFile {
 			float[] values = Arrays.copyOf(
 					org.getNormValues(), org.getNormValues().length);
 			
-			Trace tr = new Trace(org.getBinHeader(), 
+			Trace tr = new Trace(copy, org.getBinHeader(), 
 					org.getHeader(), 
 					values, 
 					org.getLatLon());

@@ -63,7 +63,7 @@ public class TraceStacking implements Command {
 			
 		}
 		
-		Trace combined = new Trace(example.getBinHeader(), example.getHeader(),
+		Trace combined = new Trace(example.getFile(), example.getBinHeader(), example.getHeader(),
 				res, example.getLatLon());
 		
 		combined.verticalOffset = example.verticalOffset; 

@@ -255,6 +255,14 @@
 			<artifactId>spring-context</artifactId>
 		</dependency>
 
+		<dependency>
+        	<groupId>org.springframework</groupId>
+        	<artifactId>spring-aop</artifactId>
+		</dependency>
+		<dependency>
+        	<groupId>org.springframework</groupId>
+        	<artifactId>spring-aspects</artifactId>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-imaging -->
 		<dependency>

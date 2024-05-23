@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.app.parcers;
 
-import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
-
 import java.util.List;
 
 public class GeoData extends GeoCoordinates {

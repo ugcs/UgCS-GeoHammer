@@ -72,22 +72,21 @@ public class Loader {
          	final List<File> files = db.getFiles();  
          	
 			if (isConstPointsFile(files)) {
-				
 				openConstPointFile(files);				
 				return;				
 			} 
-			
-			if (isPositionFile(files)) {
-				model.setLoading(true);
-				openPositionFile(files);
-				return;
-			}
 
 			if (isKmlFile(files)) {
-
 				openKmlFile(files);
 				return;
 			}
+			
+			if (isPositionFile(files)) {
+				model.setLoading(true);
+				openCSVFiles(files);
+				return;
+			}
+
 
 			if (model.stopUnsaved()) {
         		return;
@@ -142,7 +141,7 @@ public class Loader {
 			model.updateAuxElements();
 		}
 
-		private void openPositionFile(List<File> files) {
+		private void openCSVFiles(List<File> files) {
 			//if (model.getFileManager().getFiles().size() == 0) {
 				
 			//	MessageBoxHelper.showError(
@@ -169,20 +168,22 @@ public class Loader {
 			try {
 				//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
 				//	model.getFileManager().getFiles().get(0) : new GprFile();
-
-				SgyFile sgyFile = new GprFile();
+				for (File file: files) {
+					if (model.getChart(file).isEmpty()) {
+						SgyFile sgyFile = new GprFile();
 	
-				new PositionFile(model.getFileManager().getFileTemplates())
-					.load(sgyFile, files.get(0));
-				model.getFileManager().getFiles().add(sgyFile);	
-
-				//model.init();			
-		
-				//when open file by dnd (not after save)
-				model.initField();
-
-				model.initChart(files.get(0), broadcast);
-
+						new PositionFile(model.getFileManager().getFileTemplates())
+							.load(sgyFile, file);
+						model.getFileManager().addFile(sgyFile);	
+	
+						//model.init();			
+			
+						//when open file by dnd (not after save)
+						model.initField();
+	
+						model.initChart(file, broadcast);
+					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				MessageBoxHelper.showError(
@@ -226,7 +227,6 @@ public class Loader {
 
 		broadcast.notifyAll(new WhatChanged(Change.updateButtons));
 		broadcast.notifyAll(new WhatChanged(Change.justdraw));
-
 	}
 
 

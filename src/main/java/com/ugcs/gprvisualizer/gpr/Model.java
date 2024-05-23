@@ -3,9 +3,12 @@ package com.ugcs.gprvisualizer.gpr;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -33,6 +36,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 @Component
 public class Model implements InitializingBean {
@@ -330,11 +334,66 @@ public class Model implements InitializingBean {
 		AppContext.model = this;
 	}
 
+	Map<File, SensorLineChart> csvFiles = new HashMap<>();
+
+	/** 
+	 * Initialize chart for the given CSV file
+	 * @param csvFile CSV file to initialize chart for
+	 * @param broadcast Broadcast to notify listeners
+	 * @return void
+	 */
 	public void initChart(File csvFile, Broadcast broadcast) {
+		if (getChart(csvFile).isPresent()) {
+			return;
+		} 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
 		for (SgyFile file: plotData.keySet()) {
 			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(file, plotData.get(file)));
 		}
+		csvFiles.put(csvFile, sensorLineChart);
 	}
+
+	/**
+	 * Get chart for the given file if it exists in the model
+	 * @param file CSV file to get chart for
+	 * @return Optional of SensorLineChart
+	 */
+    public Optional<SensorLineChart> getChart(File csvFile) {
+		csvFiles.forEach((file, chart) -> {
+			chart.removeVerticalMarker();
+		});
+		return Optional.ofNullable(csvFiles.get(csvFile));
+    }
+
+	public void removeChart(File csvFile) {
+		csvFiles.remove(csvFile);
+    }
+
+	Map<String, Color> semanticColors = new HashMap<>();
+
+	public Color getColorBySemantic(String semantic) {
+		return semanticColors.computeIfAbsent(semantic, k -> generateRandomColor());
+	}
+
+	// Generate random color
+    private Color generateRandomColor() {
+        var brightColors = List.of(Color.web("#E6194B"), // Red
+                Color.web("#3CB44B"), // Green
+                Color.web("#4363D8"), // Dark Blue
+                Color.web("#F58231"), // Orange
+                Color.web("#911EB4"), // Purple
+                Color.web("#F032E6"), // Magenta
+                Color.web("#008080"), // Teal
+                Color.web("#9A6324"), // Brown
+                Color.web("#800000"), // Maroon
+                Color.web("#808000"), // Olive
+                Color.web("#000075"), // Navy Blue
+                Color.web("#00FF00"), // Bright Green
+                Color.web("#FF4500"), // Orange Red
+                Color.web("#DA70D6") // Orchid
+        );
+        Random rand = new Random();
+        return brightColors.get(rand.nextInt(brightColors.size()));
+    }
 }

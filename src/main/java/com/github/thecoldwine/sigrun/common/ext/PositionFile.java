@@ -70,7 +70,7 @@ public class PositionFile {
 						double hair =  100 / sgyFile.getSamplesToCmAir();
 						altArr.add((int) (coord.getAltitude() * hair));
 					} else {
-						sgyFile.getTraces().add(new Trace(null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
+						sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
 						if(coord instanceof GeoData) {
 							sgyFile.getGeoData(csvFile).add((GeoData)coord);
 						}

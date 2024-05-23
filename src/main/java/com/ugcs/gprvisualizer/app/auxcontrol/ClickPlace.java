@@ -14,6 +14,7 @@ import org.json.simple.JSONObject;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
@@ -36,8 +37,10 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	private Color flagColor = Color.getHSBColor((float) Math.random(), 1, 1f); 
 	private int traceInAll;
-	
-	public ClickPlace(int trace) {
+	private SgyFile file;
+
+	public ClickPlace(SgyFile file, int trace) {
+		this.file = file;
 		this.traceInAll = trace;
 	}
 
@@ -54,7 +57,7 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		ClickPlace result = new ClickPlace(traceInAll); 
+		ClickPlace result = new ClickPlace(file, traceInAll); 
 		
 		return result;
 	}
@@ -132,6 +135,9 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	private Trace getTrace() {
+		if (file != null) {
+			return file.getTraces().get(traceInAll);
+		}
 		return AppContext.model.getFileManager().getTraces().get(traceInAll);
 	}
 

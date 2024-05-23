@@ -182,7 +182,6 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		
 		click = model.getField().screenTolatLon(point);
 		
-		
 		status.showProgressText(click.toString());
 		
 		getRepaintListener().repaint();

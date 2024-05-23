@@ -9,6 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
@@ -175,26 +176,25 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
         public void handle(MouseEvent event) {
 			if (!isGpsPresent()) {
 				return;
-			}
-        	
+			}        	
         	
         	if (event.getClickCount() == 2) {
-        		
         		Point2D p = getLocalCoords(event);
-        		
         		LatLon ll = model.getField().screenTolatLon(p);
-        		
-        		int traceIndex = TraceUtils.findNearestTraceIndex(
-        				model.getFileManager().getTraces(), ll);
-        		
-        		model.getVField().setSelectedTrace(traceIndex);
-        		
-        		ProfileView.createTempPlace(model, traceIndex);
-        	}
-        }
+        		Trace trace = TraceUtils.findNearestTrace(
+        				model.getFileManager().getTraces(), ll);        		
+				int indexInFile = trace.getFile().getTraces().indexOf(trace);
 
-
-
+				Optional<SensorLineChart> chart = model.getChart(trace.getFile().getFile());
+				if (chart.isPresent()) {
+					chart.get().setSelectedTrace(indexInFile);
+				} else {
+					model.getVField().setSelectedTrace(indexInFile);
+				}
+				
+				ProfileView.createTempPlace(model, trace.getFile(), indexInFile);
+			}
+		}
 	};
 	
 	

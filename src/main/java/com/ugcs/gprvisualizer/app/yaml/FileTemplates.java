@@ -44,6 +44,8 @@ public class FileTemplates implements InitializingBean {
 
     private Yaml yaml;
 
+    private Path templatesPath;
+
     @Override
     @Async
     public void afterPropertiesSet() throws Exception {
@@ -74,8 +76,7 @@ public class FileTemplates implements InitializingBean {
         c.getPropertyUtils().setSkipMissingProperties(true);
         yaml = new Yaml(c);
 
-        Path templatesPath = loadTemplates(yaml, TEMPLATES_FOLDER, templates);
-        watchTemplates(templatesPath);
+        this.templatesPath = loadTemplates(yaml, TEMPLATES_FOLDER, templates);
     }
 
     private Path loadTemplates(Yaml yaml, String path, List<Template> templates) {
@@ -114,14 +115,12 @@ public class FileTemplates implements InitializingBean {
     }
 
     @Async
-    private void watchTemplates(Path templatesPath) {
+    public void watchTemplates() {
         
         if (templatesPath == null) {
             return;
         }
 
-        new Thread() {
-            public void run() {
 
         try {
                     // Create a WatchService
@@ -169,8 +168,6 @@ public class FileTemplates implements InitializingBean {
                 } catch (IOException | InterruptedException e) {
                     logger.error("Error reading template: " + e.getMessage());
                 }
-            };
-        }.start();
     }
 
     public List<Template> getTemplates() {

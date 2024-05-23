@@ -6,10 +6,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javafx.scene.control.skin.ComboBoxListViewSkin;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.util.StringUtils;
 
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -21,16 +27,21 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.Node;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -44,10 +55,69 @@ public class SensorLineChart {
     private final Model model;
     private final Broadcast broadcast;
 
+    private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
+    private LineChartWithMarkers<Number, Number> lastLineChart = null;
+    private Set<LineChartWithMarkers<Number,Number>> charts = new HashSet<>();
+    private Rectangle zoomRect = new Rectangle();
+
+    private int scale;
+    private SgyFile file;
+
     public SensorLineChart(Model model, Broadcast broadcast) {
         this.model = model;
         this.broadcast = broadcast;
     }
+
+    public void setSelectedTrace(int traceNumber) {
+        int selectedX = traceNumber / scale;
+        NumberAxis xAxis = (NumberAxis)lastLineChart.getXAxis();
+        if (xAxis.getLowerBound() > selectedX || xAxis.getUpperBound() < selectedX) {
+            for (LineChartWithMarkers<Number, Number> chart: charts) {
+                xAxis = (NumberAxis) chart.getXAxis();
+                
+                int delta = (int)(xAxis.getUpperBound() - xAxis.getLowerBound());
+                xAxis.setLowerBound(selectedX - delta / 2);
+                xAxis.setUpperBound(selectedX + delta / 2);
+            }
+        }
+        putVerticalMarker(selectedX);
+        System.out.println("Selected trace number:" + traceNumber);
+    }
+
+
+    private EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+        	
+        	if (event.getClickCount() == 2) {
+
+                System.out.println("double click " + event.getX() + " " + event.getY() + " " + event.getSource());
+                model.getChart(null);
+                
+                if (event.getSource() instanceof LineChart) {
+                    Axis<Number> xAxis = ((LineChart) event.getSource()).getXAxis();
+                    Number xValue = xAxis.getValueForDisplay(event.getX() - xAxis.getLayoutX());
+                    System.out.println("xValue: " + xValue.intValue() * scale);
+
+                    putVerticalMarker(xValue.intValue());
+
+                    int traceIndex = xValue.intValue() * scale;
+                    if (traceIndex >= 0 && traceIndex < model.getTracesCount()) {
+                        GeoData geoData = file.getGeoData(file.getFile()).get(traceIndex);
+                        model.getField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
+                        createTempPlace(model, file, traceIndex);
+                        broadcast.notifyAll(new WhatChanged(Change.mapscroll));
+                    }
+                }
+        	}
+        }
+	};
+
+    private void createTempPlace(Model model, SgyFile file, int trace) {
+		ClickPlace fp = new ClickPlace(file, trace);
+		fp.setSelected(true);
+		model.setControls(Arrays.asList(fp));
+	}
 
     public Map<SgyFile, List<PlotData>> generatePlotData(File csvFile) {
         //TODO: design it better
@@ -73,7 +143,7 @@ public class SensorLineChart {
         for (String k: sensorValues.keySet()) {
             var pd = k.split("--");
             List<SensorValue> values = sensorValues.get(k);
-            PlotData plotData = new PlotData(pd[0], pd[1], calculateAverages(values.stream()
+            PlotData plotData = new PlotData(pd[0], pd[1], getColor(pd[0]), calculateAverages(values.stream()
                     .map(SensorValue::data)
                     .collect(Collectors.toList())));
             plotDataList.add(plotData);
@@ -87,9 +157,13 @@ public class SensorLineChart {
         return Map.of(file, plotDataList);
     }
 
-    public static List<Number> calculateAverages(List<Number> sourceList) {
+    private Color getColor(String semantic) {
+        return model.getColorBySemantic(semantic);
+    }
+
+    private List<Number> calculateAverages(List<Number> sourceList) {
         if (sourceList.isEmpty()) return sourceList;
-        var scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
+        scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
         return IntStream.range(0, sourceList.size() / scale) // Create an index stream from 0 to 999
                 .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale)) // Transform each index into a sublist of 100 elements
                 .map(sublist -> sublist.stream() // Create a stream from sublist
@@ -100,8 +174,8 @@ public class SensorLineChart {
                 //.map(d -> d.intValue())
                 .collect(Collectors.toList()); // Collect results in a list
     }
-    record PlotData(String semantic, String units, List<Number> data) {}
-    record SeriesData(XYChart.Series<Number, Number> series) {
+    record PlotData(String semantic, String units, Color color, List<Number> data) {}
+    record SeriesData(XYChart.Series<Number, Number> series, Color color) {
         @Override
         public final String toString() {
             return series.getName();
@@ -112,15 +186,13 @@ public class SensorLineChart {
         return itemBooleanMap.get(item);
     }
 
-    private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
-
-    private LineChartWithMarkers<Number, Number> lastLineChart = null;
-
     public VBox createChartWithMultipleYAxes(SgyFile file, List<PlotData> plotData) {
+
+        this.file = file;
+
         // Using StackPane to overlay charts
         StackPane stackPane = new StackPane();
         ObservableList<SeriesData> seriesList = FXCollections.observableArrayList();
-        Set<LineChart<Number,Number>> charts = new HashSet<>();
 
         for (int i = 0; i < plotData.size(); i++) {
             // X-axis, common for all charts
@@ -131,11 +203,11 @@ public class SensorLineChart {
             yAxis.setLabel(plotData.get(i).units());
             yAxis.setSide(javafx.geometry.Side.RIGHT); // Y-axis on the right
             yAxis.setMinorTickVisible(false);
-            yAxis.setAutoRanging(false);
+            //yAxis.setAutoRanging(false);
             var min = getFloorMin(plotData.get(i).data());
             var max = getCeilMax(plotData.get(i).data());
-            yAxis.setLowerBound(min);
-            yAxis.setUpperBound(max);
+            //yAxis.setLowerBound(min);
+            //yAxis.setUpperBound(max);
             yAxis.setTickUnit((max - min)/10);
             yAxis.setPrefWidth(70);
             if (i > 0) {
@@ -143,7 +215,8 @@ public class SensorLineChart {
             }
 
             // Creating chart
-            LineChartWithMarkers<Number, Number> lineChart = new LineChartWithMarkers<>(xAxis, yAxis);
+            LineChartWithMarkers<Number, Number> lineChart = new LineChartWithMarkers<>(xAxis, yAxis, 0, 2000, min, max);
+            lineChart.zoomOut();
             charts.add(lineChart);
             lastLineChart = lineChart;
             lineChart.setLegendVisible(false); // Hide legend
@@ -162,14 +235,14 @@ public class SensorLineChart {
                 series.getData().add(new XYChart.Data<>(j, plotData.get(i).data().get(j)));
             }
 
-            SeriesData item = new SeriesData(series);
+            SeriesData item = new SeriesData(series, plotData.get(i).color());
             seriesList.add(item);
 
             itemBooleanMap.put(item, createBooleanProperty(item));
 
             // Set random color for series
-            lineChart.getData().add(series);
-            setColorForSeries(series, generateRandomColor());
+            lineChart.getData().add(item.series());
+            setColorForSeries(item.series(), item.color());
             // Add chart to container
             stackPane.getChildren().add(lineChart);
         }
@@ -196,22 +269,38 @@ public class SensorLineChart {
         comboBox.setValue(seriesList.isEmpty() ? null : getNonEmptySeries(seriesList));
 
         comboBox.setCellFactory(listView -> {
-            CheckBoxListCell<SeriesData> checkBoxListCell = new CheckBoxListCell<>(this::getItemBooleanProperty) {
+            return new CheckBoxListCell<>(this::getItemBooleanProperty) {
                 @Override
                 public void updateItem(SeriesData item, boolean empty) {
                     super.updateItem(item, empty);
                     this.setDisable(false); // it is required to fit default state
-                    if (item != null && item.series().getData().isEmpty()) {
-                        this.setDisable(true);
-                        this.setStyle("-fx-text-fill: gray;");
-                    }
+                    if (item != null) {
+                        if (item.series().getData().isEmpty()) {
+                            this.setDisable(true);
+                            this.setStyle("-fx-text-fill: gray;");
+                        } else {
+                            this.setStyle("-fx-text-fill: " + getColorString(item.color()) + ";");
+                        }
+                    } 
                 }
             };
-            return checkBoxListCell;
+        });
+
+        comboBox.setButtonCell(new ListCell<SeriesData>() {
+            @Override
+            protected void updateItem(SeriesData item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.series().getName());
+                    setStyle("-fx-text-fill: " + getColorString(item.color()) + ";");
+                }
+            }
         });
 
         if (lastLineChart != null) {
-            double zoomFactor = 1.01;
+            double zoomFactor = 1.1;
             lastLineChart.setOnScroll((ScrollEvent event) -> {
                 // scroll amount
                 double translateY = event.getDeltaY() / 40;
@@ -228,6 +317,8 @@ public class SensorLineChart {
                 }
                 event.consume(); // for prevent to scroll parent pane
             });
+            lastLineChart.setOnMouseClicked(mouseClickHandler);
+            setZoomHandlers(lastLineChart, charts);
         }
 
         Button close = new Button("X");
@@ -235,7 +326,19 @@ public class SensorLineChart {
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox root = new VBox(top, stackPane);
+        zoomRect.setManaged(false);
+        zoomRect.setFill(null);
+        zoomRect.setStroke(javafx.scene.paint.Color.BLUE);
+
+         // TODO: temporary
+         Button zoomOutButton = new Button("Zoom Out");
+         zoomOutButton.setOnAction(e -> {
+            charts.forEach(chart -> {
+                chart.zoomOut();
+            });
+         });
+
+        VBox root = new VBox(top, zoomOutButton, stackPane, zoomRect);
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
         root.setPadding(new Insets(10));
@@ -247,6 +350,7 @@ public class SensorLineChart {
 
                 // remove files and traces from map
                 model.getFileManager().getFiles().remove(file);
+                model.removeChart(file.getFile());
                 model.initField();
                 broadcast.notifyAll(new WhatChanged(Change.fileopened));
             }
@@ -254,11 +358,69 @@ public class SensorLineChart {
         return root;
     }
 
+    private void setZoomHandlers(LineChartWithMarkers<Number, Number> chart, Set<LineChartWithMarkers<Number, Number>> charts) {
+        
+        chart.setOnMousePressed(event -> {
+            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+80);
+            System.out.println(pointInScene);
+            zoomRect.setX(pointInScene.getX());
+            zoomRect.setY(pointInScene.getY());
+            zoomRect.setWidth(0);
+            zoomRect.setHeight(0);
+            zoomRect.setVisible(true);
+        });
+
+        chart.setOnMouseDragged(event -> {
+            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+80);
+            zoomRect.setWidth(Math.abs(pointInScene.getX() - zoomRect.getX()));
+            zoomRect.setHeight(Math.abs(pointInScene.getY() - zoomRect.getY()));
+            zoomRect.setX(Math.min(pointInScene.getX(), zoomRect.getX()));
+            zoomRect.setY(Math.min(pointInScene.getY(), zoomRect.getY()));
+        });
+
+        chart.setOnMouseReleased(event -> {
+            double startX = zoomRect.getX();
+            double endX = startX + zoomRect.getWidth();
+            System.out.println("w: " + zoomRect.getWidth() + " h:" + zoomRect.getHeight());
+
+            double startY = zoomRect.getY();
+            double endY = startY + zoomRect.getHeight();
+
+            if (zoomRect.getWidth() < 10 || zoomRect.getHeight() < 10) {
+                zoomRect.setVisible(false);
+                return;
+            }
+            
+            for(LineChart<Number, Number> c: charts) {
+                NumberAxis xAxis = (NumberAxis) c.getXAxis();
+                Number xMin = xAxis.getValueForDisplay(startX - 10);
+                Number xMax = xAxis.getValueForDisplay(endX - 10);
+                xAxis.setLowerBound(xMin.doubleValue());
+                xAxis.setUpperBound(xMax.doubleValue());
+
+                NumberAxis yAxis = (NumberAxis) c.getYAxis();
+                Number yMax = yAxis.getValueForDisplay(startY - 80);
+                Number yMin = yAxis.getValueForDisplay(endY - 80);
+                yAxis.setLowerBound(yMin.doubleValue());
+                yAxis.setUpperBound(yMax.doubleValue());
+            }
+
+            zoomRect.setVisible(false); 
+        });
+    }
+
     private SeriesData getNonEmptySeries(ObservableList<SeriesData> seriesList) {
         return seriesList.stream().filter(s -> !s.series().getData().isEmpty()).findFirst().orElse(null);
     }
 
     private Data<Number, Number> currentVerticalMarker = null;
+
+    public void removeVerticalMarker() {
+        if (lastLineChart != null && currentVerticalMarker != null) {
+            lastLineChart.removeVerticalValueMarker(currentVerticalMarker);
+            currentVerticalMarker = null;
+        }
+    }
 
     public void putVerticalMarker(int x) {
         if (lastLineChart != null) {
@@ -300,15 +462,15 @@ public class SensorLineChart {
         xAxis.setMinorTickVisible(false);
         xAxis.setTickMarkVisible(false);
         xAxis.setTickLabelsVisible(false);
-        xAxis.setAutoRanging(false);
-        xAxis.setUpperBound(2000);
+        //xAxis.setAutoRanging(false);
+        //xAxis.setUpperBound(2000);
         xAxis.setTickUnit(200);
         return xAxis;
     }
 
     private int getFloorMin(List<Number> data) {
         int min = data.stream().mapToInt(n -> n.intValue()).min().orElse(0);
-        int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(min), 0, 3));
+        int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
         return baseMin == 1 ? 0 : Math.floorDiv(min, baseMin) * baseMin;
     }
 
@@ -343,63 +505,57 @@ public class SensorLineChart {
         lineChart.setVerticalGridLinesVisible(isVisible);
         lineChart.setHorizontalGridLinesVisible(isVisible);
     }
-    static class CheckableItem {
-        private final String name;
-        private final CheckBox checkBox;
-        public CheckableItem(String name) {
-            this.name = name;
-            this.checkBox = new CheckBox(name);
-        }
-        public CheckBox getCheckBox() {
-            return checkBox;
-        }
-        public String getName() {
-            return name;
-        }
-    }
-    // Generate random color
-    private Color generateRandomColor() {
-        var brightColors = List.of(Color.web("#E6194B"), // Red
-                Color.web("#3CB44B"), // Green
-                Color.web("#4363D8"), // Dark Blue
-                Color.web("#F58231"), // Orange
-                Color.web("#911EB4"), // Purple
-                Color.web("#F032E6"), // Magenta
-                Color.web("#008080"), // Teal
-                Color.web("#9A6324"), // Brown
-                Color.web("#800000"), // Maroon
-                Color.web("#808000"), // Olive
-                Color.web("#000075"), // Navy Blue
-                Color.web("#00FF00"), // Bright Green
-                Color.web("#FF4500"), // Orange Red
-                Color.web("#DA70D6") // Orchid
-        );
-        Random rand = new Random();
-        return brightColors.get(rand.nextInt(brightColors.size()));
-    }
+
     // Apply color to data series
     private void setColorForSeries(XYChart.Series<Number, Number> series, Color color) {
-        // Convert color to string in HEX format
-        String colorString = String.format("#%02X%02X%02X",
-                (int) (color.getRed() * 255),
-                (int) (color.getGreen() * 255),
-                (int) (color.getBlue() * 255));
+        String colorString = getColorString(color);
         System.out.println("Color: " + colorString);
         // Apply style to series
         series.getNode().lookup(".chart-series-line").setStyle("-fx-stroke: " + colorString + ";" + "-fx-stroke-width: 0.6px;");
     }
 
+    private String getColorString(Color color) {
+        // Convert color to string in HEX format
+        String colorString = String.format("#%02X%02X%02X",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
+        return colorString;
+    }
+
     private class LineChartWithMarkers<X,Y> extends LineChart<X, Y> {
 
-        private ObservableList<Data<X, Y>> horizontalMarkers;
-        private ObservableList<Data<X, Y>> verticalMarkers;
+        private final ObservableList<Data<X, Y>> horizontalMarkers;
+        private final ObservableList<Data<X, Y>> verticalMarkers;
 
-        public LineChartWithMarkers(Axis<X> xAxis, Axis<Y> yAxis) {
+        private final int xLowerBound;
+        private final int xUpperBound;
+        private final int yLowerBound;
+        private final int yUpperBound;
+
+        public LineChartWithMarkers(Axis<X> xAxis, Axis<Y> yAxis, int xLowerBound, int xUpperBound, int yLowerBound, int yUpperBound) {
             super(xAxis, yAxis);
+            this.xLowerBound = xLowerBound;
+            this.xUpperBound = xUpperBound;
+            this.yLowerBound = yLowerBound;
+            this.yUpperBound = yUpperBound;
             horizontalMarkers = FXCollections.observableArrayList(data -> new javafx.beans.Observable[] {data.YValueProperty()});
             horizontalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
             verticalMarkers = FXCollections.observableArrayList(data -> new javafx.beans.Observable[] {data.XValueProperty()});
             verticalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
+        }
+
+        public void zoomOut() {
+            NumberAxis xAxis = (NumberAxis) getXAxis();
+            NumberAxis yAxis = (NumberAxis) getYAxis();
+            xAxis.setAutoRanging(true);
+            yAxis.setAutoRanging(true);
+            xAxis.setAutoRanging(false);
+            yAxis.setAutoRanging(false);
+            xAxis.setLowerBound(xLowerBound);
+            xAxis.setUpperBound(xUpperBound);
+            yAxis.setLowerBound(yLowerBound);
+            yAxis.setUpperBound(yUpperBound);
         }
 
         public void addHorizontalValueMarker(Data<X, Y> marker) {
@@ -424,8 +580,20 @@ public class SensorLineChart {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (verticalMarkers.contains(marker)) return;
             Line line = new Line();
-            marker.setNode(line );
-            getPlotChildren().add(line);
+            
+            line.setStroke(Color.RED); // Bright color for white background
+            line.setStrokeWidth(2);
+
+
+            ImageView imageView = ResourceImageHolder.getImageView("gps32.png");
+
+            VBox markerBox = new VBox();
+            markerBox.setAlignment(Pos.TOP_CENTER);
+            markerBox.getChildren().addAll(imageView, line);
+
+            marker.setNode(markerBox);
+
+            getPlotChildren().add(markerBox);
             verticalMarkers.add(marker);
         }
 
@@ -451,11 +619,18 @@ public class SensorLineChart {
                 line.toFront();
             }
             for (Data<X, Y> verticalMarker : verticalMarkers) {
-                Line line = (Line) verticalMarker.getNode();
-                line.setStartX(getXAxis().getDisplayPosition(verticalMarker.getXValue()) + 0.5);  // 0.5 for crispness
-                line.setEndX(line.getStartX());
-                line.setStartY(0d);
-                line.setEndY(getBoundsInLocal().getHeight());
+                VBox line = (VBox) verticalMarker.getNode();
+                line.setLayoutX(getXAxis().getDisplayPosition(verticalMarker.getXValue()));// + 0.5);  // 0.5 for crispness
+                for(Node node: line.getChildren()) {
+                    if (node instanceof Line) {
+                        Line l = (Line) node;
+                        l.setStartY(0d);
+                        l.setEndY(getBoundsInLocal().getHeight());
+                        l.toFront();
+                    }
+                }
+                line.setLayoutY(0d);
+                line.setMinHeight(getBoundsInLocal().getHeight());
                 line.toFront();
             }      
         }

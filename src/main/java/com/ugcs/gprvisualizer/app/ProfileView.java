@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
@@ -732,16 +733,18 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 				// add tmp flag
 				Point p = getLocalCoords(event);
 
-				int trace = getField().screenToTraceSample(p).getTrace();
+				int traceIndex = getField().screenToTraceSample(p).getTrace();
 
-				if (trace >= 0 && trace < model.getTracesCount()) {
+				if (traceIndex >= 0 && traceIndex < model.getTracesCount()) {
+
+					Trace trace = model.getFileManager().getTraces()
+							.get(traceIndex);
 
 					// select in MapView
 					model.getField().setSceneCenter(
-							model.getFileManager().getTraces()
-							.get(trace).getLatLon());
+							trace.getLatLon());
 
-					createTempPlace(model, trace);
+					createTempPlace(model, trace.getFile(), traceIndex);
 
 					broadcast.notifyAll(new WhatChanged(Change.mapscroll));
 				}
@@ -749,9 +752,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	};
 
-	public static void createTempPlace(Model model, int trace) {
-
-		ClickPlace fp = new ClickPlace(trace);
+	public static void createTempPlace(Model model, SgyFile file, int trace) {
+		ClickPlace fp = new ClickPlace(file, trace);
 		fp.setSelected(true);
 		model.setControls(Arrays.asList(fp));
 	}

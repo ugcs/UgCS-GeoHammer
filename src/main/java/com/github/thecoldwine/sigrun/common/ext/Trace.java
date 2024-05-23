@@ -44,10 +44,15 @@ public class Trace {
     public byte[] edge;
     
     public Set<Integer> max = new HashSet<>();
+    private final SgyFile file;
     
-    public Trace(byte[] binHeader, TraceHeader header, float[] originalvalues, LatLon latLon) {
+    public SgyFile getFile() {
+        return file;
+    }
+
+    public Trace(SgyFile file, byte[] binHeader, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
-    	
+    	this.file = file;
         this.header = header;
         this.binHeader = binHeader; 
         this.originalvalues = originalvalues;
