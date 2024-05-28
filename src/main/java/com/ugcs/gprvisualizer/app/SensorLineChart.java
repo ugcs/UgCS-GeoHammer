@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javafx.scene.control.skin.ComboBoxListViewSkin;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +28,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
@@ -103,7 +101,7 @@ public class SensorLineChart {
 
                     int traceIndex = xValue.intValue() * scale;
                     if (traceIndex >= 0 && traceIndex < model.getTracesCount()) {
-                        GeoData geoData = file.getGeoData(file.getFile()).get(traceIndex);
+                        GeoData geoData = file.getGeoData().get(traceIndex);
                         model.getField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
                         createTempPlace(model, file, traceIndex);
                         broadcast.notifyAll(new WhatChanged(Change.mapscroll));
@@ -124,7 +122,7 @@ public class SensorLineChart {
         var file = model.getFileManager().getFiles().stream().filter(f -> {
             return f.getFile() != null && Objects.equals(csvFile.getName(), f.getFile().getName());
         }).findAny().get();
-        List<GeoData> geoData = file.getGeoData(csvFile);
+        List<GeoData> geoData = file.getGeoData();
         Map<String, List<SensorValue>> sensorValues = new HashMap<>();
         geoData.forEach(data -> {
             data.getSensorValues().forEach(value -> {
@@ -148,12 +146,6 @@ public class SensorLineChart {
                     .collect(Collectors.toList())));
             plotDataList.add(plotData);
         }
-        //var plotData = List.of(
-        //        new PlotData("Semantic 1", "Nm", List.of(1, 22, 33, 4, 54, 6, 7, 8, 9, 10)),
-        //        new PlotData("Semantic 2", "mm", List.of(10, 1, 3, 7, 6, 4, 4, 3, 2, 1)),
-        //        new PlotData("Semantic 3", "Sm", List.of(10, 93, 833, 73, 63, 53, 43, 33, 23, 13)),
-        //        new PlotData("Semantic 4", "SS", List.of(20, 40, 66, 88, 100, 120, 777, 80, 90, 1023))
-        //);
         return Map.of(file, plotDataList);
     }
 
@@ -217,15 +209,17 @@ public class SensorLineChart {
             // Creating chart
             LineChartWithMarkers<Number, Number> lineChart = new LineChartWithMarkers<>(xAxis, yAxis, 0, 2000, min, max);
             lineChart.zoomOut();
+
             charts.add(lineChart);
             lastLineChart = lineChart;
+
             lineChart.setLegendVisible(false); // Hide legend
             lineChart.setCreateSymbols(false); // Disable symbols
             if (i > 0) {
-                lineChart.setLegendVisible(false); // Hide legend for second chart
-                lineChart.setCreateSymbols(false); // Disable symbols
                 lineChart.setVerticalGridLinesVisible(false);
                 lineChart.setHorizontalGridLinesVisible(false);
+                lineChart.setHorizontalZeroLineVisible(false);
+                lineChart.setVerticalZeroLineVisible(false);
                 lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
             }
             XYChart.Series<Number, Number> series = new XYChart.Series<>();
@@ -330,38 +324,44 @@ public class SensorLineChart {
         zoomRect.setFill(null);
         zoomRect.setStroke(javafx.scene.paint.Color.BLUE);
 
-         // TODO: temporary
-         Button zoomOutButton = new Button("Zoom Out");
-         zoomOutButton.setOnAction(e -> {
-            charts.forEach(chart -> {
-                chart.zoomOut();
-            });
-         });
-
-        VBox root = new VBox(top, zoomOutButton, stackPane, zoomRect);
+        root = new VBox(top, stackPane, zoomRect);
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
         root.setPadding(new Insets(10));
         close.setOnMouseClicked(event -> {
-            if (root.getParent() instanceof VBox) {
-                // remove charts
-                VBox parent = (VBox) root.getParent();
-                parent.getChildren().remove(root);
+            close();
+        });
+        return root;
+    }
 
+    public void zoomOut() {
+        charts.forEach(LineChartWithMarkers::zoomOut);
+    }
+
+    public void close() {
+        close(true);
+    }
+
+    public void close(boolean removeFromModel) {
+        if (root.getParent() instanceof VBox) {
+            // remove charts
+            VBox parent = (VBox) root.getParent();
+            parent.getChildren().remove(root);
+
+            if (removeFromModel) {
                 // remove files and traces from map
                 model.getFileManager().getFiles().remove(file);
                 model.removeChart(file.getFile());
                 model.initField();
                 broadcast.notifyAll(new WhatChanged(Change.fileopened));
             }
-        });
-        return root;
+        }
     }
 
     private void setZoomHandlers(LineChartWithMarkers<Number, Number> chart, Set<LineChartWithMarkers<Number, Number>> charts) {
         
         chart.setOnMousePressed(event -> {
-            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+80);
+            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
             System.out.println(pointInScene);
             zoomRect.setX(pointInScene.getX());
             zoomRect.setY(pointInScene.getY());
@@ -371,7 +371,7 @@ public class SensorLineChart {
         });
 
         chart.setOnMouseDragged(event -> {
-            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+80);
+            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
             zoomRect.setWidth(Math.abs(pointInScene.getX() - zoomRect.getX()));
             zoomRect.setHeight(Math.abs(pointInScene.getY() - zoomRect.getY()));
             zoomRect.setX(Math.min(pointInScene.getX(), zoomRect.getX()));
@@ -393,14 +393,16 @@ public class SensorLineChart {
             
             for(LineChart<Number, Number> c: charts) {
                 NumberAxis xAxis = (NumberAxis) c.getXAxis();
-                Number xMin = xAxis.getValueForDisplay(startX - 10);
-                Number xMax = xAxis.getValueForDisplay(endX - 10);
+                Number xMin = xAxis.getValueForDisplay(startX - 25);
+                Number xMax = xAxis.getValueForDisplay(endX - 25);
+                xAxis.setAutoRanging(false);
                 xAxis.setLowerBound(xMin.doubleValue());
                 xAxis.setUpperBound(xMax.doubleValue());
 
                 NumberAxis yAxis = (NumberAxis) c.getYAxis();
-                Number yMax = yAxis.getValueForDisplay(startY - 80);
-                Number yMin = yAxis.getValueForDisplay(endY - 80);
+                Number yMax = yAxis.getValueForDisplay(startY - 60);
+                Number yMin = yAxis.getValueForDisplay(endY - 60);
+                yAxis.setAutoRanging(false);
                 yAxis.setLowerBound(yMin.doubleValue());
                 yAxis.setUpperBound(yMax.doubleValue());
             }
@@ -414,6 +416,7 @@ public class SensorLineChart {
     }
 
     private Data<Number, Number> currentVerticalMarker = null;
+    private VBox root;
 
     public void removeVerticalMarker() {
         if (lastLineChart != null && currentVerticalMarker != null) {
@@ -504,6 +507,8 @@ public class SensorLineChart {
         //lineChart.setCreateSymbols(series.getNode().isVisible() && isVisible);
         lineChart.setVerticalGridLinesVisible(isVisible);
         lineChart.setHorizontalGridLinesVisible(isVisible);
+        lineChart.setHorizontalZeroLineVisible(isVisible);
+        lineChart.setVerticalZeroLineVisible(isVisible);
     }
 
     // Apply color to data series

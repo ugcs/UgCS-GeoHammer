@@ -71,8 +71,13 @@ public class CsvParser extends Parser {
                 //format = new CultureInfo("en-US", false);
                 //format.NumberFormat.NumberDecimalSeparator = template.getFileFormat().getDecimalSeparator();
 
+                var lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
+
                 var traceCount = 0;
+
                 while ((line = reader.readLine()) != null) {
+
+                    lineNumber++;
 
                     if (line.startsWith(template.getFileFormat().getCommentPrefix()) || !StringUtils.hasText(line)) {
                         continue;
@@ -119,7 +124,7 @@ public class CsvParser extends Parser {
 
                     var date = parseDateTime(data);
 
-                    coordinates.add(new GeoData(sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
+                    coordinates.add(new GeoData(lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

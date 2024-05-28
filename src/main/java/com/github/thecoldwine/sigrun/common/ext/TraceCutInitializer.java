@@ -91,7 +91,7 @@ public class TraceCutInitializer {
 		return points;
 	}
 
-	private LatLon getMiddleOf(LatLon latLon, LatLon latLon2) {
+	public static LatLon getMiddleOf(LatLon latLon, LatLon latLon2) {
 		return new LatLon((latLon.getLatDgr() + latLon2.getLatDgr()) / 2, (latLon.getLonDgr() + latLon2.getLonDgr()) / 2);
 	}
 	

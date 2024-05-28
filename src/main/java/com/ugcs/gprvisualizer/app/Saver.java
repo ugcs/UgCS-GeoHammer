@@ -190,8 +190,12 @@ public class Saver implements ToolProducer {
 		try {
 			oldFile = sgyFile.getFile();
 			File nfolder = oldFile.getParentFile();
+
+
+			String suffix = oldFile.getName().substring(
+					oldFile.getName().lastIndexOf("."));
 			
-			File tmp = File.createTempFile("tmp", "sgy", nfolder);
+			File tmp = File.createTempFile("tmp", suffix, nfolder);
 			
 			sgyFile.save(tmp);
 			
@@ -206,8 +210,10 @@ public class Saver implements ToolProducer {
 				System.out.println("!!!   rename problem!");
 			}
 			
-			sgyFile.saveAux(oldFile);
-			new MarkupFile().save(sgyFile, oldFile);
+			if (suffix.contains("sgy")) {
+				sgyFile.saveAux(oldFile);
+				new MarkupFile().save(sgyFile, oldFile);
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -271,4 +271,8 @@ public abstract class Parser implements IGeoCoordinateParser {
         return template;
     }
 
+    public String getSkippedLines() {
+        return skippedLines.toString();
+    }
+
 }

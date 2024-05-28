@@ -53,7 +53,7 @@ public class PositionFile {
 			System.out.println("template: " + fileTemplate.getName());
 			CsvParser parser = new CSVParsersFactory().createCSVParser(fileTemplate);
 
-			sgyFile.addGeoData(csvFile);
+			sgyFile.setParser(parser);
 
 			try {				
 				List<GeoCoordinates> coordinates = parser.parse(logPath);
@@ -72,7 +72,7 @@ public class PositionFile {
 					} else {
 						sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
 						if(coord instanceof GeoData) {
-							sgyFile.getGeoData(csvFile).add((GeoData)coord);
+							sgyFile.getGeoData().add((GeoData)coord);
 						}
 					}
 				}	

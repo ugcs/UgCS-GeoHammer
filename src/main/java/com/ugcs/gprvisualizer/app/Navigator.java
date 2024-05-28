@@ -44,9 +44,9 @@ public class Navigator implements ToolProducer {
 		Button nextBtn = new Button("", 
 				ResourceImageHolder.getImageView("arrow_right_20.png"));
 		
-		backBtn.setTooltip(new Tooltip("Fit previous SGY file to window"));
-		fitBtn.setTooltip(new Tooltip("Fit current SGY file to window"));
-		nextBtn.setTooltip(new Tooltip("Fit next SGY file to window"));
+		backBtn.setTooltip(new Tooltip("Fit previous file to window"));
+		fitBtn.setTooltip(new Tooltip("Fit current file to window"));
+		nextBtn.setTooltip(new Tooltip("Fit next file to window"));
 		
 		fitBtn.setOnAction(e -> {
 			fitCurrent();
@@ -86,7 +86,7 @@ public class Navigator implements ToolProducer {
 
 	public void fitCurrent() {
 		SgyFile sgyFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
-		
+		model.chartsZoomOut();
 		fitFile(sgyFile);
 	}
 

@@ -63,5 +63,15 @@ public class LatLon {
 		
 		
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof LatLon) {
+			LatLon another = (LatLon) obj;
+			return getLatDgr() == another.getLatDgr() 
+					&& getLonDgr() == another.getLonDgr();
+		}
+		return false;
+	}
 	
 }

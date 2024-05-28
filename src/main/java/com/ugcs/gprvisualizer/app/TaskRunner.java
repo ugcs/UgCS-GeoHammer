@@ -50,8 +50,8 @@ public class TaskRunner implements ProgressListener {
 	public void start() {
 		showPopup();
 		
-		new Thread() {
-			public void run() {
+		//new Thread() {
+		//	public void run() {
 				try {
 					task.run(TaskRunner.this);
 
@@ -61,8 +61,8 @@ public class TaskRunner implements ProgressListener {
 				}
 
 				closePopup();
-			}
-		}.start();
+			//}
+		//}.start();
 	}
 	
 	protected void closePopup() {

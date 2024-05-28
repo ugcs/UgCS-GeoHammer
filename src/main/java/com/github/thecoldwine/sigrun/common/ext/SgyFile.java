@@ -16,6 +16,7 @@ import com.ugcs.gprvisualizer.app.commands.DistancesSmoother;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
@@ -48,6 +49,8 @@ public abstract class SgyFile {
 	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
 
 	private Map<File, List<GeoData>> geoData = new HashMap<>();
+
+	private CsvParser parser;
 
 	public abstract void open(File file) throws Exception;
 	
@@ -230,11 +233,21 @@ public abstract class SgyFile {
 		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
 	}
 
-    public List<GeoData> getGeoData(File csvFile) {
-		return geoData.get(csvFile);
+    public List<GeoData> getGeoData() {
+		return geoData.computeIfAbsent(file, k -> new ArrayList<>());
     }
 
-	public void addGeoData(File csvFile) {
-		geoData.put(csvFile, new ArrayList<>());
+    public void setParser(CsvParser parser) {
+		this.parser = parser;
+    }
+
+	public CsvParser getParser() {
+		return parser;
 	}
+
+	public boolean isCsvFile() {
+		String fileName = file.toPath().toString().toLowerCase();
+		return fileName.endsWith(".csv") || fileName.endsWith(".asc");
+	}
+
 }

@@ -81,7 +81,7 @@ public class Loader {
 				return;
 			}
 			
-			if (isPositionFile(files)) {
+			if (isCsvFile(files)) {
 				model.setLoading(true);
 				openCSVFiles(files);
 				return;
@@ -141,62 +141,63 @@ public class Loader {
 			model.updateAuxElements();
 		}
 
-		private void openCSVFiles(List<File> files) {
-			//if (model.getFileManager().getFiles().size() == 0) {
-				
-			//	MessageBoxHelper.showError(
-			//			"Can`t open position file", 
-			//			"Open GPR file at first");
-				
-			//	return;
-			//}
-			//if (model.getFileManager().getFiles().size() > 1) {
-			//	MessageBoxHelper.showError(
-			//			"Can`t open position file", 
-			//			"Only one GPR file must be opened");
-				
-			//	return;
-			//}
-			//if (files.size() > 1) {
-			//	MessageBoxHelper.showError(
-			//			"Can`t open position file", 
-			//			"Only one position file must be opened");
-				
-			//	return;
-			//}
-				
-			try {
-				//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
-				//	model.getFileManager().getFiles().get(0) : new GprFile();
-				for (File file: files) {
-					if (model.getChart(file).isEmpty()) {
-						SgyFile sgyFile = new GprFile();
-	
-						new PositionFile(model.getFileManager().getFileTemplates())
-							.load(sgyFile, file);
-						model.getFileManager().addFile(sgyFile);	
-	
-						//model.init();			
-			
-						//when open file by dnd (not after save)
-						model.initField();
-	
-						model.initChart(file, broadcast);
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				MessageBoxHelper.showError(
-						"Can`t open file", e.getMessage() != null ? e.getMessage() :
-						"Probably file has incorrect format");
-			}
-			
-			broadcast.notifyAll(new WhatChanged(Change.updateButtons));				
-			broadcast.notifyAll(new WhatChanged(Change.fileopened));
-			//broadcast.notifyAll(new WhatChanged(Change.justdraw));
-		}
-
     };
+
+	private void openCSVFiles(List<File> files) {
+		//if (model.getFileManager().getFiles().size() == 0) {
+			
+		//	MessageBoxHelper.showError(
+		//			"Can`t open position file", 
+		//			"Open GPR file at first");
+			
+		//	return;
+		//}
+		//if (model.getFileManager().getFiles().size() > 1) {
+		//	MessageBoxHelper.showError(
+		//			"Can`t open position file", 
+		//			"Only one GPR file must be opened");
+			
+		//	return;
+		//}
+		//if (files.size() > 1) {
+		//	MessageBoxHelper.showError(
+		//			"Can`t open position file", 
+		//			"Only one position file must be opened");
+			
+		//	return;
+		//}
+			
+		try {
+			//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
+			//	model.getFileManager().getFiles().get(0) : new GprFile();
+			for (File file: files) {
+				if (model.getChart(file).isEmpty()) {
+					SgyFile sgyFile = new GprFile();
+
+					new PositionFile(model.getFileManager().getFileTemplates())
+						.load(sgyFile, file);
+					model.getFileManager().addFile(sgyFile);	
+
+					//model.init();			
+		
+					//when open file by dnd (not after save)
+					model.initField();
+
+					model.initChart(file, broadcast);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			MessageBoxHelper.showError(
+					"Can`t open file", e.getMessage() != null ? e.getMessage() :
+					"Probably file has incorrect format");
+		}
+		
+		broadcast.notifyAll(new WhatChanged(Change.updateButtons));				
+		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+
+		//broadcast.notifyAll(new WhatChanged(Change.justdraw));
+	}
 
 	private void openKmlFile(List<File> files) {
 		if (model.getFileManager().getFiles().size() == 0) {
@@ -246,10 +247,7 @@ public class Loader {
 			throws Exception {
 		try {
 			model.setLoading(true);
-			
 			load2(files, listener);
-			
-			
 		} finally {
 			model.setLoading(false);
 		}
@@ -265,26 +263,28 @@ public class Loader {
 		
 		listener.progressMsg("load");
 
-		model.getFileManager().processList(files, listener);
-	
-		model.init();			
-		
-		//when open file by dnd (not after save)
-		model.initField();	
-		
-		
-		//
-		
-		SgyFile file = model.getFileManager().getFiles().get(0);
-		if (file.getSampleInterval() < 105) {
-			model.getSettings().hyperkfc = 25;
-			
+		if (isCsvFile(files)) {
+			model.closeAllCharts();
+			model.getFileManager().clear();
+			openCSVFiles(files);
 		} else {
-			double i = file.getSampleInterval() / 104.0;
-			
-			model.getSettings().hyperkfc = (int) (25.0 + i * 1.25);
-		}
+			model.getFileManager().processList(files, listener);
+			model.init();			
 		
+			//when open file by dnd (not after save)
+			model.initField();	
+		
+			//
+			SgyFile file = model.getFileManager().getFiles().get(0);
+			if (file.getSampleInterval() < 105) {
+				model.getSettings().hyperkfc = 25;
+				
+			} else {
+				double i = file.getSampleInterval() / 104.0;
+				
+				model.getSettings().hyperkfc = (int) (25.0 + i * 1.25);
+			}
+		}			
 	}
 
 	private boolean isConstPointsFile(final List<File> files) {
@@ -292,9 +292,10 @@ public class Loader {
 				&& files.get(0).getName().endsWith(".constPoints");
 	}
 	
-	private boolean isPositionFile(final List<File> files) {
+	private boolean isCsvFile(final List<File> files) {
 		return !files.isEmpty() 
-				&& files.get(0).getName().toLowerCase().endsWith(".csv");
+				&& (files.get(0).getName().toLowerCase().endsWith(".csv")
+				|| files.get(0).getName().toLowerCase().endsWith(".asc"));
 	}
 
 	private boolean isKmlFile(final List<File> files) {

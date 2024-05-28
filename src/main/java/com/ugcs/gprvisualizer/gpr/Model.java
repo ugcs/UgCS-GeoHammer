@@ -135,16 +135,12 @@ public class Model implements InitializingBean {
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {
-		
 		for (SgyFile fl : getFileManager().getFiles()) {
-			
 			Trace lastTrace = fl.getTraces().get(fl.getTraces().size() - 1);
 			if (i <= lastTrace.indexInSet) {
-				
 				return fl;
 			}		
 		}
-		
 		return null;
 	}
 
@@ -256,12 +252,6 @@ public class Model implements InitializingBean {
 			this.getField().setPathCenter(null);
 			this.getField().setSceneCenter(null);
 		}
-		
-		
-		
-		
-		
-		
 	}
 
 	public void init() {
@@ -354,6 +344,22 @@ public class Model implements InitializingBean {
 		csvFiles.put(csvFile, sensorLineChart);
 	}
 
+	public void updateChart(File csvFile, Broadcast broadcast) {
+		Optional<SensorLineChart> currentChart = getChart(csvFile);
+		if (currentChart.isEmpty()) {
+			return;
+		} 
+		
+		currentChart.get().close();
+
+		var sensorLineChart = new SensorLineChart(this, broadcast);
+		var plotData = sensorLineChart.generatePlotData(csvFile);
+		for (SgyFile file: plotData.keySet()) {
+			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(file, plotData.get(file)));
+		}
+		csvFiles.put(csvFile, sensorLineChart);
+	}
+
 	/**
 	 * Get chart for the given file if it exists in the model
 	 * @param file CSV file to get chart for
@@ -365,6 +371,19 @@ public class Model implements InitializingBean {
 		});
 		return Optional.ofNullable(csvFiles.get(csvFile));
     }
+
+	public void chartsZoomOut() {
+		csvFiles.forEach((file, chart) -> {
+			chart.zoomOut();
+		});
+	}
+
+	public void closeAllCharts() {
+		csvFiles.forEach((file, chart) -> {
+			chart.close(false);
+		});
+		csvFiles.clear();
+	}
 
 	public void removeChart(File csvFile) {
 		csvFiles.remove(csvFile);
@@ -396,4 +415,9 @@ public class Model implements InitializingBean {
         Random rand = new Random();
         return brightColors.get(rand.nextInt(brightColors.size()));
     }
+
+	public boolean isOnlyCsvLoaded() {
+		return fileManager.getFiles().stream()
+				.allMatch(SgyFile::isCsvFile);
+	}
 }

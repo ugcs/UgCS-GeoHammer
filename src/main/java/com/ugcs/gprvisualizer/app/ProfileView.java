@@ -293,7 +293,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		for (int i = f1; i <= f2; i++) {
 			SgyFile currentFile = model.getFileManager().getFiles().get(i);
 			
-			if (currentFile.getFile().getName().toLowerCase().endsWith(".csv")) {
+			if (currentFile.isCsvFile()) {
 				continue;
 			}
 
@@ -792,7 +792,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	};
 
 	protected void repaintEvent() {
-		if (!model.isLoading()) {
+		if (!model.isLoading() && !model.isOnlyCsvLoaded()) {
 			controller.render();
 		}
 	}

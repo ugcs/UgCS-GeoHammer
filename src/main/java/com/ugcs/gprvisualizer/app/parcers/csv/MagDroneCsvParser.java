@@ -63,8 +63,12 @@ public class MagDroneCsvParser extends CsvParser {
             LocalDateTime firstDateTime = null;
             int timestampOfTheFirstDatetime = 0;
 
+            int lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
+
             while ((line = reader.readLine()) != null) {
                 
+                lineNumber++;
+
                 if (line.startsWith(getTemplate().getFileFormat().getCommentPrefix())) {
                     continue;
                 }
@@ -89,7 +93,7 @@ public class MagDroneCsvParser extends CsvParser {
                 if (getTemplate().getDataMapping().getTime() == null) {
                     Instant instant = Instant.ofEpochMilli(timestamp);
                     LocalDateTime date = LocalDateTime.ofInstant(instant, ZoneId.of("UTC"));
-                    coordinates.add(new GeoData(sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
+                    coordinates.add(new GeoData(lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
                 
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");

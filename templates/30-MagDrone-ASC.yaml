@@ -26,6 +26,11 @@
       header: 'Altitude [m]'
     timestamp:
       header: 'Timestamp [ms]'
+    date:
+      # Source to parse date. Avaliable values are FileName and Column. Column is default value
+      source: FileName
+      regex: '\d{4}\d{2}\d{2}'
+      format: 'yyyyMMdd'
     data-values:
       - header: "Total field anomaly [nT]"
         semantic: "Total field anomaly [nT]"

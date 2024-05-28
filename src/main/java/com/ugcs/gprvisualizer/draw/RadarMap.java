@@ -311,7 +311,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
 			ScanProfile profile, List<Trace> traces) {
 
-		if (file.getFile().getName().toLowerCase().endsWith(".csv"))	{
+		if (file.isCsvFile())	{
 			return;
 		}	
 		
