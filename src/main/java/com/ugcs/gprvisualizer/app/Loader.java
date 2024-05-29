@@ -87,7 +87,6 @@ public class Loader {
 				return;
 			}
 
-
 			if (model.stopUnsaved()) {
         		return;
         	}

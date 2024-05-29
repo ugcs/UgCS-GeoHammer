@@ -1,7 +1,13 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -29,7 +35,10 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -114,14 +123,14 @@ public class SensorLineChart {
     private void createTempPlace(Model model, SgyFile file, int trace) {
 		ClickPlace fp = new ClickPlace(file, trace);
 		fp.setSelected(true);
-		model.setControls(Arrays.asList(fp));
+		model.setControls(List.of(fp));
 	}
 
     public Map<SgyFile, List<PlotData>> generatePlotData(File csvFile) {
         //TODO: design it better
         var file = model.getFileManager().getFiles().stream().filter(f -> {
             return f.getFile() != null && Objects.equals(csvFile.getName(), f.getFile().getName());
-        }).findAny().get();
+        }).findAny().get();   
         List<GeoData> geoData = file.getGeoData();
         Map<String, List<SensorValue>> sensorValues = new HashMap<>();
         geoData.forEach(data -> {
@@ -130,9 +139,7 @@ public class SensorLineChart {
                     if (v == null) {
                         v = new ArrayList<>();
                     }
-                    if (value.data() != null) {
-                        v.add(value);
-                    }
+                    v.add(value);
                     return v;
                 });
             });
@@ -157,15 +164,15 @@ public class SensorLineChart {
         if (sourceList.isEmpty()) return sourceList;
         scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
         return IntStream.range(0, sourceList.size() / scale) // Create an index stream from 0 to 999
-                .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale)) // Transform each index into a sublist of 100 elements
-                .map(sublist -> sublist.stream() // Create a stream from sublist
-                        .mapToDouble(n -> n.doubleValue())
-                        //.mapToInt(Integer::intValue) // Convert Integer to int
-                        .average() // Calculate average value
-                        .orElseThrow(() -> new IllegalArgumentException("Cannot calculate average of an empty list."))) // Handle empty sublist
-                //.map(d -> d.intValue())
+                .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale) // Transform each index into a sublist of 100 elements
+                    .stream()    
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Number::doubleValue)
+                    .average())
+                .map(optAvg -> optAvg.isPresent() ? optAvg.getAsDouble() : null) // Calculate average value
                 .collect(Collectors.toList()); // Collect results in a list
     }
+
     record PlotData(String semantic, String units, Color color, List<Number> data) {}
     record SeriesData(XYChart.Series<Number, Number> series, Color color) {
         @Override
@@ -472,13 +479,13 @@ public class SensorLineChart {
     }
 
     private int getFloorMin(List<Number> data) {
-        int min = data.stream().mapToInt(n -> n.intValue()).min().orElse(0);
+        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).min().orElse(0);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
         return baseMin == 1 ? 0 : Math.floorDiv(min, baseMin) * baseMin;
     }
 
     private int getCeilMax(List<Number> data) {
-        int max = data.stream().mapToInt(n -> n.intValue()).max().orElse(0);
+        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).max().orElse(0);
         int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
         return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
     }
