@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -725,8 +726,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	}
 
 	protected Point getLocalCoords(double x, double y) {
-		javafx.geometry.Point2D sceneCoords = new javafx.geometry.Point2D(x, y);
-		javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
+		Point2D sceneCoords = new Point2D(x, y);
+		Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
 		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x
 				- getField().getMainRect().width / 2),
 				(int) (imgCoord.getY()));
@@ -858,6 +859,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 
 	});
+
+	public ImageView getImageView() {
+		return imageView;
+	}
 
 	public class ContrastSlider extends BaseSlider {
 

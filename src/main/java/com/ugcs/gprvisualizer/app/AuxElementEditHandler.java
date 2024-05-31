@@ -83,7 +83,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		}
 		
 		if (!processed) {
-			processed = processPress1(profileView.model.getAuxElements(), 
+			processed = processPress1(model.getAuxElements(),
 					localPoint, profField);
 		}
 		
@@ -260,7 +260,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
 			
-			profileView.imageView.setCursor(Cursor.DEFAULT);
+			profileView.getImageView().setCursor(Cursor.DEFAULT);
 			
 			profileView.repaintEvent();
 			return true;
@@ -279,11 +279,11 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			return true;
 		} else {
 			if (aboveControl(localPoint, profField)) {
-				profileView.imageView.setCursor(Cursor.MOVE);
+				profileView.getImageView().setCursor(Cursor.MOVE);
 			} else if (aboveElement(localPoint, profField)) {
-				profileView.imageView.setCursor(Cursor.HAND);
+				profileView.getImageView().setCursor(Cursor.HAND);
 			} else {
-				profileView.imageView.setCursor(Cursor.DEFAULT);
+				profileView.getImageView().setCursor(Cursor.DEFAULT);
 			}			
 		}		
 		
