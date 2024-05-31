@@ -6,7 +6,7 @@
   file-type: CSV
   # Applies to the first 10 not empty lines of the file to detect template
   match-regex: >-
-    ^.*Elapsed,Date,Time,Pitch,Roll,.*Latitude,Longitude,Altitude,.*Velocity,RTK Status.*
+    ^.*Elapsed,Date,Time,Pitch,Roll,.*Latitude,Longitude,Altitude,.*Velocity.*RTK.*
   file-format:
   # Applies to CSV type. 'true' if file has headers, otherwise false
     has-header: true
@@ -46,9 +46,36 @@
       - header: "ECHO:True Depth"
         semantic: "ECHO:True Depth"
         units: "m"
+      - header: "ECHO:Depth Hi"
+        semantic: "ECHO:Depth Hi"
+        units: "m"
+      - header: "ECHO:True Depth Hi"
+        semantic: "ECHO:True Depth Hi"
+        units: "m"
+      - header: "ECHO:Depth Lo"
+        semantic: "ECHO:Depth Lo"
+        units: "m"
+      - header: "ECHO:True Depth Lo"
+        semantic: "ECHO:True Depth Lo"
+        units: "m"
       - header: "ECHO:Pitch"
         semantic: "ECHO:Pitch"
         units: "m"
       - header: "ECHO:Roll"
         semantic: "ECHO:Roll"
         units: "m"
+      - header: "MD:Value"
+        semantic: "MD:Value"
+        units: ""
+      - header: "GAS:Methane"
+        semantic: "GAS:Methane"
+        units: "ppm-m"
+      - header: "GAS:Status"
+        semantic: "GAS:Status"
+        units: ""
+      - header: "AIR:Speed"
+        semantic: "AIR:Speed"
+        units: "m/s"
+      - header: "AIR:Direction"
+        semantic: "AIR:Direction"
+        units: "degrees"
