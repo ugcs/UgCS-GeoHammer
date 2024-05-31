@@ -77,10 +77,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 	
 	@Autowired
-	protected Model model;
+	private Model model;
 	
 	@Autowired
-	protected Broadcast broadcast;
+	private Broadcast broadcast;
 
 	@Autowired
 	private AuxElementEditHandler auxEditHandler;
@@ -88,19 +88,21 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	@Autowired
 	private Navigator navigator;
 
+	@Autowired
+	private Saver saver;
 
-	protected PrismDrawer prismDrawer;	
+	private PrismDrawer prismDrawer;
 	
-	protected ImageView imageView = new ImageView();
-	protected VBox vbox = new VBox();
-	protected Pane topPane = new Pane();
+	private ImageView imageView = new ImageView();
+	private VBox vbox = new VBox();
+	private Pane topPane = new Pane();
 
-	protected BufferedImage img;
-	protected Image image;
-	protected int width;
-	protected int height;
+	private BufferedImage img;
+	private Image image;
+	private int width;
+	private int height;
 
-	protected double contrast = 50;
+	private double contrast = 50;
 
 	private ContrastSlider contrastSlider;
 	private HyperbolaSlider hyperbolaSlider;
@@ -179,7 +181,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 		prepareToolbar();
 
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView);
+		//VBox outerBox = new VBox(toolBar, vbox);
+
+		//vbox.getChildren().addAll(toolBar, profileScroll, imageView);
+		vbox.getChildren().addAll(profileScroll, imageView);
 
 		profileScroll.widthProperty().bind(topPane.widthProperty());
 
@@ -194,6 +199,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 	public void prepareToolbar() {
 		toolBar.setDisable(true);
+
+		toolBar.getItems().addAll(saver.getToolNodes());
+		toolBar.getItems().add(getSpacer());
 		
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
@@ -515,7 +523,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
         centerScrollPane.setContent(model.getChartsContainer());
 
-		center.getChildren().add(centerScrollPane);
+		center.getChildren().addAll(toolBar, centerScrollPane);
 
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
 			this.setSize((int) (topPane.getWidth()), (int) (400)); //topPane.getHeight()));

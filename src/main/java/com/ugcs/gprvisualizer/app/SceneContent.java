@@ -17,8 +17,8 @@ public class SceneContent extends BorderPane implements InitializingBean {
 	@Autowired
 	private StatusBar statusBar;
 	
-	@Autowired
-	private GeoHammerToolbar toolBar;
+//	@Autowired
+//	private GeoHammerToolbar toolBar;
 
 	@Autowired
 	private MapView mapView;
@@ -33,8 +33,7 @@ public class SceneContent extends BorderPane implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		this.setOnDragOver(loader.getDragHandler());
 		this.setOnDragDropped(loader.getDropHandler());
-
-		this.setTop(toolBar);
+		//this.setTop(toolBar);
 		this.setCenter(createSplitPane());
 		this.setBottom(statusBar);
 		

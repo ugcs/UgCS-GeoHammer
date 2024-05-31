@@ -24,10 +24,7 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, Ini
 	
 	@Autowired
 	private Broadcast broadcast;
-	
-	@Autowired
-	private Saver saver; 
-	
+
     @Autowired
 	private LevelFilter levelFilter;
 	
@@ -44,13 +41,13 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, Ini
 	public void afterPropertiesSet() throws Exception {
 		setDisable(true);
 		
-		getItems().addAll(saver.getToolNodes());
+		//getItems().addAll(saver.getToolNodes());
 		
-		getItems().add(getSpacer());
+		//getItems().add(getSpacer());
 		
-		getItems().addAll(levelFilter.getToolNodes());
+		//getItems().addAll(levelFilter.getToolNodes());
 		
-		getItems().add(getSpacer());
+		//getItems().add(getSpacer());
 
 		
 	}

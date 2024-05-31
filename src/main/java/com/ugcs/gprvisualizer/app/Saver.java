@@ -134,7 +134,7 @@ public class Saver implements ToolProducer {
 	@Override
 	public List<Node> getToolNodes() {
 		
-		return Arrays.asList(buttonSave, buttonSaveTo);
+		return List.of(buttonSave, buttonSaveTo);
 	}
 
 	
@@ -220,10 +220,5 @@ public class Saver implements ToolProducer {
 			oldFile = null;
 		}
 		return oldFile;
-	}
-
-	public void setLoader(Loader loader2) {
-		this.loader = loader2;
-		
 	}
 }

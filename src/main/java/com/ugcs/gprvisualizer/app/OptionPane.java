@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.function.Consumer;
 
+import com.ugcs.gprvisualizer.math.LevelFilter;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,9 @@ public class OptionPane extends VBox implements InitializingBean {
 	
 	@Autowired
 	private ExpHoughScan expHoughScan;
+
+	@Autowired
+	private LevelFilter levelFilter;
 	
 	private ToggleButton showGreenLineBtn = new ToggleButton("", 
 			ResourceImageHolder.getImageView("level.png"));
@@ -84,8 +88,10 @@ public class OptionPane extends VBox implements InitializingBean {
 		this.setPrefWidth(RIGHT_BOX_WIDTH);
 		this.setMinWidth(0);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
-		
-		this.getChildren().addAll(profileView.getRight());
+
+		//this.getChildren().addAll(levelFilter.getToolNodes());
+
+		//this.getChildren().addAll(profileView.getRight());
 		
         this.getChildren().addAll(prepareTabPane());
         
@@ -95,8 +101,10 @@ public class OptionPane extends VBox implements InitializingBean {
 		TabPane tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         
-        Tab tab1 = new Tab("Gain");
+        Tab tab1 = new Tab("GPR");
         Tab tab2 = new Tab("Experimental");
+		Tab tab3 = new Tab("CSV");
+
         tabPane.getTabs().add(tab1);
         
         if (!AppContext.PRODUCTION) {
@@ -106,13 +114,17 @@ public class OptionPane extends VBox implements InitializingBean {
         prepareTab1(tab1);
 
         prepareTab2(tab2);
+
+		tabPane.getTabs().add(tab3);
         
 		return tabPane;
 	}
 
 	private void prepareTab1(Tab tab1) {
 		VBox t1 = new VBox();
-        t1.getChildren().addAll(mapView.getRight());
+		t1.getChildren().addAll(levelFilter.getToolNodes());
+        t1.getChildren().addAll(profileView.getRight());
+		t1.getChildren().addAll(mapView.getRight());
         tab1.setContent(t1);
 	}
 

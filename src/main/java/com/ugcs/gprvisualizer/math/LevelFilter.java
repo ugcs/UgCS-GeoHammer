@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
 import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
+import javafx.scene.layout.VBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -160,11 +161,27 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 					
 					));
 		}
-		
-		return result;			
-			
-		
+
+		String cssLayout = "-fx-border-color: gray;\n"
+				+ "-fx-border-insets: 5;\n"
+				+ "-fx-border-width: 2;\n"
+				+ "-fx-border-style: solid;\n";
+
+		VBox vbox = new VBox();
+		vbox.setStyle(cssLayout);
+
+		vbox.setDisable(!isActive());
+		vbox.getChildren().addAll(result);
+
+		return List.of(vbox);
+
+		//return result;
 	}
+
+	public boolean isActive() {
+		return model.isActive();
+	}
+
 
 	protected void updateButtons() {
 		buttonLevelGround.setDisable(!isGroundProfileExists());
