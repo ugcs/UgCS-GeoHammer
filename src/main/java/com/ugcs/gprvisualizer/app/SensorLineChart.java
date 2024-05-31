@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -130,9 +131,10 @@ public class SensorLineChart {
         //TODO: design it better
         var file = model.getFileManager().getFiles().stream().filter(f -> {
             return f.getFile() != null && Objects.equals(csvFile.getName(), f.getFile().getName());
-        }).findAny().get();   
+        }).findAny().get();
         List<GeoData> geoData = file.getGeoData();
-        Map<String, List<SensorValue>> sensorValues = new HashMap<>();
+
+        Map<String, List<SensorValue>> sensorValues = new LinkedHashMap<>();
         geoData.forEach(data -> {
             data.getSensorValues().forEach(value -> {
                 sensorValues.compute(value.semantic() + "--" + (StringUtils.hasText(value.units()) ? value.units() : " "), (k, v) -> {
@@ -144,6 +146,7 @@ public class SensorLineChart {
                 });
             });
         });
+        
         var plotDataList = new ArrayList<PlotData>();
         for (String k: sensorValues.keySet()) {
             var pd = k.split("--");
@@ -162,6 +165,11 @@ public class SensorLineChart {
 
     private List<Number> calculateAverages(List<Number> sourceList) {
         if (sourceList.isEmpty()) return sourceList;
+        //check if sourceList have only nulls
+        if (sourceList.stream().allMatch(Objects::isNull)) {
+            return new ArrayList<>();
+        }
+
         scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
         return IntStream.range(0, sourceList.size() / scale) // Create an index stream from 0 to 999
                 .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale) // Transform each index into a sublist of 100 elements
@@ -560,8 +568,8 @@ public class SensorLineChart {
         public void zoomOut() {
             NumberAxis xAxis = (NumberAxis) getXAxis();
             NumberAxis yAxis = (NumberAxis) getYAxis();
-            xAxis.setAutoRanging(true);
-            yAxis.setAutoRanging(true);
+            //xAxis.setAutoRanging(true);
+            //yAxis.setAutoRanging(true);
             xAxis.setAutoRanging(false);
             yAxis.setAutoRanging(false);
             xAxis.setLowerBound(xLowerBound);

@@ -75,11 +75,13 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	public void clear() {
 		points = null;
 		active = null;
+		activePoints.clear();
 	}
 
 	public void init() {		
 		points = new TraceCutInitializer()
 			.initialRect(model, model.getFileManager().getTraces());
+		activePoints.clear();
 	}
 	
 	@Override
