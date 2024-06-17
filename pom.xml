@@ -362,7 +362,7 @@
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
+					<!--<plugin>
 					  <groupId>com.akathist.maven.plugins.launch4j</groupId>
 					  <artifactId>launch4j-maven-plugin</artifactId>
 					  <version>${launch4j-maven-plugin.version}</version>

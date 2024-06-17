@@ -178,9 +178,11 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 
 				int indexInFile = trace.getFile().getTraces().indexOf(trace);
 
-				Optional<SensorLineChart> chart = model.getChart((CsvFile) trace.getFile());
-				if (chart.isPresent()) {
-					chart.get().setSelectedTrace(indexInFile);
+				if (trace.getFile() instanceof CsvFile) {
+					Optional<SensorLineChart> chart = model.getChart((CsvFile) trace.getFile());
+					if (chart.isPresent()) {
+						chart.get().setSelectedTrace(indexInFile);
+					} 
 				} else {
 					model.getProfileField().setSelectedTrace(indexInFile);
 				}				

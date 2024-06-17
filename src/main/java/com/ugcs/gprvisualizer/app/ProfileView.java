@@ -105,9 +105,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	private double contrast = 50;
 
 	private ContrastSlider contrastSlider;
-	private HyperbolaSlider hyperbolaSlider;
-	private HyperGoodSizeSlider hyperGoodSizeSlider;
-	private MiddleAmplitudeSlider middleAmplitudeSlider;
+
+	//private HyperbolaSlider hyperbolaSlider;
+	//private HyperGoodSizeSlider hyperGoodSizeSlider;
+	//private MiddleAmplitudeSlider middleAmplitudeSlider;
 
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
@@ -157,14 +158,14 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		contrastSlider = new ContrastSlider(model.getSettings(), 
 				sliderListener);
 		
-		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
-				aspectSliderListener);
+		//hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
+		//		aspectSliderListener);
 		
-		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
-				sliderListener);
+		//hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
+		//		sliderListener);
 		
-		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
-				sliderListener);
+		//middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
+		//		sliderListener);
 	}
 	
 	@Override
@@ -577,7 +578,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 		
 		//Slider s;
-		List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
+		/*List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
 				hyperGoodSizeSlider.produce(), 
 				middleAmplitudeSlider.produce(),
 
@@ -625,7 +626,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 				);
 		
 		
-		return lst;
+		return lst;*/
+		return List.of();
 	}
 
 	protected void initImageView() {
@@ -858,7 +860,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 			toolBar.setDisable(!model.isActive());
 			
-			hyperbolaSlider.updateUI();
+			//hyperbolaSlider.updateUI();
 		}
 
 		repaintEvent();
@@ -931,7 +933,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-	public class HyperbolaSlider extends BaseSlider {
+	/*public class HyperbolaSlider extends BaseSlider {
 
 		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
@@ -950,9 +952,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hyperkfc = (int) slider.getValue();
 			return (int) settings.hyperkfc;
 		}
-	}
+	}*/
 
-	public class HyperGoodSizeSlider extends BaseSlider {
+	/*public class HyperGoodSizeSlider extends BaseSlider {
 
 		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
@@ -976,9 +978,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hyperSensitivity.setValue((int) slider.getValue());
 			return (int) settings.hyperSensitivity.intValue();
 		}
-	}
+	}*/
 
-	public class MiddleAmplitudeSlider extends BaseSlider {
+	/*public class MiddleAmplitudeSlider extends BaseSlider {
 
 		public MiddleAmplitudeSlider(Settings settings,
 				ChangeListener<Number> listenerExt) {
@@ -998,7 +1000,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hypermiddleamp = (int) slider.getValue();
 			return (int) settings.hypermiddleamp;
 		}
-	}
+	}*/
 
 	public void setSize(int width, int height) {
 

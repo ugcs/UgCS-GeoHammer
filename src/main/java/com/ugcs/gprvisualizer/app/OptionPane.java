@@ -121,20 +121,41 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         
         Tab tab2 = new Tab("Experimental");
-		Button button1 = new Button("Low-pass filter");
-		HBox button1Box = new HBox(button1);
-		
 
+
+		prepareCsvTab(csvTab);
+
+        //tabPane.getTabs().add(gprTab);
+        
+        if (!AppContext.PRODUCTION) {
+        	tabPane.getTabs().add(tab2);
+        }
+        
+        prepareGprTab(gprTab);
+
+        //prepareTab2(tab2);
+
+		//tabPane.getTabs().add(csvTab);        
+	}
+
+	private void prepareCsvTab(Tab tab) {
+		Button button1 = new Button("Low-pass filter");
 		Button button2 = new Button("GNSS time-lag");
 		Button button3 = new Button("Heading error compensation");
 		Button button4 = new Button("Gridding");
 		Button button5 = new Button("Quality control");
 
+		button1.setMaxWidth(Double.MAX_VALUE);
+		button2.setMaxWidth(Double.MAX_VALUE);
+		button3.setMaxWidth(Double.MAX_VALUE);
+		button4.setMaxWidth(Double.MAX_VALUE);
+		button5.setMaxWidth(Double.MAX_VALUE);
+
 		VBox t3 = new VBox();
-		t3.getChildren().add(button1Box);
 		t3.setPadding(new Insets(10,5,5,5));
 		t3.setSpacing(5);
 		t3.getChildren().addAll(List.of(button1, button2, button3, button4, button5));
+
 		button1.setOnAction(e -> {
 			showLowPassFilter();
 		});
@@ -155,19 +176,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			showQualityControl();
 		});
 
-		csvTab.setContent(t3);
-
-        //tabPane.getTabs().add(gprTab);
-        
-        if (!AppContext.PRODUCTION) {
-        	tabPane.getTabs().add(tab2);
-        }
-        
-        prepareTab1(gprTab);
-
-        prepareTab2(tab2);
-
-		//tabPane.getTabs().add(csvTab);        
+		tab.setContent(t3);
 	}
 
 	private void getNoImplementedDialog() {
@@ -199,7 +208,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		getNoImplementedDialog();
 	}
 
-	private void prepareTab1(Tab tab1) {
+	private void prepareGprTab(Tab tab1) {
 		VBox t1 = new VBox();
 		//contrast
 		t1.getChildren().addAll(profileView.getRight());
@@ -267,29 +276,30 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
         
 		ToggleButton shEdge;
 		t2.getChildren().addAll(
-				new HBox(
+				//new HBox(
 						
-					commandRegistry.createAsinqTaskButton(
-						expHoughScan, 
-						e -> radarMap.selectAlgMode()						
-					)
+				//	commandRegistry.createAsinqTaskButton(
+				//		expHoughScan, 
+				//		e -> radarMap.selectAlgMode()						
+				//	)
+
 				//	,
 				//	commandRegistry.createAsinqTaskButton(
 				//		houghScan,
 				//		e -> radarMap.selectAlgMode()
 				//	)
-				),
-				new HBox(
-						commandRegistry.createAsinqTaskButton(
-						new AlgorithmicScanFull(),
-						e -> radarMap.selectAlgMode()
-					),
-					commandRegistry.createAsinqTaskButton(
-							new PluginRunner(model),
-							e -> {}
-					)
-				),
+				//),
 
+				//new HBox(
+				//		commandRegistry.createAsinqTaskButton(
+				//		new AlgorithmicScanFull(),
+				//		e -> radarMap.selectAlgMode()
+				//	),
+				//	commandRegistry.createAsinqTaskButton(
+				//			new PluginRunner(model),
+				//			e -> {}
+				//	)
+				//),
 				
 				//commandRegistry.createAsinqTaskButton(
 				//		new AlgorithmicScan()),				

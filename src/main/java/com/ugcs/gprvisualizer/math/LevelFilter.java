@@ -8,6 +8,7 @@ import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
 import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -109,6 +110,14 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		hbox.setSpacing(5);
 		hbox.setStyle("-fx-padding: 5px;");
 		hbox.setDisable(!model.isActive());
+
+		buttons.forEach(b -> {
+			b.setMaxWidth(Double.MAX_VALUE);
+		});
+
+		HBox.setHgrow(buttons.get(0), Priority.ALWAYS);
+		HBox.setHgrow(buttons.get(1), Priority.ALWAYS);
+
 		hbox.getChildren().addAll(buttons);
 
 		return List.of(hbox);
@@ -170,6 +179,13 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		} else {
 			HBox hbox = new HBox();
 			hbox.setSpacing(5);
+
+			buttonRemoveLevel.setMaxWidth(Double.MAX_VALUE);
+			buttonLevelGround.setMaxWidth(Double.MAX_VALUE);
+
+			HBox.setHgrow(buttonRemoveLevel, Priority.ALWAYS);
+			HBox.setHgrow(buttonLevelGround, Priority.ALWAYS);
+
 			hbox.getChildren().addAll(buttonLevelGround, buttonRemoveLevel);					
 			result.addAll(List.of(
 					//buttonRemoveLevel, 

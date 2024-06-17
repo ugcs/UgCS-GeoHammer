@@ -86,13 +86,15 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		@Override
 		public void handle(ActionEvent event) {
 
-			setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
+			//setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
+			setActive(showMapButtonAmp.isSelected());
 			//vertBox.setDisable(!isActive());
 			
 			
-			if (showMapButtonAlg.isSelected()) {
+			/*if (showMapButtonAlg.isSelected()) {
 				model.getSettings().radarMapMode = RadarMapMode.SEARCH;
-			}
+			}*/
+
 			if (showMapButtonAmp.isSelected()) {
                 model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
                 model.getSettings().getHyperliveview().setFalse();
@@ -120,21 +122,20 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		showMapButtonAmp.setToggleGroup(group);
 	}
 	
-	private ToggleButton showMapButtonAlg = 
-			new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
+	//private ToggleButton showMapButtonAlg = 
+	//		new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
 	
-	{
+	/*{
 		showMapButtonAlg.setTooltip(new Tooltip("Toggle algorithm search layer"));
 		showMapButtonAlg.setSelected(false);
 		showMapButtonAlg.setOnAction(showMapListener);
 		showMapButtonAlg.setToggleGroup(group);
-	}
+	}*/
 	
-	public void selectAlgMode() {
-		showMapButtonAlg.setSelected(true);
-		
+	/*public void selectAlgMode() {
+		showMapButtonAlg.setSelected(true);		
 		showMapListener.handle(null);
-	}
+	}*/
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -372,9 +373,12 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	
 	@Override
 	public List<Node> getToolNodes() {
+		return List.of(
+			showMapButtonAmp
+		);
 
-		return Arrays.asList(
-			showMapButtonAmp, showMapButtonAlg);	
+		//return Arrays.asList(
+		//	showMapButtonAmp, showMapButtonAlg);	
 		
 	}
 
