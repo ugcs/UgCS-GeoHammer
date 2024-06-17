@@ -188,7 +188,7 @@ public class SensorLineChart {
                 .collect(Collectors.toList()); // Collect results in a list
     }
 
-    record PlotData(String semantic, String units, Color color, List<Number> data) {}
+    public record PlotData(String semantic, String units, Color color, List<Number> data) {}
     record SeriesData(XYChart.Series<Number, Number> series, Color color) {
         @Override
         public final String toString() {
