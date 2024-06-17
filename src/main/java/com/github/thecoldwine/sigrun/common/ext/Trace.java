@@ -27,8 +27,8 @@ public class Trace {
     public int maxindex;
     public int verticalOffset;
     
-    public int indexInFile;
-    public int indexInSet;
+    private int indexInFile;
+    private int indexInSet;
     
     public byte[] good;
     
@@ -45,9 +45,19 @@ public class Trace {
     
     public Set<Integer> max = new HashSet<>();
     
-    public Trace(byte[] binHeader, TraceHeader header, float[] originalvalues, LatLon latLon) {
+    private SgyFile file;
+    
+    public SgyFile getFile() {
+        return file;
+    }
+
+    public void setFile(SgyFile file) {
+        this.file = file;
+    }
+
+    public Trace(SgyFile file, byte[] binHeader, TraceHeader header, float[] originalvalues, LatLon latLon) {
         
-    	
+    	this.file = file;
         this.header = header;
         this.binHeader = binHeader; 
         this.originalvalues = originalvalues;
@@ -121,5 +131,21 @@ public class Trace {
 	public void setMarked(boolean marked) {
 		this.marked = marked;
 	}
+
+    public int getIndexInFile() {
+        return indexInFile;
+    }
+
+    public void setIndexInFile(int indexInFile) {
+        this.indexInFile = indexInFile;
+    }
+
+    public int getIndexInSet() {
+        return indexInSet;
+    }
+
+    public void setIndexInSet(int indexInSet) {
+        this.indexInSet = indexInSet;
+    }
 	
 }

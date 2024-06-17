@@ -17,7 +17,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.AsinqCommand;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
@@ -67,7 +66,7 @@ public class HoughScan implements AsinqCommand {
 		for (int pinTr = 0; pinTr < file.size(); pinTr++) {
 			//log progress
 			if (pinTr % 300 == 0) {
-				Sout.p("tr " + pinTr + " / " + file.size());
+				System.out.println("tr " + pinTr + " / " + file.size());
 			}
 			
 			Trace tr = file.getTraces().get(pinTr);
@@ -120,12 +119,12 @@ public class HoughScan implements AsinqCommand {
 				
 				
 				sb.append(i).append(":");
-				sb.append(Sout.d(goodSpecific));
-				sb.append(Sout.d(goodDiagCm));
+				sb.append(goodSpecific);
+				sb.append(goodDiagCm);
 				
 				sb.append(" | ");
 			}
-			Sout.p(sb.toString());
+			System.out.println(sb.toString());
 		}
 		
 		////
@@ -206,14 +205,14 @@ public class HoughScan implements AsinqCommand {
 	public void _logStoreResults(HoughScanPinncaleAnalizer analizer, int bestEdge, HoughArray store,
 			int bestDiscr, double bestVal) {
 		if (isPrintLog) {
-			Sout.p( "  e " + bestEdge  
+			System.out.println( "  e " + bestEdge  
 					+ "  i " + bestDiscr 
-					+ " val: " + Sout.d(store.getLocalMax())
-					+ " clr: " + Sout.d(store.getClearness())
-					+ " outs: " + Sout.d(analizer.fullnessAnalizer.getOutsideCount() / bestVal)
+					+ " val: " + store.getLocalMax()
+					+ " clr: " + store.getClearness()
+					+ " outs: " + analizer.fullnessAnalizer.getOutsideCount() / bestVal
 					
-					+ " ins: " + Sout.d(analizer.fullnessAnalizer.getInsideCount() / bestVal)
-					+ " brdweak: " + Sout.d(analizer.fullnessAnalizer.getBorderWeakness())
+					+ " ins: " + analizer.fullnessAnalizer.getInsideCount() / bestVal
+					+ " brdweak: " + analizer.fullnessAnalizer.getBorderWeakness()
 				);
 		}
 	}
@@ -387,7 +386,7 @@ public class HoughScan implements AsinqCommand {
 
 		for (int i = 1; i < stores.length; i++) {
 			HoughArray s = stores[i];
-			Sout.p("edge " + i + " = " + Arrays.toString(s.ar));
+			System.out.println("edge " + i + " = " + Arrays.toString(s.ar));
 		}
 	}
 
@@ -420,7 +419,7 @@ public class HoughScan implements AsinqCommand {
 					}
 				}
 				
-				Sout.p(String.format("edge %2d ind %3d - maxval %5.1f = ", 
+				System.out.println(String.format("edge %2d ind %3d - maxval %5.1f = ", 
 						i, index, stores[i].ar[index]) 
 						+ sb.toString());
 			}

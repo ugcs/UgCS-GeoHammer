@@ -2,9 +2,9 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,15 +25,15 @@ import javafx.scene.control.Tooltip;
 import javafx.stage.DirectoryChooser;
 
 @Component
-public class Saver implements ToolProducer {
+public class Saver implements ToolProducer, InitializingBean {
 
-	private Button buttonSave = new Button("", ResourceImageHolder.getImageView("save.png"));
-	private Button buttonSaveTo = new Button("", ResourceImageHolder.getImageView("save_go.png"));
+	private final Button buttonSave = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE, new Button());
+	private final Button buttonSaveTo = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE_TO, new Button());
+
 	{
 		buttonSave.setTooltip(new Tooltip("Save"));
 		buttonSaveTo.setTooltip(new Tooltip("Save to.."));
-	}
-	
+	}	
 	
 	@Autowired
 	private Model model;
@@ -49,57 +49,46 @@ public class Saver implements ToolProducer {
 	
 	private File folder;
 	
-	private ProgressTask saveTask = new ProgressTask() {
-		@Override
-		public void run(ProgressListener listener) {
-			listener.progressMsg("save now");
-			
-			
-			List<File> newfiles = saveTheSame();		
-			
-			
-			listener.progressMsg("load now");			
-			try {
-				loader.load(newfiles, listener);
-				
-			} catch (Exception e) {
-				MessageBoxHelper.showError("error reopening files", "");
-			}
-		    	
-	    	broadcast.notifyAll(new WhatChanged(Change.fileopened));
-		    	
-		    status.showProgressText("saved " 
-		    		+ model.getFileManager().getFiles().size() + " files");
+	private ProgressTask saveTask = listener -> {
+
+		listener.progressMsg("save now");
+		List<File> newfiles = saveTheSame();		
+		
+		listener.progressMsg("load now");			
+		try {
+			loader.load(newfiles, listener);			
+		} catch (Exception e) {
+			MessageBoxHelper.showError("error reopening files", "");
 		}
+	    	
+		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+	    	
+	    status.showProgressText("saved " 
+	    		+ model.getFileManager().getFilesCount() + " files");
 	};
 
-	private ProgressTask saveAsTask = new ProgressTask() {
-		@Override
-		public void run(ProgressListener listener) {
-			listener.progressMsg("save now");
+	private ProgressTask saveAsTask = listener -> {
 
-			List<File> newfiles = saveAs(folder);
-			
-			listener.progressMsg("load now");
-			
-			try {
-				loader.load(newfiles, listener);
-			} catch (Exception e) {
-				
-				e.printStackTrace();
-				MessageBoxHelper.showError("error reopening files", "");
-			}
-				
-				
-	    	
-			broadcast.notifyAll(new WhatChanged(Change.fileopened));
-	    	
-	    	status.showProgressText("saved " 
-	    			+ model.getFileManager().getFiles().size() + " files");
+		listener.progressMsg("save now");
+		List<File> newfiles = saveAs(folder);
+		
+		listener.progressMsg("load now");
+		try {
+			loader.load(newfiles, listener);
+		} catch (Exception e) {			
+			e.printStackTrace();
+			MessageBoxHelper.showError("error reopening files", "");
 		}
+				
+		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+		
+		status.showProgressText("saved " 
+				+ model.getFileManager().getFilesCount() + " files");
 	};
 
-	{
+	@Override
+	public void afterPropertiesSet() throws Exception {
+
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 		    @Override public void handle(ActionEvent e) {
 				new TaskRunner(status, saveTask).start();
@@ -111,13 +100,15 @@ public class Saver implements ToolProducer {
 		    @Override public void handle(ActionEvent e) {
 		    	
 		    	DirectoryChooser dirChooser = new DirectoryChooser(); 
-		    	if (!model.getFileManager().getFiles().isEmpty()) {
+				//TODO: тут надо будет получать выбранный файл
+		    	if (!model.getFileManager().getGprFiles().isEmpty()) {
 		    		
-		    		SgyFile firstFile = model.getFileManager().getFiles().get(0);
+		    		SgyFile firstFile = model.getFileManager().getGprFiles().get(0);
 		    		
 					dirChooser.setInitialDirectory(
 		    				firstFile.getFile().getParentFile());
 		    	}
+
 		    	folder = dirChooser.showDialog(AppContext.stage); 
 		    	  
                 if (folder != null) { 
@@ -132,17 +123,18 @@ public class Saver implements ToolProducer {
 	}
 	
 	@Override
-	public List<Node> getToolNodes() {
-		
-		return Arrays.asList(buttonSave, buttonSaveTo);
+	public List<Node> getToolNodes() {		
+		return List.of(buttonSave, buttonSaveTo);
 	}
-
-	
 	
 	private List<File> saveTheSame() {
 		List<File> newfiles = new ArrayList<>();
 		
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getGprFiles()) {
+			newfiles.add(save(file));
+		}
+
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
 			newfiles.add(save(file));
 		}
 		
@@ -152,7 +144,7 @@ public class Saver implements ToolProducer {
 	private List<File> saveAs(File folder) {
 		List<File> newfiles = new ArrayList<>();
 		
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			newfiles.add(save(file, folder));
 		}
 		
@@ -190,8 +182,12 @@ public class Saver implements ToolProducer {
 		try {
 			oldFile = sgyFile.getFile();
 			File nfolder = oldFile.getParentFile();
+
+
+			String suffix = oldFile.getName().substring(
+					oldFile.getName().lastIndexOf("."));
 			
-			File tmp = File.createTempFile("tmp", "sgy", nfolder);
+			File tmp = File.createTempFile("tmp", suffix, nfolder);
 			
 			sgyFile.save(tmp);
 			
@@ -206,8 +202,10 @@ public class Saver implements ToolProducer {
 				System.out.println("!!!   rename problem!");
 			}
 			
-			sgyFile.saveAux(oldFile);
-			new MarkupFile().save(sgyFile, oldFile);
+			if (suffix.contains("sgy")) {
+				sgyFile.saveAux(oldFile);
+				new MarkupFile().save(sgyFile, oldFile);
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -216,8 +214,4 @@ public class Saver implements ToolProducer {
 		return oldFile;
 	}
 
-	public void setLoader(Loader loader2) {
-		this.loader = loader2;
-		
-	}
 }

@@ -3,6 +3,9 @@ package com.ugcs.gprvisualizer.app.yaml;
 import com.ugcs.gprvisualizer.app.yaml.data.BaseData;
 import com.ugcs.gprvisualizer.app.yaml.data.Date;
 import com.ugcs.gprvisualizer.app.yaml.data.DateTime;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
+
+import java.util.List;
 
 public class DataMapping {
 
@@ -14,6 +17,26 @@ public class DataMapping {
     private DateTime dateTime;
     private BaseData timestamp;
     private BaseData traceNumber;
+
+    private List<SensorData> dataValues;
+
+    /**
+     * Gets the sensors of the template.
+     *
+     * @return the sensors of the template.
+     */
+    public List<SensorData> getDataValues() {
+        return dataValues;
+    }
+
+    /**
+     * Sets the sensors of the template.
+     *
+     * @param sensors the sensors of the template.
+     */
+    public void setDataValues(List<SensorData> dataValues) {
+        this.dataValues = dataValues;
+    }
 
     public BaseData getLatitude() {
         return latitude;

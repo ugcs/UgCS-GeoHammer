@@ -8,22 +8,16 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class TraceCutInitializer {
 
-	
-	
 	public List<LatLon> initialRect(Model model,  List<Trace> traces){
-		
-		
+				
 		//LatLon c = model.getField().getPathCenter();
-		MapField f = new MapField(model.getField());
+		MapField f = new MapField(model.getMapField());
 		f.setZoom(30);
-		
-		
 		
 		List<Point2D> scrpos = new ArrayList<>();
 		double sx = 0;
 		double sy = 0;
 		for (Trace trace : traces) {
-			
 			Point2D p = f.latLonToScreen(trace.getLatLon());
 			sx += p.getX();
 			sy += p.getY();
@@ -91,7 +85,7 @@ public class TraceCutInitializer {
 		return points;
 	}
 
-	private LatLon getMiddleOf(LatLon latLon, LatLon latLon2) {
+	public static LatLon getMiddleOf(LatLon latLon, LatLon latLon2) {
 		return new LatLon((latLon.getLatDgr() + latLon2.getLatDgr()) / 2, (latLon.getLonDgr() + latLon2.getLonDgr()) / 2);
 	}
 	

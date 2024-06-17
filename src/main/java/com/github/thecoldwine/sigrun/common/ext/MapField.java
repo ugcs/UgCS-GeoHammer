@@ -2,7 +2,6 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.geom.Point2D;
 
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.draw.GoogleMapProvider;
 import com.ugcs.gprvisualizer.draw.HereMapProvider;
 import com.ugcs.gprvisualizer.draw.MapProvider;
@@ -44,10 +43,8 @@ public class MapField {
 	}
 	
 	protected void tst2(Point2D p1) {
-
 		LatLon ll = screenTolatLon(p1);
 		Point2D p2 = latLonToScreen(ll);
-		
 	}
 	
 	protected void test() {

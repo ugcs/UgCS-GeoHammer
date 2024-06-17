@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -66,7 +67,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		Rectangle r = getRect(field);
 		if (r.contains(point)) {
 			
-			AppContext.model.getVField().setSelectedTrace(
+			AppContext.model.getProfileField().setSelectedTrace(
 					offset.localToGlobal(traceInFile));
 		
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
@@ -92,7 +93,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		if (isPointInside(localPoint, profField)) {
 				
-			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
+			AppContext.model.getMapField().setSceneCenter(getTrace().getLatLon());
 			
 			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
 			
@@ -192,8 +193,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 
-	public Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces().get(
+	private Trace getTrace() {
+		return AppContext.model.getGprTraces().get(
 				offset.localToGlobal(traceInFile));
 	}
 
@@ -231,6 +232,10 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	public boolean isFit(int begin, int end) {
 		
 		return traceInFile >= begin && traceInFile <= end;
+	}
+
+	public LatLon getLatLon() {
+		return getTrace().getLatLon();
 	}
 
 }

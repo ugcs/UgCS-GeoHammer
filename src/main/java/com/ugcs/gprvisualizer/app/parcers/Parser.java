@@ -78,6 +78,14 @@ public abstract class Parser implements IGeoCoordinateParser {
         return null;
     }
 
+    protected Number parseNumber(BaseData data, String column) {
+        if (StringUtils.hasText(column) && column.indexOf(getTemplate().getFileFormat().getDecimalSeparator()) > 0) {
+            return parseDouble(data, column);
+        } else {
+            return parseInt(data, column);
+        }
+    }
+
     protected Double parseDouble(BaseData data, String column) {
         Double result;
         if (StringUtils.hasText(data.getRegex())) {
@@ -204,7 +212,7 @@ public abstract class Parser implements IGeoCoordinateParser {
     private LocalDate parseDate(DateTime data, String column) {
         LocalDate result;
         if (StringUtils.hasText(data.getRegex())) {
-            var match = findByRegex(data.getRegex(), column);
+            var match = findByRegex(data.getRegex(), column.trim());
             if (match.matches()) {
                 try {
                     result = LocalDate.parse(match.group(), DateTimeFormatter.ofPattern(data.getFormat()));
@@ -216,7 +224,7 @@ public abstract class Parser implements IGeoCoordinateParser {
         }
 
         try {
-            result = LocalDate.parse(column, DateTimeFormatter.ofPattern(data.getFormat()));
+            result = LocalDate.parse(column.trim(), DateTimeFormatter.ofPattern(data.getFormat()));
             return result;
         } catch (DateTimeParseException e) {
             return null;
@@ -261,6 +269,10 @@ public abstract class Parser implements IGeoCoordinateParser {
 
     public Template getTemplate() {
         return template;
+    }
+
+    public String getSkippedLines() {
+        return skippedLines.toString();
     }
 
 }

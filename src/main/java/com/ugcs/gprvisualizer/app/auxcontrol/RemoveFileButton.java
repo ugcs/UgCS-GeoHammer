@@ -66,15 +66,13 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 			 
 			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {		
 				
-				int index = AppContext.model.getFileManager()
-						.getFiles().indexOf(sgyFile);
-				AppContext.model.getFileManager().getFiles().remove(index);
+				//int index = AppContext.model.getFileManager()
+				//		.getFiles().indexOf(sgyFile);
+				AppContext.model.getFileManager().removeFile(sgyFile); //.getFiles().remove(index);
 				
-			
-				AppContext.model.getFileManager().clearTraces();
 				AppContext.model.init();
-				AppContext.model.getVField().clear();
-				
+				AppContext.model.initField();
+				AppContext.model.getProfileField().clear();	
 				
 				AppContext.notifyAll(new WhatChanged(Change.fileopened));
 			}
@@ -148,10 +146,10 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		return null;
 	}
 
-	private Trace getTrace() {
+	/*private Trace getTrace() {
 		return AppContext.model.getFileManager().getTraces()
 				.get(offset.localToGlobal(traceInFile));
-	}
+	}*/
 
 	@Override
 	public boolean isPointInside(Point localPoint, ProfileField profField) {

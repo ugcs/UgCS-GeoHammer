@@ -16,7 +16,8 @@ import com.ugcs.gprvisualizer.math.LevelFilter;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.Region;
 
-@Component
+//@Component
+//TODO: remove this class
 public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, InitializingBean {
 
 	@Autowired
@@ -24,10 +25,7 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, Ini
 	
 	@Autowired
 	private Broadcast broadcast;
-	
-	@Autowired
-	private Saver saver; 
-	
+
     @Autowired
 	private LevelFilter levelFilter;
 	
@@ -44,13 +42,13 @@ public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, Ini
 	public void afterPropertiesSet() throws Exception {
 		setDisable(true);
 		
-		getItems().addAll(saver.getToolNodes());
+		//getItems().addAll(saver.getToolNodes());
 		
-		getItems().add(getSpacer());
+		//getItems().add(getSpacer());
 		
-		getItems().addAll(levelFilter.getToolNodes());
+		//getItems().addAll(levelFilter.getToolNodes());
 		
-		getItems().add(getSpacer());
+		//getItems().add(getSpacer());
 
 		
 	}

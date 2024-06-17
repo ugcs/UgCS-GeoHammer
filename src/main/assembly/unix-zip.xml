@@ -14,9 +14,9 @@
 			<outputDirectory>/jre21</outputDirectory>
 		</fileSet>
         <fileSet>
-      		<directory>${project.basedir}/mapping</directory>
+      		<directory>${project.basedir}/templates</directory>
             <useDefaultExcludes>false</useDefaultExcludes>
-            <outputDirectory>/mapping</outputDirectory>
+            <outputDirectory>/templates</outputDirectory>
         </fileSet>    
 	</fileSets>
     <files>

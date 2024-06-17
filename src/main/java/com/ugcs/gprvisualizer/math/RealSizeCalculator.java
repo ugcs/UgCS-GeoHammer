@@ -1,6 +1,5 @@
 package com.ugcs.gprvisualizer.math;
 
-import com.ugcs.gprvisualizer.app.Sout;
 
 public 	class RealSizeCalculator {
 	public boolean print;

@@ -28,7 +28,7 @@ public class AvgShiftFilter {
 	}
 	
 	public void execute2() {
-		for (SgyFile sf : model.getFileManager().getFiles()) {
+		for (SgyFile sf : model.getFileManager().getGprFiles()) {
 			execute2(sf.getTraces());
 			
 		}
@@ -59,7 +59,7 @@ public class AvgShiftFilter {
 	
 	public void execute() {
 		
-		for (SgyFile sf : model.getFileManager().getFiles()) {
+		for (SgyFile sf : model.getFileManager().getGprFiles()) {
 			execute(sf.getTraces());			
 		}		
 	}

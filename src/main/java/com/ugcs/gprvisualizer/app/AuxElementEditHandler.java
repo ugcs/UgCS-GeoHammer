@@ -12,10 +12,8 @@ import org.springframework.stereotype.Component;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.Hyperbola;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
@@ -47,23 +45,16 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
-	private Button addBtn = new Button("", 
-			ResourceImageHolder.getImageView("addRect.png"));
+	//private Button addSurfaceBtn = new Button("", ResourceImageHolder.getImageView("addSurf.png"));
 	
-	private Button addHypBtn = new Button("", 
-			ResourceImageHolder.getImageView("addHyp.png"));
+	private final Button addFoundBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ADD_MARK, new Button());
+	//new Button("",  ResourceImageHolder.getImageView("addFlag.png"));
 	
-	private Button addSurfaceBtn = new Button("", 
-			ResourceImageHolder.getImageView("addSurf.png"));
+	private final Button delBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE, new Button());
+	//new Button("", ResourceImageHolder.getImageView("delete-20.png"));
 	
-	private Button addFoundBtn = new Button("", 
-			ResourceImageHolder.getImageView("addFlag.png"));
-	
-	private Button delBtn = new Button("", 
-			ResourceImageHolder.getImageView("delete-20.png"));
-	
-	private Button clearBtn = new Button("", 
-			ResourceImageHolder.getImageView("delete-all-20.png"));
+	private final Button clearBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE_ALL, new Button());
+	//new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
 	
 	public AuxElementEditHandler() {
 		
@@ -91,7 +82,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		}
 		
 		if (!processed) {
-			processed = processPress1(profileView.model.getAuxElements(), 
+			processed = processPress1(model.getAuxElements(),
 					localPoint, profField);
 		}
 		
@@ -110,14 +101,15 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 	
 	public List<Node> getRightPanelTools() {
-		return Arrays.asList(addBtn, addHypBtn, addFoundBtn, 
-				getSpacer(), delBtn, clearBtn);	
+		return Arrays.asList(addFoundBtn, 
+				//getSpacer(), 
+				delBtn, clearBtn);	
 	}
 	
 	private Region getSpacer() {
-		Region r3 = new Region();
-		r3.setPrefWidth(7);
-		return r3;
+		Region region = new Region();
+		region.setPrefWidth(7);
+		return region;
 	}
 	
 	public Node getRight() {
@@ -125,10 +117,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 	
 	protected void initButtons() {
-		
-		addBtn.setTooltip(new Tooltip("Create rectangle with mask"));
-		addHypBtn.setTooltip(new Tooltip("Create parametric hyperbola"));
-		addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
+		//addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
 		addFoundBtn.setTooltip(new Tooltip("Create mark"));
 		delBtn.setTooltip(new Tooltip("Delete selected element"));
 		clearBtn.setTooltip(new Tooltip("Delete all additional elements"));
@@ -150,7 +139,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		delBtn.setOnAction(e -> {		
 			
 			if (getSelected() != null) {
-				for (SgyFile sgyFile : model.getFileManager().getFiles()) {
+				for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
 					if (sgyFile.getAuxElements().contains(getSelected())) {
 						sgyFile.getAuxElements().remove(getSelected());
 						sgyFile.setUnsaved(true);
@@ -168,46 +157,6 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			
 			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
-		
-		addBtn.setOnAction(e -> {				
-				SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-				
-				if (sf == null) {
-					return;
-				}
-				
-				AuxRect rect = new AuxRect(field.getSelectedTrace(), 
-						field.getStartSample() + 30, sf.getOffset());
-				
-				sf.getAuxElements().add(rect);
-				sf.setUnsaved(true);
-				model.updateAuxElements();
-				
-				selectControl(rect);
-				
-				profileView.repaintEvent();
-			}
-		);
-		
-		addHypBtn.setOnAction(e -> {				
-			SgyFile sf = model.getSgyFileByTrace(field.getSelectedTrace());
-			
-			if (sf == null) {
-				return;
-			}
-
-			Hyperbola rect = new Hyperbola(field.getSelectedTrace(), 
-					field.getStartSample() + 30, sf.getOffset());
-			sf.getAuxElements().add(rect);
-			sf.setUnsaved(true);
-			
-			model.updateAuxElements();			
-			
-			selectControl(rect);
-			
-			profileView.repaintEvent();
-		}
-	);
 		
 		addFoundBtn.setOnAction(e -> {				
 			
@@ -245,9 +194,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 
 	private void clearAuxElements() {
-		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
-			sgyFile.getAuxElements().clear();
-			
+		for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
+			sgyFile.getAuxElements().clear();			
 			sgyFile.setUnsaved(true);
 		}				
 			
@@ -311,7 +259,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
 			
-			profileView.imageView.setCursor(Cursor.DEFAULT);
+			profileView.getImageView().setCursor(Cursor.DEFAULT);
 			
 			profileView.repaintEvent();
 			return true;
@@ -330,11 +278,11 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			return true;
 		} else {
 			if (aboveControl(localPoint, profField)) {
-				profileView.imageView.setCursor(Cursor.MOVE);
+				profileView.getImageView().setCursor(Cursor.MOVE);
 			} else if (aboveElement(localPoint, profField)) {
-				profileView.imageView.setCursor(Cursor.HAND);
+				profileView.getImageView().setCursor(Cursor.HAND);
 			} else {
-				profileView.imageView.setCursor(Cursor.DEFAULT);
+				profileView.getImageView().setCursor(Cursor.DEFAULT);
 			}			
 		}		
 		

@@ -5,13 +5,19 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.app.yaml.Template;
+import com.ugcs.gprvisualizer.app.yaml.data.Date.Source;
 import com.ugcs.gprvisualizer.app.yaml.data.DateTime;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 
 public class MagDroneCsvParser extends CsvParser {
 
@@ -34,8 +40,8 @@ public class MagDroneCsvParser extends CsvParser {
             throw new FileNotFoundException("File " + logPath + " does not exist");
         }
 
-        if (template.getDataMapping().getDate().getSource() == com.ugcs.gprvisualizer.app.yaml.data.Date.Source.FileName) {
-            throw new FileNotFoundException("File " + logPath + " does not exist");
+        if (template.getDataMapping().getDate() != null && Source.FileName.equals(template.getDataMapping().getDate().getSource())) {
+            parseDateFromNameOfFile(new File(logPath).getName());
         }
 
         List<GeoCoordinates> coordinates = new ArrayList<>();
@@ -56,9 +62,17 @@ public class MagDroneCsvParser extends CsvParser {
             int traceCount = 0;
             LocalDateTime firstDateTime = null;
             int timestampOfTheFirstDatetime = 0;
+
+            int lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
+
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(getTemplate().getFileFormat().getCommentPrefix()))
+                
+                lineNumber++;
+
+                if (line.startsWith(getTemplate().getFileFormat().getCommentPrefix())) {
                     continue;
+                }
+
                 String[] data = line.split(getTemplate().getFileFormat().getSeparator());
                 double lat = parseDouble(getTemplate().getDataMapping().getLatitude(), data[getTemplate().getDataMapping().getLatitude().getIndex()]);
                 double lon = parseDouble(getTemplate().getDataMapping().getLongitude(), data[getTemplate().getDataMapping().getLongitude().getIndex()]);
@@ -67,12 +81,28 @@ public class MagDroneCsvParser extends CsvParser {
                 int timestamp = parseInt(getTemplate().getDataMapping().getTimestamp(), data[getTemplate().getDataMapping().getTimestamp().getIndex()]);
                 int traceNumber = getTemplate().getDataMapping().getTraceNumber() != null && getTemplate().getDataMapping().getTraceNumber().getIndex() != -1 ?
                         parseInt(getTemplate().getDataMapping().getTraceNumber(), data[getTemplate().getDataMapping().getTraceNumber().getIndex()]) : traceCount;
+            
+                List<SensorValue> sensorValues = new ArrayList<>();
+                if (template.getDataMapping().getDataValues() != null) {
+                    for (SensorData sensor : template.getDataMapping().getDataValues()) {
+                        String sensorData = (sensor.getIndex() != null && sensor.getIndex() != -1 && sensor.getIndex() < data.length) ? data[sensor.getIndex()] : null;
+                        sensorValues.add(new SensorValue(sensor.getSemantic(), sensor.getUnits(), parseNumber(sensor, sensorData)));
+                    }    
+                }
+
+                if (getTemplate().getDataMapping().getTime() == null) {
+                    Instant instant = Instant.ofEpochMilli(timestamp);
+                    LocalDateTime date = LocalDateTime.ofInstant(instant, ZoneId.of("UTC"));
+                    coordinates.add(new GeoData(lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
+                }
+                
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
                 boolean isRowHasTime = false;
-                
                 try {
-                    sdf.parse(data[getTemplate().getDataMapping().getTime().getIndex()]);
-                    isRowHasTime = true;
+                    if (getTemplate().getDataMapping().getTime() != null && getTemplate().getDataMapping().getTime().getIndex() != -1) {
+                        sdf.parse(data[getTemplate().getDataMapping().getTime().getIndex()]);
+                        isRowHasTime = true;
+                    }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -81,8 +111,9 @@ public class MagDroneCsvParser extends CsvParser {
                     if (firstDateTime != null) {
                         LocalDateTime date = firstDateTime.plus(timestamp - timestampOfTheFirstDatetime, ChronoUnit.MILLIS);
                         coordinates.add(new GeoCoordinates(date, lat, lon, alt, traceNumber));
-                    } else
+                    } else {
                         continue;
+                    }
                 } else {
                     LocalDateTime date = parseDateTime(data);
                     if (firstDateTime == null) {
@@ -91,6 +122,7 @@ public class MagDroneCsvParser extends CsvParser {
                     }
                     coordinates.add(new GeoCoordinates(date, lat, lon, alt, traceNumber));
                 }
+
                 traceCount++;
             }
         } catch (IOException e) {

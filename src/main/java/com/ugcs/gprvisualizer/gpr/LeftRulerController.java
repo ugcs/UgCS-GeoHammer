@@ -73,7 +73,7 @@ public class LeftRulerController {
 		@Override
 		public Pair<Integer, Integer> convert(int s, int f) {
 			
-			SgyFile fl = model.getFileManager().getFiles().get(0);
+			SgyFile fl = model.getFileManager().getGprFiles().get(0);
 			
 			
 			return Pair.of(
@@ -82,7 +82,7 @@ public class LeftRulerController {
 		}
 		
 		public int back(int unt) {
-			SgyFile fl = model.getFileManager().getFiles().get(0);
+			SgyFile fl = model.getFileManager().getGprFiles().get(0);
 			return unt * 1000 / fl.getSampleInterval();
 		}
 		
@@ -119,13 +119,11 @@ public class LeftRulerController {
 			return false;
 		}
 
-		@Override
-		public Rectangle getRect(ProfileField profField) {
-
+		//@Override
+		private Rectangle getRect(ProfileField profField) {
 			Rectangle  r = profField.getInfoRect();
 			return new Rectangle(profField.visibleStart + r.x + 5, r.y + r.height - 25, 
 					r.width - 10, 20);
-
 		}
 
 		@Override

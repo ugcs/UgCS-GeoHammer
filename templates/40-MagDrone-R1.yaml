@@ -1,0 +1,54 @@
+  # Displayable name of Template
+  name: "MagDrone R1"
+  # Code of template
+  code: "magdrone-r1"
+  # Type of template for parsing data. Options are CSV and ColumnsFixedWidth
+  file-type: CSV
+  # Applies to the first 10 not empty lines of the file to detect template
+  match-regex: >-
+    ^.*Date,Time,Latitude,Longitude,Heading,Next WP,Altitude,Altitude AGL,TMI,Bx,By,Bz.*
+  file-format:
+  # Applies to CSV type. 'true' if the file has headers, otherwise false
+    has-header: true
+    # The symbol which uses to make a comment
+    comment-prefix: '%'
+    # The symbol used to separate the integer part from the fractional part of a number written in decimal form. Options are ',' and '.'
+    decimal-separator: '.'
+    # Applies to CSV type. The symbol to separate values from line in CSV file;
+    separator: ','
+  # Mapping data from source file to data. Requierd fields (latitude, longitude, time and date or date-time)
+  data-mapping:
+    latitude:
+      header: 'Latitude'
+    longitude:
+      header: 'Longitude'
+    altitude:
+      header: 'Altitude AGL'
+    time:
+      header: 'Time'
+      format: 'H:mm:ss.fff' # Format to parse time from column;
+    date:
+      header: 'Date'
+      format: 'yyyy/MM/dd' # Format to parse date from column;
+    data-values:
+      - header: "TMI"
+        semantic: "Total field anomaly [nT]"
+        units: "nT"
+      - header: "Bx"
+        semantic: "Bx [nT]"
+        units: "nT"
+      - header: "By"
+        semantic: "By [nT]"
+        units: "nT"
+      - header: "Bz"
+        semantic: "Bz [nT]"
+        units: "nT"
+      - header: "Next WP"
+        semantic: "Line"
+        units: ""
+      - header: "Altitude AGL"
+        semantic: "Altitude AGL"
+        units: "m"
+      - header: "Altitude"
+        semantic: "Altitude"
+        units: "m"

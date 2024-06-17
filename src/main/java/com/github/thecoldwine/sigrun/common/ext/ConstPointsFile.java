@@ -55,7 +55,7 @@ public class ConstPointsFile {
 			}
 			
 			if(nearestTraceDst < 1.2) {
-				fl.getAuxElements().add(new ConstPlace(nearestTrace.indexInFile, ll, fl.getOffset()));
+				fl.getAuxElements().add(new ConstPlace(nearestTrace.getIndexInFile(), ll, fl.getOffset()));
 			}
 			
 		}

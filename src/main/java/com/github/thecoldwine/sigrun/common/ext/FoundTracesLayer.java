@@ -77,7 +77,7 @@ public class FoundTracesLayer implements Layer {
 		for(BaseObject bo : model.getAuxElements()) {
 			
 			
-			if(bo.mousePressHandle(point, model.getField())) {
+			if(bo.mousePressHandle(point, model.getMapField())) {
 				
 				return true;
 			}			

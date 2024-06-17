@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.draw;
 
-import com.ugcs.gprvisualizer.app.Sout;
-
 public class WhatChanged {
 
 	private Change change;
@@ -58,4 +56,8 @@ public class WhatChanged {
 	public boolean isAuxOnMapSelected() {
 		return change == Change.auxOnMapSelected;
 	}
+
+    public boolean isFileSelected() {
+		return change == Change.fileSelected;
+    }
 }

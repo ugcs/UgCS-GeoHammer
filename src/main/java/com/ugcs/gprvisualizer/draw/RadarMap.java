@@ -20,7 +20,6 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.Broadcast;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
@@ -53,6 +52,13 @@ import javafx.scene.layout.VBox;
 public class RadarMap extends BaseLayer implements InitializingBean {
 
 	private static final double MIN_CIRCLE_THRESHOLD = 2.0;
+
+	private static final String BORDER_STYLING = """
+		-fx-border-color: gray; 
+		-fx-border-insets: 5;
+		-fx-border-width: 1;
+		-fx-border-style: solid;
+		""";
 	
 	@Autowired
 	private Model model;
@@ -68,7 +74,6 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	private BaseSlider thresholdSlider;
 	private BaseSlider radiusSlider;
 	private BaseCheckBox autoGainCheckbox;
-	private VBox vertBox = new VBox();
 	
 	private ArrayBuilder scaleArrayBuilder;
 	private ArrayBuilder autoArrayBuilder;
@@ -81,13 +86,15 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		@Override
 		public void handle(ActionEvent event) {
 
-			setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
-			vertBox.setDisable(!isActive());
+			//setActive(showMapButtonAlg.isSelected() || showMapButtonAmp.isSelected());
+			setActive(showMapButtonAmp.isSelected());
+			//vertBox.setDisable(!isActive());
 			
 			
-			if (showMapButtonAlg.isSelected()) {
+			/*if (showMapButtonAlg.isSelected()) {
 				model.getSettings().radarMapMode = RadarMapMode.SEARCH;
-			}
+			}*/
+
 			if (showMapButtonAmp.isSelected()) {
                 model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
                 model.getSettings().getHyperliveview().setFalse();
@@ -105,8 +112,8 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	};
 	
 	ToggleGroup group = new ToggleGroup();
-	private ToggleButton showMapButtonAmp = 
-			new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
+	private ToggleButton showMapButtonAmp = ResourceImageHolder.setButtonImage(ResourceImageHolder.LIGHT, new ToggleButton());
+			//new ToggleButton("", ResourceImageHolder.getImageView("light-20.png"));
 	
 	{
 		showMapButtonAmp.setTooltip(new Tooltip("Toggle amplitude map layer"));
@@ -115,21 +122,20 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		showMapButtonAmp.setToggleGroup(group);
 	}
 	
-	private ToggleButton showMapButtonAlg = 
-			new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
+	//private ToggleButton showMapButtonAlg = 
+	//		new ToggleButton("", ResourceImageHolder.getImageView("floodlight-20.png"));
 	
-	{
+	/*{
 		showMapButtonAlg.setTooltip(new Tooltip("Toggle algorithm search layer"));
 		showMapButtonAlg.setSelected(false);
 		showMapButtonAlg.setOnAction(showMapListener);
 		showMapButtonAlg.setToggleGroup(group);
-	}
+	}*/
 	
-	public void selectAlgMode() {
-		showMapButtonAlg.setSelected(true);
-		
+	/*public void selectAlgMode() {
+		showMapButtonAlg.setSelected(true);		
 		showMapListener.handle(null);
-	}
+	}*/
 	
 	private ChangeListener<Number> sliderListener = new ChangeListener<Number>() {
 		@Override
@@ -200,14 +206,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		radiusSlider = new RadiusSlider(settings, sliderListener);
 		
 		autoGainCheckbox = new AutoGainCheckbox(settings, autoGainListener);
-		
-		String cssLayout = "-fx-border-color: gray;\n" 
-				+ "-fx-border-insets: 5;\n"
-                + "-fx-border-width: 2;\n"
-                + "-fx-border-style: solid;\n";
- 
-		vertBox.setStyle(cssLayout);		
-		
+				
 		initQ();
 	}
 	
@@ -269,11 +268,8 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 
 		int[] palette;
 		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
-				
-			
-			
 			// fill file.amplScan
-			commandRegistry.runForFiles(new RadarMapScan(getArrayBuilder()));
+			commandRegistry.runForGprFiles(new RadarMapScan(getArrayBuilder()));
 			
 			palette = DblArray.paletteAmp;
 		} else {
@@ -287,7 +283,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	}
 
 	public void drawCircles(MapField field, DblArray da) {
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			
 			ScanProfile profile = getFileScanProfile(file);
 			
@@ -355,11 +351,12 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	}
 	
 	public List<Node> getControlNodes() {
-		
-		vertBox.getChildren().clear();
-		
+		VBox vertBox = new VBox();
+
+		vertBox.setStyle(BORDER_STYLING);
+				
 		vertBox.getChildren().addAll(
-			Arrays.asList(
+			List.of(
 				//depthSlider.produce(),
 				//depthWindowSlider.produce(),
 				autoGainCheckbox.produce(),
@@ -369,14 +366,19 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 				radiusSlider.produce()
 			));
 
-		return Arrays.asList(vertBox);
+		//vertBox.setDisable(isActive());	
+
+		return List.of(vertBox);
 	}
 	
 	@Override
 	public List<Node> getToolNodes() {
+		return List.of(
+			showMapButtonAmp
+		);
 
-		return Arrays.asList(
-			showMapButtonAmp, showMapButtonAlg);	
+		//return Arrays.asList(
+		//	showMapButtonAmp, showMapButtonAlg);	
 		
 	}
 

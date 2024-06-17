@@ -49,7 +49,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		
 		if (isPointInside(localPoint, profField)) {
 				
-			AppContext.model.getField().setSceneCenter(getTrace().getLatLon());
+			AppContext.model.getMapField().setSceneCenter(getTrace().getLatLon());
 			
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
 			
@@ -142,7 +142,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces()
+		return AppContext.model.getGprTraces()
 				.get(offset.localToGlobal(traceInFile));
 	}
 

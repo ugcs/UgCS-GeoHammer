@@ -9,6 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
@@ -37,13 +39,15 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 
 @Component
 public class MapView extends Work implements SmthChangeListener, InitializingBean {
@@ -76,16 +80,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	private Dimension windowSize = new Dimension();
 	
 	
-	public MapView() {
-		super();		
-	}
-	
-	protected RepaintListener listener = new RepaintListener() {
-		@Override
-		public void repaint() {
-			repaintEvent();
-		}
-	};
+	protected RepaintListener listener = this::repaintEvent;
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -109,20 +104,18 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		
 	}
 	
+	@Override
 	public void somethingChanged(WhatChanged changed) {
 		super.somethingChanged(changed);
-		
 		if (changed.isFileopened()) {
-			
 			toolBar.setDisable(!model.isActive() || !isGpsPresent());
 			repaintEvent();
-		}
-		
+		}	
 	}
 	
-	protected boolean isGpsPresent() {
-		
-		return model.getField().isActive();
+	@Override
+	protected boolean isGpsPresent() {	
+		return model.getMapField().isActive();
 	}
 		
 	private void initImageView() {
@@ -134,16 +127,16 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 			}
 			
 			Point2D p = getLocalCoords(event.getSceneX(), event.getSceneY());
-			LatLon ll = model.getField().screenTolatLon(p);
+			LatLon ll = model.getMapField().screenTolatLon(p);
 			
-	    	int zoom = model.getField().getZoom() + (event.getDeltaY() > 0 ? 1 : -1);
-			model.getField().setZoom(zoom);
+	    	int zoom = model.getMapField().getZoom() + (event.getDeltaY() > 0 ? 1 : -1);
+			model.getMapField().setZoom(zoom);
 	    	
-	    	Point2D p2 = model.getField().latLonToScreen(ll);
+	    	Point2D p2 = model.getMapField().latLonToScreen(ll);
 	    	Point2D pdist = new Point2D.Double(p2.getX() - p.getX(), p2.getY() - p.getY());
 	    	
-	    	LatLon sceneCenter = model.getField().screenTolatLon(pdist);			
-			model.getField().setSceneCenter(sceneCenter);
+	    	LatLon sceneCenter = model.getMapField().screenTolatLon(pdist);			
+			model.getMapField().setSceneCenter(sceneCenter);
 	    	
 			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 	    });		
@@ -175,26 +168,27 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
         public void handle(MouseEvent event) {
 			if (!isGpsPresent()) {
 				return;
-			}
-        	
+			}        	
         	
         	if (event.getClickCount() == 2) {
-        		
         		Point2D p = getLocalCoords(event);
-        		
-        		LatLon ll = model.getField().screenTolatLon(p);
-        		
-        		int traceIndex = TraceUtils.findNearestTraceIndex(
-        				model.getFileManager().getTraces(), ll);
-        		
-        		model.getVField().setSelectedTrace(traceIndex);
-        		
-        		ProfileView.createTempPlace(model, traceIndex);
-        	}
-        }
+        		LatLon ll = model.getMapField().screenTolatLon(p);
+        		Trace trace = TraceUtils.findNearestTrace(
+        				model.getTraces(), ll);
 
+				int indexInFile = trace.getFile().getTraces().indexOf(trace);
 
-
+				if (trace.getFile() instanceof CsvFile) {
+					Optional<SensorLineChart> chart = model.getChart((CsvFile) trace.getFile());
+					if (chart.isPresent()) {
+						chart.get().setSelectedTrace(indexInFile);
+					} 
+				} else {
+					model.getProfileField().setSelectedTrace(indexInFile);
+				}				
+				model.createClickPlace(trace.getFile(), trace);
+			}
+		}
 	};
 	
 	
@@ -202,34 +196,29 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
-		
+		toolBar.getItems().add(getSpacer());
 		toolBar.getItems().add(
 				CommandRegistry.createButton("",
 						ResourceImageHolder.getImageView("geotiff.png"),
 						"export map to GeoTIFF image",
-						new EventHandler<ActionEvent>() {
-							
-							@Override
-							public void handle(ActionEvent event) {
-								
-								new TiffImageExport(model, radarMap, gpsTrackMap,
+						event -> {
+							new TiffImageExport(model, radarMap, gpsTrackMap,
 										gpsTrackMap.isActive())
 									.execute();
-								
-							}
 						}));
 		
-		
-		toolBar.getItems().add(CommandRegistry.createButton("", 
+		Button kml = new Button("", ResourceImageHolder.getImageView("kml.png"));
+		//ResourceImageHolder.setButtonImage(ResourceImageHolder.KML, new Button());
+		kml.setTooltip(new Tooltip("Export marks to KML"));
+		kml.setOnAction(event -> new KMLExport(model).execute());
+
+		toolBar.getItems().add(kml);
+		toolBar.getItems().add(getSpacer());
+
+			/*CommandRegistry.createButton("", 
 				ResourceImageHolder.getImageView("kml.png"), 
 				"export marks to KML", 
-				new EventHandler<ActionEvent>() {
-			
-			@Override
-			public void handle(ActionEvent event) {
-				new KMLExport(model).execute();
-			}
-		}));
+				event -> new KMLExport(model).execute()));*/
 				
 		toolBar.getItems().addAll(getToolNodes());
 		
@@ -286,7 +275,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		g2.translate(width / 2, height / 2);
 		
 		
-		MapField fixedField = new MapField(model.getField());
+		MapField fixedField = new MapField(model.getMapField());
 		
 		for (Layer l : getLayers()) {
 			try {
@@ -303,37 +292,26 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	
 	protected void repaintEvent() {
 		
-		
-		Platform.runLater(new Runnable() {
-			 @Override
-	         public void run() {		
+		Platform.runLater(() -> { //new Runnable() {
+		//	 @Override
+	    //     public void run() {		
 				 entercount++;
 		
 				 if (entercount > 1) {
-					 Sout.p("entercount " + entercount);
+					System.err.println("entercount " + entercount);
 				 }	
 
 				if (isGpsPresent()) {
-				
 					img = draw(windowSize.width, windowSize.height);
-					
 				} else {
-					
 					img = drawStub();
-					
 				}
 			
 				toImageView();
 				
 				entercount--;
-			 }
-
-
-		});
-		
-		
-		
-		
+			 });
+		//});
 	}
 
 	public void setSize(int width, int height) {
@@ -366,6 +344,12 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		g2.drawString(NO_GPS_TEXT, x, y);
 		
 		return noGpsImg;
+	}
+
+	private Region getSpacer() {
+		Region r3 = new Region();
+		r3.setPrefWidth(7);
+		return r3;
 	}
 	
 }

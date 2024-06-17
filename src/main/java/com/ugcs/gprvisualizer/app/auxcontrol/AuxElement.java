@@ -23,7 +23,7 @@ public class AuxElement {
 	
 	public void drawOnCut(Graphics2D g2, ProfileField field) {
 		
-		TraceSample ts = new TraceSample(traceStart.indexInSet, 
+		TraceSample ts = new TraceSample(traceStart.getIndexInSet(), 
 				sampleStart != null ? sampleStart : 0);
 		Point scr = field.traceSampleToScreen(ts);
 		

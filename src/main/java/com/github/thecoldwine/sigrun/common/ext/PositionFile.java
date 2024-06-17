@@ -23,6 +23,8 @@ public class PositionFile {
 
 	private FileTemplates fileTemplates;
 
+	private File positionFile;
+
 	public PositionFile(FileTemplates fileTemplates) {
 		this.fileTemplates = fileTemplates;
 	}
@@ -36,16 +38,14 @@ public class PositionFile {
 		}
 	}
 
-	public void load(SgyFile sgyFile, File posfile) {
+	private void load(SgyFile sgyFile, File positionFile) {
+		this.positionFile = positionFile;
 
-		String logPath = posfile.getAbsolutePath();
+		String logPath = positionFile.getAbsolutePath();
 		var fileTemplate = fileTemplates.findTemplate(fileTemplates.getTemplates(), logPath);
 
 			if (fileTemplate == null) {
-				MessageBoxHelper.showError(
-						"Can`t open position file", 
-						"Can`t find template for position file");
-				return;
+				throw new RuntimeException("Can`t find template for file " + positionFile.getName());
 			}
 
 			System.out.println("template: " + fileTemplate.getName());
@@ -53,14 +53,24 @@ public class PositionFile {
 
 			try {				
 				List<GeoCoordinates> coordinates = parser.parse(logPath);
+				
+				//if (sgyFile.getFile() == null) {
+				//	sgyFile.setFile(csvFile);
+				//}
 
-				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());
-		    
-		    	double hair =  100 / sgyFile.getSamplesToCmAir();
-		    
+				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());		    
    		    	StretchArray altArr = new StretchArray();
+
 				for (GeoCoordinates coord : coordinates) {
-					altArr.add((int) (coord.getAltitude() * hair));
+					//if (loadAltOnly) {
+						double hair =  100 / sgyFile.getSamplesToCmAir();
+						altArr.add((int) (coord.getAltitude() * hair));
+					//} else {
+					//	sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
+					//	if(coord instanceof GeoData) {
+					//		sgyFile.getGeoData().add((GeoData)coord);
+					//	}
+					//}
 				}	
 				
     			hp.deep = altArr.stretchToArray(sgyFile.getTraces().size());	    
@@ -175,5 +185,9 @@ public class PositionFile {
 		}
 				
 		return mrkupName != null ? Optional.of(new File(mrkupName)) : Optional.empty();
+	}
+
+	public File getPositionFile() {
+		return positionFile;
 	}
 }

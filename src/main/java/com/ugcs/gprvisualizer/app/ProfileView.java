@@ -16,14 +16,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
@@ -38,7 +41,6 @@ import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.HoughDiscretizer;
-import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
@@ -52,6 +54,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
@@ -74,12 +77,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 					BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 
 					10.0f, dash1, 0.0f);
 
+	private final Model model;
 	
 	@Autowired
-	protected Model model;
-	
-	@Autowired
-	protected Broadcast broadcast;
+	private Broadcast broadcast;
 
 	@Autowired
 	private AuxElementEditHandler auxEditHandler;
@@ -87,40 +88,44 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	@Autowired
 	private Navigator navigator;
 
+	@Autowired
+	private Saver saver;
 
-	protected PrismDrawer prismDrawer;	
+	private PrismDrawer prismDrawer;
 	
-	protected ImageView imageView = new ImageView();
-	protected VBox vbox = new VBox();
-	protected Pane topPane = new Pane();
+	private ImageView imageView = new ImageView();
+	private VBox vbox = new VBox();
+	private Pane topPane = new Pane();
 
-	protected BufferedImage img;
-	protected Image image;
-	protected int width;
-	protected int height;
+	private BufferedImage img;
+	private Image image;
+	private int width;
+	private int height;
 
-	protected double contrast = 50;
+	private double contrast = 50;
 
 	private ContrastSlider contrastSlider;
-	private HyperbolaSlider hyperbolaSlider;
-	private HyperGoodSizeSlider hyperGoodSizeSlider;
-	private MiddleAmplitudeSlider middleAmplitudeSlider;
+
+	//private HyperbolaSlider hyperbolaSlider;
+	//private HyperGoodSizeSlider hyperGoodSizeSlider;
+	//private MiddleAmplitudeSlider middleAmplitudeSlider;
 
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
 	
-	private Button zoomInBtn = new Button("", 
-			ResourceImageHolder.getImageView("zoom-in_20.png"));
+	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
+	 // new Button("", ResourceImageHolder.getImageView("zoom-in_20.png"));
 	
-	private Button zoomOutBtn = new Button("", 
-			ResourceImageHolder.getImageView("zoom-out_20.png"));
+	private Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
+	// new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
 	
 
 	private MouseHandler selectedMouseHandler;
 	private MouseHandler scrollHandler;
 	
-	private HyperFinder hyperFinder;
-	public ProfileScroll profileScroll;
+	private final HyperFinder hyperFinder;
+
+	private final ProfileScroll profileScroll;
 	
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
@@ -143,8 +148,24 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	};
 
-	public ProfileView() {
+	public ProfileView(Model model) {
+		this.model = model;
 
+		profileScroll = new ProfileScroll(model);
+		hyperFinder = new HyperFinder(model);
+		prismDrawer = new PrismDrawer(model);
+
+		contrastSlider = new ContrastSlider(model.getSettings(), 
+				sliderListener);
+		
+		//hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
+		//		aspectSliderListener);
+		
+		//hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
+		//		sliderListener);
+		
+		//middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
+		//		sliderListener);
 	}
 	
 	@Override
@@ -152,24 +173,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
-
-		hyperFinder = new HyperFinder(model);
-		prismDrawer = new PrismDrawer(model);
-		contrastSlider = new ContrastSlider(model.getSettings(), 
-				sliderListener);
-		
-		hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
-				aspectSliderListener);
-		
-		hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
-				sliderListener);
-		
-		middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
-				sliderListener);
 		
 		initImageView();
-
-		profileScroll = new ProfileScroll(model);
 		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
 			public void changed(ObservableValue<? extends Number> ov, 
@@ -182,7 +187,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 		prepareToolbar();
 
-		vbox.getChildren().addAll(toolBar, profileScroll, imageView);
+		//VBox outerBox = new VBox(toolBar, vbox);
+
+		//vbox.getChildren().addAll(toolBar, profileScroll, imageView);
+		vbox.getChildren().addAll(profileScroll, imageView);
 
 		profileScroll.widthProperty().bind(topPane.widthProperty());
 
@@ -195,41 +203,25 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		});
 	}
 
-	public void prepareToolbar() {
+	private void prepareToolbar() {
 		toolBar.setDisable(true);
+
+		toolBar.getItems().addAll(saver.getToolNodes());
+		toolBar.getItems().add(getSpacer());
+		
 		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
 
 		toolBar.getItems().addAll(navigator.getToolNodes());
-
 		toolBar.getItems().add(getSpacer());
+
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(getSpacer());
-		//toolBar.getItems().add(showGreenLineBtn);
-
-		toolBar.getItems().add(CommandRegistry.createButton("",
-				ResourceImageHolder.getImageView("ruler.png"), 
-				"show ruler", e -> {
-
-			SgyFile file = model.getSgyFileByTrace(getField().getSelectedTrace());
-
-			RulerTool fp = RulerTool.createRulerTool(getField(), file);
-
-			fp.setSelected(true);
-
-			List<BaseObject> lst = new ArrayList<>();
-			lst.addAll(fp.getControls());
-			lst.add(fp);
-			model.setControls(lst);
-
-			repaintEvent();
-
-		}));
 	}
 
 	protected BufferedImage draw(int width, int height) {
-		if (width <= 0 || height <= 0 || !model.isActive()) {
+		if (width <= 0 || height <= 0 || !model.isActive() || model.getGprTracesCount() == 0) {
 			return null;
 		}
 
@@ -291,7 +283,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-	public void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
+	private void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
 		int startTrace = field.getFirstVisibleTrace();
 		int finishTrace = field.getLastVisibleTrace();
 
@@ -303,44 +295,48 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		drawAmplitudeMapLevels(field, g2);
 	}
 
-	public void drawFileProfiles(ProfileField field, Graphics2D g2, 
+	private void drawFileProfiles(ProfileField field, Graphics2D graphicsContext,
 			int startTrace, int finishTrace) {
 
-		int f1 = model.getFileManager().getFiles().indexOf(
+		int f1 = model.getFileManager().getGprFiles().indexOf(
 				model.getSgyFileByTrace(startTrace));
 		
-		int f2 = model.getFileManager().getFiles().indexOf(
+		int f2 = model.getFileManager().getGprFiles().indexOf(
 				model.getSgyFileByTrace(finishTrace));
 
 		for (int i = f1; i <= f2; i++) {
-			SgyFile f = model.getFileManager().getFiles().get(i);
+			SgyFile currentFile = model.getFileManager().getGprFiles().get(i);
+			
+			if (currentFile instanceof CsvFile) {
+				continue;
+			}
 
-			if (f.profiles != null) {
+			if (currentFile.profiles != null) {
 				// pf
-				g2.setColor(new Color(50, 200, 250));
-				g2.setStroke(AMP_STROKE);
-				for (HorizontalProfile pf : f.profiles) {
-					drawHorizontalProfile(field, g2, 
-							f.getOffset().getStartTrace(), pf, 0);
+				graphicsContext.setColor(new Color(50, 200, 250));
+				graphicsContext.setStroke(AMP_STROKE);
+				for (HorizontalProfile pf : currentFile.profiles) {
+					drawHorizontalProfile(field, graphicsContext,
+							currentFile.getOffset().getStartTrace(), pf, 0);
 				}
 			}
 
 			// ground
-			if (f.groundProfile != null) {
-				g2.setColor(new Color(210, 105, 30));
-				g2.setStroke(LEVEL_STROKE);
-				drawHorizontalProfile(field, g2, 
-						f.getOffset().getStartTrace(), f.groundProfile,
+			if (currentFile.groundProfile != null) {
+				graphicsContext.setColor(new Color(210, 105, 30));
+				graphicsContext.setStroke(LEVEL_STROKE);
+				drawHorizontalProfile(field, graphicsContext,
+						currentFile.getOffset().getStartTrace(), currentFile.groundProfile,
 						shiftGround.intValue());
 			}
 
-			if (model.getSettings().showGreenLine && f.algoScan != null) {
+			if (model.getSettings().showGreenLine && currentFile.algoScan != null) {
 
-				g2.setColor(Color.GREEN);
-				g2.setStroke(AMP_STROKE);
+				graphicsContext.setColor(Color.GREEN);
+				graphicsContext.setStroke(AMP_STROKE);
 
-				drawScanProfile(field, g2, 
-						f.getOffset().getStartTrace(), f.algoScan);
+				drawScanProfile(field, graphicsContext,
+						currentFile.getOffset().getStartTrace(), currentFile.algoScan);
 			}
 
 		}
@@ -467,7 +463,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 
 		SgyFile currentFile = model.getSgyFileByTrace(
-				model.getVField().getSelectedTrace());
+				model.getProfileField().getSelectedTrace());
 
 		int selectedX1 = 0;
 		int selectedX2 = 0;
@@ -477,14 +473,14 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		int leftMargin = -getField().getMainRect().width / 2;
 
 		g2.setStroke(AMP_STROKE);
-		for (SgyFile fl : model.getFileManager().getFiles()) {
+		for (SgyFile fl : model.getFileManager().getGprFiles()) {
 
 			p = field.traceSampleToScreen(new TraceSample(
-					fl.getTraces().get(0).indexInSet, 0));
+					fl.getTraces().get(0).getIndexInSet(), 0));
 			
 			int lastTraceIndex = fl.getTraces().size() - 1;
 			p2 = field.traceSampleToScreen(new TraceSample(
-					fl.getTraces().get(lastTraceIndex).indexInSet, 0));
+					fl.getTraces().get(lastTraceIndex).getIndexInSet(), 0));
 
 			if (currentFile == fl) {
 				g2.setColor(Color.YELLOW);
@@ -524,36 +520,65 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-
+	//center
 	public Node getCenter() {
 
+		VBox center = new VBox();
+        ScrollPane centerScrollPane = new ScrollPane();
+		centerScrollPane.setStyle("-fx-focus-color: transparent; -fx-faint-focus-color: transparent;");
+
+        centerScrollPane.setFitToWidth(true);
+        centerScrollPane.setContent(model.getChartsContainer());
+
+		center.getChildren().addAll(toolBar, centerScrollPane);
+
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			this.setSize((int) (topPane.getWidth()), (int) (topPane.getHeight()));
+			this.setSize((int) (topPane.getWidth()), (int) (400)); //topPane.getHeight()));
 		};
 		topPane.widthProperty().addListener(sp2SizeListener);
-		topPane.heightProperty().addListener(sp2SizeListener);
+		//topPane.heightProperty().addListener(sp2SizeListener);
 
-		topPane.getChildren().add(vbox);
+		//ScrollPane scrollPane = new ScrollPane(vbox);
+		//scrollPane.setFitToWidth(true);
 
-		return topPane;
+		//scrollPane.setFitToHeight(true);
+
+		//topPane.getChildren().addAll(scrollPane);
+
+
+		topPane.getChildren().addAll(vbox);
+		model.getChartsContainer().getChildren().add(topPane);
+
+		//model.getChartsContainer().getChildren().add(topPane);
+
+		topPane.setOnMouseClicked(event -> {
+			select();
+		});
+
+		//return topPane;
+        return center;
+	}
+
+	public void select() {
+		model.selectAndScrollToChart(topPane);
+		broadcast.fileSelected(model.getFileManager().getGprFiles());
 	}
 
 	public List<Node> getRight() {
-
-		return Arrays.asList(
-				contrastSlider.produce());
+		var contrastNode = contrastSlider.produce();
+		//contrastNode.setDisable(!model.isActive());
+		return List.of(contrastNode);
 	}
 
-	MutableInt shiftGround = new MutableInt(0);
+	private MutableInt shiftGround = new MutableInt(0);
 
-	
-	public Node printHoughSlider;
+	private Node printHoughSlider;
 	
 	public List<Node> getRightSearch() {
 
 		
 		//Slider s;
-		List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
+		/*List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
 				hyperGoodSizeSlider.produce(), 
 				middleAmplitudeSlider.produce(),
 
@@ -601,7 +626,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 				);
 		
 		
-		return lst;
+		return lst;*/
+		return List.of();
 	}
 
 	protected void initImageView() {
@@ -612,6 +638,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			double ey = event.getSceneY();
 
 			zoom(ch, ex, ey, event.isControlDown());
+
+			event.consume(); // don't scroll the page
 		});
 
 		imageView.setOnMousePressed(mousePressHandler);
@@ -720,8 +748,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	}
 
 	protected Point getLocalCoords(double x, double y) {
-		javafx.geometry.Point2D sceneCoords = new javafx.geometry.Point2D(x, y);
-		javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
+		Point2D sceneCoords = new Point2D(x, y);
+		Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
 		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x
 				- getField().getMainRect().width / 2),
 				(int) (imgCoord.getY()));
@@ -736,29 +764,24 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 				// add tmp flag
 				Point p = getLocalCoords(event);
 
-				int trace = getField().screenToTraceSample(p).getTrace();
+				int traceIndex = getField().screenToTraceSample(p).getTrace();
 
-				if (trace >= 0 && trace < model.getTracesCount()) {
+				if (traceIndex >= 0 && traceIndex < model.getGprTracesCount()) {
+
+					Trace trace = model.getGprTraces()
+							.get(traceIndex);
 
 					// select in MapView
-					model.getField().setSceneCenter(
-							model.getFileManager().getTraces()
-							.get(trace).getLatLon());
+					model.getMapField().setSceneCenter(
+							trace.getLatLon());
 
-					createTempPlace(model, trace);
+					model.createClickPlace(trace.getFile(), trace);
 
 					broadcast.notifyAll(new WhatChanged(Change.mapscroll));
 				}
 			}
 		}
 	};
-
-	public static void createTempPlace(Model model, int trace) {
-
-		ClickPlace fp = new ClickPlace(trace);
-		fp.setSelected(true);
-		model.setControls(Arrays.asList(fp));
-	}
 
 	protected EventHandler<MouseEvent> mousePressHandler = 
 			new EventHandler<MouseEvent>() {
@@ -794,7 +817,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	};
 
 	protected void repaintEvent() {
-		if (!model.isLoading()) {
+		if (!model.isLoading() && model.getGprTracesCount() > 0) {
 			controller.render();
 		}
 	}
@@ -823,10 +846,21 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	public void somethingChanged(WhatChanged changed) {
 
 		if (changed.isFileopened()) {
-			profileScroll.setVisible(model.isActive());
+			profileScroll.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+			topPane.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+			vbox.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+			
+			if (!topPane.isVisible()) {
+				model.getChartsContainer().getChildren().remove(topPane);
+			} else {
+				if (model.getChartsContainer().getChildren().indexOf(topPane) == -1) {
+					model.getChartsContainer().getChildren().add(topPane);
+				}
+			}
+
 			toolBar.setDisable(!model.isActive());
 			
-			hyperbolaSlider.updateUI();
+			//hyperbolaSlider.updateUI();
 		}
 
 		repaintEvent();
@@ -834,7 +868,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	}
 
 	private void updateScroll() {
-		if (!model.isActive()) {
+		if (!model.isActive() || model.getGprTracesCount() == 0) {
 			return;
 		}
 
@@ -852,6 +886,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 
 	});
+
+	public ImageView getImageView() {
+		return imageView;
+	}
 
 	public class ContrastSlider extends BaseSlider {
 
@@ -895,7 +933,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		}
 	}
 
-	public class HyperbolaSlider extends BaseSlider {
+	/*public class HyperbolaSlider extends BaseSlider {
 
 		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
@@ -914,9 +952,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hyperkfc = (int) slider.getValue();
 			return (int) settings.hyperkfc;
 		}
-	}
+	}*/
 
-	public class HyperGoodSizeSlider extends BaseSlider {
+	/*public class HyperGoodSizeSlider extends BaseSlider {
 
 		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
 			super(settings, listenerExt);
@@ -940,9 +978,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hyperSensitivity.setValue((int) slider.getValue());
 			return (int) settings.hyperSensitivity.intValue();
 		}
-	}
+	}*/
 
-	public class MiddleAmplitudeSlider extends BaseSlider {
+	/*public class MiddleAmplitudeSlider extends BaseSlider {
 
 		public MiddleAmplitudeSlider(Settings settings,
 				ChangeListener<Number> listenerExt) {
@@ -962,7 +1000,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			settings.hypermiddleamp = (int) slider.getValue();
 			return (int) settings.hypermiddleamp;
 		}
-	}
+	}*/
 
 	public void setSize(int width, int height) {
 
@@ -986,7 +1024,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 	}
 
 	protected ProfileField getField() {
-		return model.getVField();
+		return model.getProfileField();
 	}
 
 	private Region getSpacer() {
@@ -997,6 +1035,14 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 	public AuxElementEditHandler getAuxEditHandler() {
 		return auxEditHandler;
+	}
+
+	public Node getPrintHoughSlider() {
+		return printHoughSlider;
+	}
+
+	public ProfileScroll getProfileScroll() {
+		return profileScroll;
 	}
 	
 }

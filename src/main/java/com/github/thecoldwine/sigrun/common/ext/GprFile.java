@@ -51,7 +51,7 @@ public class GprFile extends SgyFile {
 
 
 	public void open(File file) throws Exception {
-		this.file = file;		
+		setFile(file);
 		
 		BinFile binFile = BinFile.load(file); 
 		
@@ -94,7 +94,7 @@ public class GprFile extends SgyFile {
         	//return null;
         }
         
-        Trace trace = new Trace(headerBin, header, values, latLon);
+        Trace trace = new Trace(this, headerBin, header, values, latLon);
         if (headerBin[MARK_BYTE_POS] != 0) {
         	trace.setMarked(true);
         }
@@ -103,7 +103,7 @@ public class GprFile extends SgyFile {
 	}
 
 	public void save(File file) throws Exception {
-		
+
 		Set<Integer> marks = prepareMarksIndexSet();
 		BinFile binFile = new BinFile();
 		
@@ -113,9 +113,9 @@ public class GprFile extends SgyFile {
 		SeismicValuesConverter converter = 
 				ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
 
-		sampleNormalizer.back(traces);
+		sampleNormalizer.back(getTraces());
 
-		for (Trace trace : traces) {
+		for (Trace trace : getTraces()) {
 			BinTrace binTrace = new BinTrace();
 			
 			binTrace.header = trace.getBinHeader();
@@ -129,7 +129,7 @@ public class GprFile extends SgyFile {
 			
 			//set or clear marks
 			binTrace.header[MARK_BYTE_POS] = 
-					(byte) (marks.contains(trace.indexInFile) ? -1 : 0);
+					(byte) (marks.contains(trace.getIndexInFile()) ? -1 : 0);
 			
 			binTrace.data = converter.valuesToByteBuffer(trace.getNormValues()).array();
 			
@@ -152,7 +152,7 @@ public class GprFile extends SgyFile {
 			float[] values = Arrays.copyOf(
 					org.getNormValues(), org.getNormValues().length);
 			
-			Trace tr = new Trace(org.getBinHeader(), 
+			Trace tr = new Trace(file2, org.getBinHeader(), 
 					org.getHeader(), values, org.getLatLon());
 			traces.add(tr);
 		}		

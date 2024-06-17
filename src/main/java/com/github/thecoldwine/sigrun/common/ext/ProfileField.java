@@ -40,7 +40,6 @@ public class ProfileField {
 
 	public ProfileField(Model model) {
 		this.model  = model;		
-		
 	}
 
 	public ProfileField(ProfileField copy) {
@@ -63,18 +62,39 @@ public class ProfileField {
 		this.clipMainRect = copy.clipMainRect ;
 		this.clipLeftMainRect = copy.clipLeftMainRect; 
 		this.clipTopMainRect = copy.clipTopMainRect; 
-		this.clipInfoRect = copy.clipInfoRect; 
-		
+		this.clipInfoRect = copy.clipInfoRect; 	
 	}
 
 	public void clear() {
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;
-		if (model.isActive()) {
-			new Navigator(model).fitFull();
+		if (model.isActive() && model.getGprTracesCount() > 0) {
+			fitFull();
 		}
+	}
 
+	private void fitFull() {		
+		setSelectedTrace(model.getGprTracesCount() / 2);
+		int maxSamples = model.getMaxHeightInSamples();
+		fit(maxSamples * 2, model.getGprTracesCount());
+	}
+
+	public void fit(int maxSamples, int tracesCount) {
+		double vertScale = (double) getViewDimension().height 
+				/ (double) maxSamples;
+		double zoom = Math.log(vertScale) / Math.log(ProfileField.ZOOM_A);
+		
+		setZoom((int) zoom);
+		setStartSample(0);
+		
+		double h = (double) (getViewDimension().width 
+				- getLeftRuleRect().width - 20) 
+				/ ((double) tracesCount);
+		
+		double realAspect = h / getVScale();
+
+		setAspectReal(realAspect);		
 	}
 	
 	public TraceSample screenToTraceSample(Point point, VerticalCutPart vcp) {
@@ -124,25 +144,17 @@ public class ProfileField {
 		return t2.getTrace();
 	}
 	
-	public int getFirstVisibleTrace() {
-		
-		return 
-			Math.max(
-			Math.min(
-				screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
-				model.getFileManager().getTraces().size() - 1), 0);
+	public int getFirstVisibleTrace() {		
+		return Math.clamp(screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
+				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleTrace() {
-		return 
-			Math.max(
-			Math.min(
-				screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
-				model.getFileManager().getTraces().size() - 1), 0);					
+		return Math.clamp(screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
+				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleSample(int height) {
-
 		return screenToTraceSample(new Point( 0, height)).getSample();
 	}
 	
@@ -152,9 +164,8 @@ public class ProfileField {
 
 	public void setSelectedTrace(int selectedTrace) {
 		this.selectedTrace =
-			Math.min(
-				Math.max(0, selectedTrace),
-				model.getFileManager().getTraces().size() - 1);
+			Math.clamp(selectedTrace, 0, 
+			Math.max(0, model.getGprTracesCount() - 1));
 	}
 
 	public int getStartSample() {
@@ -171,10 +182,8 @@ public class ProfileField {
 	}
 
 	double vertScale = 1;
-	public double getVScale() {
-		
-		
-		
+
+	public double getVScale() {	
 		return vertScale;
 	}
 
@@ -195,7 +204,7 @@ public class ProfileField {
 	public Dimension getScreenImageSize() {
 		
 		return new Dimension(
-				(int) (model.getFileManager().getTraces().size() * getHScale()), 
+				(int) (model.getGprTracesCount() * getHScale()), 
 				(int) (model.getMaxHeightInSamples() * getVScale()));
 	}
 
@@ -229,9 +238,7 @@ public class ProfileField {
 	}
 
 	public void setZoom(int zoom) {
-		
 		this.zoom = zoom;
-		
 		vertScale = Math.pow(ZOOM_A, getZoom());
 	}
 
@@ -256,8 +263,7 @@ public class ProfileField {
 	}
 
 	public Rectangle getClipMainRect() {
-		return clipMainRect;
-		
+		return clipMainRect;		
 	}
 	
 	public Rectangle getClipLeftMainRect() {
@@ -280,12 +286,13 @@ public class ProfileField {
 		clipTopMainRect = new Rectangle(
 				-getMainRect().width / 2, 0, 
 				getMainRect().width, getMainRect().y + getMainRect().height);
+
 		clipLeftMainRect = new Rectangle(
 				-getMainRect().x - getMainRect().width / 2, getMainRect().y, 
 				getMainRect().x + getMainRect().width, getMainRect().height);
+
 		clipInfoRect = new Rectangle(
 				-getMainRect().x - getMainRect().width / 2, 0, getInfoRect().width, getInfoRect().height);
 				
 	}
 }
-

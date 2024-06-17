@@ -11,7 +11,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -92,7 +91,7 @@ public class HyperFinder {
 		}
 		
 		int tr = ts.getTrace();
-		List<Trace> traces = model.getFileManager().getTraces();
+		List<Trace> traces = model.getGprTraces();
 		
 		if (tr < 0 || tr >= traces.size() || ts.getSample() < 0) {
 			return;
@@ -132,7 +131,7 @@ public class HyperFinder {
 		g2.fillRect(lt.x - 100, lt.y - 60, 200, 40);
 		g2.setColor(Color.RED);
 
-		g2.drawString("" + ts.getTrace() + " (" + extr.indexInFile + ") " 
+		g2.drawString("" + ts.getTrace() + " (" + extr.getIndexInFile() + ") " 
 				+ ts.getSample() + " (" + fl(example2) 
 				+ ")   ofst: " + extr.verticalOffset,
 				lt.x - 100, lt.y - 40);

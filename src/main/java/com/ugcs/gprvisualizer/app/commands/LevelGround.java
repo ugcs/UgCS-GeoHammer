@@ -43,8 +43,8 @@ public class LevelGround implements Command {
 
 	@Override
 	public String getButtonText() {
-
-		return "Level ground";
+		return "Flatten surface";
+		//return "Level ground";
 	}
 
 	@Override

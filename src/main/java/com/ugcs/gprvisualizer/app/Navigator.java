@@ -21,72 +21,68 @@ import javafx.scene.control.Tooltip;
 @Component
 public class Navigator implements ToolProducer {
 
-	@Autowired
-	private Model model;
+	//@Autowired
+	private final Model model;
 	
-	@Autowired
-	private Broadcast broadcast;
+	//@Autowired
+	private final Broadcast broadcast;
 	
-	public Navigator() {
-		
-	}
-	
-	public Navigator(Model model) {
-		this.model = model;		
+	public Navigator(Model model, Broadcast broadcast) {
+		this.model = model;
+		this.broadcast = broadcast;
 	}
 
 	@Override
 	public List<Node> getToolNodes() {
-		Button backBtn = new Button("", 
-				ResourceImageHolder.getImageView("arrow_left_20.png"));
-		Button fitBtn = new Button("", 
-				ResourceImageHolder.getImageView("fit_20.png"));		
-		Button nextBtn = new Button("", 
-				ResourceImageHolder.getImageView("arrow_right_20.png"));
+		Button backBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ARROW_LEFT, new Button());
+		//new Button("", ResourceImageHolder.getImageView("arrow_left_20.png"));
+		Button fitBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.FIT, new Button());
+		//new Button("", ResourceImageHolder.getImageView("fit_20.png"));		
+		Button nextBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ARROW_RIGHT, new Button());
+		//new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
 		
-		backBtn.setTooltip(new Tooltip("Fit previous SGY file to window"));
-		fitBtn.setTooltip(new Tooltip("Fit current SGY file to window"));
-		nextBtn.setTooltip(new Tooltip("Fit next SGY file to window"));
+		backBtn.setTooltip(new Tooltip("Fit previous file to window"));
+		fitBtn.setTooltip(new Tooltip("Fit current file to window"));
+		nextBtn.setTooltip(new Tooltip("Fit next file to window"));
 		
 		fitBtn.setOnAction(e -> {
 			fitCurrent();
 		});
 
 		backBtn.setOnAction(e -> {
-			
 			fitBack();
 		});
 
 		nextBtn.setOnAction(e -> {
-			
 			fitNext();
 		});
 		
 		return Arrays.asList(backBtn, fitBtn, nextBtn);
+
 	}
 	
 
 	public void fitNext() {
-		int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField().getSelectedTrace());
 		
-		index = Math.min(model.getFileManager().getFiles().size() - 1, index + 1);
-		SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
+		index = Math.min(model.getFileManager().getGprFiles().size() - 1, index + 1);
+		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
 				
 		fitFile(sgyFile);
 	}
 
 	public void fitBack() {
-		int index = model.getSgyFileIndexByTrace(model.getVField().getSelectedTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField().getSelectedTrace());
 		
 		index = Math.max(0, index - 1);
-		SgyFile sgyFile = model.getFileManager().getFiles().get(index);  
+		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
 				
 		fitFile(sgyFile);
 	}
 
 	public void fitCurrent() {
-		SgyFile sgyFile = model.getSgyFileByTrace(model.getVField().getSelectedTrace());
-		
+		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField().getSelectedTrace());
+		model.chartsZoomOut();
 		fitFile(sgyFile);
 	}
 
@@ -95,7 +91,7 @@ public class Navigator implements ToolProducer {
 			return;
 		}
 		
-		model.getVField().setSelectedTrace(
+		model.getProfileField().setSelectedTrace(
 				(sgyFile.getOffset().getStartTrace() 
 				+ sgyFile.getOffset().getFinishTrace()) 
 				/ 2);
@@ -103,35 +99,9 @@ public class Navigator implements ToolProducer {
 		int maxSamples = sgyFile.getOffset().getMaxSamples();
 		int tracesCount = sgyFile.getTraces().size(); 
 		
-		fit(maxSamples, tracesCount);
+		model.getProfileField().fit(maxSamples, tracesCount);
 		
 		broadcast.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
-	public void fit(int maxSamples, int tracesCount) {
-		double vertScale = (double) model.getVField().getViewDimension().height 
-				/ (double) maxSamples;
-		double zoom = Math.log(vertScale) / Math.log(ProfileField.ZOOM_A);
-		
-		model.getVField().setZoom((int) zoom);
-		model.getVField().setStartSample(0);
-		
-		double h = (double) (model.getVField().getViewDimension().width 
-				- model.getVField().getLeftRuleRect().width - 20) 
-				/ ((double) tracesCount);
-		
-		double realAspect = h / model.getVField().getVScale();
-
-		model.getVField().setAspectReal(realAspect);
-		
-		
-	}
-
-	public void fitFull() {		
-		model.getVField().setSelectedTrace(model.getTracesCount() / 2);
-		
-		int maxSamples = model.getMaxHeightInSamples();
-
-		fit(maxSamples * 2, model.getTracesCount());
-	}
 }

@@ -1,12 +1,9 @@
 package com.ugcs.gprvisualizer.app.yaml;
 
-import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.springframework.util.StringUtils;
-
-import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 
 /**
  * Represents a template for processing files.
@@ -20,25 +17,7 @@ public class Template {
     private FileFormat fileFormat;
     private DataMapping dataMapping;
     private SkipLinesTo skipLinesTo;
-    private List<SensorData> sensors;
 
-    /**
-     * Gets the sensors of the template.
-     *
-     * @return the sensors of the template.
-     */
-    public List<SensorData> getSensors() {
-        return sensors;
-    }
-    
-    /**
-     * Sets the sensors of the template.
-     *
-     * @param sensors the sensors of the template.
-     */
-    public void setSensors(List<SensorData> sensors) {
-        this.sensors = sensors;
-    }    
 
     /**
      * Checks if the template is valid.

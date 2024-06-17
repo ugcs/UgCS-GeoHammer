@@ -40,10 +40,8 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	@Autowired
 	private Broadcast broadcast;
 
-	@Autowired
-	private Dimension wndSize;
-
 	private LatLon click;
+
 	private ThrQueue recalcQueue;
 	
 	@Override
@@ -84,12 +82,10 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	RadioMenuItem menuItem2 = new RadioMenuItem("here.com");
 	RadioMenuItem menuItem3 = new RadioMenuItem("turn off");
 	
-	private MenuButton optionsMenuBtn = new MenuButton("", ResourceImageHolder.getImageView("gmap-20.png"), 
-			menuItem1,
-			menuItem2,
-			menuItem3);
+	private final MenuButton optionsMenuBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.MAP, new MenuButton());	
+
 	{
-		
+		optionsMenuBtn.getItems().addAll(menuItem1, menuItem2, menuItem3);
 		ToggleGroup toggleGroup = new ToggleGroup();
 		menuItem1.setToggleGroup(toggleGroup);
 		menuItem2.setToggleGroup(toggleGroup);
@@ -98,22 +94,22 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		menuItem1.setSelected(true);		
 		
 		menuItem1.setOnAction(e -> {
-			model.getField().setMapProvider(new GoogleMapProvider());
-			setActive(model.getField().getMapProvider() != null);
+			model.getMapField().setMapProvider(new GoogleMapProvider());
+			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
 			broadcast.notifyAll(new WhatChanged(Change.mapzoom));		        
 		});
 
 		menuItem2.setOnAction(e -> {
-			model.getField().setMapProvider(new HereMapProvider());
-			setActive(model.getField().getMapProvider() != null);
+			model.getMapField().setMapProvider(new HereMapProvider());
+			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
 			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 		});
 
 		menuItem3.setOnAction(e -> {
-			model.getField().setMapProvider(null);
-			setActive(model.getField().getMapProvider() != null);
+			model.getMapField().setMapProvider(null);
+			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
 			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
 		});
@@ -180,10 +176,9 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 			return false;
 		}
 		
-		dragField = new MapField(model.getField());
+		dragField = new MapField(model.getMapField());
 		
-		click = model.getField().screenTolatLon(point);
-		
+		click = model.getMapField().screenTolatLon(point);
 		
 		status.showProgressText(click.toString());
 		
@@ -216,7 +211,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		double lon = dragField.getSceneCenter().getLonDgr() 
 				+ click.getLonDgr() - newCenter.getLonDgr();
 		
-		model.getField().setSceneCenter(new LatLon(lat, lon));
+		model.getMapField().setSceneCenter(new LatLon(lat, lon));
 		
 		getRepaintListener().repaint();
 		

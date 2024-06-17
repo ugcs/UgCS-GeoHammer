@@ -5,22 +5,20 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.draw.Change;
 
 public class DistancesSmoother implements Command {
 
 	double smoothDist;
+
 	@Override
-	public String getButtonText() {
-		
+	public String getButtonText() {	
 		return "Smooth distances";
 	}
 
 	@Override
 	public Change getChange() {
-		
 		return null;
 	}
 
@@ -29,7 +27,7 @@ public class DistancesSmoother implements Command {
 		
 		smoothDist = RulerTool.distanceVCm(file, 0, 0, file.getMaxSamples() / 2) * 0.25 * 0.5;
 		
-		Sout.p(" smoothDist " + smoothDist);
+		//Sout.p(" smoothDist " + smoothDist);
 		
 		smoothDistances(file.getTraces());
 	}

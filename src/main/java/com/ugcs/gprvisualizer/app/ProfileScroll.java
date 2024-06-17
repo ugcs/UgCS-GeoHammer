@@ -87,7 +87,8 @@ public class ProfileScroll extends Canvas {
 			
 		}
 	};
-	MouseSInput centerInput = new MouseSInput() {
+
+	private MouseSInput centerInput = new MouseSInput() {
 
 		@Override
 		public Rectangle getRect() {
@@ -103,12 +104,12 @@ public class ProfileScroll extends Canvas {
 			centerPos = Math.min(Math.max(centerPos, 0), getWidth());
 			
 			//finish = barStart;
-			double tracesFull = model.getFileManager().getTraces().size();
+			double tracesFull = model.getGprTracesCount();
 			
 			double trCenter = centerPos * tracesFull / getWidth();
 			
 			
-			model.getVField().setSelectedTrace((int) trCenter);
+			model.getProfileField().setSelectedTrace((int) trCenter);
 			
 			double rectWidth = finish - start;
 			start = centerPos - rectWidth / 2;
@@ -121,8 +122,8 @@ public class ProfileScroll extends Canvas {
 		}
 	};	
 	
-	MouseSInput selected;
-	Set<MouseSInput> bars = Set.of(centerInput, leftInput, rightInput); 
+	private MouseSInput selected;
+	private Set<MouseSInput> bars = Set.of(centerInput, leftInput, rightInput); 
  
 	
 	public ProfileScroll(Model model) {
@@ -231,7 +232,7 @@ public class ProfileScroll extends Canvas {
 	
 	void recalc() {
 		
-		if (!model.isActive()) {
+		if (!model.isActive() || model.getGprTracesCount() == 0) {
 			GraphicsContext gc = this.getGraphicsContext2D();	
 			gc.clearRect(0, 0, getWidth(), getHeight());
 			return;
@@ -240,10 +241,10 @@ public class ProfileScroll extends Canvas {
 		int width = (int) getWidth();
 		int height = (int) getHeight();
 		
-		double tracesFull = model.getFileManager().getTraces().size();
-		double center = model.getVField().getSelectedTrace();
+		double tracesFull = model.getGprTracesCount();
+		double center = model.getProfileField().getSelectedTrace();
 		
-		double tracesVisible = model.getVField().getVisibleNumberOfTrace();
+		double tracesVisible = model.getProfileField().getVisibleNumberOfTrace();
 		
 		double centerPos =  center / tracesFull * (double) width;
 		double rectWidth = tracesVisible / tracesFull * (double) width;
@@ -262,7 +263,8 @@ public class ProfileScroll extends Canvas {
 		gc.fillRect(0, V_GRAY_MARGIN, 
 				getWidth(), getHeight() - 2 * V_GRAY_MARGIN);
 		
-		gc.setFill(Color.BLUE);
+		//gc.setFill(Color.BLUE);
+		
 		Rectangle c = getCenterBar();
 
 		gc.strokeRoundRect(c.getX() + CENTER_MARGIN, 
@@ -274,14 +276,14 @@ public class ProfileScroll extends Canvas {
 		double centerX = c.getX() + c.getWidth() / 2;
 		gc.strokeLine(centerX, 0, centerX, HEIGHT);
 		
-		gc.setFill(Color.AQUAMARINE);
+		//gc.setFill(Color.AQUAMARINE);
 		Rectangle l = getLeftBar();
 		
 
 		gc.strokeRoundRect(l.getX() + V_MARGIN, l.getY() + V_MARGIN, 
 				l.getWidth() - 2 * V_MARGIN, l.getHeight() - 2 * V_MARGIN, 10, 10);
 
-		gc.setFill(Color.AQUAMARINE);
+		//gc.setFill(Color.AQUAMARINE);
 		Rectangle r = getRightBar();
 		gc.strokeRoundRect(r.getX() + V_MARGIN, r.getY() + V_MARGIN, 
 				r.getWidth() - 2 * V_MARGIN, r.getHeight() - 2 * V_MARGIN, 10, 10);
@@ -315,11 +317,11 @@ public class ProfileScroll extends Canvas {
 		final DragContext dragContext = new DragContext();
 		final Group wrapGroup = new Group(node);
 
-		wrapGroup.addEventFilter(MouseEvent.ANY, new EventHandler<MouseEvent>() {
-			public void handle(final MouseEvent mouseEvent) {
-				mouseEvent.consume();
-			}
-		});
+		//wrapGroup.addEventFilter(MouseEvent.ANY, new EventHandler<MouseEvent>() {
+		//	public void handle(final MouseEvent mouseEvent) {
+		//		mouseEvent.consume();
+		//	}
+		//});
 
 		wrapGroup.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
 			public void handle(final MouseEvent mouseEvent) {
@@ -353,12 +355,12 @@ public class ProfileScroll extends Canvas {
 		double scrWidth = (finish - start);
 		
 		double visibletracesCount = scrWidth / (double) getWidth() 
-				* (double) model.getTracesCount();
+				* (double) model.getGprTracesCount();
 		double hsc = getWidth() / visibletracesCount;
-		double aspect = hsc / model.getVField().getVScale();
+		double aspect = hsc / model.getProfileField().getVScale();
 		
-		double trCenter = scrCenter / (double) getWidth() * (double) model.getTracesCount();
-		model.getVField().setSelectedTrace((int) trCenter);
-		model.getVField().setAspectReal(aspect);
+		double trCenter = scrCenter / (double) getWidth() * (double) model.getGprTracesCount();
+		model.getProfileField().setSelectedTrace((int) trCenter);
+		model.getProfileField().setAspectReal(aspect);
 	}
 }

@@ -22,7 +22,7 @@ public interface BaseObject extends MouseHandler {
 	
 	boolean isPointInside(Point localPoint, ProfileField profField);
 	
-	Rectangle getRect(ProfileField profField);
+	//Rectangle getRect(ProfileField profField);
 	
 	void signal(Object obj);
 	

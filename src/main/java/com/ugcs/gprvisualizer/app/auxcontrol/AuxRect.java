@@ -204,10 +204,12 @@ public class AuxRect extends BaseObjectImpl {
 		        });				
 			}
 			
+			@Override
 			public int getTrace() {
 				return (left.getTrace());
 			}
 			
+			@Override
 			public int getSample() {
 				return (top.getSample());
 			}

@@ -5,8 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.ugcs.gprvisualizer.app.Sout;
-
 public class ObjectByteMapper {
 
 
@@ -153,12 +151,10 @@ public class ObjectByteMapper {
 			buffer.get(bytes);
 			
 			String value = new String(bytes);
-			Sout.p(" READ string " + value);
+			System.out.println(" READ string " + value);
 			
 			field.set(instance, value);
 		}
 	}
-
 	
-
 }

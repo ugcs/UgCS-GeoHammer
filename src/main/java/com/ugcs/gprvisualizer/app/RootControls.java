@@ -31,8 +31,8 @@ public class RootControls {
 	@Autowired
 	private StatusBar statusBar;
 	
-	@Autowired
-	private GeoHammerToolbar toolBar;
+	//@Autowired
+	//private GeoHammerToolbar toolBar;
 	
 	@Autowired
 	private Broadcast broadcast;
@@ -75,9 +75,9 @@ public class RootControls {
 		return statusBar;
 	}
 
-	public GeoHammerToolbar getToolBar() {
-		return toolBar;
-	}
+	//public GeoHammerToolbar getToolBar() {
+	//	return toolBar;
+	//}
 
 	public Broadcast getBroadcast() {
 		return broadcast;

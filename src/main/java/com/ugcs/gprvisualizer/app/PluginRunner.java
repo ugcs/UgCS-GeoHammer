@@ -144,9 +144,7 @@ public class PluginRunner implements SingleCommand {
 
 	@Override
 	public void execute(List<SgyFile> files, ProgressListener listener) {
-		
-		processSgyFiles(listener, model.getFileManager().getFiles());
-		
+		processSgyFiles(listener, model.getFileManager().getGprFiles());
 	}
 
 }

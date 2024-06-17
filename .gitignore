@@ -6,10 +6,7 @@
 *.ear
 #*.png
 
-/target
-/bin/
-src/main/resources/googleapikey
-gpr-viewer-tasklist.txt
+target
 .idea
 .DS_Store
 .classpath

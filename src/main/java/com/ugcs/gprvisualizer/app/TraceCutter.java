@@ -2,17 +2,19 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -20,6 +22,7 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutInitializer;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
@@ -32,7 +35,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.Region;
 
 @Component
 public class TraceCutter implements Layer, SmthChangeListener, InitializingBean {
@@ -42,51 +44,50 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	private MapField field;
 	private List<LatLon> points;	
 	private Integer active = null;
+
+	Map<Integer, Boolean> activePoints = new HashMap<>();
 	
-	@Autowired
-	private Model model;
-	
-	@Autowired
-	private Broadcast broadcast;
+	private final Model model;
+	private final Broadcast broadcast;
 	
 	private RepaintListener listener;
 	
-	private ToggleButton buttonCutMode = new ToggleButton("Select", 
-			ResourceImageHolder.getImageView("select_rect20.png"));
-	private Button buttonSet = new Button("Crop", 
-			ResourceImageHolder.getImageView("scisors3-20.png"));	
-	private Button buttonUndo = new Button("", 
-			ResourceImageHolder.getImageView("undo.png"));
+	private ToggleButton buttonCutMode = ResourceImageHolder.setButtonImage(ResourceImageHolder.SELECT_RECT, new ToggleButton());
+	//new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
+	private Button buttonSet = ResourceImageHolder.setButtonImage(ResourceImageHolder.CROP, new Button());
+	//new Button("Crop", ResourceImageHolder.getImageView("scisors3-20.png"));	
+	private Button buttonUndo = ResourceImageHolder.setButtonImage(ResourceImageHolder.UNDO, new Button());
+	//new Button("", ResourceImageHolder.getImageView("undo.png"));
 	
 	{
+		buttonCutMode.setTooltip(new Tooltip("Select Area"));
 		buttonUndo.setTooltip(new Tooltip("Undo Crop")); 
+		buttonSet.setTooltip(new Tooltip("Apply Crop"));
+	}
+
+	public TraceCutter(Model model, Broadcast broadcast) {
+		this.model = model;
+		this.broadcast = broadcast;
 	}
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		this.field = model.getField();
+		this.field = model.getMapField();
 	}
-	
+
 	public void clear() {
 		points = null;
 		active = null;
+		activePoints.clear();
 	}
 
-	public void init() {
-		
+	public void init() {		
 		points = new TraceCutInitializer()
-			.initialRect(model, model.getFileManager().getTraces());
+			.initialRect(model, model.getTraces());
+		activePoints.clear();
 	}
 	
-	public void initOld() {		
-		points = new ArrayList<>();
-		points.add(field.screenTolatLon(new Point(+100, +100)));
-		points.add(field.screenTolatLon(new Point(+100, -100)));
-		points.add(field.screenTolatLon(new Point(-100, -100)));
-		points.add(field.screenTolatLon(new Point(-100, +100)));
-		
-	}
-	
+	@Override
 	public boolean mousePressed(Point2D point) {
 		if (points == null) {
 			return false;
@@ -105,6 +106,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return false;
 	}
 	
+	@Override
 	public boolean mouseRelease(Point2D point) {
 		if (points == null) {
 			return false;
@@ -119,6 +121,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return false;
 	}
 	
+	@Override
 	public boolean mouseMove(Point2D point) {
 		if (points == null) {
 			return false;
@@ -129,10 +132,27 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		}
 		
 		points.get(active).from(field.screenTolatLon(point));
+		if (active % 2 == 0) {
+			if (!isActive(active + 1)) {
+				points.get(active + 1).from(TraceCutInitializer.getMiddleOf((active + 2) < points.size() ? points.get(active + 2) : points.get(0), field.screenTolatLon(point)));
+			}
+			if (!isActive(active == 0 ? points.size() - 1 : active - 1)) {
+				(active == 0 ? points.get(points.size() - 1) : points.get(active - 1))
+				.from(TraceCutInitializer.getMiddleOf(active == 0 ? points.get(points.size() - 2) : points.get(active - 2), field.screenTolatLon(point)));
+			}
+		} else {
+			activePoints.put(active, !isInTheMiddle(active));
+		}
+
 		getListener().repaint();		
 		return true;
 	}
 	
+	private boolean isActive(int pointIndex) {
+		return activePoints.computeIfAbsent(pointIndex, i -> false);
+	}
+
+	@Override
 	public void draw(Graphics2D g2, MapField fixedField) {
 		if (points == null) {
 			return;
@@ -153,7 +173,12 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		for (int i = 0; i < border.size(); i++) {
 			Point2D p1 = border.get(i);			
 			
-			g2.setColor(Color.WHITE);
+			if ((i+1) % 2 == 0 && !isActive(i)) {
+				g2.setColor(Color.GRAY);
+			} else {
+				g2.setColor(Color.WHITE);
+			}
+			 
 			g2.fillOval((int) p1.getX() - RADIUS, 
 					(int) p1.getY() - RADIUS,
 					2 * RADIUS, 2 * RADIUS);
@@ -165,8 +190,23 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 			}			
 		}		
 	}
+
+	private boolean isInTheMiddle(int pointIndex) {
+		List<Point2D> border = getScreenPoligon(field);
+		return isInTheMiddle(
+			border.get(pointIndex - 1), 
+			border.get(pointIndex), 
+			(pointIndex + 1 < border.size()) ? border.get(pointIndex + 1) : border.get(0));
+	}
 	
-	public void apply() {
+	private boolean isInTheMiddle(Point2D before, Point2D current, Point2D after) {
+		double dist = before.distance(after);
+		double dist1 = before.distance(current);
+		double dist2 = current.distance(after);
+		return Math.abs(dist1 + dist2 - dist) < 0.05;
+	}
+
+	private void apply() {
 		
 		model.setControls(null);
 		
@@ -175,50 +215,67 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		List<Point2D> border = getScreenPoligon(fld);
 		
 		List<SgyFile> slicedSgyFiles = new ArrayList<>();
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		
+		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 		}
-		
-		model.setUndoFiles(model.getFileManager().getFiles());
-		
-		model.getFileManager().setFiles(slicedSgyFiles);
-		
-		model.getFileManager().clearTraces();
+		model.setUndoFiles(model.getFileManager().getGprFiles());
+
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
+			slicedSgyFiles.addAll(splitFile(file, fld, border));
+		}
+		model.getUndoFiles().addAll(model.getFileManager().getCsvFiles());
+
+		model.getFileManager().updateFiles(slicedSgyFiles);
+
+		for (SgyFile sf : model.getFileManager().getCsvFiles()) {
+			model.updateChart((CsvFile) sf, broadcast);
+		}
 		
 		model.init();
-		
-		model.getVField().clear();
+		model.initField();
+		model.getProfileField().clear();
 	}
 
-	public void undo() {
+	private void undo() {
 		model.setControls(null);
 
 		if (model.getUndoFiles() != null) {
-			model.getFileManager().setFiles(model.getUndoFiles());
+			model.getFileManager().updateFiles(model.getUndoFiles());
 			model.setUndoFiles(null);
 			
-			for (SgyFile sf : model.getFileManager().getFiles()) {
+			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
 			}
 
-			model.getFileManager().clearTraces();
+			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
+				model.updateChart((CsvFile) sf, broadcast);
+			}
 			
 			model.init();
-			
 			//model.initField();
-			model.getVField().clear();
+			model.getProfileField().clear();
 		}
 		
 	}
-
 	
 	public boolean isTraceInsideSelection(MapField fld, List<Point2D> border, Trace trace) {
 		Point2D p = fld.latLonToScreen(trace.getLatLon());
 		boolean ins = inside(p, border);
 		return ins;
 	}
-	
+
+	public boolean isGeoDataInsideSelection(MapField fld, List<Point2D> border, GeoData geoData) {
+		Point2D p = fld.latLonToScreen(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
+		boolean ins = inside(p, border);
+		return ins;
+	}
+
 	private SgyFile generateSgyFileFrom(SgyFile sourceFile, List<Trace> traces, int part) {
+		return generateSgyFileFrom(sourceFile, traces, new ArrayList<>(), part);
+	}
+
+	private SgyFile generateSgyFileFrom(SgyFile sourceFile, List<Trace> traces, List<GeoData> geoDataList, int part) {
 		
 		SgyFile sgyFile = sourceFile.copyHeader(); 
 		
@@ -226,19 +283,23 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		
 		sgyFile.setTraces(traces);
 		sgyFile.setFile(getPartFile(sourceFile, part, sourceFile.getFile().getParentFile()));
+
+		//sgyFile.setFile(sourceFile.getFile());
+		//sgyFile.setParser(sourceFile.getParser());
+		//sgyFile.getGeoData().addAll(geoDataList);
 		
-		int begin = traces.get(0).indexInFile;
-		int end = traces.get(traces.size() - 1).indexInFile;
-		sgyFile.setAuxElements(copyAuxObjects(sourceFile, sgyFile, begin, end));
-		
-		
-		/// TODO:
-		if (sgyFile instanceof DztFile) {
-			DztFile dztfile = (DztFile) sgyFile;
-			dztfile.dzg = dztfile.dzg.cut(begin, end);
+		if (!traces.isEmpty()) {
+			int begin = traces.get(0).getIndexInFile();
+			int end = traces.get(traces.size() - 1).getIndexInFile();
+			sgyFile.setAuxElements(copyAuxObjects(sourceFile, sgyFile, begin, end));
+			/// TODO:
+			if (sgyFile instanceof DztFile) {
+				DztFile dztfile = (DztFile) sgyFile;
+				dztfile.dzg = dztfile.dzg.cut(begin, end);
+			}
+			///
 		}
-		
-		///
+
 		sgyFile.updateInternalIndexes();
 		return sgyFile;
 	}
@@ -252,34 +313,69 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		nfile = new File(nfolder, onlyname + "_" + spart + name.substring(pos));
 		return nfile;
 	}
-
 	
 	private List<SgyFile> splitFile(SgyFile file, MapField field, List<Point2D> border) {
-		
 		
 		List<SgyFile> splitList = new ArrayList<>();
 		List<Trace> sublist = new ArrayList<>();
 		
-		int part = 1; 
+		int part = 1;
+
+		if(file instanceof CsvFile) {
+			CsvFile csvFile = (CsvFile) file;
+			for(Trace trace: file.getTraces()) {
+				boolean inside = isTraceInsideSelection(field, border, trace);
+				if (inside) {
+					sublist.add(trace);
+				} 
+			}	
+			List<GeoData> geoDataList = new ArrayList<>();
+			List<GeoData> geoDataLineList = new ArrayList<>();
+			int lineNumber = 0;
+			for(GeoData geoData: csvFile.getGeoData()) {
+				boolean inside = isGeoDataInsideSelection(field, border, geoData);
+				if (inside) {
+					geoDataLineList.add(geoData);
+				} else {
+					if (!geoDataLineList.isEmpty()) {
+						if (isGoodForFile(geoDataLineList)) { //filter too small lines
+							for(GeoData gd: geoDataLineList) {
+								gd.setLine(lineNumber);
+							}
+							lineNumber++;
+							geoDataList.addAll(geoDataLineList);
+						}
+						geoDataLineList = new ArrayList<>();
+					}
+				}
+	
+			}
+			
+			CsvFile subfile = csvFile.copy();
+			subfile.setUnsaved(true);
+		
+			subfile.setTraces(sublist);
+			subfile.getGeoData().addAll(geoDataList);	
+			
+			return List.of(subfile);
+		} 
 		
 		for (Trace trace : file.getTraces()) {
 			boolean inside = isTraceInsideSelection(field, border, trace);
-			
 			if (inside) {
 				sublist.add(trace);
 			} else {
 				if (!sublist.isEmpty()) {
-					
 					if (isGoodForFile(sublist)) { //filter too small files
 						SgyFile subfile = generateSgyFileFrom(
 								file, sublist, part++);
-						
 						splitList.add(subfile);
 					}
 					sublist = new ArrayList<>();
 				}
 			}
 		}
+
 		//for last
 		if (isGoodForFile(sublist)) {					
 			SgyFile subfile = generateSgyFileFrom(file, sublist, part++);
@@ -307,7 +403,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return auxObjects;
 	}
 
-	public boolean isGoodForFile(List<Trace> sublist) {
+	public boolean isGoodForFile(List<?> sublist) {
 		return sublist.size() > 3;
 	}
 	
@@ -360,6 +456,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return Arrays.asList();
 	}
 	
+
 	public List<Node> getToolNodes2() {
 		
 		initButtons();
@@ -411,19 +508,12 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
     	getListener().repaint();
 	}
 
-	private Region getSpacer() {
-		Region r3 = new Region();
-		r3.setPrefWidth(7);
-		return r3;
-	}
-
 	public RepaintListener getListener() {
 		return listener;
 	}
 
 	public void setListener(RepaintListener listener) {
 		this.listener = listener;
-	}
-	
+	}	
 }
 

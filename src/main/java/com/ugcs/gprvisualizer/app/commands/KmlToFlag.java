@@ -26,13 +26,12 @@ public class KmlToFlag implements Command {
 
         Model model = AppContext.model;
 
-
         model.getAuxElements().stream()
             .filter(a -> a instanceof ConstPlace)
             .map(a -> (ConstPlace) a)
             .forEach(c -> {
                 int traceIndex = TraceUtils.findNearestTraceIndex(
-                    model.getFileManager().getTraces(), c.getLatLon());
+                    model.getGprTraces(), c.getLatLon());
 
                 SgyFile sf = model.getSgyFileByTrace(traceIndex);
 

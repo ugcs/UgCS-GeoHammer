@@ -28,10 +28,12 @@ public class FileFormat {
         return switch (type) {
             case CSV -> isDecimalSeparatorValid() && separator != null && commentPrefix != null
                     && columns != null && isDateTimeColumnsValid(columns)
-                    && (hasHeader ? (StringUtils.hasLength(columns.getLatitude().getHeader())
+                    && (hasHeader ? (columns.getLatitude() != null 
+                            && StringUtils.hasLength(columns.getLatitude().getHeader())
+                            && columns.getLongitude() != null 
                             && StringUtils.hasLength(columns.getLongitude().getHeader())
-                            && columns.getLatitude() != null && columns.getLatitude().getIndex() == null
-                            && columns.getLongitude() != null && columns.getLongitude().getIndex() == null)
+                            &&  columns.getLatitude().getIndex() == null
+                            &&  columns.getLongitude().getIndex() == null)
                             : (columns.getLatitude() != null && columns.getLatitude().getIndex() != null
                                     && columns.getLongitude() != null && columns.getLongitude().getIndex() != null)
                                     && !StringUtils.hasLength(columns.getLongitude().getHeader()));

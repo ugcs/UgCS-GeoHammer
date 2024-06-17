@@ -20,7 +20,4 @@ public interface Layer extends ToolProducer {
 	
 	boolean mouseMove(Point2D point);
 
-	
-	
-	
 }

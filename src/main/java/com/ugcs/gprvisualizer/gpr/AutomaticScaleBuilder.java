@@ -4,15 +4,13 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class AutomaticScaleBuilder implements ArrayBuilder {
 
-	private Model model;
+	private final Model model;
 	private float[] maxvalues = new float[1];
 	private float[] avgvalues = new float[1];
 	private double avgcount = 0;
 	
 	public AutomaticScaleBuilder(Model model) {
-		
 		this.model = model;
-
 	}
 	
 	public void clear() {
@@ -24,23 +22,21 @@ public class AutomaticScaleBuilder implements ArrayBuilder {
 	@Override
 	public double[][] build() {
 		
-		for (Trace trace: model.getFileManager().getTraces()) {
+		for (Trace trace: model.getGprTraces()) {
 			analyze(trace.getNormValues());			
 		}
 		
 		double[][] scale = new double[2][maxvalues.length]; 
 		
 		for (int i = 0; i < maxvalues.length; i++) {
-			
 			scale[0][i] = avgvalues[i] / avgcount;
 			scale[1][i] = 100 / Math.max(0, maxvalues[i] - scale[0][i]);
-			
 		}
 		
 		return scale;
 	}
 
-	int nrm(int i, int max) {
+	private int nrm(int i, int max) {
 		return Math.max(0, Math.min(max - 1, i));
 	}
 	
