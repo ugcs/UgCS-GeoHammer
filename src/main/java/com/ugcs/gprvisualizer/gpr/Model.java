@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.gpr;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Set;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
@@ -23,8 +25,8 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.SensorLineChart;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
@@ -32,9 +34,13 @@ import com.ugcs.gprvisualizer.app.ext.FileManager;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
@@ -48,40 +54,42 @@ public class Model implements InitializingBean {
 	private MapField field = new MapField();
 	private ProfileField profField = new ProfileField(this);
 	
-	private FileManager fileManager; // = new FileManager();
+	private final FileManager fileManager;
+	 // = new FileManager();
 	private List<SgyFile> undoFiles = null;
 	
 	
-	private Settings settings = new Settings();
-	private LeftRulerController leftRulerController = new LeftRulerController(this);
+	private final Settings settings = new Settings();
+
+	private final LeftRulerController leftRulerController = new LeftRulerController(this);
 	
-	private Set<FileChangeType> changes = new HashSet<>();
+	private final Set<FileChangeType> changes = new HashSet<>();
 	
-	private List<BaseObject> auxElements = new ArrayList<>();
+	private final List<BaseObject> auxElements = new ArrayList<>();
+
 	private List<BaseObject> controls = null;
 	
 	private Rectangle2D.Double bounds;
 	private int maxHeightInSamples = 0;
 	
 	private boolean kmlToFlagAvailable = false;
+
+	private PrefSettings prefSettings;
+
+	private final VBox chartsContainer = new VBox(); // Charts container
+
+	Map<CsvFile, SensorLineChart> csvFiles = new HashMap<>();
 	
-	public Model(FileManager fileManager) {
-		Sout.p("create model");
+	public Model(FileManager fileManager, PrefSettings prefSettings) {
+		//Sout.p("create model");
+		this.prefSettings = prefSettings;
 		this.fileManager = fileManager;
-	}
-	
-	public int getTracesCount() {
-		return getFileManager().getTraces().size();
 	}
 	
 	public Settings getSettings() {
 		return settings;
 	}
-	
-	public void setSettings(Settings settings) {
-		this.settings = settings;
-	}
-	
+		
 	public void setBounds(Rectangle2D.Double bounds) {
 		this.bounds = bounds;		
 	}
@@ -90,7 +98,7 @@ public class Model implements InitializingBean {
 		return bounds;
 	}
 
-	public MapField getField() {
+	public MapField getMapField() {
 		return field;
 	}
 
@@ -116,14 +124,14 @@ public class Model implements InitializingBean {
 	
 	public void updateAuxElements() {
 		auxElements.clear();
-		for (SgyFile sf : getFileManager().getFiles()) {
+		for (SgyFile sf : getFileManager().getGprFiles()) {
 			auxElements.addAll(sf.getAuxElements());
 			
 			Trace lastTrace = sf.getTraces().get(sf.getTraces().size() - 1);
 			
 			// add remove button
 			RemoveFileButton rfb = new RemoveFileButton(
-					lastTrace.indexInFile, sf.getOffset(), sf);
+					lastTrace.getIndexInFile(), sf.getOffset(), sf);
 			
 			auxElements.add(rfb);
 			
@@ -135,9 +143,9 @@ public class Model implements InitializingBean {
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {
-		for (SgyFile fl : getFileManager().getFiles()) {
+		for (SgyFile fl : getFileManager().getGprFiles()) {
 			Trace lastTrace = fl.getTraces().get(fl.getTraces().size() - 1);
-			if (i <= lastTrace.indexInSet) {
+			if (i <= lastTrace.getIndexInSet()) {
 				return fl;
 			}		
 		}
@@ -145,28 +153,22 @@ public class Model implements InitializingBean {
 	}
 
 	public int getSgyFileIndexByTrace(int i) {
-		
 		for (int index = 0;
-				index < getFileManager().getFiles().size(); index++) {
-			SgyFile fl =  getFileManager().getFiles().get(index);
+				index < getFileManager().getGprFiles().size(); index++) {
+			SgyFile fl =  getFileManager().getGprFiles().get(index);
 			
-			if (i <= fl.getTraces().get(fl.getTraces().size() - 1).indexInSet) {
-				
+			if (i <= fl.getTraces().get(fl.getTraces().size() - 1).getIndexInSet()) {
 				return index;
 			}		
 		}
-		
 		return 0;
 	}
-
-	private final VBox chartsContainer = new VBox(); // Charts container
 
 	public VBox getChartsContainer() {
 		return chartsContainer;
 	}
 
-	
-	public ProfileField getVField() {
+	public ProfileField getProfileField() {
 		return profField;
 	}
 
@@ -178,10 +180,8 @@ public class Model implements InitializingBean {
 		
 		//set index of traces
 		int maxHeight = 0;
-		for (int i = 0;
-				i < this.getFileManager().getTraces().size(); 
-				i++) {
-			Trace tr = this.getFileManager().getTraces().get(i);
+		for (int i = 0; i < getGprTracesCount(); i++) {
+			Trace tr = getGprTraces().get(i);
 			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
 		}
 		
@@ -207,8 +207,7 @@ public class Model implements InitializingBean {
 	
 	public void updateSgyFileOffsets() {
 		int startTraceNum = 0;
-		for (SgyFile sgyFile : this.getFileManager().getFiles()) {
-			
+		for (SgyFile sgyFile : this.getFileManager().getGprFiles()) {			
 			sgyFile.getOffset().setStartTrace(startTraceNum);
 			startTraceNum += sgyFile.getTraces().size();
 			sgyFile.getOffset().setFinishTrace(startTraceNum);
@@ -220,7 +219,7 @@ public class Model implements InitializingBean {
 		// center
 		MinMaxAvg lonMid = new MinMaxAvg();
 		MinMaxAvg latMid = new MinMaxAvg();
-		for (Trace trace : this.getFileManager().getTraces()) {
+		for (Trace trace : getTraces()) {
 			if (trace == null) {
 				System.out.println("null trace or ot latlon");
 				continue;
@@ -232,25 +231,24 @@ public class Model implements InitializingBean {
 			}
 		}
 		
-		
 		if (latMid.isNotEmpty()) {
-			this.getField().setPathCenter(
+			this.getMapField().setPathCenter(
 					new LatLon(latMid.getMid(), lonMid.getMid()));
-			this.getField().setSceneCenter(
+			this.getMapField().setSceneCenter(
 					new LatLon(latMid.getMid(), lonMid.getMid()));
 			
 			
 			LatLon lt = new LatLon(latMid.getMin(), lonMid.getMin());
 			LatLon rb = new LatLon(latMid.getMax(), lonMid.getMax());
 			
-			this.getField().setPathEdgeLL(lt, rb);
+			this.getMapField().setPathEdgeLL(lt, rb);
 			
-			this.getField().adjustZoom(400, 700);
+			this.getMapField().adjustZoom(400, 700);
 			
 		} else {
-			Sout.p("GPS coordinates not found");
-			this.getField().setPathCenter(null);
-			this.getField().setSceneCenter(null);
+			//Sout.p("GPS coordinates not found");
+			this.getMapField().setPathCenter(null);
+			this.getMapField().setSceneCenter(null);
 		}
 	}
 
@@ -301,15 +299,13 @@ public class Model implements InitializingBean {
 	}
 
 	public boolean isSpreadCoordinatesNecessary() {
-		
-		for (SgyFile file : getFileManager().getFiles()) {
+		for (SgyFile file : getFileManager().getGprFiles()) {
 			if (file.isSpreadCoordinatesNecessary()) {
 				return true;
 			}
 		}
 		return false;
 	}
-
 
 	public boolean isKmlToFlagAvailable() {
 		return kmlToFlagAvailable;
@@ -322,9 +318,8 @@ public class Model implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		AppContext.model = this;
+		loadColorSettings(semanticColors);
 	}
-
-	Map<File, SensorLineChart> csvFiles = new HashMap<>();
 
 	/** 
 	 * Initialize chart for the given CSV file
@@ -332,19 +327,25 @@ public class Model implements InitializingBean {
 	 * @param broadcast Broadcast to notify listeners
 	 * @return void
 	 */
-	public void initChart(File csvFile, Broadcast broadcast) {
+	public void initChart(CsvFile csvFile, Broadcast broadcast) {
 		if (getChart(csvFile).isPresent()) {
 			return;
 		} 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		for (SgyFile file: plotData.keySet()) {
-			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(file, plotData.get(file)));
+		for (var entry: plotData.entrySet()) {
+			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(entry.getKey(), entry.getValue()));
 		}
 		csvFiles.put(csvFile, sensorLineChart);
+		saveColorSettings(semanticColors);
 	}
 
-	public void updateChart(File csvFile, Broadcast broadcast) {
+	private void saveColorSettings(Map<String, Color> semanticColors) {
+		String group = "colors";
+		prefSettings.saveSetting(group, semanticColors);
+	}
+
+	public void updateChart(CsvFile csvFile, Broadcast broadcast) {
 		Optional<SensorLineChart> currentChart = getChart(csvFile);
 		if (currentChart.isEmpty()) {
 			return;
@@ -354,8 +355,8 @@ public class Model implements InitializingBean {
 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		for (SgyFile file: plotData.keySet()) {
-			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(file, plotData.get(file)));
+		for (var entry: plotData.entrySet()) {
+			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(entry.getKey(), entry.getValue()));
 		}
 		csvFiles.put(csvFile, sensorLineChart);
 	}
@@ -365,7 +366,7 @@ public class Model implements InitializingBean {
 	 * @param file CSV file to get chart for
 	 * @return Optional of SensorLineChart
 	 */
-    public Optional<SensorLineChart> getChart(File csvFile) {
+    public Optional<SensorLineChart> getChart(CsvFile csvFile) {
 		csvFiles.forEach((file, chart) -> {
 			chart.removeVerticalMarker();
 		});
@@ -385,39 +386,133 @@ public class Model implements InitializingBean {
 		csvFiles.clear();
 	}
 
-	public void removeChart(File csvFile) {
+	public void removeChart(CsvFile csvFile) {
 		csvFiles.remove(csvFile);
     }
 
 	Map<String, Color> semanticColors = new HashMap<>();
 
+	public void loadColorSettings(Map<String, Color> semanticColors) {
+		prefSettings.getAllSettings().get("colors")
+			.forEach((key, value) -> {
+			//if (key.startsWith("colors")) {
+				semanticColors.put(key, Color.web(value));
+			//}
+		});
+	}
+
 	public Color getColorBySemantic(String semantic) {
 		return semanticColors.computeIfAbsent(semantic, k -> generateRandomColor());
 	}
 
+	private List<Color> brightColors = List.of(Color.web("#E6194B"), // Red
+		Color.web("#3CB44B"), // Green
+		Color.web("#4363D8"), // Dark Blue
+		Color.web("#F58231"), // Orange
+		Color.web("#911EB4"), // Purple
+		Color.web("#F032E6"), // Magenta
+		Color.web("#008080"), // Teal
+		Color.web("#9A6324"), // Brown
+		Color.web("#800000"), // Maroon
+		Color.web("#808000"), // Olive
+		Color.web("#000075"), // Navy Blue
+		Color.web("#00FF00"), // Bright Green
+		Color.web("#FF4500"), // Orange Red
+		Color.web("#DA70D6") // Orchid
+	);
+
+	Random rand = new Random();
+
+	private Node selectedDataNode;
+
 	// Generate random color
     private Color generateRandomColor() {
-        var brightColors = List.of(Color.web("#E6194B"), // Red
-                Color.web("#3CB44B"), // Green
-                Color.web("#4363D8"), // Dark Blue
-                Color.web("#F58231"), // Orange
-                Color.web("#911EB4"), // Purple
-                Color.web("#F032E6"), // Magenta
-                Color.web("#008080"), // Teal
-                Color.web("#9A6324"), // Brown
-                Color.web("#800000"), // Maroon
-                Color.web("#808000"), // Olive
-                Color.web("#000075"), // Navy Blue
-                Color.web("#00FF00"), // Bright Green
-                Color.web("#FF4500"), // Orange Red
-                Color.web("#DA70D6") // Orchid
-        );
-        Random rand = new Random();
         return brightColors.get(rand.nextInt(brightColors.size()));
     }
 
-	public boolean isOnlyCsvLoaded() {
+	/*public boolean isOnlyCsvLoaded() {
 		return fileManager.getFiles().stream()
 				.allMatch(SgyFile::isCsvFile);
+	}*/
+
+	public List<Trace> getGprTraces() {
+		return getFileManager().getGprTraces();
 	}
+
+	public List<Trace> getCsvTraces() {
+		return getFileManager().getCsvTraces();
+	}
+
+	public int getCsvTracesCount() {
+		return getCsvTraces().size();
+	}
+
+	public int getGprTracesCount() {
+		return getGprTraces().size();
+	}
+
+	public List<Trace> getTraces() {
+		List<Trace> result = new ArrayList<>();
+		result.addAll(getGprTraces());
+		result.addAll(getCsvTraces());
+		return result;
+	}
+
+	private void setSelectedData(Node node) {
+		this.selectedDataNode = node;
+	}
+
+    private Node getSelectedData() {
+		return selectedDataNode;   
+	}
+
+	public void selectAndScrollToChart(Node node) {
+
+        if (getSelectedData() != null) {
+			if (getSelectedData() == node) {
+				return;
+			}
+			getChart(null); // clear selection
+            getSelectedData().setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
+        }
+
+        node.setStyle("-fx-border-width: 2px; -fx-border-color: lightblue;");
+        setSelectedData(node);
+		fileManager.selectFile();
+
+		ScrollPane scrollPane = findScrollPane(node);
+		if (scrollPane != null) {
+			//TODO: implement scroll to chart
+        	scrollToChart(scrollPane, node);
+		}
+    }
+
+	private ScrollPane findScrollPane(Node node) {
+        Parent parent = node.getParent();
+        while (parent != null) {
+            if (parent instanceof ScrollPane) {
+                return (ScrollPane) parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
+    }
+
+	private void scrollToChart(ScrollPane scrollPane, Node chart) {
+        Bounds viewportBounds = scrollPane.getViewportBounds();
+        Bounds chartBounds = chart.getBoundsInParent();
+
+        double heightDifference = chartsContainer.getBoundsInParent().getHeight() - viewportBounds.getHeight();
+
+        double vValue = chartBounds.getMinY() / heightDifference;
+
+        scrollPane.setVvalue(vValue);
+    }
+
+	public void createClickPlace(SgyFile file, Trace trace) {
+		ClickPlace fp = new ClickPlace(file, trace);
+		fp.setSelected(true);
+		setControls(Arrays.asList(fp));
+	}
+
 }

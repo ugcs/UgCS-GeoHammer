@@ -12,10 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class ThrQueue {
+public abstract class ThrQueue {
 	
 	
 	private final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1,
@@ -54,13 +53,10 @@ public class ThrQueue {
 				
 					actualizeBackImg();
 							
-					MapField field = new MapField(model.getField());
+					MapField field = new MapField(model.getMapField());
 					
 					///
-					
 					draw(backImg, field);
-					
-					
 					///
 					
 					BufferedImage img = backImg;
@@ -87,22 +83,22 @@ public class ThrQueue {
 		};
 	}
 
-	protected void draw(BufferedImage backImg, MapField field) {
-		Sout.p("start d");
+	protected abstract void draw(BufferedImage backImg, MapField field); //{
+		//System.out.println("start d");
 		
-		try {
+		/*try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			
 			e.printStackTrace();
-		}
-		
-		Sout.p("finish d");
+		}*/
+
+		//System.out.println("finish d");
 				
-	}		
+	//}		
 	
 	public void ready() {
-		Sout.p("ready");
+		System.out.println("ready");
 	}
 
 	protected void actualizeBackImg() {

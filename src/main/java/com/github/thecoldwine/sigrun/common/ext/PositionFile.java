@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.opencsv.CSVReader;
 import com.ugcs.gprvisualizer.app.MessageBoxHelper;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
 import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
@@ -24,6 +23,8 @@ public class PositionFile {
 
 	private FileTemplates fileTemplates;
 
+	private File positionFile;
+
 	public PositionFile(FileTemplates fileTemplates) {
 		this.fileTemplates = fileTemplates;
 	}
@@ -31,50 +32,45 @@ public class PositionFile {
 	public void load(SgyFile sgyFile) throws Exception {
 		var posFile = getPositionFileBySgy(sgyFile.getFile());
 		if (posFile.isPresent()) {
-			load(sgyFile, posFile.get(), true);
+			load(sgyFile, posFile.get());
 		} else {
 			System.out.println("Position file not found for " + sgyFile.getFile().getAbsolutePath());
 		}
 	}
 
-	public void load(SgyFile sgyFile, File csvFile) {
-		load(sgyFile, csvFile, false);
-	}
+	private void load(SgyFile sgyFile, File positionFile) {
+		this.positionFile = positionFile;
 
-	public void load(SgyFile sgyFile, File csvFile, boolean loadAltOnly) {
-
-		String logPath = csvFile.getAbsolutePath();
+		String logPath = positionFile.getAbsolutePath();
 		var fileTemplate = fileTemplates.findTemplate(fileTemplates.getTemplates(), logPath);
 
 			if (fileTemplate == null) {
-				throw new RuntimeException("Can`t find template for file " + csvFile.getName());
+				throw new RuntimeException("Can`t find template for file " + positionFile.getName());
 			}
 
 			System.out.println("template: " + fileTemplate.getName());
 			CsvParser parser = new CSVParsersFactory().createCSVParser(fileTemplate);
 
-			sgyFile.setParser(parser);
-
 			try {				
 				List<GeoCoordinates> coordinates = parser.parse(logPath);
 				
-				if (sgyFile.getFile() == null) {
-					sgyFile.setFile(csvFile);
-				}
+				//if (sgyFile.getFile() == null) {
+				//	sgyFile.setFile(csvFile);
+				//}
 
 				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());		    
    		    	StretchArray altArr = new StretchArray();
 
 				for (GeoCoordinates coord : coordinates) {
-					if (loadAltOnly) {
+					//if (loadAltOnly) {
 						double hair =  100 / sgyFile.getSamplesToCmAir();
 						altArr.add((int) (coord.getAltitude() * hair));
-					} else {
-						sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
-						if(coord instanceof GeoData) {
-							sgyFile.getGeoData().add((GeoData)coord);
-						}
-					}
+					//} else {
+					//	sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
+					//	if(coord instanceof GeoData) {
+					//		sgyFile.getGeoData().add((GeoData)coord);
+					//	}
+					//}
 				}	
 				
     			hp.deep = altArr.stretchToArray(sgyFile.getTraces().size());	    
@@ -189,5 +185,9 @@ public class PositionFile {
 		}
 				
 		return mrkupName != null ? Optional.of(new File(mrkupName)) : Optional.empty();
+	}
+
+	public File getPositionFile() {
+		return positionFile;
 	}
 }

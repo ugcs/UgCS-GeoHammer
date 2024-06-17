@@ -12,7 +12,6 @@ import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.ProgressTask;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.TaskRunner;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -56,17 +55,17 @@ public class CommandRegistry {
 		}
 	};
 	
-	public void runForFiles(Command command) {
-		
-		runForFiles(command, emptyListener);
+	public void runForGprFiles(Command command) {		
+		runForGprFiles(command, emptyListener);
 	}
 	
-	public void runForFiles(Command command, ProgressListener listener) {
+	private void runForGprFiles(Command command, ProgressListener listener) {
 	
 		int number = 1;
-		int count = model.getFileManager().getFiles().size();
+		var files = model.getFileManager().getGprFiles();
+		int count = files.size();
 		
-		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
+		for (SgyFile sgyFile : files) {
 			
 			try {
 				listener.progressMsg("process file '" 
@@ -100,25 +99,15 @@ public class CommandRegistry {
 		
 		Button button = new Button(command.getButtonText());
 		
-		ProgressTask task = new ProgressTask() {
-			
-			@Override
-			public void run(ProgressListener listener) {
-				runForFiles(command, listener);				
+		ProgressTask task = listener -> {
+				runForGprFiles(command, listener);				
 				
 				if (finish != null) {
 					finish.accept(null);
 				}
-			}
 		};
 		
-		button.setOnAction(new EventHandler<ActionEvent>() {
-		    @Override public void handle(ActionEvent e) {
-				
-				new TaskRunner(status, task).start();
-		    	
-		    }
-		});
+		button.setOnAction(event -> new TaskRunner(status, task).start());
 		
 		return button;
 	}
@@ -134,7 +123,7 @@ public class CommandRegistry {
 				try {
 					listener.progressMsg("start processing");
 					
-                    command.execute(AppContext.model.getFileManager().getFiles(),
+                    command.execute(AppContext.model.getFileManager().getGprFiles(),
 							listener);
 					
 				} catch (Exception e) {
@@ -181,7 +170,7 @@ public class CommandRegistry {
 		}
 		
 		button.setOnAction(e -> {
-			runForFiles(command);
+			runForGprFiles(command);
 			
 			if (finish != null) {
 				finish.accept(null);

@@ -8,14 +8,12 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class MedianScaleBuilder implements ArrayBuilder {
 
-	private Model model;
+	private final Model model;
 	
-	double[][] scale = null;
+	private double[][] scale = null;
 	
 	public MedianScaleBuilder(Model model) {
-		
 		this.model = model;
-
 	}
 	
 	public void clear() {
@@ -25,7 +23,7 @@ public class MedianScaleBuilder implements ArrayBuilder {
 	@Override
 	public double[][] build() {
 		
-		List<Trace> traces = model.getFileManager().getTraces();
+		List<Trace> traces = model.getGprTraces();
 		if (scale != null) {
 			return scale;
 		}
@@ -68,7 +66,7 @@ public class MedianScaleBuilder implements ArrayBuilder {
 		return scale;
 	}
 
-	int nrm(int i, int max) {
+	private int nrm(int i, int max) {
 		return Math.max(0, Math.min(max - 1, i));
 	}
 }

@@ -118,22 +118,18 @@ public class VerticalCut implements SmthChangeListener {
 	    
 	    Graphics2D g2 = (Graphics2D) image.getGraphics();
 	    
-	    
-	    
 	    //draw hor grid
 	    g2.setColor(Color.GRAY);
 	    for (int i = 0; i < 30; i++) {
-	    	
 	    	int h = (int) ((i - model.getSettings().heightStart) * getHZoom());
 	    	g2.drawLine(0, h, width, h);
 	    }
 	    
 	    int rangx = width / model.getSettings().distBetweenTraces / 2;
 	    for (int x = -rangx; x < rangx; x++) {
-	    	
     		int scanNum = model.getSettings().selectedScanIndex + x;
     		if (scanNum < 0 
-    				|| scanNum >= model.getFileManager().getTraces().size()) {
+    				|| scanNum >= model.getGprTracesCount()) {
     			continue;
     		}
 
@@ -145,7 +141,7 @@ public class VerticalCut implements SmthChangeListener {
     		
     		g2.setColor(Color.GRAY);
     		
-    		Trace trace = model.getFileManager().getTraces().get(scanNum);
+    		Trace trace = model.getGprTraces().get(scanNum);
     		float [] values = trace.getOriginalValues();
     		//drawGraph(values, startx, g2);
     		
@@ -257,7 +253,7 @@ public class VerticalCut implements SmthChangeListener {
 		public void updateUI() {
 			//slider.setMax(model.getFileManager().getTraces().size()-1);
 			int mx = model.getFileManager().isActive() 
-					? model.getFileManager().getTraces().size() - 1 : 1; 
+					? model.getGprTracesCount() - 1 : 1; 
 			slider.setMax(mx);
 			slider.setMin(0);
 			//slider.set

@@ -69,10 +69,32 @@ public class ProfileField {
 		zoom = 1;
 		aspect = -15;		
 		startSample = 0;
-		if (model.isActive()) {
-			new Navigator(model).fitFull();
+		if (model.isActive() && model.getGprTracesCount() > 0) {
+			fitFull();
 		}
+	}
 
+	private void fitFull() {		
+		setSelectedTrace(model.getGprTracesCount() / 2);
+		int maxSamples = model.getMaxHeightInSamples();
+		fit(maxSamples * 2, model.getGprTracesCount());
+	}
+
+	public void fit(int maxSamples, int tracesCount) {
+		double vertScale = (double) getViewDimension().height 
+				/ (double) maxSamples;
+		double zoom = Math.log(vertScale) / Math.log(ProfileField.ZOOM_A);
+		
+		setZoom((int) zoom);
+		setStartSample(0);
+		
+		double h = (double) (getViewDimension().width 
+				- getLeftRuleRect().width - 20) 
+				/ ((double) tracesCount);
+		
+		double realAspect = h / getVScale();
+
+		setAspectReal(realAspect);		
 	}
 	
 	public TraceSample screenToTraceSample(Point point, VerticalCutPart vcp) {
@@ -124,16 +146,15 @@ public class ProfileField {
 	
 	public int getFirstVisibleTrace() {		
 		return Math.clamp(screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
-				0, model.getFileManager().getTraces().size() - 1);
+				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleTrace() {
 		return Math.clamp(screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
-				0, model.getFileManager().getTraces().size() - 1);
+				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleSample(int height) {
-
 		return screenToTraceSample(new Point( 0, height)).getSample();
 	}
 	
@@ -144,7 +165,7 @@ public class ProfileField {
 	public void setSelectedTrace(int selectedTrace) {
 		this.selectedTrace =
 			Math.clamp(selectedTrace, 0, 
-				model.getFileManager().getTraces().size() - 1);
+			Math.max(0, model.getGprTracesCount() - 1));
 	}
 
 	public int getStartSample() {
@@ -183,7 +204,7 @@ public class ProfileField {
 	public Dimension getScreenImageSize() {
 		
 		return new Dimension(
-				(int) (model.getFileManager().getTraces().size() * getHScale()), 
+				(int) (model.getGprTracesCount() * getHScale()), 
 				(int) (model.getMaxHeightInSamples() * getVScale()));
 	}
 
@@ -217,9 +238,7 @@ public class ProfileField {
 	}
 
 	public void setZoom(int zoom) {
-		
 		this.zoom = zoom;
-		
 		vertScale = Math.pow(ZOOM_A, getZoom());
 	}
 

@@ -13,7 +13,6 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
@@ -83,7 +82,7 @@ public class HoughExperiments {
 
 		boolean res = good > compare;
 		if (print) {
-			Sout.p("criteriaGoodCount         " + good + "  <>  " + compare + " = " + res);
+			System.out.println("criteriaGoodCount         " + good + "  <>  " + compare + " = " + res);
 		}
 
 		return res;
@@ -109,7 +108,7 @@ public class HoughExperiments {
 
 		boolean res = realWidth > min;
 		if (print) {
-			Sout.p("criteriaRealW " + maxgap + "(" + realTraceFrom + "-" + realTraceTo + ")" + "  rw " + realWidth
+			System.out.println("criteriaRealW " + maxgap + "(" + realTraceFrom + "-" + realTraceTo + ")" + "  rw " + realWidth
 					+ "  <>  " + min + " = " + res);
 		}
 
@@ -122,7 +121,7 @@ public class HoughExperiments {
 
 		boolean res = lftInd > min;
 		if (print) {
-			Sout.p("criteriaRealMinLeft  " + lftInd + "  <>  " + min + " = " + res);
+			System.out.println("criteriaRealMinLeft  " + lftInd + "  <>  " + min + " = " + res);
 		}
 
 		return res;
@@ -134,7 +133,7 @@ public class HoughExperiments {
         int min = (traceTo - tracePin) / 2;
 		boolean res = rghInd > min;
 		if (print) {
-			Sout.p("criteriaRealMinRight " + rghInd + "  <>  " + min + " = " + res);
+			System.out.println("criteriaRealMinRight " + rghInd + "  <>  " + min + " = " + res);
 		}
 
 		return res;
@@ -151,7 +150,7 @@ public class HoughExperiments {
 		
 		boolean res = minHt > min;
 		if (print) {
-			Sout.p("criteriaRealMinHeight " + minHt + "  <>  " + min + " = " + res);
+			System.out.println("criteriaRealMinHeight " + minHt + "  <>  " + min + " = " + res);
 		}
 
 		return res;
@@ -212,7 +211,7 @@ public class HoughExperiments {
 		boolean res = good > compare;
 
 		if (print) {
-			Sout.p("criteria  gd/bad      " + good + "  <>  " + compare + " = " + res);
+			System.out.println("criteria  gd/bad      " + good + "  <>  " + compare + " = " + res);
 		}
 
 		return res;
@@ -279,7 +278,7 @@ public class HoughExperiments {
 
 		badMargin = (leftFinish[1] - leftStart[1] + 1) * 130 / 100;
 		if (print) {
-			Sout.p("badMargin " + badMargin);
+			System.out.println("badMargin " + badMargin);
 		}
 		maxgap = getMaxWidth() / 15;
 

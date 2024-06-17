@@ -14,8 +14,8 @@ public class LevelClear implements Command {
 
 	@Override
 	public String getButtonText() {
-
-		return "X";
+		return "Undo flattening";
+		//return "X";
 	}
 
 	@Override

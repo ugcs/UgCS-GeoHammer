@@ -86,8 +86,8 @@ public class TiffImageExport {
 	}
 
 	public MapField prepareField() {
-		MapField field = new MapField(model.getField());
-		field.setSceneCenter(model.getField().getPathCenter());		
+		MapField field = new MapField(model.getMapField());
+		field.setSceneCenter(model.getMapField().getPathCenter());		
 		field.adjustZoom(maxTifSize.width, maxTifSize.height);
 		return field;
 	}

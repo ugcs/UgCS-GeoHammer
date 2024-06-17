@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -36,12 +37,14 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
                 10.0f, dash1, 0.0f);
 
 	private Color flagColor = Color.getHSBColor((float) Math.random(), 1, 1f); 
-	private int traceInAll;
+	
+	private Trace trace;
+
 	private SgyFile file;
 
-	public ClickPlace(SgyFile file, int trace) {
+	public ClickPlace(SgyFile file, Trace trace) {
 		this.file = file;
-		this.traceInAll = trace;
+		this.trace = trace;
 	}
 
 	@Override
@@ -57,8 +60,7 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		ClickPlace result = new ClickPlace(file, traceInAll); 
-		
+		ClickPlace result = new ClickPlace(file, trace); 	
 		return result;
 	}
 
@@ -95,6 +97,11 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+		
+		if (file instanceof CsvFile) {
+			return;
+		}
+
 		setClip(g2, profField.getClipTopMainRect());
 		
 		Rectangle rect = getRect(profField);
@@ -113,9 +120,9 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		g2.translate(-rect.x, -rect.y);
 	}
 	
-	public Rectangle getRect(ProfileField profField) {
+	private Rectangle getRect(ProfileField profField) {
 		
-		int x = profField.traceToScreen(traceInAll);
+		int x = profField.traceToScreen(trace.getIndexInSet());
 				
 		Rectangle rect = new Rectangle(
 				x - R_HOR, Model.TOP_MARGIN - R_VER * 2, 
@@ -123,10 +130,9 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField mapField) {
-		
-		Trace tr = getTrace();		
-		Point2D p =  mapField.latLonToScreen(tr.getLatLon());		
+	private Rectangle getRect(MapField mapField) {
+		//Trace tr = getTrace();		
+		Point2D p =  mapField.latLonToScreen(trace.getLatLon());		
 		
 		Rectangle rect = new Rectangle(
 				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
@@ -134,12 +140,12 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 
-	private Trace getTrace() {
-		if (file != null) {
-			return file.getTraces().get(traceInAll);
-		}
-		return AppContext.model.getFileManager().getTraces().get(traceInAll);
-	}
+	//private Trace getTrace() {
+	//	if (file != null) {
+	//		return file.getTraces().get(traceInAll);
+	//	}
+	//	return AppContext.model.getGprTraces().get(traceInAll);
+	//}
 
 	@Override
 	public boolean isPointInside(Point localPoint, ProfileField profField) {
@@ -161,8 +167,8 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return false;
 	}
 
-	public int getGlobalTrace() {
+	/*public int getGlobalTrace() {
 		return traceInAll;
-	}
+	}*/
 
 }

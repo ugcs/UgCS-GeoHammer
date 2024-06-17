@@ -2,8 +2,6 @@ package com.ugcs.gprvisualizer.math;
 
 import java.util.Arrays;
 
-import com.ugcs.gprvisualizer.app.Sout;
-
 public class HoughHypFullness {
 
 	private int horizontalSize;
@@ -108,7 +106,7 @@ public class HoughHypFullness {
 		//}				
 		
 		if (isPrintLog) {
-			Sout.p("zerogrp: " + result + "  ar:  " + sb.toString());
+			System.out.println("zerogrp: " + result + "  ar:  " + sb.toString());
 			
 		}
 

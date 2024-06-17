@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
@@ -15,19 +13,16 @@ import com.ugcs.gprvisualizer.app.commands.DistCalculator;
 import com.ugcs.gprvisualizer.app.commands.DistancesSmoother;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
-import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public abstract class SgyFile {
 	
-
-    protected List<Trace> traces = new ArrayList<>(); 
+    private List<Trace> traces = new ArrayList<>(); 
     
     private VerticalCutPart offset = new VerticalCutPart();
     
-	protected File file;
+	private File file;
 	
 	private boolean unsaved = true;
 	
@@ -41,16 +36,13 @@ public abstract class SgyFile {
     
     // amplitude
     public ScanProfile amplScan;
+
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
 	private boolean spreadCoordinatesNecessary = false;
 	
 	protected static double SPEED_SM_NS_VACUUM = 30.0;
 	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
-
-	private Map<File, List<GeoData>> geoData = new HashMap<>();
-
-	private CsvParser parser;
 
 	public abstract void open(File file) throws Exception;
 	
@@ -75,14 +67,14 @@ public abstract class SgyFile {
 
 			if (trace.isMarked()) {
 				this.getAuxElements().add(
-						new FoundPlace(trace.indexInFile, offset));
+						new FoundPlace(trace.getIndexInFile(), offset));
 			}
 		}
 	}
 	
 	public void updateInternalIndexes() {
 		for (int i = 0; i < traces.size(); i++) {
-			traces.get(i).indexInFile = i;
+			traces.get(i).setIndexInFile(i);
 			traces.get(i).setEnd(false);			
 		}		
 		traces.get(traces.size() - 1).setEnd(true);
@@ -233,21 +225,32 @@ public abstract class SgyFile {
 		this.spreadCoordinatesNecessary = spreadCoordinatesNecessary;
 	}
 
-    public List<GeoData> getGeoData() {
-		return geoData.computeIfAbsent(file, k -> new ArrayList<>());
-    }
-
-    public void setParser(CsvParser parser) {
-		this.parser = parser;
-    }
-
-	public CsvParser getParser() {
-		return parser;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((file == null) ? 0 : file.hashCode());
+		result = prime * result + (unsaved ? 1231 : 1237);
+		return result;
 	}
 
-	public boolean isCsvFile() {
-		String fileName = file.toPath().toString().toLowerCase();
-		return fileName.endsWith(".csv") || fileName.endsWith(".asc");
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SgyFile other = (SgyFile) obj;
+		if (file == null) {
+			if (other.file != null)
+				return false;
+		} else if (!file.equals(other.file))
+			return false;
+		if (unsaved != other.unsaved)
+			return false;
+		return true;
 	}
 
 }

@@ -2,7 +2,6 @@ package com.ugcs.gprvisualizer.math;
 
 import java.util.Arrays;
 
-import com.ugcs.gprvisualizer.app.Sout;
 
 public class HoughArray {
 	
@@ -30,14 +29,10 @@ public class HoughArray {
 				* HoughDiscretizer.FACTORX_WIDTH)
 				* gain;
 			
-			Sout.p("factor " + i + " -> " + FACTOR[i] + "  old: " + old);
+			System.out.println("factor " + i + " -> " + FACTOR[i] + "  old: " + old);
 		}
 	}
 	
-	public static void main(String[] args) {
-		
-	}
-
 	public static double[] REDUCE = new double[DISCRET_SIZE];
 
 	static {
@@ -46,7 +41,7 @@ public class HoughArray {
 				1.20 * (HoughDiscretizer.FACTORX_FROM 
 						- (double) i / (double) DISCRET_SIZE * 0.02);
 			
-			Sout.p("reduce " + i + " -> " + REDUCE[i]);
+			System.out.println("reduce " + i + " -> " + REDUCE[i]);
 		}
 	}
 	
@@ -139,7 +134,6 @@ public class HoughArray {
 			sb.append(" ");
 			sb.append(ar[i]);
 		}
-		Sout.p(sb.toString());
 	}
 
 	public double getClearness() {

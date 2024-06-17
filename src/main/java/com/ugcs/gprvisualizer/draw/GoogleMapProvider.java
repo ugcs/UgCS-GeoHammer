@@ -23,6 +23,10 @@ public class GoogleMapProvider implements MapProvider {
 			field.setZoom(getMaxZoom());
 		}
 
+		if (field.getZoom() < getMinZoom()) {
+			field.setZoom(getMinZoom());
+		}
+
 		LatLon midlPoint = field.getSceneCenter();
 
 		BufferedImage img = null;
@@ -90,6 +94,11 @@ public class GoogleMapProvider implements MapProvider {
 	private static class TileUtils {
 
 		record Tile(int x, int y, int z) {
+			Tile(int x, int y, int z) {
+				this.x = Math.max(0, x);
+				this.y = Math.max(0, y);
+				this.z = z;
+			}
 		}
 
 		private static final int TILE_SIZE = 256;

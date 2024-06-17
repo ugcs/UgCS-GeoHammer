@@ -1,11 +1,14 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 
@@ -43,5 +46,13 @@ public class Broadcast implements InitializingBean {
 			}
 		});		
 	}
+
+	public void fileSelected(SgyFile file) {
+		notifyAll(new FileSelected(file));
+	}
+
+    public void fileSelected(List<SgyFile> files) {
+		notifyAll(new FileSelected(files));
+    }
 	
 }

@@ -1,23 +1,15 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.github.thecoldwine.sigrun.common.BinaryHeader;
 import com.github.thecoldwine.sigrun.common.ConverterFactory;
@@ -31,8 +23,6 @@ import com.github.thecoldwine.sigrun.serialization.TraceHeaderFormat;
 import com.github.thecoldwine.sigrun.serialization.TraceHeaderReader;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
-import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.gpr.SgyLoader;
 
 public class GprFile extends SgyFile {
@@ -61,7 +51,7 @@ public class GprFile extends SgyFile {
 
 
 	public void open(File file) throws Exception {
-		this.file = file;		
+		setFile(file);
 		
 		BinFile binFile = BinFile.load(file); 
 		
@@ -113,40 +103,6 @@ public class GprFile extends SgyFile {
 	}
 
 	public void save(File file) throws Exception {
-		
-		if (isCsvFile()) {
-			Path inputFile = getFile().toPath();
-        	Path tempFile = file.toPath();
-
-        	try (BufferedReader reader = Files.newBufferedReader(inputFile);
-            	BufferedWriter writer = Files.newBufferedWriter(tempFile)) {
-
-				CsvParser parser = getParser();	
-
-				writer.write(parser.getSkippedLines());
-
-            	String line;
-            	int lineNumber = 0;
-
-				Map<Integer, GeoData> geoDataMap = getGeoData().stream().collect(Collectors.toMap(gd -> gd.getLineNumber(), gd -> gd));
-
-            	while ((line = reader.readLine()) != null) {
-                	lineNumber++;
-                	if (geoDataMap.keySet().contains(lineNumber)) {
-						GeoData gd = geoDataMap.get(lineNumber);
-						var lineSensor = gd.getLine();
-						String template = ",%s,";
-						line = line.replaceFirst(String.format(template, lineSensor.originalData()), String.format(template, lineSensor.data()));
-                    	writer.write(line);
-                    	writer.newLine();
-                	}
-            	}
-
-        	} catch (IOException e) {
-            	e.printStackTrace();
-        	}
-			return;
-		}
 
 		Set<Integer> marks = prepareMarksIndexSet();
 		BinFile binFile = new BinFile();
@@ -157,9 +113,9 @@ public class GprFile extends SgyFile {
 		SeismicValuesConverter converter = 
 				ConverterFactory.getConverter(binaryHeader.getDataSampleCode());
 
-		sampleNormalizer.back(traces);
+		sampleNormalizer.back(getTraces());
 
-		for (Trace trace : traces) {
+		for (Trace trace : getTraces()) {
 			BinTrace binTrace = new BinTrace();
 			
 			binTrace.header = trace.getBinHeader();
@@ -173,7 +129,7 @@ public class GprFile extends SgyFile {
 			
 			//set or clear marks
 			binTrace.header[MARK_BYTE_POS] = 
-					(byte) (marks.contains(trace.indexInFile) ? -1 : 0);
+					(byte) (marks.contains(trace.getIndexInFile()) ? -1 : 0);
 			
 			binTrace.data = converter.valuesToByteBuffer(trace.getNormValues()).array();
 			

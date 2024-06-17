@@ -320,11 +320,6 @@ public class RulerTool extends BaseObjectImpl
 	}
 
 	@Override
-	public Rectangle getRect(ProfileField profField) {
-		return null;
-	}
-
-	@Override
 	public void signal(Object obj) {
 	}
 

@@ -16,7 +16,8 @@ import com.ugcs.gprvisualizer.math.LevelFilter;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.Region;
 
-@Component
+//@Component
+//TODO: remove this class
 public class GeoHammerToolbar extends ToolBar implements SmthChangeListener, InitializingBean {
 
 	@Autowired

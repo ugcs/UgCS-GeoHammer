@@ -41,8 +41,8 @@ public class BackgroundNoiseRemover implements Command {
 
 	@Override
 	public String getButtonText() {
-
-		return "Background removal";
+		return "Remove background";
+		//return "Background removal";
 	}
 
 

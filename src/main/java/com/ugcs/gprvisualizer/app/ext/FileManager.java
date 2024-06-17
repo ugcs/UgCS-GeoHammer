@@ -7,14 +7,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.github.thecoldwine.sigrun.converters.ByteANumberConverter;
+import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
 import com.ugcs.gprvisualizer.dzt.DztFile;
@@ -22,25 +30,24 @@ import com.ugcs.gprvisualizer.dzt.DztFile;
 @Component
 public class FileManager {
 
-	public static FilenameFilter FILTER = new FilenameFilter() {
-		public boolean accept(File dir, String name) {
-			return name.toLowerCase().endsWith(".sgy");
-		}
-	};
+	private static final Logger log = LoggerFactory.getLogger(FileManager.class.getName());
+
+	private static final FilenameFilter SGY = (dir, name) -> name.toLowerCase().endsWith(".sgy");
 
 	//public boolean levelCalculated = false;
 	
-	private List<SgyFile> files = new ArrayList<>();
-
-	private List<Trace> traces = null;
+	private final List<SgyFile> files = new ArrayList<>();
 
 	private File topFolder = null;
 
-	private FileTemplates fileTemplates;
+	private final FileTemplates fileTemplates;
 
+	//@Autowired
+	//private Broadcast broadcast;
 
-	FileManager(FileTemplates fileTemplates) {
-		this.fileTemplates = fileTemplates;		 
+	FileManager(FileTemplates fileTemplates) { //, Broadcast broadcast) {
+		this.fileTemplates = fileTemplates;
+		//this.broadcast = broadcast;
 	}
 
 	public boolean isActive() {
@@ -65,8 +72,8 @@ public class FileManager {
 
 	public void clear() {
 		//levelCalculated = false;
-		traces = null;
-		files = new ArrayList<>();
+		clearTraces();
+		files.clear(); // = new ArrayList<>();
 		topFolder = null;
 	}
 
@@ -77,7 +84,7 @@ public class FileManager {
 
 		listener.progressMsg("load directory " + fl.getAbsolutePath());
 
-		processFileList(Arrays.asList(fl.listFiles(FILTER)));
+		processFileList(Arrays.asList(fl.listFiles(SGY)));
 
 	}
 
@@ -102,7 +109,7 @@ public class FileManager {
 			new MarkupFile().load(sgyFile);
 			new PositionFile(fileTemplates).load(sgyFile);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.warn("Error loading markup or position files: {}", e.getMessage());
 		}
 	}
 
@@ -112,43 +119,66 @@ public class FileManager {
 		}
 	}
 
-	public List<SgyFile> getFiles() {
+	/*public List<SgyFile> getFiles() {
 		return files;
-	}
+	}*/
 
-	public void setFiles(List<SgyFile> fl) {
+
+	/*public void setFiles(List<SgyFile> fl) {
 		clear();
 		files = fl;
-	}
+	}*/
 
-	public List<Trace> getTraces() {
-		if (traces == null) {
-			traces = new ArrayList<>();
+	private List<Trace> gprTraces = new ArrayList<>();
 
+	public List<Trace> getGprTraces() {
+		if (gprTraces.isEmpty()) {
 			int traceIndex = 0;
 			for (SgyFile file : files) {
+				if (file instanceof CsvFile) {
+					continue;
+				}
 				for (Trace trace : file.getTraces()) {
-					traces.add(trace);
-					trace.indexInSet = traceIndex++;
+					gprTraces.add(trace);
+					trace.setIndexInSet(traceIndex++);
 				}
 			}
 		}
-		return traces;
+		return gprTraces;
+	}
+
+	private  List<Trace> csvTraces = new ArrayList<>();
+
+	public List<Trace> getCsvTraces() {
+		if (csvTraces.isEmpty()) {
+			int traceIndex = 0;
+			for (SgyFile file : files) {
+				if (!(file instanceof CsvFile)) {
+					continue;
+				}
+				for (Trace trace : file.getTraces()) {
+					csvTraces.add(trace);
+					trace.setIndexInSet(traceIndex++);
+				}
+			}
+		}
+		return csvTraces;
 	}
 
 	public void clearTraces() {
-		traces = null;		
+		gprTraces.clear();
+		csvTraces.clear();
 	}
 
 	public boolean isUnsavedExists() {
 		if (isActive()) {
-			for (SgyFile sgyFile : getFiles()) {
+			for (SgyFile sgyFile : files) {
 				if (sgyFile.isUnsaved()) {
 					return true;
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -158,7 +188,42 @@ public class FileManager {
 
 	public void addFile(SgyFile sgyFile) {
 		files.add(sgyFile);
-		traces = null;
+		if (sgyFile instanceof CsvFile) {
+			csvTraces.clear();
+		} else {
+			gprTraces.clear();		
+		}
 	}
+
+	public void removeFile(SgyFile sgyFile) {
+		boolean removed = files.remove(sgyFile);
+		if (removed && sgyFile instanceof CsvFile) {
+			csvTraces.clear();
+		} else if (removed) {
+			gprTraces.clear();		
+		}
+	}
+
+	public List<SgyFile> getGprFiles() {
+		return files.stream().filter(Predicate.not(CsvFile.class::isInstance)).collect(Collectors.toList());
+	}
+
+	public List<SgyFile> getCsvFiles() {
+		return files.stream().filter(CsvFile.class::isInstance).collect(Collectors.toList());
+	}
+
+	public void selectFile() {
+		// TODO Auto-generated method stub
+		//throw new UnsupportedOperationException("Unimplemented method 'selectFile'");
+	}
+
+	public int getFilesCount() {
+		return files.size();
+	}
+
+    public void updateFiles(List<SgyFile> slicedSgyFiles) {
+		clear();
+		files.addAll(slicedSgyFiles);
+    }
 
 }

@@ -16,11 +16,16 @@ import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.ImageView;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import com.github.thecoldwine.sigrun.common.TextHeader;
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
@@ -40,6 +45,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -60,6 +66,8 @@ import javafx.scene.chart.XYChart.Series;
 
 public class SensorLineChart {
 
+    private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
+
     private final Model model;
     private final Broadcast broadcast;
 
@@ -69,7 +77,7 @@ public class SensorLineChart {
     private Rectangle zoomRect = new Rectangle();
 
     private int scale;
-    private SgyFile file;
+    private CsvFile file;
 
     public SensorLineChart(Model model, Broadcast broadcast) {
         this.model = model;
@@ -88,6 +96,7 @@ public class SensorLineChart {
                 xAxis.setUpperBound(selectedX + delta / 2);
             }
         }
+        model.selectAndScrollToChart(root);
         putVerticalMarker(selectedX);
         System.out.println("Selected trace number:" + traceNumber);
     }
@@ -99,9 +108,9 @@ public class SensorLineChart {
         	
         	if (event.getClickCount() == 2) {
 
-                System.out.println("double click " + event.getX() + " " + event.getY() + " " + event.getSource());
-                model.getChart(null);
-                
+                log.debug("Double click " + event.getX() + " " + event.getY() + " " + event.getSource());
+                model.getChart(null); // clear selection
+                                
                 if (event.getSource() instanceof LineChart) {
                     Axis<Number> xAxis = ((LineChart) event.getSource()).getXAxis();
                     Number xValue = xAxis.getValueForDisplay(event.getX() - xAxis.getLayoutX());
@@ -110,29 +119,27 @@ public class SensorLineChart {
                     putVerticalMarker(xValue.intValue());
 
                     int traceIndex = xValue.intValue() * scale;
-                    if (traceIndex >= 0 && traceIndex < model.getTracesCount()) {
+                    if (traceIndex >= 0 && traceIndex < file.getTraces().size()) {//model.getCsvTracesCount()) {
                         GeoData geoData = file.getGeoData().get(traceIndex);
-                        model.getField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
-                        createTempPlace(model, file, traceIndex);
+                        model.getMapField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
+                        model.createClickPlace(file, file.getTraces().get(traceIndex));
                         broadcast.notifyAll(new WhatChanged(Change.mapscroll));
                     }
                 }
+                event.consume();
         	}
         }
 	};
 
-    private void createTempPlace(Model model, SgyFile file, int trace) {
+    /*private void createTempPlace(Model model, SgyFile file, Trace trace) {
 		ClickPlace fp = new ClickPlace(file, trace);
 		fp.setSelected(true);
 		model.setControls(List.of(fp));
-	}
+	}*/
 
-    public Map<SgyFile, List<PlotData>> generatePlotData(File csvFile) {
-        //TODO: design it better
-        var file = model.getFileManager().getFiles().stream().filter(f -> {
-            return f.getFile() != null && Objects.equals(csvFile.getName(), f.getFile().getName());
-        }).findAny().get();
-        List<GeoData> geoData = file.getGeoData();
+    public Map<CsvFile, List<PlotData>> generatePlotData(CsvFile csvFile) {
+    
+        List<GeoData> geoData = csvFile.getGeoData();
 
         Map<String, List<SensorValue>> sensorValues = new LinkedHashMap<>();
         geoData.forEach(data -> {
@@ -156,7 +163,7 @@ public class SensorLineChart {
                     .collect(Collectors.toList())));
             plotDataList.add(plotData);
         }
-        return Map.of(file, plotDataList);
+        return Map.of(csvFile, plotDataList);
     }
 
     private Color getColor(String semantic) {
@@ -193,7 +200,7 @@ public class SensorLineChart {
         return itemBooleanMap.get(item);
     }
 
-    public VBox createChartWithMultipleYAxes(SgyFile file, List<PlotData> plotData) {
+    public VBox createChartWithMultipleYAxes(CsvFile file, List<PlotData> plotData) {
 
         this.file = file;
 
@@ -202,6 +209,7 @@ public class SensorLineChart {
         ObservableList<SeriesData> seriesList = FXCollections.observableArrayList();
 
         for (int i = 0; i < plotData.size(); i++) {
+            
             // X-axis, common for all charts
             NumberAxis xAxis = getXAxis();
 
@@ -222,11 +230,8 @@ public class SensorLineChart {
             }
 
             // Creating chart
-            LineChartWithMarkers<Number, Number> lineChart = new LineChartWithMarkers<>(xAxis, yAxis, 0, 2000, min, max);
+            LineChartWithMarkers<Number, Number> lineChart = new LineChartWithMarkers<>(xAxis, yAxis, 0, plotData.get(i).data().size(), min, max);
             lineChart.zoomOut();
-
-            charts.add(lineChart);
-            lastLineChart = lineChart;
 
             lineChart.setLegendVisible(false); // Hide legend
             lineChart.setCreateSymbols(false); // Disable symbols
@@ -249,11 +254,15 @@ public class SensorLineChart {
 
             itemBooleanMap.put(item, createBooleanProperty(item));
 
-            // Set random color for series
-            lineChart.getData().add(item.series());
-            setColorForSeries(item.series(), item.color());
-            // Add chart to container
-            stackPane.getChildren().add(lineChart);
+            if (!item.series.getData().isEmpty()) {
+                charts.add(lineChart);
+                lastLineChart = lineChart;
+                // Set random color for series
+                lineChart.getData().add(item.series());
+                setColorForSeries(item.series(), item.color());
+                // Add chart to container
+                stackPane.getChildren().add(lineChart);
+            }
         }
 
         // ComboBox with checkboxes
@@ -326,8 +335,14 @@ public class SensorLineChart {
                 }
                 event.consume(); // for prevent to scroll parent pane
             });
-            lastLineChart.setOnMouseClicked(mouseClickHandler);
             setZoomHandlers(lastLineChart, charts);
+
+            lastLineChart.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseClickHandler);
+
+            lastLineChart.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                log.debug("MouseClicked: " + event.getX() + ", " + event.getY());
+            });
+
         }
 
         Button close = new Button("X");
@@ -346,6 +361,13 @@ public class SensorLineChart {
         close.setOnMouseClicked(event -> {
             close();
         });
+
+        root.setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
+        root.setOnMouseClicked(event -> {
+            model.selectAndScrollToChart(root);
+            broadcast.fileSelected(file);
+        });
+
         return root;
     }
 
@@ -365,8 +387,8 @@ public class SensorLineChart {
 
             if (removeFromModel) {
                 // remove files and traces from map
-                model.getFileManager().getFiles().remove(file);
-                model.removeChart(file.getFile());
+                model.getFileManager().removeFile(file);
+                model.removeChart(file);
                 model.initField();
                 broadcast.notifyAll(new WhatChanged(Change.fileopened));
             }
@@ -489,7 +511,7 @@ public class SensorLineChart {
     private int getFloorMin(List<Number> data) {
         int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).min().orElse(0);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
-        return baseMin == 1 ? 0 : Math.floorDiv(min, baseMin) * baseMin;
+        return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
     }
 
     private int getCeilMax(List<Number> data) {

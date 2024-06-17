@@ -14,6 +14,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -51,15 +52,17 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	
 	private RepaintListener listener;
 	
-	private ToggleButton buttonCutMode = new ToggleButton("Select", 
-			ResourceImageHolder.getImageView("select_rect20.png"));
-	private Button buttonSet = new Button("Crop", 
-			ResourceImageHolder.getImageView("scisors3-20.png"));	
-	private Button buttonUndo = new Button("", 
-			ResourceImageHolder.getImageView("undo.png"));
+	private ToggleButton buttonCutMode = ResourceImageHolder.setButtonImage(ResourceImageHolder.SELECT_RECT, new ToggleButton());
+	//new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
+	private Button buttonSet = ResourceImageHolder.setButtonImage(ResourceImageHolder.CROP, new Button());
+	//new Button("Crop", ResourceImageHolder.getImageView("scisors3-20.png"));	
+	private Button buttonUndo = ResourceImageHolder.setButtonImage(ResourceImageHolder.UNDO, new Button());
+	//new Button("", ResourceImageHolder.getImageView("undo.png"));
 	
 	{
+		buttonCutMode.setTooltip(new Tooltip("Select Area"));
 		buttonUndo.setTooltip(new Tooltip("Undo Crop")); 
+		buttonSet.setTooltip(new Tooltip("Apply Crop"));
 	}
 
 	public TraceCutter(Model model, Broadcast broadcast) {
@@ -69,7 +72,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		this.field = model.getField();
+		this.field = model.getMapField();
 	}
 
 	public void clear() {
@@ -80,7 +83,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 
 	public void init() {		
 		points = new TraceCutInitializer()
-			.initialRect(model, model.getFileManager().getTraces());
+			.initialRect(model, model.getTraces());
 		activePoints.clear();
 	}
 	
@@ -212,42 +215,46 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		List<Point2D> border = getScreenPoligon(fld);
 		
 		List<SgyFile> slicedSgyFiles = new ArrayList<>();
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		
+		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 		}
-		
-		model.setUndoFiles(model.getFileManager().getFiles());
-		
-		model.getFileManager().setFiles(slicedSgyFiles);
+		model.setUndoFiles(model.getFileManager().getGprFiles());
 
-		for (SgyFile sf : model.getFileManager().getFiles()) {
-			model.updateChart(sf.getFile(), broadcast);
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
+			slicedSgyFiles.addAll(splitFile(file, fld, border));
+		}
+		model.getUndoFiles().addAll(model.getFileManager().getCsvFiles());
+
+		model.getFileManager().updateFiles(slicedSgyFiles);
+
+		for (SgyFile sf : model.getFileManager().getCsvFiles()) {
+			model.updateChart((CsvFile) sf, broadcast);
 		}
 		
-		model.getFileManager().clearTraces();
-		
 		model.init();
-		
-		model.getVField().clear();
+		model.initField();
+		model.getProfileField().clear();
 	}
 
 	private void undo() {
 		model.setControls(null);
 
 		if (model.getUndoFiles() != null) {
-			model.getFileManager().setFiles(model.getUndoFiles());
+			model.getFileManager().updateFiles(model.getUndoFiles());
 			model.setUndoFiles(null);
 			
-			for (SgyFile sf : model.getFileManager().getFiles()) {
+			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
 			}
 
-			model.getFileManager().clearTraces();
+			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
+				model.updateChart((CsvFile) sf, broadcast);
+			}
 			
 			model.init();
-			
 			//model.initField();
-			model.getVField().clear();
+			model.getProfileField().clear();
 		}
 		
 	}
@@ -277,22 +284,22 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		sgyFile.setTraces(traces);
 		sgyFile.setFile(getPartFile(sourceFile, part, sourceFile.getFile().getParentFile()));
 
-		sgyFile.setFile(sourceFile.getFile());
-		sgyFile.setParser(sourceFile.getParser());
-		sgyFile.getGeoData().addAll(geoDataList);
+		//sgyFile.setFile(sourceFile.getFile());
+		//sgyFile.setParser(sourceFile.getParser());
+		//sgyFile.getGeoData().addAll(geoDataList);
 		
-		int begin = traces.get(0).indexInFile;
-		int end = traces.get(traces.size() - 1).indexInFile;
-		sgyFile.setAuxElements(copyAuxObjects(sourceFile, sgyFile, begin, end));
-
-		
-		/// TODO:
-		if (sgyFile instanceof DztFile) {
-			DztFile dztfile = (DztFile) sgyFile;
-			dztfile.dzg = dztfile.dzg.cut(begin, end);
+		if (!traces.isEmpty()) {
+			int begin = traces.get(0).getIndexInFile();
+			int end = traces.get(traces.size() - 1).getIndexInFile();
+			sgyFile.setAuxElements(copyAuxObjects(sourceFile, sgyFile, begin, end));
+			/// TODO:
+			if (sgyFile instanceof DztFile) {
+				DztFile dztfile = (DztFile) sgyFile;
+				dztfile.dzg = dztfile.dzg.cut(begin, end);
+			}
+			///
 		}
-		
-		///
+
 		sgyFile.updateInternalIndexes();
 		return sgyFile;
 	}
@@ -314,7 +321,8 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		
 		int part = 1;
 
-		if(file.isCsvFile()) {
+		if(file instanceof CsvFile) {
+			CsvFile csvFile = (CsvFile) file;
 			for(Trace trace: file.getTraces()) {
 				boolean inside = isTraceInsideSelection(field, border, trace);
 				if (inside) {
@@ -324,7 +332,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 			List<GeoData> geoDataList = new ArrayList<>();
 			List<GeoData> geoDataLineList = new ArrayList<>();
 			int lineNumber = 0;
-			for(GeoData geoData: file.getGeoData()) {
+			for(GeoData geoData: csvFile.getGeoData()) {
 				boolean inside = isGeoDataInsideSelection(field, border, geoData);
 				if (inside) {
 					geoDataLineList.add(geoData);
@@ -342,10 +350,14 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 				}
 	
 			}
-			SgyFile subfile = generateSgyFileFrom(file, sublist, geoDataList, part++);
-			subfile.setFile(file.getFile());
-			splitList.add(subfile);
-			return splitList;
+			
+			CsvFile subfile = csvFile.copy();
+			subfile.setUnsaved(true);
+		
+			subfile.setTraces(sublist);
+			subfile.getGeoData().addAll(geoDataList);	
+			
+			return List.of(subfile);
 		} 
 		
 		for (Trace trace : file.getTraces()) {
@@ -444,6 +456,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return Arrays.asList();
 	}
 	
+
 	public List<Node> getToolNodes2() {
 		
 		initButtons();

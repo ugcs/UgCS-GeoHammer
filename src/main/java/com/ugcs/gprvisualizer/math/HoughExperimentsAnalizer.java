@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.Sout;
 
 public class HoughExperimentsAnalizer {
 	
@@ -46,7 +45,7 @@ public class HoughExperimentsAnalizer {
 		
 		if (!findHeaderEdge2(tr, smp)) {
 			if (print) {
-				Sout.p("~~ !findHeaderEdge2");
+				System.out.println("~~ !findHeaderEdge2");
 			}
 			return Collections.emptyList();
 		}
@@ -70,7 +69,7 @@ public class HoughExperimentsAnalizer {
 		}
 		
 		if (print) {
-			Sout.p("~~ all filtered");
+			System.out.println("~~ all filtered");
 		}
 		
 		return Collections.emptyList();
@@ -128,7 +127,7 @@ public class HoughExperimentsAnalizer {
 			int rightc = find(+1, edge, tr, smp) - tr;
 			
 			if (print) {
-				Sout.p("mn: " + mintr + " l: " + leftc + " r: " + rightc + " mx: " + maxtr );
+				System.out.println("mn: " + mintr + " l: " + leftc + " r: " + rightc + " mx: " + maxtr );
 			}
 			
 			if (leftc < mintr || rightc < mintr || leftc > maxtr || rightc > maxtr) {
@@ -297,7 +296,7 @@ public class HoughExperimentsAnalizer {
 		int goodHeadEdge;
 		
 		if (st.isEmpty()) {
-			Sout.p("~~ head criteria false");
+			System.out.println("~~ head criteria false");
 			goodHeadEdge = findHeaderEdge(tr, smp);
 		} else {
 			HoughExperiments hp = st.iterator().next();
@@ -305,7 +304,7 @@ public class HoughExperimentsAnalizer {
 			goodHeadEdge = hp.lookingEdge;
 		}
 		
-		Sout.p("goodHeadEdge     = " + goodHeadEdge + "      shift = " + heightShift);
+		System.out.println("goodHeadEdge     = " + goodHeadEdge + "      shift = " + heightShift);
 		if (goodHeadEdge == 0) {
 			
 			goodHeadEdge = 4;

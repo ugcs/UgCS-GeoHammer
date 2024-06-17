@@ -21,7 +21,6 @@ import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 import com.ugcs.gprvisualizer.obm.ObjectByteMapper;
 
@@ -93,8 +92,7 @@ public class DztFile extends SgyFile {
 	
 	@Override
 	public void open(File file) throws Exception {
-		
-		this.file = file;
+		setFile(file);
 		this.sourceFile = file;
 		
 		dzg.load(getDsgFile(file));
@@ -111,7 +109,7 @@ public class DztFile extends SgyFile {
 			setTraces(loadTraces(getValueBufferMediator(), datachan));
 		}
 		
-		if (traces.isEmpty()) {
+		if (getTraces().isEmpty()) {
 			throw new RuntimeException("Corrupted file");
 		}
 		
@@ -148,15 +146,15 @@ public class DztFile extends SgyFile {
 	}
 
 	public void logHeader() {
-		Sout.p("| header.rh_data  " + header.rh_data);
-		Sout.p("| header.rh_bits  " + header.rh_bits);
-		Sout.p("| header.rh_nsamp " + header.rh_nsamp);
-		Sout.p("| header.rh_zero  " + header.rh_zero);
-		Sout.p("| header.rhf_sps  " + header.rhf_sps);
-		Sout.p("| avgDielectric.rhf_epsr " + header.rhf_epsr);
-		Sout.p("| 		   rh_spp " + header.rh_spp);
-		Sout.p("|  rhf_epsr (ns) " + header.rhf_range);
-		Sout.p("|  rhf_depth (m) " + header.rhf_depth);
+		System.out.println("| header.rh_data  " + header.rh_data);
+		System.out.println("| header.rh_bits  " + header.rh_bits);
+		System.out.println("| header.rh_nsamp " + header.rh_nsamp);
+		System.out.println("| header.rh_zero  " + header.rh_zero);
+		System.out.println("| header.rhf_sps  " + header.rhf_sps);
+		System.out.println("| avgDielectric.rhf_epsr " + header.rhf_epsr);
+		System.out.println("| 		   rh_spp " + header.rh_spp);
+		System.out.println("|  rhf_epsr (ns) " + header.rhf_range);
+		System.out.println("|  rhf_depth (m) " + header.rhf_depth);
 	}
 
 	public File getDsgFile(File file) {
@@ -188,7 +186,7 @@ public class DztFile extends SgyFile {
 				traces.add(tr);
 			}		
 		} catch (Exception e) {
-			Sout.p("loadTraces error");
+			System.err.println("loadTraces error");
 			e.printStackTrace();
 		}
 		
@@ -338,8 +336,6 @@ public class DztFile extends SgyFile {
 		
 		copy.setFile(this.getFile());
 		
-		
-				
 		List<Trace> traces = new ArrayList<>();
 		for (Trace org : this.getTraces()) {
 			
@@ -370,7 +366,7 @@ public class DztFile extends SgyFile {
 	@Override
 	public void save(File newFile) throws Exception {
 		
-		Sout.p("save to " + newFile.getName());
+		System.out.println("Save to " + newFile.getName());
 		
 		FileOutputStream fos = new FileOutputStream(newFile);
 		FileChannel writechan = fos.getChannel();		
@@ -388,12 +384,12 @@ public class DztFile extends SgyFile {
 		
 		float avg = (float) valuesAvg.getAvg();
 		
-		for (Trace trace : traces) {
+		for (Trace trace : getTraces()) {
 			
 			ByteBuffer buffer = ByteBuffer.allocate(getTraceBufferSize())
 					.order(ByteOrder.LITTLE_ENDIAN);
 			
-			valueMediator.put(buffer, trace.indexInFile);
+			valueMediator.put(buffer, trace.getIndexInFile());
 			
 			for (int i = 0; i < header.rh_nsamp - 1; i++) {
 				valueMediator.put(buffer, (int) (trace.getNormValues()[i] + avg));

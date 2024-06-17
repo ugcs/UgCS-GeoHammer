@@ -118,8 +118,8 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect.contains(localPoint);
 	}
 	
-	@Override
-	public Rectangle getRect(ProfileField profField) {
+	//@Override
+	private Rectangle getRect(ProfileField profField) {
 		
 		Point scr = getCenter(profField);
 		Rectangle rect = new Rectangle(scr.x + offsetX, scr.y + offsetY, horM, verM);

@@ -5,8 +5,13 @@ import java.awt.image.BufferedImage;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 
 public interface MapProvider {
+	
 	BufferedImage loadimg(MapField field);
 	
 	int getMaxZoom();
+
+	default int getMinZoom() {
+		return 1;
+	};
 	
 }

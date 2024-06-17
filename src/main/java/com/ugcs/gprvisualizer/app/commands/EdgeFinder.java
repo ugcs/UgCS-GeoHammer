@@ -23,6 +23,7 @@ public class EdgeFinder implements Command {
 		
 		for (int i = 0; i < traces.size(); i++) {
 			Trace trace = traces.get(i);
+			trace.setFile(sgyFile);
 			float[] values = trace.getNormValues();
 			trace.edge = new byte[values.length];
 			

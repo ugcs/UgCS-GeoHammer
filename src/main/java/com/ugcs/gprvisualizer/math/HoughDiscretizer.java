@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.math;
 
-import com.ugcs.gprvisualizer.app.Sout;
-
 public class HoughDiscretizer {
 
 	public static final int DISCRET_SIZE = 21;
@@ -52,14 +50,14 @@ public class HoughDiscretizer {
 	public static void main(String[] args) {
 		HoughDiscretizer d = new HoughDiscretizer();
 		
-		Sout.p(" step " + STEP);
+		System.out.println(" step " + STEP);
 		
 		for(int i = 0; i < 22; i+= 1) {
 			
 			double i2 = d.back(i);
 			int z = d.transform(i2);			
-					
-			Sout.p(i + " -> " + i2 + " -> " + z);
+			
+			System.out.println(i + " -> " + i2 + " -> " + z);
 		}
 		
 	}

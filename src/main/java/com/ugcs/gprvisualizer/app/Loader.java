@@ -12,6 +12,7 @@ import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -84,6 +85,7 @@ public class Loader {
 			if (isCsvFile(files)) {
 				model.setLoading(true);
 				openCSVFiles(files);
+				model.setLoading(false);
 				return;
 			}
 
@@ -106,11 +108,13 @@ public class Loader {
 							"Can`t open files", 
 							"Probably file has incorrect format");
 						
-						model.getFileManager().getFiles().clear();
+						model.closeAllCharts();	
+						//model.getFileManager().getFiles().clear();
 						model.getChartsContainer().getChildren().clear();
+
 						model.updateAuxElements();
 						model.initField();
-						model.getVField().clear();
+						model.getProfileField().clear();
 						
 						
 						broadcast.notifyAll(
@@ -120,7 +124,6 @@ public class Loader {
         	};
         	
 			new TaskRunner(status, loadTask).start();
-        	System.out.println("start completed");
         	
             event.setDropCompleted(true);
             event.consume();
@@ -130,11 +133,8 @@ public class Loader {
 			ConstPointsFile cpf = new ConstPointsFile();
 			cpf.load(files.get(0));
 			
-			for (SgyFile sgyFile : 
-				model.getFileManager().getFiles()) {
-				
-				cpf.calcVerticalCutNearestPoints(
-						sgyFile);
+			for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
+				cpf.calcVerticalCutNearestPoints(sgyFile);
 			}
 			
 			model.updateAuxElements();
@@ -170,19 +170,19 @@ public class Loader {
 			//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
 			//	model.getFileManager().getFiles().get(0) : new GprFile();
 			for (File file: files) {
-				if (model.getChart(file).isEmpty()) {
-					SgyFile sgyFile = new GprFile();
+					CsvFile csvFile = new CsvFile(model.getFileManager().getFileTemplates());
+					csvFile.open(file);
+				
+				if (model.getChart(csvFile).isEmpty()) {
 
-					new PositionFile(model.getFileManager().getFileTemplates())
-						.load(sgyFile, file);
-					model.getFileManager().addFile(sgyFile);	
+					model.getFileManager().addFile(csvFile);	
 
 					//model.init();			
 		
 					//when open file by dnd (not after save)
 					model.initField();
 
-					model.initChart(file, broadcast);
+					model.initChart(csvFile, broadcast);
 				}
 			}
 		} catch (Exception e) {
@@ -199,19 +199,16 @@ public class Loader {
 	}
 
 	private void openKmlFile(List<File> files) {
-		if (model.getFileManager().getFiles().size() == 0) {
-
+		if (model.getFileManager().getGprFiles().isEmpty()) {
 			MessageBoxHelper.showError(
 				"Can`t open kml file",
 				"Open GPR file at first");
-
 			return;
 		}
 		if (files.size() > 1) {
 			MessageBoxHelper.showError(
 				"Can`t open position file",
 				"Only one position file must be opened");
-
 			return;
 		}
 
@@ -236,7 +233,7 @@ public class Loader {
 		
 		load(files, listener);
 		
-		model.getVField().clear();
+		model.getProfileField().clear();
 		
 		broadcast.notifyAll(new WhatChanged(Change.fileopened));
 	}
@@ -244,6 +241,9 @@ public class Loader {
     
 	public void load(final List<File> files, ProgressListener listener) 
 			throws Exception {
+		
+		int filesCountBefore = model.getFileManager().getFilesCount();
+
 		try {
 			model.setLoading(true);
 			load2(files, listener);
@@ -251,8 +251,15 @@ public class Loader {
 			model.setLoading(false);
 		}
 		
-		status.showProgressText("loaded " 
-				+ model.getFileManager().getFiles().size() + " files");
+		int loadedFiles = model.getFileManager().getFilesCount() - filesCountBefore;
+
+		if (loadedFiles > 0) {
+			status.showProgressText("loaded " 
+				+ model.getFileManager().getFilesCount() + " files");
+		} else {
+			status.showProgressText("no files loaded");
+		
+		}
 	}        		
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {
@@ -268,13 +275,14 @@ public class Loader {
 			openCSVFiles(files);
 		} else {
 			model.getFileManager().processList(files, listener);
+			model.closeAllCharts();
 			model.init();			
 		
 			//when open file by dnd (not after save)
 			model.initField();	
 		
 			//
-			SgyFile file = model.getFileManager().getFiles().get(0);
+			SgyFile file = model.getFileManager().getGprFiles().get(0);
 			if (file.getSampleInterval() < 105) {
 				model.getSettings().hyperkfc = 25;
 				

@@ -9,8 +9,6 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import com.ugcs.gprvisualizer.app.Sout;
-
 public class DblArray {
 
 	int width;
@@ -106,9 +104,9 @@ public class DblArray {
 	    }
 
 	    //tmp show palette
-	    if (Sout.developMode) {
+	    //if (Sout.developMode) {
 		    //showGradientPalatte(palette, buffer);
-	    }
+	    //}
 	    
 	    return image;
 	}

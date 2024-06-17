@@ -45,7 +45,7 @@ public class CleverViewScrollHandler implements MouseHandler {
     		int t = dragField.getSelectedTrace() 
     				+ oldCenter.getTrace() - newCenter.getTrace();
     		field.setSelectedTrace(t);
-    		cleverView.profileScroll.recalc();
+    		cleverView.getProfileScroll().recalc();
     		
     		field.setStartSample(dragField.getStartSample() 
     				+ oldCenter.getSample() - newCenter.getSample());

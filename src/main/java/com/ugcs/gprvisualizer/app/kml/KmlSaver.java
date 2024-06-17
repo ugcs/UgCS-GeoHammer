@@ -24,7 +24,7 @@ public class KmlSaver {
 			
 			if (el instanceof FoundPlace) {
 				FoundPlace fp = (FoundPlace) el;
-				builder.addPoint(fp.getTrace().getLatLon(), "" + i);
+				builder.addPoint(fp.getLatLon(), "" + i);
 				
 				i++;
 			}

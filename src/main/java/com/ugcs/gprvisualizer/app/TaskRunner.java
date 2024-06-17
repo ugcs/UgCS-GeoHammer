@@ -19,7 +19,7 @@ public class TaskRunner implements ProgressListener {
 	private Stage dialog = new Stage();
 	private ImageView loadingView = ResourceImageHolder.getImageView("loading.gif");
 	private ProgressTask task;
-	//private Text text = new Text("This is a Dialog");
+
 	private VBox dialogVbox = new VBox(20);
 	
 	private Button closeButton = new Button("Close");
@@ -66,25 +66,11 @@ public class TaskRunner implements ProgressListener {
 	}
 	
 	protected void closePopup() {
-
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				primaryStage.getScene().setCursor(Cursor.DEFAULT);
-			}
-		});
+		Platform.runLater(() -> primaryStage.getScene().setCursor(Cursor.DEFAULT));
 	}
 	
 	protected void showPopup() {
-		 
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				Sout.p(" showPopup() ");
-				
-				primaryStage.getScene().setCursor(Cursor.WAIT);
-			}
-		});
+		Platform.runLater(() -> primaryStage.getScene().setCursor(Cursor.WAIT));
 	}
 
 	@Override
@@ -95,13 +81,7 @@ public class TaskRunner implements ProgressListener {
 	}
 	
 	protected void show(String msg) {
-		
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				status.showProgressText(msg);
-			}
-		});
+		Platform.runLater(() -> status.showProgressText(msg));
 	}
 
 	@Override

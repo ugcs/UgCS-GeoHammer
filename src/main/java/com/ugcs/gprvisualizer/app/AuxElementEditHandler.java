@@ -45,17 +45,16 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	private BaseObject selected;
 	private MouseHandler mouseInput;
 	
-	private Button addSurfaceBtn = new Button("", 
-			ResourceImageHolder.getImageView("addSurf.png"));
+	//private Button addSurfaceBtn = new Button("", ResourceImageHolder.getImageView("addSurf.png"));
 	
-	private Button addFoundBtn = new Button("", 
-			ResourceImageHolder.getImageView("addFlag.png"));
+	private final Button addFoundBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ADD_MARK, new Button());
+	//new Button("",  ResourceImageHolder.getImageView("addFlag.png"));
 	
-	private Button delBtn = new Button("", 
-			ResourceImageHolder.getImageView("delete-20.png"));
+	private final Button delBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE, new Button());
+	//new Button("", ResourceImageHolder.getImageView("delete-20.png"));
 	
-	private Button clearBtn = new Button("", 
-			ResourceImageHolder.getImageView("delete-all-20.png"));
+	private final Button clearBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE_ALL, new Button());
+	//new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
 	
 	public AuxElementEditHandler() {
 		
@@ -103,7 +102,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	
 	public List<Node> getRightPanelTools() {
 		return Arrays.asList(addFoundBtn, 
-				getSpacer(), delBtn, clearBtn);	
+				//getSpacer(), 
+				delBtn, clearBtn);	
 	}
 	
 	private Region getSpacer() {
@@ -117,7 +117,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 	
 	protected void initButtons() {
-		addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
+		//addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
 		addFoundBtn.setTooltip(new Tooltip("Create mark"));
 		delBtn.setTooltip(new Tooltip("Delete selected element"));
 		clearBtn.setTooltip(new Tooltip("Delete all additional elements"));
@@ -139,7 +139,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		delBtn.setOnAction(e -> {		
 			
 			if (getSelected() != null) {
-				for (SgyFile sgyFile : model.getFileManager().getFiles()) {
+				for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
 					if (sgyFile.getAuxElements().contains(getSelected())) {
 						sgyFile.getAuxElements().remove(getSelected());
 						sgyFile.setUnsaved(true);
@@ -194,9 +194,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 
 	private void clearAuxElements() {
-		for (SgyFile sgyFile : model.getFileManager().getFiles()) {
-			sgyFile.getAuxElements().clear();
-			
+		for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
+			sgyFile.getAuxElements().clear();			
 			sgyFile.setUnsaved(true);
 		}				
 			

@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
 import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
+
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -50,6 +52,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	Node slider;
 
 	private Button buttonSpreadCoord;
+
 	private Button buttonKmlToFlag;
 	private Button buttonCancelKmlToFlag;
 
@@ -93,28 +96,42 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 	@Override
 	public List<Node> getToolNodes() {
-		
 
-		buttonRemoveLevel = commandRegistry.createButton(new LevelClear(),
-			e -> { 
-				levelCalculated = false; 
-				updateButtons(); 
+		buttonSpreadCoord = commandRegistry.createButton(new SpreadCoordinates(), 
+			e -> {
+				updateButtons();
+				//buttonSpreadCoord.setVisible(false);
 			});
 			
+		var buttons = List.of(commandRegistry.createButton(new BackgroundNoiseRemover()), buttonSpreadCoord);
+
+		HBox hbox = new HBox();
+		hbox.setSpacing(5);
+		hbox.setStyle("-fx-padding: 5px;");
+		hbox.setDisable(!model.isActive());
+		hbox.getChildren().addAll(buttons);
+
+		return List.of(hbox);
+	}
+
+	
+	public List<Node> getToolNodes2() {
+
+		buttonRemoveLevel = commandRegistry.createButton(new LevelClear(),
+		e -> { 
+			levelCalculated = false; 
+			updateButtons(); 
+		});
+					
 		buttonLevelGround = commandRegistry.createButton(new LevelGround(), 
 			e -> {				
 				levelCalculated = false;
 				updateButtons();
 			});
 		
-		buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
+		//buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
 
 		
-		buttonSpreadCoord = commandRegistry.createButton(new SpreadCoordinates(), 
-			e -> {
-				buttonSpreadCoord.setVisible(false);
-			});
-
 		buttonKmlToFlag = commandRegistry.createButton(new KmlToFlag(),
 			e -> {
 				//buttonKmlToFlag.setVisible(false);
@@ -131,13 +148,11 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, Change.justdraw, -50, 50, "shift");
 
 
-		List<Node> result = new ArrayList<Node>();
-		result.add(commandRegistry.createButton(new BackgroundNoiseRemover()));
+		List<Node> result = new ArrayList<>();
 		
 		if (!AppContext.PRODUCTION) {
 		    result.addAll(Arrays.asList(
 			 
-		
 			commandRegistry.createButton(new LevelScanner(), "scanLevel.png", 
 					e -> {
 						levelCalculated = true; 
@@ -149,50 +164,55 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 						updateButtons(); 
 					}),
 			
-				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord, buttonKmlToFlag, buttonCancelKmlToFlag
+				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonKmlToFlag, buttonCancelKmlToFlag
 		
 		    	));		
-		} else {		
-			
-			
-			result.addAll(Arrays.asList(
-					buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonSpreadCoord, buttonKmlToFlag, buttonCancelKmlToFlag
-					
-					
-					));
+		} else {
+			HBox hbox = new HBox();
+			hbox.setSpacing(5);
+			hbox.getChildren().addAll(buttonLevelGround, buttonRemoveLevel);					
+			result.addAll(List.of(
+					//buttonRemoveLevel, 
+					//buttonLevelGround, 
+					//levelPreview, 
+					slider,
+					hbox 
+					//buttonKmlToFlag, buttonCancelKmlToFlag
+			));
 		}
 
-		String cssLayout = "-fx-border-color: gray;\n"
-				+ "-fx-border-insets: 5;\n"
-				+ "-fx-border-width: 2;\n"
-				+ "-fx-border-style: solid;\n";
-
 		VBox vbox = new VBox();
-		vbox.setStyle(cssLayout);
 
-		vbox.setDisable(!isActive());
+		vbox.setDisable(!model.isActive());
 		vbox.getChildren().addAll(result);
 
 		return List.of(vbox);
-
-		//return result;
 	}
-
-	public boolean isActive() {
-		return model.isActive();
-	}
-
 
 	protected void updateButtons() {
-		buttonLevelGround.setDisable(!isGroundProfileExists());
-		buttonRemoveLevel.setDisable(!isGroundProfileExists());
-		levelPreview.setDisable(!isGroundProfileExists());
-		slider.setDisable(!isGroundProfileExists());
+
+		if (buttonSpreadCoord != null) {
+			buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
+			//buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+		}
+
+		if (buttonLevelGround != null) {
+			buttonLevelGround.setDisable(!isGroundProfileExists());
+		}
+		if (buttonRemoveLevel != null) {
+			buttonRemoveLevel.setDisable(!isGroundProfileExists());
+		}
+		if (levelPreview != null) {
+			levelPreview.setDisable(!isGroundProfileExists());
+		}
+		if (slider != null) {
+			slider.setDisable(!isGroundProfileExists());
+		}
 	}
 	
 	protected boolean isGroundProfileExists() {
-		return !model.getFileManager().getFiles().isEmpty() &&
-				model.getFileManager().getFiles().get(0).groundProfile != null;
+		return !model.getFileManager().getGprFiles().isEmpty() &&
+				model.getFileManager().getGprFiles().get(0).groundProfile != null;
 	}
 	
 	public void clearForNewFile() {
@@ -208,14 +228,20 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			
 			clearForNewFile();
 			
-			buttonSpreadCoord.setVisible(model.isSpreadCoordinatesNecessary());
-			buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+			if (buttonSpreadCoord != null) {
+				buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
+				buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+			}
 
-			buttonKmlToFlag.setVisible(model.isKmlToFlagAvailable());
-			buttonKmlToFlag.setManaged(model.isKmlToFlagAvailable());
-			buttonCancelKmlToFlag.setVisible(model.isKmlToFlagAvailable());
-			buttonCancelKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+			if (buttonKmlToFlag != null) {
+				buttonKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+				buttonKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+			}
 
+			if (buttonCancelKmlToFlag != null) {
+				buttonCancelKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+				buttonCancelKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+			}
 		}
 	}
 

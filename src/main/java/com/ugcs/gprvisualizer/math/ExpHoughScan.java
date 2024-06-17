@@ -8,7 +8,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.app.Sout;
 import com.ugcs.gprvisualizer.app.commands.AsinqCommand;
 import com.ugcs.gprvisualizer.app.commands.Command;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
@@ -67,10 +66,9 @@ public class ExpHoughScan  implements AsinqCommand {
 			}
 		}
 		
+		System.out.println("scan " + (System.currentTimeMillis() - tm) + "    inithe tm " + hea.fulltm);
+		System.out.println(" bad " + hea.cr1badcount + "   good " + hea.cr1count);
 		
-		
-		Sout.p("scan " + (System.currentTimeMillis() - tm) + "    inithe tm " + hea.fulltm);
-		Sout.p(" bad " + hea.cr1badcount + "   good " + hea.cr1count);
 		new ScanGood().execute(file, listener);	
 		
 		
