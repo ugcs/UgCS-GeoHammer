@@ -362,7 +362,7 @@
 							</execution>
 						</executions>
 					</plugin>
-					<!--<plugin>
+					<plugin>
 					  <groupId>com.akathist.maven.plugins.launch4j</groupId>
 					  <artifactId>launch4j-maven-plugin</artifactId>
 					  <version>${launch4j-maven-plugin.version}</version>
@@ -397,7 +397,7 @@
 								<originalFilename>geohammer.exe</originalFilename>
 							</versionInfo>
 							<splash>
-								<file>${project.basedir}/src/main/assembly/splash_screen.jpg</file>
+								<file>${project.basedir}/src/main/assembly/splash_screen.bmp</file>
 								<waitForWindow>true</waitForWindow>
 								<timeout>60</timeout>
 								<timeoutErr>true</timeoutErr>
@@ -405,7 +405,7 @@
 						  </configuration>
 						</execution>
 					  </executions>
-					</plugin>-->
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
