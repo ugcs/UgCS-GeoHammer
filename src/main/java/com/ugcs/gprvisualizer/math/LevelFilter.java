@@ -109,7 +109,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		HBox hbox = new HBox();
 		hbox.setSpacing(5);
 		hbox.setStyle("-fx-padding: 5px;");
-		hbox.setDisable(!model.isActive());
+		//hbox.setDisable(!model.isActive());
 
 		buttons.forEach(b -> {
 			b.setMaxWidth(Double.MAX_VALUE);
@@ -199,7 +199,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 		VBox vbox = new VBox();
 
-		vbox.setDisable(!model.isActive());
+		//vbox.setDisable(!model.isActive());
 		vbox.getChildren().addAll(result);
 
 		return List.of(vbox);
@@ -246,7 +246,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			
 			if (buttonSpreadCoord != null) {
 				buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
-				buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+				//buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
 			}
 
 			if (buttonKmlToFlag != null) {

@@ -356,11 +356,12 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	@Override
 	public void somethingChanged(WhatChanged changed) {
 		if (changed.isFileopened()) {
-			if (gprTab.getContent() instanceof VBox) {
-				((VBox)gprTab.getContent()).getChildren().forEach(node -> {
-					node.setDisable(!model.isActive() && !model.getFileManager().getGprFiles().isEmpty());
-				});
-			}
+			
+			//if (gprTab.getContent() instanceof VBox) {
+			//	((VBox)gprTab.getContent()).getChildren().forEach(node -> {
+			//		node.setDisable(!model.isActive() && !model.getFileManager().getGprFiles().isEmpty());
+			//	});
+			//}
 
 			if (model.isActive()) {
 				if (!model.getFileManager().getGprFiles().isEmpty()) {

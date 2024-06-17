@@ -366,7 +366,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 				radiusSlider.produce()
 			));
 
-		vertBox.setDisable(isActive());	
+		//vertBox.setDisable(isActive());	
 
 		return List.of(vertBox);
 	}

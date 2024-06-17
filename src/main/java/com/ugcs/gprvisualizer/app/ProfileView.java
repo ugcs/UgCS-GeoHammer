@@ -547,7 +547,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 
 		topPane.getChildren().addAll(vbox);
-		//model.getChartsContainer().getChildren().add(topPane);
+		model.getChartsContainer().getChildren().add(topPane);
 
 		//model.getChartsContainer().getChildren().add(topPane);
 
@@ -566,7 +566,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 	public List<Node> getRight() {
 		var contrastNode = contrastSlider.produce();
-		contrastNode.setDisable(!model.isActive());
+		//contrastNode.setDisable(!model.isActive());
 		return List.of(contrastNode);
 	}
 
