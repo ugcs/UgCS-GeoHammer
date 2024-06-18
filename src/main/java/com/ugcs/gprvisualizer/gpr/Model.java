@@ -333,9 +333,7 @@ public class Model implements InitializingBean {
 		} 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		for (var entry: plotData.entrySet()) {
-			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(entry.getKey(), entry.getValue()));
-		}
+		chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData));
 		csvFiles.put(csvFile, sensorLineChart);
 		saveColorSettings(semanticColors);
 	}
@@ -351,13 +349,12 @@ public class Model implements InitializingBean {
 			return;
 		} 
 		
-		currentChart.get().close();
+		currentChart.get().close(false);
+		csvFiles.remove(csvFile);
 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		for (var entry: plotData.entrySet()) {
-			chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(entry.getKey(), entry.getValue()));
-		}
+		chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData));
 		csvFiles.put(csvFile, sensorLineChart);
 	}
 

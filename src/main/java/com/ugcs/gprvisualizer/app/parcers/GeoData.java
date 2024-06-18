@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app.parcers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -15,6 +16,15 @@ public class GeoData extends GeoCoordinates {
         super(geoCoordinates.getLatitude(), geoCoordinates.getLongitude(), geoCoordinates.getAltitude(), geoCoordinates.getTimeInMs(), geoCoordinates.getTraceNumber(), geoCoordinates.getDateTime());
         this.sensorValues = sensorValues;
         this.lineNumber = lineNumber;
+    }
+
+    public GeoData(GeoData geoData) {
+        super(geoData.getLatitude(), geoData.getLongitude(), geoData.getAltitude(), geoData.getTimeInMs(), geoData.getTraceNumber(), geoData.getDateTime());
+        this.sensorValues = new ArrayList<>();
+        for (SensorValue sensorValue : geoData.sensorValues) {
+            sensorValues.add(new SensorValue(sensorValue));
+        }
+        this.lineNumber = geoData.lineNumber;
     }
 
     public List<SensorValue> getSensorValues() {
