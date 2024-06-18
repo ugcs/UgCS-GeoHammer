@@ -1,7 +1,7 @@
   # Displayable name of Template
-  name: "MagDrone ASC"
+  name: "MagDrone ASC old"
   # Code of template
-  code: "magdrone-asc-old"
+  code: "magdrone"
   # Type of template for parsing data. Options are CSV and ColumnsFixedWidth
   file-type: CSV
   # Applies to the first 10 not empty lines of the file to detect template
