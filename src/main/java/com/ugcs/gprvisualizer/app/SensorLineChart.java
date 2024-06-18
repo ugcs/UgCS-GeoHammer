@@ -1,6 +1,5 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,13 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.github.thecoldwine.sigrun.common.TextHeader;
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -45,7 +40,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -131,13 +125,7 @@ public class SensorLineChart {
         }
 	};
 
-    /*private void createTempPlace(Model model, SgyFile file, Trace trace) {
-		ClickPlace fp = new ClickPlace(file, trace);
-		fp.setSelected(true);
-		model.setControls(List.of(fp));
-	}*/
-
-    public Map<CsvFile, List<PlotData>> generatePlotData(CsvFile csvFile) {
+    public List<PlotData> generatePlotData(CsvFile csvFile) {
     
         List<GeoData> geoData = csvFile.getGeoData();
 
@@ -154,16 +142,15 @@ public class SensorLineChart {
             });
         });
         
-        var plotDataList = new ArrayList<PlotData>();
-        for (String k: sensorValues.keySet()) {
-            var pd = k.split("--");
-            List<SensorValue> values = sensorValues.get(k);
-            PlotData plotData = new PlotData(pd[0], pd[1], getColor(pd[0]), calculateAverages(values.stream()
+        List<PlotData> plotDataList = new ArrayList<>();
+        for (Map.Entry<String, List<SensorValue>> e: sensorValues.entrySet()) {
+            var pd = e.getKey().split("--");
+            PlotData plotData = new PlotData(pd[0], pd[1], getColor(pd[0]), calculateAverages(e.getValue().stream()
                     .map(SensorValue::data)
                     .collect(Collectors.toList())));
             plotDataList.add(plotData);
         }
-        return Map.of(csvFile, plotDataList);
+        return plotDataList;
     }
 
     private Color getColor(String semantic) {

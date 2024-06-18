@@ -253,7 +253,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 			}
 			
 			model.init();
-			//model.initField();
+			model.initField();
 			model.getProfileField().clear();
 		}
 		
@@ -328,14 +328,16 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 				if (inside) {
 					sublist.add(trace);
 				} 
-			}	
+			}
+			
 			List<GeoData> geoDataList = new ArrayList<>();
 			List<GeoData> geoDataLineList = new ArrayList<>();
 			int lineNumber = 0;
+
 			for(GeoData geoData: csvFile.getGeoData()) {
 				boolean inside = isGeoDataInsideSelection(field, border, geoData);
 				if (inside) {
-					geoDataLineList.add(geoData);
+						geoDataLineList.add(new GeoData(geoData));
 				} else {
 					if (!geoDataLineList.isEmpty()) {
 						if (isGoodForFile(geoDataLineList)) { //filter too small lines
@@ -347,8 +349,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 						}
 						geoDataLineList = new ArrayList<>();
 					}
-				}
-	
+				}	
 			}
 			
 			CsvFile subfile = csvFile.copy();
