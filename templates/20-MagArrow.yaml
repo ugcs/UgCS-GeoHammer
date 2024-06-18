@@ -40,4 +40,6 @@
       - header: "Altitude"
         semantic: "Altitude"
         units: "m"
-
+      - header: "Line"
+        semantic: "Line"
+        units: ""
