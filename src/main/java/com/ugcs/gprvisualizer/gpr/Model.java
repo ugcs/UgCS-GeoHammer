@@ -402,21 +402,37 @@ public class Model implements InitializingBean {
 		return semanticColors.computeIfAbsent(semantic, k -> generateRandomColor());
 	}
 
-	private List<Color> brightColors = List.of(Color.web("#E6194B"), // Red
-		Color.web("#3CB44B"), // Green
-		Color.web("#4363D8"), // Dark Blue
-		Color.web("#F58231"), // Orange
-		Color.web("#911EB4"), // Purple
-		Color.web("#F032E6"), // Magenta
-		Color.web("#008080"), // Teal
-		Color.web("#9A6324"), // Brown
-		Color.web("#800000"), // Maroon
-		Color.web("#808000"), // Olive
-		Color.web("#000075"), // Navy Blue
-		Color.web("#00FF00"), // Bright Green
-		Color.web("#FF4500"), // Orange Red
-		Color.web("#DA70D6") // Orchid
-	);
+	private List<Color> brightColors = List.of(
+		Color.web("#fbd101"),
+		//Color.web("#fdff0d"),
+		Color.web("#b0903a"),
+		Color.web("#f99e01"),
+		Color.web("#c56a04"),
+		Color.web("#df818e"),
+		Color.web("#ff6455"),
+		Color.web("#d80b01"),
+		Color.web("#b40a13"),
+		Color.web("#690d08"),
+		Color.web("#989d9b"),
+		Color.web("#738768"),
+		Color.web("#6bb7e6"),
+		Color.web("#496a8b"),
+		Color.web("#2b52a3"),
+		Color.web("#272f73"),
+		Color.web("#5b9a95"),
+		Color.web("#add6aa"),
+		Color.web("#2b960a"),
+		Color.web("#0e5f1e"),
+		Color.web("#bfc1c3"),
+		Color.web("#cbac7a"),
+		Color.web("#80674e"),
+		Color.web("#cabf95"),
+		Color.web("#7b7b7b"),
+		Color.web("#354a32"),
+		Color.web("#8c2a07"),
+		Color.web("#545a4c"),
+		Color.web("#242d29"),
+		Color.web("#7b7b7b"));
 
 	Random rand = new Random();
 
