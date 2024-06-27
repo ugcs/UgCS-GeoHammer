@@ -50,9 +50,7 @@ public class UiUtils {
 	
 	public Node createSlider(MutableInt val, Change change, int min, int max, String name) {
 		
-		return SliderFactory.create(name, 
-				val, 
-			min, max, 
+		return createSlider(val, change, min, max, name,
 			new ChangeListener<Number>() {
 				@Override
 				public void changed(
@@ -62,6 +60,10 @@ public class UiUtils {
 					
 					broadcast.notifyAll(new WhatChanged(change));
 				}
-		}, 5);
+		});
+	};
+
+	public Node createSlider(MutableInt val, Change change, int min, int max, String name, ChangeListener<Number> listener) {
+		return SliderFactory.create(name, val, min, max, listener, 5);
 	};
 }

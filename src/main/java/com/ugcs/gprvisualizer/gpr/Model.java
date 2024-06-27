@@ -266,14 +266,6 @@ public class Model implements InitializingBean {
 		this.updateAuxElements();
 	}
 
-	public List<SgyFile> getUndoFiles() {
-		return undoFiles;
-	}
-
-	public void setUndoFiles(List<SgyFile> undoFiles) {
-		this.undoFiles = undoFiles;
-	}
-
 	public boolean isActive() {
 		return getFileManager().isActive();
 	}

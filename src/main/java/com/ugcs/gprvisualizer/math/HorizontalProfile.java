@@ -8,7 +8,9 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 public class HorizontalProfile {
 
 	// in smp
-	public int[] deep;	
+	public int[] deep;
+	public int[] originalDeep;
+
 	public int minDeep;
 	public int maxDeep;
 	public int height;
@@ -89,5 +91,20 @@ public class HorizontalProfile {
 		}
 		
 		return (int) Math.round(sum / cnt);
-	}	
+	}
+
+    public void shift(int intValue) {
+		if (originalDeep == null) {
+			originalDeep = deep.clone();
+		}
+		int[] newDeep = new int[deep.length];
+		for (int i = 0; i < deep.length; i++) {
+			if (i + intValue >= 0 && i + intValue < deep.length) {
+				newDeep[i + intValue] = originalDeep[i];
+			} else {
+				newDeep[i] = 0;
+			}
+		}
+		this.deep = newDeep;
+    }	
 }

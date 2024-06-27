@@ -79,6 +79,8 @@ public class PositionFile {
 				hp.color = Color.red;
 			
 				sgyFile.groundProfile = hp;
+
+				sgyFile.setGroundProfileSource(this);
 			
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

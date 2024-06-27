@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -58,6 +57,8 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	//new Button("Crop", ResourceImageHolder.getImageView("scisors3-20.png"));	
 	private Button buttonUndo = ResourceImageHolder.setButtonImage(ResourceImageHolder.UNDO, new Button());
 	//new Button("", ResourceImageHolder.getImageView("undo.png"));
+
+	private List<SgyFile> undoFiles;
 	
 	{
 		buttonCutMode.setTooltip(new Tooltip("Select Area"));
@@ -219,12 +220,12 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 		}
-		model.setUndoFiles(model.getFileManager().getGprFiles());
+		setUndoFiles(model.getFileManager().getGprFiles());
 
 		for (SgyFile file : model.getFileManager().getCsvFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 		}
-		model.getUndoFiles().addAll(model.getFileManager().getCsvFiles());
+		getUndoFiles().addAll(model.getFileManager().getCsvFiles());
 
 		model.getFileManager().updateFiles(slicedSgyFiles);
 
@@ -240,9 +241,9 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	private void undo() {
 		model.setControls(null);
 
-		if (model.getUndoFiles() != null) {
-			model.getFileManager().updateFiles(model.getUndoFiles());
-			model.setUndoFiles(null);
+		if (getUndoFiles() != null) {
+			model.getFileManager().updateFiles(getUndoFiles());
+			setUndoFiles(null);
 			
 			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
@@ -390,11 +391,10 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return splitList;
 	}
 
-	public List<BaseObject> copyAuxObjects(SgyFile file, SgyFile sgyFile, int begin, int end) {
+	public static List<BaseObject> copyAuxObjects(SgyFile file, SgyFile sgyFile, int begin, int end) {
 		List<BaseObject> auxObjects = new ArrayList<>();				
 		for (BaseObject au : file.getAuxElements()) {
 			if (au.isFit(begin, end)) {
-				
 				BaseObject copy = au.copy(begin, sgyFile.getOffset());
 				if (copy != null) {
 					auxObjects.add(copy);
@@ -447,9 +447,17 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		
 		if (changed.isFileopened()) {
 			clear();
-			model.setUndoFiles(null);
+			setUndoFiles(null);
 			initButtons();
 		}
+	}
+
+	public List<SgyFile> getUndoFiles() {
+		return undoFiles;
+	}
+
+	public void setUndoFiles(List<SgyFile> undoFiles) {
+		this.undoFiles = undoFiles;
 	}
 
 	@Override
@@ -494,7 +502,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	public void initButtons() {
 		buttonCutMode.setSelected(false);
 		buttonSet.setDisable(true);
-		buttonUndo.setDisable(model.getUndoFiles() == null);
+		buttonUndo.setDisable(getUndoFiles() == null);
 	}
 	
 	private void updateCutMode() {
@@ -504,8 +512,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
     	} else {
     		clear();
     		buttonSet.setDisable(true);
-    	}		
-		
+    	}
     	getListener().repaint();
 	}
 

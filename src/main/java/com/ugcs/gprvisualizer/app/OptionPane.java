@@ -51,7 +51,7 @@ import javafx.scene.layout.VBox;
 @Component
 public class OptionPane extends VBox implements SmthChangeListener, InitializingBean {
 	
-	private static final int RIGHT_BOX_WIDTH = 330;
+	private static final int RIGHT_BOX_WIDTH = 350;
 	
 	@Autowired
 	private MapView mapView;
@@ -71,14 +71,14 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	@Autowired
 	private Model model;
 
-	@Autowired
-	private RadarMap radarMap;
+	//@Autowired
+	//private RadarMap radarMap;
 	
-	@Autowired
-	private HoughScan houghScan;
+	//@Autowired
+	//private HoughScan houghScan;
 	
-	@Autowired
-	private ExpHoughScan expHoughScan;
+	//@Autowired
+	//private ExpHoughScan expHoughScan;
 
 	@Autowired
 	private LevelFilter levelFilter;
@@ -101,7 +101,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
-		this.setPadding(new Insets(3, 13, 3, 3));
+		this.setPadding(new Insets(3, 3, 3, 3));
 		this.setPrefWidth(RIGHT_BOX_WIDTH);
 		this.setMinWidth(0);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
@@ -131,7 +131,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
         	tabPane.getTabs().add(tab2);
         }
         
-        prepareGprTab(gprTab);
+        //prepareGprTab(gprTab);
 
         //prepareTab2(tab2);
 
@@ -208,7 +208,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		getNoImplementedDialog();
 	}
 
-	private void prepareGprTab(Tab tab1) {
+	private Tab prepareGprTab(Tab tab1, SgyFile file) {
 		VBox t1 = new VBox();
 		//contrast
 		t1.getChildren().addAll(profileView.getRight());
@@ -217,8 +217,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		// map
 		t1.getChildren().addAll(mapView.getRight());
 
-		t1.getChildren().addAll(getPositionCsvButtons(null));
+		t1.getChildren().addAll(getPositionCsvButtons(file.getGroundProfileSource()));
         tab1.setContent(t1);
+		return tab1;
 	}
 
 	private List<Node> getPositionCsvButtons(PositionFile positionFile) {
@@ -365,7 +366,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 			if (model.isActive()) {
 				if (!model.getFileManager().getGprFiles().isEmpty()) {
-					showTab(gprTab);
+					showTab(prepareGprTab(gprTab, model.getFileManager().getGprFiles().get(0)));
 				} else {
 					showTab(csvTab);
 				}
@@ -383,7 +384,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 				if (file == null) {
 					clear();
 				} else {
-					showTab(gprTab);
+					showTab(prepareGprTab(gprTab, file));
 				}	
 			}
 		}
