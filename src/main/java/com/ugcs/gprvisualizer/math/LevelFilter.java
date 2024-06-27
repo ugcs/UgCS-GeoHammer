@@ -10,11 +10,15 @@ import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
+import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.UiUtils;
 import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
@@ -30,6 +34,8 @@ import com.ugcs.gprvisualizer.draw.ToolProducer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
@@ -46,23 +52,27 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 	@Autowired
 	private CommandRegistry commandRegistry;
-	
+
+	@Autowired
+	private Broadcast broadcast;
+
 	private Button buttonRemoveLevel;
+
 	private Button buttonLevelGround;
+
 	private ToggleButton levelPreview;
-	Node slider;
+
+	private Node slider;
 
 	private Button buttonSpreadCoord;
 
 	private Button buttonKmlToFlag;
 	private Button buttonCancelKmlToFlag;
 
-	private boolean levelCalculated = true;
-	
+	//private boolean levelCalculated = true;
 
+	private List<SgyFile> undoFiles;
 	
-	public LevelFilter() {
-	}
 
 //	public void smoothLevel() {
 //		for(SgyFile sf : model.getFileManager().getFiles()) {
@@ -124,20 +134,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	}
 
 	
-	public List<Node> getToolNodes2() {
-
-		buttonRemoveLevel = commandRegistry.createButton(new LevelClear(),
-		e -> { 
-			levelCalculated = false; 
-			updateButtons(); 
-		});
-					
-		buttonLevelGround = commandRegistry.createButton(new LevelGround(), 
-			e -> {				
-				levelCalculated = false;
-				updateButtons();
-			});
-		
+	public List<Node> getToolNodes2() {		
 		//buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
 
 		
@@ -153,9 +150,46 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		levelPreview = uiUtils.prepareToggleButton("Level preview", null, 
 				model.getSettings().levelPreview, 
 				Change.justdraw);
-		
-		slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, Change.justdraw, -50, 50, "shift");
 
+		if (buttonRemoveLevel == null) {	
+			buttonRemoveLevel = commandRegistry.createButton(new LevelClear(this), e -> { 
+				//levelCalculated = false; 
+				List<SgyFile> files = model.getFileManager().getGprFiles();
+				files.addAll(model.getFileManager().getCsvFiles());
+				model.getFileManager().updateFiles(files);
+				updateButtons(); 
+			});
+		}
+		
+		if (buttonLevelGround == null) {
+			buttonLevelGround = commandRegistry.createButton(new LevelGround(this), e -> {				
+				//levelCalculated = false;
+				updateButtons();
+			});		
+		}		
+		
+		if (slider == null) {
+			//slider = commandRegistry.createSlider(new ElevationLag(), e -> {
+				//levelCalculated = false; 
+			//	updateButtons(); 
+			//});
+
+			//model.getSettings().levelPreviewShift
+
+			slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, Change.justdraw, -50, 50, """
+			Elevation lag, 
+			traces""", 	new ChangeListener<Number>() {
+				@Override
+				public void changed(
+					ObservableValue<? extends Number> observable, 
+					Number oldValue,
+					Number newValue) {
+					SgyFile file = model.getFileManager().getGprFiles().get(0);
+					file.groundProfile.shift(newValue.intValue());
+					broadcast.notifyAll(new WhatChanged(Change.traceValues));
+				}
+		});
+		}
 
 		List<Node> result = new ArrayList<>();
 		
@@ -164,12 +198,12 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			 
 			commandRegistry.createButton(new LevelScanner(), "scanLevel.png", 
 					e -> {
-						levelCalculated = true; 
+						//levelCalculated = true; 
 						updateButtons(); 
 					}),
 			commandRegistry.createButton(new LevelManualSetter(), 
 					e -> {
-						levelCalculated = true; 
+						//levelCalculated = true; 
 						updateButtons(); 
 					}),
 			
@@ -199,13 +233,15 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 		VBox vbox = new VBox();
 
+		updateButtons();
+
 		//vbox.setDisable(!model.isActive());
 		vbox.getChildren().addAll(result);
 
 		return List.of(vbox);
 	}
 
-	protected void updateButtons() {
+	private void updateButtons() {
 
 		if (buttonSpreadCoord != null) {
 			buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
@@ -216,7 +252,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			buttonLevelGround.setDisable(!isGroundProfileExists());
 		}
 		if (buttonRemoveLevel != null) {
-			buttonRemoveLevel.setDisable(!isGroundProfileExists());
+			buttonRemoveLevel.setDisable(!isUndoFilesExists());
 		}
 		if (levelPreview != null) {
 			levelPreview.setDisable(!isGroundProfileExists());
@@ -226,6 +262,10 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		}
 	}
 	
+	private boolean isUndoFilesExists() {
+		return undoFiles != null && !undoFiles.isEmpty();
+	}
+
 	protected boolean isGroundProfileExists() {
 		return !model.getFileManager().getGprFiles().isEmpty() &&
 				model.getFileManager().getGprFiles().get(0).groundProfile != null;
@@ -233,7 +273,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 	
 	public void clearForNewFile() {
 		
-		levelCalculated = true; 
+		//levelCalculated = true; 
 		updateButtons(); 
 	}
 	
@@ -259,6 +299,15 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 				buttonCancelKmlToFlag.setManaged(model.isKmlToFlagAvailable());
 			}
 		}
+	}
+
+	
+	public List<SgyFile> getUndoFiles() {
+		return undoFiles;
+	}
+
+	public void setUndoFiles(List<SgyFile> undoFiles) {
+		this.undoFiles = undoFiles;
 	}
 
 }

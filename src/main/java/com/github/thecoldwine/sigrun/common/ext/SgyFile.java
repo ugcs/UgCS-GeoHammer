@@ -40,6 +40,8 @@ public abstract class SgyFile {
 	private List<BaseObject> auxElements = new ArrayList<>();
 	
 	private boolean spreadCoordinatesNecessary = false;
+
+	private PositionFile positionFile;
 	
 	protected static double SPEED_SM_NS_VACUUM = 30.0;
 	protected static double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
@@ -251,6 +253,14 @@ public abstract class SgyFile {
 		if (unsaved != other.unsaved)
 			return false;
 		return true;
+	}
+
+    public void setGroundProfileSource(PositionFile positionFile) {
+		this.positionFile = positionFile;
+    }
+
+	public PositionFile getGroundProfileSource() {
+		return positionFile;
 	}
 
 }
