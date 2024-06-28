@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.opencsv.CSVReader;
 import com.ugcs.gprvisualizer.app.MessageBoxHelper;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
 import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
@@ -61,10 +62,17 @@ public class PositionFile {
 				HorizontalProfile hp = new HorizontalProfile(sgyFile.getTraces().size());		    
    		    	StretchArray altArr = new StretchArray();
 
+				double hair =  100 / sgyFile.getSamplesToCmAir();
+
 				for (GeoCoordinates coord : coordinates) {
+					if (coord instanceof GeoData) {
+						double alt = ((GeoData) coord).getSensorValue(GeoData.Semantic.ALTITUDE_AGL).data().doubleValue();
+						altArr.add((int) (alt * hair));
+					}
+
 					//if (loadAltOnly) {
-						double hair =  100 / sgyFile.getSamplesToCmAir();
-						altArr.add((int) (coord.getAltitude() * hair));
+					//	double hair =  100 / sgyFile.getSamplesToCmAir();
+					//	altArr.add((int) (coord.getAltitude() * hair));
 					//} else {
 					//	sgyFile.getTraces().add(new Trace(sgyFile, null, null, new float[]{}, new LatLon(coord.getLatitude(), coord.getLongitude())));
 					//	if(coord instanceof GeoData) {
