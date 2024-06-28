@@ -8,6 +8,18 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class GeoData extends GeoCoordinates {
 
+    public enum Semantic {
+
+        LINE("Line"),
+        ALTITUDE_AGL("Altitude AGL");
+
+        private String name;
+
+        Semantic(String name) {
+            this.name = name;
+        }
+    }
+
     private final List<SensorValue> sensorValues;
     
     private final int lineNumber;
@@ -46,14 +58,18 @@ public class GeoData extends GeoCoordinates {
     }
 
     public SensorValue getLine() {
+        return getSensorValue(Semantic.LINE);    
+    }
+
+    public SensorValue getSensorValue(Semantic semantic) {
         SensorValue result = null;
         for(SensorValue sensorValue : sensorValues) {
-            if ("Line".equals(sensorValue.semantic())) {
+            if (semantic.name.equals(sensorValue.semantic())) {
                 result = sensorValue;
                 break;
             }
         }
-        return result;    
+        return result;
     }
 
     public int getLineNumber() {
