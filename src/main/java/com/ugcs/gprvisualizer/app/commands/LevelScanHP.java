@@ -67,9 +67,8 @@ public class LevelScanHP implements Command {
 		List<HorizontalProfile> result = new ArrayList<>();
 		result.add(grnd);
 		file.profiles = result;
-		file.groundProfile = grnd;
-		
-		
+		file.setGroundProfile(grnd);
+	
 		//aux tasks 
 		new EdgeFinder().execute(file, listener);
 		new EdgeSubtractGround().execute(file, listener);		

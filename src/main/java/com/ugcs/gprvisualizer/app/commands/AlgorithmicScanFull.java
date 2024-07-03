@@ -9,7 +9,7 @@ public class AlgorithmicScanFull implements AsinqCommand {
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
 
-		if (file.groundProfile == null) {
+		if (file.getGroundProfile() == null) {
 			//new LevelScanHP().execute(file);
 			new LevelScanner().execute(file, listener);
 		}

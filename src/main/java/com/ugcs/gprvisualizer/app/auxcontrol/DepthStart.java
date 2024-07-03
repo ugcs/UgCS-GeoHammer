@@ -81,8 +81,8 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public void controlToSettings(TraceSample ts) {
 		int max = model.getMaxHeightInSamples();
-		model.getSettings().layer = Math.min(
-				max - model.getSettings().hpage, Math.max(0, ts.getSample()));
+		model.getSettings().setLayer(Math.min(max - model.getSettings().hpage, 
+			Math.max(0, ts.getSample())));
 	}
 
 	@Override
@@ -128,7 +128,7 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	public Point getCenter(ProfileField profField) {
 		Point scr = profField.traceSampleToScreen(new TraceSample(
-				0, model.getSettings().layer));
+				0, model.getSettings().getLayer()));
 		scr.x = profField.visibleStart;
 		return scr;
 	}

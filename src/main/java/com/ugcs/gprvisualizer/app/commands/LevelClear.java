@@ -24,7 +24,7 @@ public class LevelClear implements Command {
 		file.setTraces(undoFile.getTraces());
 		levelFilter.setUndoFiles(null);
 
-		file.groundProfile = undoFile.groundProfile;
+		file.setGroundProfile(undoFile.getGroundProfile());
 	}
 
 	@Override

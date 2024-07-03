@@ -29,7 +29,7 @@ public class LevelScanner implements Command {
 
 		AmplitudeMatrix am = new AmplitudeMatrix();
 		am.init(lst);
-		file.groundProfile = am.findLevel();
+		file.setGroundProfile(am.findLevel());
 		
 		
 		//aux tasks 

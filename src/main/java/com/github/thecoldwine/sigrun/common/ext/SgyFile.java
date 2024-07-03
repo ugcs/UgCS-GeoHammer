@@ -29,7 +29,8 @@ public abstract class SgyFile {
 	
     //horizontal cohesive lines of edges
     public List<HorizontalProfile> profiles;
-    public HorizontalProfile groundProfile;
+
+    private HorizontalProfile groundProfile;
     
     // hyperbola probability calculated by AlgoritmicScan
     public ScanProfile algoScan;
@@ -262,5 +263,13 @@ public abstract class SgyFile {
 	public PositionFile getGroundProfileSource() {
 		return positionFile;
 	}
+
+	public HorizontalProfile getGroundProfile() {
+		return groundProfile;
+	}
+
+    public void setGroundProfile(HorizontalProfile groundProfile) {
+		this.groundProfile = groundProfile;
+    }
 
 }

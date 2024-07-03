@@ -26,7 +26,7 @@ public class LevelManualSetter implements Command {
 		
 		HorizontalProfile levelProfile = new HorizontalProfile(file.size());
 		
-		int level = model.getSettings().layer;
+		int level = model.getSettings().getLayer();
 		
 		for (int i = 0; i < file.size(); i++) {
 			levelProfile.deep[i] = level;
@@ -34,8 +34,7 @@ public class LevelManualSetter implements Command {
 		
 		levelProfile.finish(file.getTraces());
 		
-		file.groundProfile = levelProfile;
-		
+		file.setGroundProfile(levelProfile);		
 	}
 
 }

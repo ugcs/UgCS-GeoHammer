@@ -31,8 +31,8 @@ public class ScanGood implements Command {
 		
 		// | ___ |
 		
-		int fromSmp = AppContext.model.getSettings().layer;
-		int toSmp = Math.min(AppContext.model.getSettings().layer 
+		int fromSmp = AppContext.model.getSettings().getLayer();
+		int toSmp = Math.min(AppContext.model.getSettings().getLayer() 
 				+ AppContext.model.getSettings().hpage,
 				file.getMaxSamples() - 2);
 		

@@ -41,7 +41,7 @@ public class HorizontalGroupFilter implements Command {
 		HorizontalProfile brightestGrn = getBrightest(tmpCurve);
 		brightestGrn.color = Color.RED;
 		
-		file.groundProfile = brightestGrn; 
+		file.setGroundProfile(brightestGrn); 
 		
 	}
 

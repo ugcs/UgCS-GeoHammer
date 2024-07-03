@@ -12,17 +12,19 @@ public class DepthHeight extends DepthStart {
 		super(shape);
 	}
 
+	@Override
 	public void controlToSettings(TraceSample ts) {
 		int max = model.getMaxHeightInSamples();
 		
 		model.getSettings().hpage = 
-			Math.min(max - model.getSettings().layer, Math.max(
-				0, ts.getSample() - model.getSettings().layer));
+			Math.min(max - model.getSettings().getLayer(), Math.max(
+				0, ts.getSample() - model.getSettings().getLayer()));
 	}
 	
+	@Override
 	public Point getCenter(ProfileField profField) {
 		Point scr = profField.traceSampleToScreen(new TraceSample(
-				0, model.getSettings().layer + model.getSettings().hpage));
+				0, model.getSettings().getLayer() + model.getSettings().hpage));
 		scr.x = profField.visibleStart;
 		return scr;
 	}	

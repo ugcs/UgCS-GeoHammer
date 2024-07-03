@@ -50,14 +50,14 @@ public class HoughScan implements AsinqCommand {
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
 
-		if (file.groundProfile == null) {
+		if (file.getGroundProfile() == null) {
 			new LevelScanner().execute(file, listener);
 		}
 		new EdgeFinder().execute(file, listener);
 		new EdgeSubtractGround().execute(file, listener);
 
 		//
-		int maxSmp = Math.min(AppContext.model.getSettings().layer 
+		int maxSmp = Math.min(AppContext.model.getSettings().getLayer() 
 				+ AppContext.model.getSettings().hpage,
 				file.getMaxSamples() - 2);
 
@@ -72,7 +72,7 @@ public class HoughScan implements AsinqCommand {
 			Trace tr = file.getTraces().get(pinTr);
 			tr.good = new byte[file.getMaxSamples()];
 
-			for (int pinSmp = AppContext.model.getSettings().layer; 
+			for (int pinSmp = AppContext.model.getSettings().getLayer(); 
 					pinSmp < maxSmp; pinSmp++) {
 				
 				boolean isGood = scan(file, pinTr, pinSmp, threshold);
@@ -89,8 +89,8 @@ public class HoughScan implements AsinqCommand {
 	public boolean scan(SgyFile sgyFile, 
 			int pinTrace, int pinSmpl, double threshold) {
 		
-		if (sgyFile.groundProfile == null 
-				|| pinSmpl < sgyFile.groundProfile.deep[pinTrace]) {
+		if (sgyFile.getGroundProfile() == null 
+				|| pinSmpl < sgyFile.getGroundProfile().deep[pinTrace]) {
 			return false;
 		}
 		
