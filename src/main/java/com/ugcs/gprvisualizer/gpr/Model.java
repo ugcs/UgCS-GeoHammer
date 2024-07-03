@@ -189,9 +189,8 @@ public class Model implements InitializingBean {
 		getSettings().maxsamples = maxHeightInSamples;
 		
 		
-		if (getSettings().layer + getSettings().hpage > maxHeightInSamples) {
-			
-			getSettings().layer = maxHeightInSamples / 4;
+		if (getSettings().getLayer() + getSettings().hpage > maxHeightInSamples) {
+			getSettings().setLayer(maxHeightInSamples / 4);
 			getSettings().hpage = maxHeightInSamples / 4;			
 		}
 		

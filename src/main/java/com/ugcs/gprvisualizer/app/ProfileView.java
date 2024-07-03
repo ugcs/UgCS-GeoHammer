@@ -307,10 +307,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		for (int i = f1; i <= f2; i++) {
 			SgyFile currentFile = model.getFileManager().getGprFiles().get(i);
 			
-			if (currentFile instanceof CsvFile) {
-				continue;
-			}
-
 			if (currentFile.profiles != null) {
 				// pf
 				graphicsContext.setColor(new Color(50, 200, 250));
@@ -322,11 +318,11 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 			}
 
 			// ground
-			if (currentFile.groundProfile != null) {
+			if (currentFile.getGroundProfile() != null) {
 				graphicsContext.setColor(new Color(210, 105, 30));
 				graphicsContext.setStroke(LEVEL_STROKE);
 				drawHorizontalProfile(field, graphicsContext,
-						currentFile.getOffset().getStartTrace(), currentFile.groundProfile,
+						currentFile.getOffset().getStartTrace(), currentFile.getGroundProfile(),
 						shiftGround.intValue());
 			}
 
@@ -351,10 +347,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		g2.setColor(Color.MAGENTA);
 		g2.setStroke(dashed);
 
-		int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().layer)).y;
+		int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().getLayer())).y;
 		g2.drawLine(-width / 2, y, width / 2, y);
 
-		int bottomSelectedSmp = model.getSettings().layer + model.getSettings().hpage;
+		int bottomSelectedSmp = model.getSettings().getLayer() + model.getSettings().hpage;
 		int y2 = field.traceSampleToScreen(new TraceSample(
 				0, bottomSelectedSmp)).y;
 		
@@ -423,8 +419,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
 					startTraceIndex + i, max2));
-			
-			if (p2.x - p1.x > 2) {
+
+			if (p2.x - p1.x > 0 || Math.abs(p2.y - p1.y) > 0) {
 				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
 				p1 = p2;
 				max2 = 0;

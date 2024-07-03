@@ -24,7 +24,7 @@ public class LevelGround implements Command {
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
 
-		HorizontalProfile hp = file.groundProfile;
+		HorizontalProfile hp = file.getGroundProfile();
 		if (hp == null) {
 			return;
 		}
@@ -58,7 +58,7 @@ public class LevelGround implements Command {
 		SgyFile oldFile = generateSgyFileFrom(file, processedTraces);
  		levelFilter.setUndoFiles(List.of(oldFile));
 		
-		file.groundProfile = null;
+		file.setGroundProfile(null);
 		file.setUnsaved(true);
 	}
 
@@ -83,7 +83,7 @@ public class LevelGround implements Command {
 			///
 		}
 		
-		sgyFile.groundProfile = sourceFile.groundProfile;
+		sgyFile.setGroundProfile(sourceFile.getGroundProfile());
 
 		sgyFile.updateInternalIndexes();
 		return sgyFile;

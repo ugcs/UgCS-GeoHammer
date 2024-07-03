@@ -185,7 +185,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 					Number oldValue,
 					Number newValue) {
 					SgyFile file = model.getFileManager().getGprFiles().get(0);
-					file.groundProfile.shift(newValue.intValue());
+					file.getGroundProfile().shift(newValue.intValue());
 					broadcast.notifyAll(new WhatChanged(Change.traceValues));
 				}
 		});
@@ -268,7 +268,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 	protected boolean isGroundProfileExists() {
 		return !model.getFileManager().getGprFiles().isEmpty() &&
-				model.getFileManager().getGprFiles().get(0).groundProfile != null;
+				model.getFileManager().getGprFiles().get(0).getGroundProfile() != null;
 	}
 	
 	public void clearForNewFile() {

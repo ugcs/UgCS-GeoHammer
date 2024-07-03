@@ -25,9 +25,9 @@ public class RadarMapScan implements Command {
 			file.amplScan = new ScanProfile(file.size());
 		}		
 		
-		int start = Math.clamp(model.getSettings().layer,
+		int start = Math.clamp(model.getSettings().getLayer(),
 				0, model.getMaxHeightInSamples());
-		int finish = Math.clamp(model.getSettings().layer + model.getSettings().hpage,
+		int finish = Math.clamp(model.getSettings().getLayer() + model.getSettings().hpage,
 				0, model.getMaxHeightInSamples());
 		
 		

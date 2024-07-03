@@ -34,7 +34,7 @@ public class AlgorithmicScan implements AsinqCommand {
 		int height = traces.get(0).getNormValues().length;
 		byte[][] good = new byte[traces.size()][height];
 		
-		if (sf.groundProfile == null) {
+		if (sf.getGroundProfile() == null) {
 			System.out.println("!!!!groundProfile == null");
 			return;
 		}
@@ -128,14 +128,14 @@ public class AlgorithmicScan implements AsinqCommand {
 		int goodSmpCnt = 0;
 		int maxSmp =
 				Math.min(
-					AppContext.model.getSettings().layer
+					AppContext.model.getSettings().getLayer()
 					+ AppContext.model.getSettings().hpage,
 					
 					sgyFile.getTraces().get(tr).getNormValues().length - 2);
 		
 		// test all samples to fit hyperbola
 		
-		for (int smp = AppContext.model.getSettings().layer;				
+		for (int smp = AppContext.model.getSettings().getLayer();				
 			smp < maxSmp; smp++) {			
 			
 			byte exists = checkAllVariantsForPoint(sgyFile, tr, thr, smp);

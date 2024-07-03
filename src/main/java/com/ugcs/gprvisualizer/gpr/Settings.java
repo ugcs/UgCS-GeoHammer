@@ -31,8 +31,10 @@ public class Settings {
 	public int width = 800;
 	public int height = 600;
 	public int radius = 15;
+	
 	public int hpage = 47;
-	public int layer = 80; 
+
+	private int layer = 80; 
 	
 	
 	public int hyperkfc = 25; 
@@ -84,5 +86,13 @@ public class Settings {
 	
 	public MutableBoolean getHyperliveview() {
 		return hyperliveview;
+	}
+
+	public int getLayer() {
+		return layer;
+	}
+
+	public void setLayer(int layer) {
+		this.layer = layer;
 	}	
 }

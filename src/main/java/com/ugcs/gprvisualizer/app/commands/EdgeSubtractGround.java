@@ -80,7 +80,7 @@ public class EdgeSubtractGround implements Command {
 	
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
-		if (file.groundProfile == null) {
+		if (file.getGroundProfile() == null) {
 			System.out.println("!!!!!!!!!!!!!1 file.groundProfile == null");
 			return;
 		}
@@ -90,11 +90,11 @@ public class EdgeSubtractGround implements Command {
 		hplist.add(getHorizontal(file.getTraces().size()));
 		
 		// ground profile
-		hplist.add(file.groundProfile);
+		hplist.add(file.getGroundProfile());
 		
 		
 		// ground profile * 2
-		hplist.add(multTwice(file.groundProfile));
+		hplist.add(multTwice(file.getGroundProfile()));
 		
 		for (HorizontalProfile hp : hplist) {
 			
@@ -106,7 +106,7 @@ public class EdgeSubtractGround implements Command {
 				// minimal length of curve which must be similar to hp (cm) 
 				double minDst = HalfHyperDst.getGoodSideDstGrnd(
 						file, deep + hp.avgdeep, 
-						file.groundProfile.avgdeep) * 4;
+						file.getGroundProfile().avgdeep) * 4;
 				
 				processDeep(file, hp,  deep, minDst);
 			}

@@ -70,7 +70,7 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 				//		.getFiles().indexOf(sgyFile);
 				AppContext.model.getFileManager().removeFile(sgyFile); //.getFiles().remove(index);
 				
-				AppContext.model.init();
+				//AppContext.model.init();
 				AppContext.model.initField();
 				AppContext.model.getProfileField().clear();	
 				

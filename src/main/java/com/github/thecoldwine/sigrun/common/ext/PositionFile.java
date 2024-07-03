@@ -86,7 +86,7 @@ public class PositionFile {
 		    	hp.finish(sgyFile.getTraces());			
 				hp.color = Color.red;
 			
-				sgyFile.groundProfile = hp;
+				sgyFile.setGroundProfile(hp);
 
 				sgyFile.setGroundProfileSource(this);
 			
@@ -160,7 +160,7 @@ public class PositionFile {
 		    hp.finish(sgyFile.getTraces());			
 			hp.color = Color.red;
 			
-			sgyFile.groundProfile = hp;
+			sgyFile.setGroundProfile(hp);
 			
 			
 			hp2.finish(sgyFile.getTraces());			

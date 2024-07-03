@@ -16,11 +16,11 @@ public class DepthSlider extends BaseSlider {
 	public void updateUI() {
 		slider.setMax(settings.maxsamples);		
 		slider.setMin(0);
-		slider.setValue(settings.layer);
+		slider.setValue(settings.getLayer());
 	}
 	
 	public int updateModel() {
-		settings.layer = (int) slider.getValue();
-		return settings.layer;
+		settings.setLayer((int) slider.getValue());
+		return settings.getLayer();
 	}
 }

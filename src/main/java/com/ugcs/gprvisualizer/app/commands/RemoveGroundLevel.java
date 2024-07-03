@@ -8,9 +8,7 @@ public class RemoveGroundLevel implements Command {
 
 	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
-		
-		file.groundProfile = null;
-
+		file.setGroundProfile(null);
 	}
 
 	@Override

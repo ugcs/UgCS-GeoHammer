@@ -196,8 +196,8 @@ public class RulerTool extends BaseObjectImpl
 
 	public static double distanceVCm(SgyFile file, int tr, double smp1, double smp2) {
 		double grndLevel = 0;
-		if (file.groundProfile != null) {
-			grndLevel = file.groundProfile.deep[tr];
+		if (file.getGroundProfile() != null) {
+			grndLevel = file.getGroundProfile().deep[tr];
 		}
 
 		double h1 = Math.min(smp1, smp2); 
@@ -216,8 +216,8 @@ public class RulerTool extends BaseObjectImpl
 	
 	public static double distanceCm(SgyFile file, int tr1, int tr2, double smp1, double smp2) {
 		double grndLevel = 0;
-		if (file.groundProfile != null) {
-			grndLevel = file.groundProfile.deep[(tr1 + tr2) / 2];
+		if (file.getGroundProfile() != null) {
+			grndLevel = file.getGroundProfile().deep[(tr1 + tr2) / 2];
 		}
 
 		int s = Math.max(0, Math.min(tr1, tr2));
@@ -249,7 +249,7 @@ public class RulerTool extends BaseObjectImpl
 	
 	public static int diagonalToSmp(SgyFile file, int tr, int smp, double c) {
 		
-		int grn = file.groundProfile.deep[tr];
+		int grn = file.getGroundProfile().deep[tr];
 	
 		int i=0;
 		double dst = 0;
@@ -267,7 +267,7 @@ public class RulerTool extends BaseObjectImpl
 		
 	public static int diagonalToSmp2(SgyFile file, int tr, int smp, double c) {
 		
-		int grn = file.groundProfile.deep[tr];
+		int grn = file.getGroundProfile().deep[tr];
 		
 		//part of air
 		

@@ -94,8 +94,8 @@ public class HalfHyperDst {
 	
 	private double[] smpToDst(int smp) {
 		
-		int grndSmp = sgyFile.groundProfile != null 
-				? sgyFile.groundProfile.deep[pinnacleTrace] : 0;
+		int grndSmp = sgyFile.getGroundProfile() != null 
+				? sgyFile.getGroundProfile().deep[pinnacleTrace] : 0;
 		
 		return smpToDst(sgyFile, smp, grndSmp);
 	}
@@ -116,7 +116,7 @@ public class HalfHyperDst {
 	}
 	
 	public static double getGoodSideDstPin(SgyFile file, int pinnacleTr, int smp) {
-		int grndSmp = file.groundProfile != null ? file.groundProfile.deep[pinnacleTr] : 0;
+		int grndSmp = file.getGroundProfile() != null ? file.getGroundProfile().deep[pinnacleTr] : 0;
 		
 		return getGoodSideDstGrnd(file, smp, grndSmp);
 	}
