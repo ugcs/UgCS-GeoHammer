@@ -176,15 +176,15 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
         		Trace trace = TraceUtils.findNearestTrace(
         				model.getTraces(), ll);
 
-				int indexInFile = trace.getFile().getTraces().indexOf(trace);
+				//int indexInFile = trace.getFile().getTraces().indexOf(trace);
 
 				if (trace.getFile() instanceof CsvFile) {
 					Optional<SensorLineChart> chart = model.getChart((CsvFile) trace.getFile());
 					if (chart.isPresent()) {
-						chart.get().setSelectedTrace(indexInFile);
+						chart.get().setSelectedTrace(trace.getIndexInSet());
 					} 
 				} else {
-					model.getProfileField().setSelectedTrace(indexInFile);
+					model.getProfileField().setSelectedTrace(trace.getIndexInSet());
 				}				
 				model.createClickPlace(trace.getFile(), trace);
 			}
