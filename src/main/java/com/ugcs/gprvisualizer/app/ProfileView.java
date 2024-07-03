@@ -307,10 +307,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 		for (int i = f1; i <= f2; i++) {
 			SgyFile currentFile = model.getFileManager().getGprFiles().get(i);
 			
-			if (currentFile instanceof CsvFile) {
-				continue;
-			}
-
 			if (currentFile.profiles != null) {
 				// pf
 				graphicsContext.setColor(new Color(50, 200, 250));
@@ -423,8 +419,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
 
 			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
 					startTraceIndex + i, max2));
-			
-			if (p2.x - p1.x > 0 || p2.y - p1.y > 0) {
+
+			if (p2.x - p1.x > 0 || Math.abs(p2.y - p1.y) > 0) {
 				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
 				p1 = p2;
 				max2 = 0;

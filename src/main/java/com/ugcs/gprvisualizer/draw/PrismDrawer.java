@@ -61,7 +61,7 @@ public class PrismDrawer {
 		boolean showEdge = model.getSettings().showEdge.booleanValue();
 		boolean shiftGround = model.getSettings().levelPreview.booleanValue();
 		
-		HorizontalProfile gp = model.getFileManager().getGprFiles().get(0).groundProfile;
+		HorizontalProfile gp = model.getFileManager().getGprFiles().get(0).getGroundProfile();
 		
 		List<Trace> traces = model.getGprTraces();
 		
