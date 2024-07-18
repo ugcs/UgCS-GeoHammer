@@ -23,7 +23,7 @@ jobs:
       - name: Build with Maven
         run: mvn --batch-mode install -P windows-build
       - name: Package
-        run: jpackage --input target\ --name geohammer --main-jar geohammer.jar --main-class com.ugcs.gprvisualizer.app.MainGeoHammer --type msi --runtime-image target\jre21
+        run: jpackage --input target\ --name geohammer --main-jar geohammer.jar --main-class com.ugcs.gprvisualizer.app.MainGeoHammer --type app-image --runtime-image target\jre21
       - name: Staging artifacts
         run: mkdir staging && copy target\*.zip staging && copy *.msi staging
       - name: Store artifacts
