@@ -25,7 +25,7 @@ jobs:
       - name: Package
         run: jpackage --verbose --input target\ --name geohammer --main-jar geohammer.jar --main-class com.ugcs.gprvisualizer.app.MainGeoHammer --type app-image --runtime-image target\jre21
       - name: Staging artifacts
-        run: mkdir staging && copy target\*.zip staging && copy *.msi staging
+        run: mkdir staging && copy target\*.zip staging
       - name: Store artifacts
         uses: actions/upload-artifact@v4
         with:

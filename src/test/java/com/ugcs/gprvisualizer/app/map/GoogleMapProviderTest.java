@@ -1,3 +1,5 @@
+package com.ugcs.gprvisualizer.app.map;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
