@@ -36,17 +36,33 @@
 
 		<gt.version>22.2</gt.version>
 
-		<!-- Default values. These should be overloaded by profile choice -->
-		<platform.suffix>windows-x86_64</platform.suffix>
-        <zip.content>src/main/assembly/zip.xml</zip.content>
-
 		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
 		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
 		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
-		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>	
+		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>
+		<javafx.version>21.0.4</javafx.version>
+		
+		<build.timestamp>${maven.build.timestamp}</build.timestamp>
+		<maven.build.timestamp.format>MMddHHmmss</maven.build.timestamp.format>
 	</properties>
 
+
+
 	<build>
+		<resources>
+    		<resource>
+        		<filtering>true</filtering>
+        		<directory>src/main/resources</directory>
+        		<includes>
+            		<include>buildnumber.properties</include>
+        		</includes>
+    		</resource>
+	    	<resource>
+        		<filtering>false</filtering>
+        		<directory>src/main/resources</directory>
+    		</resource>
+		</resources>
+
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
@@ -160,12 +176,13 @@
 			</plugin>
 
 			<!-- Java FX module support -->
+			<!-- Allow to run app with mvn javafx:run -->
 		    <plugin>
 		        <groupId>org.openjfx</groupId>
 		        <artifactId>javafx-maven-plugin</artifactId>
-		        <version>0.0.1</version>
+		        <version>0.0.8</version>
 		        <configuration>
-		            <mainClass>MainGeoHammer.app.gprvisualizer.ugcs.com</mainClass>
+		            <mainClass>com.ugcs.gprvisualizer.app.MainGeoHammer</mainClass>
 		        </configuration>
 		    </plugin>
 			<plugin>
@@ -176,23 +193,40 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>${build-helper-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>parse-version</id>
+						<goals>
+							<goal>parse-version</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>centr</id>
-			<name>central</name>
-			<url>https://repo1.maven.org/maven2/</url>
-		</repository>
-		<repository>
-			<id>repo1</id>
-			<name>Repo 1</name>
-			<url>https://repo.osgeo.org/repository/release/</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
+		<!-- Core JavaFX modules -->
+    	<dependency>
+        	<groupId>org.openjfx</groupId>
+       		<artifactId>javafx-controls</artifactId>
+        	<version>${javafx.version}</version>
+    	</dependency>
+		<dependency>
+        	<groupId>org.openjfx</groupId>
+        	<artifactId>javafx-graphics</artifactId>
+        	<version>${javafx.version}</version>
+    	</dependency>
+		<dependency>
+        	<groupId>org.openjfx</groupId>
+        	<artifactId>javafx-swing</artifactId>
+        	<version>${javafx.version}</version>
+    	</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -293,24 +327,17 @@
 		</dependency>
 
         <!-- Add JUnit 5 dependencies -->
-        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
-
 	</dependencies>
-
-
 
 	<profiles>
 		<profile>
@@ -342,26 +369,16 @@
 		</profile>
 		<profile>
 			<id>windows-build</id>
+			<activation>
+                <os><family>windows</family></os>
+            </activation>
 			<properties>
         		<platform.suffix>windows-x86_64</platform.suffix>
-        		<zip.content>src/main/assembly/zip.xml</zip.content>
+        		<zip.content>assembly/windows-zip.xml</zip.content>
       		</properties>
        		<!-- exe -->
        		<build>
 	       		<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>build-helper-maven-plugin</artifactId>
-						<version>${build-helper-maven-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>parse-version</id>
-								<goals>
-									<goal>parse-version</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
 					<plugin>
 					  <groupId>com.akathist.maven.plugins.launch4j</groupId>
 					  <artifactId>launch4j-maven-plugin</artifactId>
@@ -397,7 +414,7 @@
 								<originalFilename>geohammer.exe</originalFilename>
 							</versionInfo>
 							<splash>
-								<file>${project.basedir}/src/main/assembly/splash_screen.bmp</file>
+								<file>${project.basedir}/assembly/splash_screen.bmp</file>
 								<waitForWindow>true</waitForWindow>
 								<timeout>60</timeout>
 								<timeoutErr>true</timeoutErr>
@@ -411,17 +428,97 @@
 		</profile>
 		<profile>
 			<id>linux-build</id>
+			<activation>
+                <os><family>linux</family></os>
+            </activation>
 			<properties>
         		<platform.suffix>linux-x86_64</platform.suffix>
-        		<zip.content>src/main/assembly/unix-zip.xml</zip.content>
+        		<zip.content>assembly/linux-zip.xml</zip.content>
       		</properties>
       	</profile>
 		<profile>
 			<id>macos-build</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
 			<properties>
         		<platform.suffix>macos-x86_64</platform.suffix>
-        		<zip.content>src/main/assembly/unix-zip.xml</zip.content>
+        		<zip.content>assembly/macos-zip.xml</zip.content>
+				<installer.input>${project.build.directory}/installer/input/</installer.input>
       		</properties>
+			<build>
+                <plugins>
+                    <plugin>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <version>${exec-maven-plugin.version}</version>
+                        <executions>
+							<execution>
+                    			<id>create-installer-dir</id>
+                    			<phase>install</phase>
+                    			<goals><goal>exec</goal></goals>
+                    			<configuration>
+                        			<executable>mkdir</executable>
+                        			<arguments>
+										<argument>-p</argument><argument>${installer.input}</argument>
+                        			</arguments>
+                    			</configuration>
+                			</execution>
+							<execution>
+                    			<id>copy-jar-file</id>
+                    			<phase>install</phase>
+                    			<goals><goal>exec</goal></goals>
+                    			<configuration>
+                        			<executable>cp</executable>
+                        			<arguments>
+                            			<argument>${project.build.directory}/${project.artifactId}-jar-with-dependencies.jar</argument>
+                            			<argument>${installer.input}</argument>
+                        			</arguments>
+                    			</configuration>
+                			</execution>
+							<execution>
+                    			<id>copy-templates</id>
+                    			<phase>install</phase>
+                    			<goals><goal>exec</goal></goals>
+                    			<configuration>
+                        			<executable>cp</executable>
+                        			<arguments>
+									    <argument>-r</argument><argument>templates</argument><argument>${installer.input}</argument>
+                        			</arguments>
+                    			</configuration>
+                			</execution>
+                            <execution>
+                                <id>Build Native Mac App</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+								<configuration>
+									<executable>${java.home}/bin/jpackage</executable>
+									<arguments>
+										<argument>--verbose</argument>
+										<argument>--type</argument> <argument>app-image</argument>
+										<argument>--dest</argument> <argument>${installer.input}/..</argument>
+										<argument>--input</argument> <argument>${installer.input}</argument>
+										<argument>--name</argument> <argument>${project.name}</argument>
+										<argument>--main-class</argument> <argument>com.ugcs.gprvisualizer.app.MainGeoHammer</argument>
+										<argument>--main-jar</argument> <argument>${project.artifactId}-jar-with-dependencies.jar</argument>
+										<argument>--java-options</argument> <argument>"-splash:splash_screen.jpg -Xmx4096m"</argument>
+										<argument>--runtime-image</argument> <argument>${project.build.directory}/jre21</argument>
+										<argument>--app-version</argument> <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</argument>
+										<argument>--vendor</argument> <argument>"SPH Engeneering"</argument>
+										<argument>--copyright</argument> <argument>"© SPH Engeneering, 2024"</argument>
+										<argument>--mac-package-identifier</argument> <argument>com.ugcs.gprvisualizer</argument>
+										<argument>--mac-package-name</argument> <argument>${project.name}</argument>
+										<argument>--icon</argument> <argument>assembly/logo32.icns</argument>
+									</arguments>
+									<workingDirectory>${project.basedir}/</workingDirectory>
+								</configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
       	</profile>
 	</profiles>
 

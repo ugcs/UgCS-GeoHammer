@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Application;
@@ -22,16 +23,14 @@ import javafx.stage.WindowEvent;
 
 public class MainGeoHammer extends Application {
 
-	private static final String TITLE_VERSION = "GeoHammer v.2.0.3";
+	private static final String TITLE_VERSION = "GeoHammer v.";
 	
 	private Model model;
 	private RootControls rootControls;
-	private ApplicationContext context; 
-	
-	public MainGeoHammer() {
+	private ApplicationContext context;
+
+	private FileTemplates fileTemplates; 
 		
-	}
-	
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -40,11 +39,15 @@ public class MainGeoHammer extends Application {
     public void init() {
 		//create all classes
 		//context = new ClassPathXmlApplicationContext("spring.xml");
-		 context = new AnnotationConfigApplicationContext("com.ugcs");
+		context = new AnnotationConfigApplicationContext("com.ugcs");
+		
 		model = context.getBean(Model.class);
 		  
 		rootControls = context.getBean(RootControls.class);
-		
+
+		appBuildInfo = context.getBean(BuildInfo.class);
+
+		fileTemplates = context.getBean(FileTemplates.class);
     }	
 
 	@Override
@@ -54,7 +57,7 @@ public class MainGeoHammer extends Application {
 
         stage.getIcons().add(ResourceImageHolder.IMG_LOGO24);
 	
-        stage.setTitle(TITLE_VERSION);
+        stage.setTitle(TITLE_VERSION + appBuildInfo.getBuildVersion());
 		
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
@@ -79,7 +82,12 @@ public class MainGeoHammer extends Application {
 		        Platform.exit();
 		        System.exit(0);
 		    }
-		});		
+		});
+		
+		if (fileTemplates.getTemplates().isEmpty()) {
+            MessageBoxHelper.showError("There are no templates for the csv files",  
+			"There are no templates for the csv files loaded, so you could not open any csv");
+		}
 
 		//load files if they were given in parameters 
 		if (!getParameters().getRaw().isEmpty()) {
@@ -103,5 +111,7 @@ public class MainGeoHammer extends Application {
 			
 		}
 	};
+
+	private BuildInfo appBuildInfo;
 
 }

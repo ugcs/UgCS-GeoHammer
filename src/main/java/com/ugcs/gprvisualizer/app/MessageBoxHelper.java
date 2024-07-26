@@ -9,21 +9,16 @@ public class MessageBoxHelper {
 
 	public static void showError(String header, String msg) {
 		
+		System.out.println("MessageBoxHelper.showError " + header + " " + msg);
 		
-		System.out.println("  MessageBoxHelper.showError " + header + " " + msg);
-		
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				
-				Alert alert = new Alert(AlertType.ERROR);
-				alert.setTitle("Error");
-				alert.setHeaderText(header);
-				alert.setContentText(msg);
-				alert.showAndWait().ifPresent(rs -> {
+		Platform.runLater(() -> {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText(header);
+			alert.setContentText(msg);
+			alert.showAndWait();//.ifPresent(rs -> {
 
-				});
-			}
+			//});
 		});
 	}	
 	

@@ -31,6 +31,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
 
+import com.ugcs.gprvisualizer.app.MessageBoxHelper;
 import com.ugcs.gprvisualizer.app.yaml.Template.FileType;
 
 @Component
@@ -47,7 +48,6 @@ public class FileTemplates implements InitializingBean {
     private Path templatesPath;
 
     @Override
-    @Async
     public void afterPropertiesSet() throws Exception {
 
         logger.info("Loading templates...");
@@ -76,20 +76,28 @@ public class FileTemplates implements InitializingBean {
         c.getPropertyUtils().setSkipMissingProperties(true);
         yaml = new Yaml(c);
 
-        this.templatesPath = loadTemplates(yaml, TEMPLATES_FOLDER, templates);
+        
+
+        Path templatesPath = Path.of(TEMPLATES_FOLDER);
+        if (!Files.exists(templatesPath)) {
+            Path currentDir = Paths.get(FileTemplates.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            System.out.println("Current Directory: " + currentDir);
+            
+            templatesPath = currentDir.resolve(TEMPLATES_FOLDER);
+            System.out.println("Data file path: " + templatesPath);
+        }
+
+        this.templatesPath = loadTemplates(yaml, templatesPath, templates);
     }
 
-    private Path loadTemplates(Yaml yaml, String path, List<Template> templates) {
+    private Path loadTemplates(Yaml yaml, Path templatesPath, List<Template> templates) {
         try {
             // Get all resources ending with .yaml from path
             Resource[] resources = new PathMatchingResourcePatternResolver()
-                    .getResources("file:" + path + "/*.yaml");
-            
-            Path templatesPath = null;        
+                    .getResources("file:" + templatesPath.toString() + "/*.yaml");
 
             for (Resource resource : resources) {
                 templatesPath = templatesPath == null ? resource.getFile().getParentFile().toPath() : templatesPath;
-                System.err.println(templatesPath);
                 try (InputStream inputStream = resource.getInputStream()) {
                     try {
                         Template template = yaml.load(inputStream);
@@ -105,7 +113,7 @@ public class FileTemplates implements InitializingBean {
                 }
             }
             if (templates.isEmpty()) {
-                logger.error("No templates found in " + path);
+                logger.error("No templates found in " + templatesPath);
             }
             return templatesPath;
         } catch (IOException e) {
@@ -158,7 +166,7 @@ public class FileTemplates implements InitializingBean {
                                 }
                             }
                             templates.clear();
-                            loadTemplates(yaml, TEMPLATES_FOLDER, templates);
+                            loadTemplates(yaml, templatesPath, templates);
                         }
          
                         // To receive further events, reset the key
