@@ -352,12 +352,24 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 					}
 				}	
 			}
+
+			// for last
+			if (!geoDataLineList.isEmpty()) {
+				if (isGoodForFile(geoDataLineList)) { //filter too small lines
+					for(GeoData gd: geoDataLineList) {
+						gd.setLine(lineNumber);
+					}
+					lineNumber++;
+					geoDataList.addAll(geoDataLineList);
+				}
+			}
 			
 			CsvFile subfile = csvFile.copy();
 			subfile.setUnsaved(true);
 		
 			subfile.setTraces(sublist);
-			subfile.getGeoData().addAll(geoDataList);	
+			subfile.getGeoData().addAll(geoDataList);
+			subfile.updateInternalIndexes();
 			
 			return List.of(subfile);
 		} 
