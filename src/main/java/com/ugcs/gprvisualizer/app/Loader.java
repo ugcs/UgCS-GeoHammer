@@ -183,6 +183,7 @@ public class Loader {
 					model.initField();
 
 					model.initChart(csvFile, broadcast);
+					csvFile.updateInternalIndexes();
 				}
 			}
 		} catch (Exception e) {

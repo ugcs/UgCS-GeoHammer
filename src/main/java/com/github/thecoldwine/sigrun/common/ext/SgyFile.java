@@ -79,8 +79,11 @@ public abstract class SgyFile {
 		for (int i = 0; i < traces.size(); i++) {
 			traces.get(i).setIndexInFile(i);
 			traces.get(i).setEnd(false);			
+		}
+		
+		if (!traces.isEmpty()) {
+			traces.get(traces.size() - 1).setEnd(true);
 		}		
-		traces.get(traces.size() - 1).setEnd(true);
 	}
 
 	public void updateInternalDist() {
