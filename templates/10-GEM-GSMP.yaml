@@ -40,6 +40,6 @@
       - header: "laser"
         semantic: "Altitude AGL"
         units: "m"
-      - header: "Line"
+      - header: "Next WP"
         semantic: "Line"
         units: ""
