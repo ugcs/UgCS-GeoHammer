@@ -49,6 +49,11 @@ public abstract class SgyFile {
 
 	public abstract void open(File file) throws Exception;
 	
+	/**
+	 * Save file data to file system.
+	 * @param file - file on file system to save.
+	 * @throws Exception
+	 */
 	public abstract void save(File file) throws Exception;
 	
 	public abstract void saveAux(File file) throws Exception;

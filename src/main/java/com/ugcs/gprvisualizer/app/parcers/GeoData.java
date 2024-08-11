@@ -22,6 +22,9 @@ public class GeoData extends GeoCoordinates {
 
     private final List<SensorValue> sensorValues;
     
+    /** 
+     * Line number in the source file
+     */
     private final int lineNumber;
 
     public GeoData(int lineNumber, List<SensorValue> sensorValues, GeoCoordinates geoCoordinates) {
@@ -49,8 +52,8 @@ public class GeoData extends GeoCoordinates {
 
     public void setLine(int lineNumber) {
         for(SensorValue sensorValue : sensorValues) {
-            if ("Line".equals(sensorValue.semantic())) {
-                sensorValues.add(new SensorValue(sensorValue.semantic(), sensorValue.units(), lineNumber, sensorValue.originalData()));
+            if (Semantic.LINE.name.equals(sensorValue.semantic())) {
+                sensorValues.add(sensorValue.withValue(lineNumber));
                 sensorValues.remove(sensorValue);
                 break;
             }

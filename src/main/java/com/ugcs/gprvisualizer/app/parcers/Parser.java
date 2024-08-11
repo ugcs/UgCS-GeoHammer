@@ -24,10 +24,22 @@ import com.ugcs.gprvisualizer.app.yaml.data.DateTime;
 
 public abstract class Parser implements IGeoCoordinateParser {
 
+    /**
+     * Contains lines that were skipped during parsing
+     */
     protected StringBuilder skippedLines;
+
+    /**
+     * Date from the name of the file
+     */
     protected LocalDate dateFromNameOfFile;
     // private CultureInfo format;
+
+    /**
+     * Template for parsing
+     */
     protected final Template template;
+
     private int countOfReplacedLines;
 
     public int getCountOfReplacedLines() {
