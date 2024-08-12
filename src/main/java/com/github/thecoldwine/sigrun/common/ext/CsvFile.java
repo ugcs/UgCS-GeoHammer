@@ -62,11 +62,19 @@ public class CsvFile extends SgyFile {
         }
 
         for (GeoCoordinates coord : coordinates) {
-            getTraces().add(new Trace(this, null, null, new float[] {},
-                    new LatLon(coord.getLatitude(), coord.getLongitude())));
-            if (coord instanceof GeoData) {
-                getGeoData().add((GeoData) coord);
-            }
+            // Added points if lat and lon are not 0 and point is close to the first point
+            if (coord.getLatitude().intValue() != 0 && coord.getLongitude().intValue() != 0 
+                    && (getGeoData().isEmpty()  
+                        || (Math.abs(coord.getLatitude().intValue() 
+                            - getGeoData().get(0).getLatitude().intValue()) <= 1  
+                        && Math.abs(coord.getLongitude().intValue() 
+                            - getGeoData().get(0).getLongitude().intValue()) <= 1))) {
+                getTraces().add(new Trace(this, null, null, new float[] {},
+                new LatLon(coord.getLatitude(), coord.getLongitude())));
+                if (coord instanceof GeoData) {
+                    getGeoData().add((GeoData) coord);
+                }
+            }            
         }
     }
 
