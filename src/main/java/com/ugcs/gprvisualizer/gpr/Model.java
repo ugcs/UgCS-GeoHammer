@@ -498,7 +498,6 @@ public class Model implements InitializingBean {
         setSelectedData(node);
 
 		fileDataContainer.selectFile();
-		fileManager.selectFile();
 
 		ScrollPane scrollPane = findScrollPane(node);
 		if (scrollPane != null) {
