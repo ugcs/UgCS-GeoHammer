@@ -212,11 +212,6 @@ public class FileManager {
 		return files.stream().filter(CsvFile.class::isInstance).collect(Collectors.toList());
 	}
 
-	public void selectFile() {
-		// TODO Auto-generated method stub
-		//throw new UnsupportedOperationException("Unimplemented method 'selectFile'");
-	}
-
 	public int getFilesCount() {
 		return files.size();
 	}

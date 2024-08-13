@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
+import com.ugcs.gprvisualizer.app.FileDataContainer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +35,7 @@ import com.ugcs.gprvisualizer.app.ext.FileManager;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -324,9 +326,19 @@ public class Model implements InitializingBean {
 		} 
 		var sensorLineChart = new SensorLineChart(this, broadcast);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData));
+
+		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
+		chartsContainer.getChildren().add(sensorLineChartBox);
+		
+
 		csvFiles.put(csvFile, sensorLineChart);
 		saveColorSettings(semanticColors);
+
+		Platform.runLater(() -> {
+			selectAndScrollToChart(sensorLineChart);
+		});
+
+		//selectAndScrollToChart(sensorLineChartBox);
 	}
 
 	private void saveColorSettings(Map<String, Color> semanticColors) {
@@ -351,7 +363,7 @@ public class Model implements InitializingBean {
 
 	/**
 	 * Get chart for the given file if it exists in the model
-	 * @param file CSV file to get chart for
+	 * @param csvFile CSV file to get chart for
 	 * @return Optional of SensorLineChart
 	 */
     public Optional<SensorLineChart> getChart(CsvFile csvFile) {
@@ -470,11 +482,13 @@ public class Model implements InitializingBean {
 		return selectedDataNode;   
 	}
 
-	public void selectAndScrollToChart(Node node) {
+	public boolean selectAndScrollToChart(FileDataContainer fileDataContainer) {// Node node) {
+		
+		Node node = fileDataContainer.getRootNode();
 
         if (getSelectedData() != null) {
 			if (getSelectedData() == node) {
-				return;
+				return false;
 			}
 			getChart(null); // clear selection
             getSelectedData().setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
@@ -482,13 +496,16 @@ public class Model implements InitializingBean {
 
         node.setStyle("-fx-border-width: 2px; -fx-border-color: lightblue;");
         setSelectedData(node);
-		fileManager.selectFile();
+
+		fileDataContainer.selectFile();
 
 		ScrollPane scrollPane = findScrollPane(node);
 		if (scrollPane != null) {
 			//TODO: implement scroll to chart
         	scrollToChart(scrollPane, node);
 		}
+
+		return true;
     }
 
 	private ScrollPane findScrollPane(Node node) {
@@ -510,7 +527,7 @@ public class Model implements InitializingBean {
 
         double vValue = chartBounds.getMinY() / heightDifference;
 
-        scrollPane.setVvalue(vValue);
+        scrollPane.setVvalue(vValue < 0 ? Double.POSITIVE_INFINITY : vValue);
     }
 
 	public void createClickPlace(SgyFile file, Trace trace) {

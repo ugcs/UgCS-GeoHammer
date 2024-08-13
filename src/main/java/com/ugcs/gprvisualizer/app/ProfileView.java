@@ -67,7 +67,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class ProfileView implements SmthChangeListener, InitializingBean {
+public class ProfileView implements SmthChangeListener, InitializingBean, FileDataContainer {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
@@ -555,8 +555,17 @@ public class ProfileView implements SmthChangeListener, InitializingBean {
         return center;
 	}
 
-	public void select() {
-		model.selectAndScrollToChart(topPane);
+	private void select() {
+		model.selectAndScrollToChart(this);
+	}
+
+	@Override
+	public Node getRootNode() {
+		return topPane;
+	}
+
+	@Override
+	public void selectFile() {
 		broadcast.fileSelected(model.getFileManager().getGprFiles());
 	}
 
