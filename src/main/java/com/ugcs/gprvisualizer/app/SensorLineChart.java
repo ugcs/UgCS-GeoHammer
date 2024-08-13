@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,8 +10,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+import javafx.beans.Observable;
+import javafx.geometry.Point2D;
+import javafx.geometry.Side;
+import javafx.scene.control.*;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.ImageView;
 
@@ -36,10 +40,6 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -53,12 +53,13 @@ import javafx.scene.Node;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
 
 
-public class SensorLineChart {
+public class SensorLineChart implements FileDataContainer {
+
+    private static final String _FILTERED = "_filtered";
 
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
 
@@ -72,6 +73,7 @@ public class SensorLineChart {
 
     //private int scale;
     private CsvFile file;
+    private Node rootNode;
 
     public SensorLineChart(Model model, Broadcast broadcast) {
         this.model = model;
@@ -101,18 +103,11 @@ public class SensorLineChart {
             log.debug("Shifted charts, lowerIndex: {} upperIndex: {} size: {}", lowerIndex, upperIndex, dataSize);
 
             for (LineChartWithMarkers chart: charts) {
-                xAxis = (NumberAxis) chart.getXAxis();
-                xAxis.setLowerBound(lowerIndex);
-                xAxis.setUpperBound(upperIndex);
-
-                chart.getData().forEach(series -> {
-                    //series.getData().addAll(getSubsample(calculateAverages(chart.plotData.data().subList(lowerIndex, upperIndex)), lowerIndex, upperIndex));
-                    series.getData().addAll(getSubsampleInRange(chart.plotData.data()//.subList(lowerIndex, upperIndex)
-                    , lowerIndex, upperIndex));
-                });
+                var yAxis = (NumberAxis) chart.getYAxis();
+                chart.updateLineChartData(new ZoomRect(lowerIndex, upperIndex, yAxis.getLowerBound(), yAxis.getUpperBound()));
             }        
         }
-        model.selectAndScrollToChart(root);
+        model.selectAndScrollToChart(this);
         putVerticalMarker(selectedX);
     }
 
@@ -183,6 +178,16 @@ public class SensorLineChart {
         return model.getColorBySemantic(semantic);
     }
 
+    @Override
+    public Node getRootNode() {
+        return rootNode;
+    }
+
+    @Override
+    public void selectFile() {
+        broadcast.fileSelected(file);
+    }
+
     /* private List<Number> calculateAverages(List<Number> sourceList) {
         if (sourceList.isEmpty()) return sourceList;
         //check if sourceList have only nulls
@@ -201,8 +206,40 @@ public class SensorLineChart {
                 .collect(Collectors.toList()); // Collect results in a list
     } */
 
-    public record PlotData(String semantic, String units, Color color, List<Number> data) {}
-    record SeriesData(XYChart.Series<Number, Number> series, Color color) {
+    public record PlotData(String semantic, String units, Color color, List<Number> data, boolean rendered) {
+        
+        public PlotData(String semantic, String units, Color color, List<Number> data) {
+            this(semantic, units, color, data, false);
+        }
+
+        public PlotData withData(List<Number> data) {
+            return new PlotData(semantic, units, color, data);
+        }
+
+        /**
+         * Set rendered flag to true
+         * @return PlotData with rendered flag set to true
+         */
+        public PlotData render() {
+            return new PlotData(semantic, units, color, data, true);
+        }
+
+        public String getPlotStyle() {
+            return "-fx-stroke: " + getColorString(color) + ";" + "-fx-stroke-width: 0.6px;";
+        }
+
+    }
+
+    private static String getColorString(Color color) {
+        // Convert color to string in HEX format
+        String colorString = String.format("#%02X%02X%02X",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
+        return colorString;
+    }
+
+    record SeriesData(Series<Number, Number> series, Color color) {
         @Override
         public final String toString() {
             return series.getName();
@@ -212,6 +249,8 @@ public class SensorLineChart {
     public BooleanProperty getItemBooleanProperty(SeriesData item) {
         return itemBooleanMap.get(item);
     }
+
+    ComboBox<SeriesData> comboBox;
 
     public VBox createChartWithMultipleYAxes(CsvFile file, List<PlotData> plotDataList) {
 
@@ -231,15 +270,12 @@ public class SensorLineChart {
             // Y-axis
             NumberAxis yAxis = new NumberAxis();
             yAxis.setLabel(plotData.units());
-            yAxis.setSide(javafx.geometry.Side.RIGHT); // Y-axis on the right
+            yAxis.setSide(Side.RIGHT); // Y-axis on the right
             yAxis.setMinorTickVisible(false);
-            //yAxis.setAutoRanging(false);
-            var data = plotData.data();//calculateAverages(plotData.data());
+            var data = plotData.data();
 
             var min = getFloorMin(data);
             var max = getCeilMax(data);
-            //yAxis.setLowerBound(min);
-            //yAxis.setUpperBound(max);
 
             yAxis.setTickUnit((max - min) / 10);
             yAxis.setPrefWidth(70);
@@ -248,7 +284,7 @@ public class SensorLineChart {
             }
 
             // Creating chart
-            LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, 0, plotData.data().size(), min, max, plotData);
+            LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, new ZoomRect(0, plotData.data().size(), min, max), plotData);
             lineChart.zoomOut();
 
             lineChart.setLegendVisible(false); // Hide legend
@@ -261,8 +297,12 @@ public class SensorLineChart {
                 lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
             }
 
-            XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            Series<Number, Number> series = new Series<>();
             series.setName(plotData.semantic());
+
+            Series<Number, Number> filtered = new Series<>();
+            filtered.setName(plotData.semantic() + _FILTERED);
+
             // Add data to chart
             if (!data.isEmpty()) {
                 series.getData().setAll(getSubsampleInRange(data, 0, plotData.data().size()));
@@ -278,16 +318,19 @@ public class SensorLineChart {
                 lastLineChart = lineChart;
                 // Set random color for series
                 lineChart.getData().add(item.series());
-                setColorForSeries(item.series(), item.color());
+                setStyleForSeries(item.series(), plotData.getPlotStyle());
+
+                lineChart.getData().add(filtered);
+                setStyleForSeries(filtered, plotData.getPlotStyle());
                 // Add chart to container
                 stackPane.getChildren().add(lineChart);
             }
         }
 
         // ComboBox with checkboxes
-        ComboBox<SeriesData> comboBox = new ComboBox<>(seriesList) {
+        comboBox = new ComboBox<>(seriesList) {
             @Override
-            protected javafx.scene.control.Skin<?> createDefaultSkin() {
+            protected Skin<?> createDefaultSkin() {
                 var skin = super.createDefaultSkin();
                 ((ComboBoxListViewSkin) skin).setHideOnClick(false);
                 return skin;
@@ -297,10 +340,8 @@ public class SensorLineChart {
         comboBox.setValue(seriesList.isEmpty() ? null : seriesList.get(0));
 
         comboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            oldVal.series().getChart().getYAxis().setOpacity(0);
-            newVal.series().getChart().getYAxis().setOpacity(1);
-            customizeLineChart(newVal.series(), true);
-            customizeLineChart(oldVal.series(), false);
+            selectLineChart(newVal.series(), true);
+            selectLineChart(oldVal.series(), false);
         });
 
         comboBox.setValue(seriesList.isEmpty() ? null : getNonEmptySeries(seriesList));
@@ -310,7 +351,7 @@ public class SensorLineChart {
                 @Override
                 public void updateItem(SeriesData item, boolean empty) {
                     super.updateItem(item, empty);
-                    this.setDisable(false); // it is required to fit default state
+                    this.setDisable(false); // it is required to fit the default state
                     if (item != null) {
                         if (item.series().getData().isEmpty()) {
                             this.setDisable(true);
@@ -354,7 +395,8 @@ public class SensorLineChart {
                 }
                 event.consume(); // for prevent to scroll parent pane
             });
-            setZoomHandlers(lastLineChart, charts);
+
+            setZoomHandlers(lastLineChart);
 
             lastLineChart.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseClickHandler);
 
@@ -371,7 +413,7 @@ public class SensorLineChart {
 
         zoomRect.setManaged(false);
         zoomRect.setFill(null);
-        zoomRect.setStroke(javafx.scene.paint.Color.BLUE);
+        zoomRect.setStroke(Color.BLUE);
 
         root = new VBox(top, stackPane, zoomRect);
         root.setSpacing(10);
@@ -383,14 +425,17 @@ public class SensorLineChart {
 
         root.setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
         root.setOnMouseClicked(event -> {
-            model.selectAndScrollToChart(root);
-            broadcast.fileSelected(file);
+            if (model.selectAndScrollToChart(this)) {
+                //broadcast.fileSelected(file);
+            }
         });
+
+        this.rootNode = root;
 
         return root;
     }
 
-    private List<XYChart.Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex) {
+    private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex) {
         // Validate indices
         if (lowerIndex < 0 || upperIndex > data.size() || lowerIndex >= upperIndex) {
             throw new IllegalArgumentException("Invalid range specified.");
@@ -405,7 +450,7 @@ public class SensorLineChart {
         int desiredNumberOfPoints = 2000;
         int actualNumberOfPoints = Math.min(desiredNumberOfPoints, range);
 
-        List<XYChart.Data<Number, Number>> subsample = new ArrayList<>(actualNumberOfPoints);
+        List<Data<Number, Number>> subsample = new ArrayList<>(actualNumberOfPoints);
 
         if (actualNumberOfPoints > 0) {
             int step = Math.max(1, range / actualNumberOfPoints);
@@ -413,21 +458,58 @@ public class SensorLineChart {
             //    actualNumberOfPoints = range;
             //}
             for (int i = lowerIndex; i < upperIndex; i += step) {
-                subsample.add(new XYChart.Data<>(i, data.get(i)));
+                subsample.add(new Data<>(i, data.get(i)));
             }
         }
 
         return subsample;
     }
 
+    private void zoomRect(double startX, double endX, double startY, double endY) {
+        startX = startX - 25;
+        endX = endX - 25;
+        startY = startY - 60;
+        endY = endY - 60;
+        for(LineChartWithMarkers c: charts) {
+            NumberAxis xAxis = (NumberAxis) c.getXAxis();
+            Number xMin = xAxis.getValueForDisplay(startX);
+            Number xMax = xAxis.getValueForDisplay(endX);
+
+            NumberAxis yAxis = (NumberAxis) c.getYAxis();
+            Number yMax = yAxis.getValueForDisplay(startY);
+            Number yMin = yAxis.getValueForDisplay(endY);
+
+            c.setCurrentZoomRect(new ZoomRect(xMin, xMax, yMin, yMax));
+        }
+        zoomRect();
+    }
+    
+    private void zoomRect() {
+        for(LineChartWithMarkers c: charts) {
+            c.updateLineChartData(c.currentZoomRect);
+        }
+    }
+
+    private record ZoomRect(Number xMin, Number xMax, Number yMin, Number yMax) {}
+
+    /**
+     * Zoom to full range
+     */
     public void zoomOut() {
         charts.forEach(LineChartWithMarkers::zoomOut);
     }
 
+    /**
+     * Close chart
+     */
     public void close() {
         close(true);
     }
 
+    /**
+     * Close chart
+     * @param removeFromModel
+     */
     public void close(boolean removeFromModel) {
         if (root.getParent() instanceof VBox) {
             // remove charts
@@ -444,10 +526,10 @@ public class SensorLineChart {
         }
     }
 
-    private void setZoomHandlers(LineChartWithMarkers chart, Set<LineChartWithMarkers> charts) {
+    private void setZoomHandlers(LineChartWithMarkers chart) { //, Set<LineChartWithMarkers> charts) {
         
         chart.setOnMousePressed(event -> {
-            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
+            Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
             System.out.println(pointInScene);
             zoomRect.setX(pointInScene.getX());
             zoomRect.setY(pointInScene.getY());
@@ -457,7 +539,7 @@ public class SensorLineChart {
         });
 
         chart.setOnMouseDragged(event -> {
-            javafx.geometry.Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
+            Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
             zoomRect.setWidth(Math.abs(pointInScene.getX() - zoomRect.getX()));
             zoomRect.setHeight(Math.abs(pointInScene.getY() - zoomRect.getY()));
             zoomRect.setX(Math.min(pointInScene.getX(), zoomRect.getX()));
@@ -477,32 +559,7 @@ public class SensorLineChart {
                 return;
             }
             
-            for(LineChartWithMarkers c: charts) {
-                NumberAxis xAxis = (NumberAxis) c.getXAxis();
-                Number xMin = xAxis.getValueForDisplay(startX - 25);
-                Number xMax = xAxis.getValueForDisplay(endX - 25);
-                xAxis.setAutoRanging(false);
-                xAxis.setLowerBound(xMin.doubleValue());
-                xAxis.setUpperBound(xMax.doubleValue());
-
-                System.out.println("xMin: " + xMin + " xMax: " + xMax);
-                c.getData().forEach(series -> {
-                    int lowerIndex = Math.clamp(xMin.intValue(), 0, c.plotData.data().size()-1);
-                    int upperIndex = Math.clamp(xMax.intValue(), 0, c.plotData.data().size());
-                    System.out.println("lowerIndex: " + lowerIndex + " upperIndex: " + upperIndex + " size: " + c.plotData.data().size());
-                    //series.getData().addAll(getSubsample(calculateAverages(c.plotData.data().subList(lowerIndex, upperIndex)), lowerIndex, upperIndex));
-                    series.getData().addAll(getSubsampleInRange(c.plotData.data() //.subList(lowerIndex, upperIndex)
-                    , lowerIndex, upperIndex));
-
-                });
-                
-                NumberAxis yAxis = (NumberAxis) c.getYAxis();
-                Number yMax = yAxis.getValueForDisplay(startY - 60);
-                Number yMin = yAxis.getValueForDisplay(endY - 60);
-                yAxis.setAutoRanging(false);
-                yAxis.setLowerBound(yMin.doubleValue());
-                yAxis.setUpperBound(yMax.doubleValue());
-            }
+            zoomRect(startX, endX, startY, endY);
 
             zoomRect.setVisible(false); 
         });
@@ -515,6 +572,9 @@ public class SensorLineChart {
     private Data<Number, Number> currentVerticalMarker = null;
     private VBox root;
 
+    /** 
+     * Remove vertical marker 
+     */
     public void removeVerticalMarker() {
         if (lastLineChart != null && currentVerticalMarker != null) {
             lastLineChart.removeVerticalValueMarker(currentVerticalMarker);
@@ -522,6 +582,10 @@ public class SensorLineChart {
         }
     }
 
+    /**
+     * Add vertical marker
+     * @param x
+     */
     public void putVerticalMarker(int x) {
         if (lastLineChart != null) {
             if (currentVerticalMarker != null) {
@@ -583,96 +647,113 @@ public class SensorLineChart {
     private BooleanProperty createBooleanProperty(SeriesData item) {
         final BooleanProperty booleanProperty = new SimpleBooleanProperty(item, "visible", !item.series().getData().isEmpty());
         booleanProperty.addListener((observable, oldValue, newValue) -> {
-            if (item.series().getNode() != null) {
-                item.series().getNode().setVisible(newValue);
-                //if (isSelected && series.getChart().getYAxis().getOpacity() > 0) {
-                    //((LineChart) series.getChart()).setCreateSymbols(true);
-                //}
-            }
-            item.series().getData().forEach(data -> {
-                if (data.getNode() != null) {
-                    data.getNode().setVisible(newValue);
+            item.series().getChart().getData().forEach(series -> {
+                if (series.getNode() != null) {
+                    series.getNode().setVisible(newValue);
                 }
             });
         });
-
         return booleanProperty;
     }
 
-    private void customizeLineChart(Series<Number, Number> series, boolean isVisible) {
+    private void selectLineChart(Series<Number, Number> series, boolean isVisible) {
         LineChart<Number, Number> lineChart = (LineChart) series.getChart();
-        //lineChart.setCreateSymbols(series.getNode().isVisible() && isVisible);
+
         lineChart.setVerticalGridLinesVisible(isVisible);
         lineChart.setHorizontalGridLinesVisible(isVisible);
         lineChart.setHorizontalZeroLineVisible(isVisible);
         lineChart.setVerticalZeroLineVisible(isVisible);
+
+        lineChart.getYAxis().setOpacity(isVisible ? 1: 0);
     }
 
     // Apply color to data series
-    private void setColorForSeries(XYChart.Series<Number, Number> series, Color color) {
-        String colorString = getColorString(color);
-        System.out.println("Color: " + colorString);
+    private void setStyleForSeries(Series<Number, Number> series, String plotStyle) {
+        //String colorString = getColorString(color);
+        //System.out.println("Color: " + colorString);
         // Apply style to series
-        series.getNode().lookup(".chart-series-line").setStyle("-fx-stroke: " + colorString + ";" + "-fx-stroke-width: 0.6px;");
+        series.getNode().lookup(".chart-series-line").setStyle(plotStyle);
+        //.setStyle("-fx-stroke: " + colorString + ";" + "-fx-stroke-width: 0.6px;");
     }
 
-    private String getColorString(Color color) {
-        // Convert color to string in HEX format
-        String colorString = String.format("#%02X%02X%02X",
-                (int) (color.getRed() * 255),
-                (int) (color.getGreen() * 255),
-                (int) (color.getBlue() * 255));
-        return colorString;
-    }
-
+    /**
+     * Line chart with markers
+     */
     private class LineChartWithMarkers extends LineChart<Number, Number> {
 
         private final ObservableList<Data<Number, Number>> horizontalMarkers;
         private final ObservableList<Data<Number, Number>> verticalMarkers;
 
-        private final int xLowerBound;
-        private final int xUpperBound;
-        private final int yLowerBound;
-        private final int yUpperBound;
+        private final ZoomRect outZoomRect;
+        private ZoomRect currentZoomRect;
 
         private PlotData plotData;
-        //private final List<Number> data;
+        private PlotData filteredData;
 
         //private final List<Data<Number, Number>> subsampleInFullRange;
         
-        public LineChartWithMarkers(Axis<Number> xAxis, Axis<Number> yAxis, int xLowerBound, int xUpperBound, int yLowerBound, int yUpperBound, PlotData plotData) {
+        public LineChartWithMarkers(Axis<Number> xAxis, Axis<Number> yAxis, ZoomRect outZoomRect, PlotData plotData) {
             super(xAxis, yAxis);
-            this.xLowerBound = xLowerBound;
-            this.xUpperBound = xUpperBound;
-            this.yLowerBound = yLowerBound;
-            this.yUpperBound = yUpperBound;
-            horizontalMarkers = FXCollections.observableArrayList(data -> new javafx.beans.Observable[] {data.YValueProperty()});
+
+            this.outZoomRect = outZoomRect;
+            
+            horizontalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.YValueProperty()});
             horizontalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
-            verticalMarkers = FXCollections.observableArrayList(data -> new javafx.beans.Observable[] {data.XValueProperty()});
+            verticalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
             verticalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
             
             this.plotData = plotData;
+        }
 
-            //System.out.println("start filter " + System.currentTimeMillis());
-            //var plotFilteredData = filterList(plotData.data());
-            //System.out.println("complete filter " + System.currentTimeMillis());
-            //this.plotData = new PlotData(plotData.semantic, plotData.units, plotData.color, plotFilteredData);
+        public void setCurrentZoomRect(ZoomRect zoomRect) {
+            this.currentZoomRect = zoomRect;
+        }
 
-            //subsampleInFullRange = getSubsampleInRange(this.plotData.data, xLowerBound, xUpperBound);
+        private void updateLineChartData(ZoomRect zoomRect) {
+            
+            setCurrentZoomRect(zoomRect);
+
+            NumberAxis xAxis = (NumberAxis) getXAxis();
+            xAxis.setAutoRanging(false);
+            xAxis.setLowerBound(zoomRect.xMin.doubleValue());
+            xAxis.setUpperBound(zoomRect.xMax.doubleValue());
+    
+            int lowerIndex = Math.clamp(zoomRect.xMin.intValue(), 0, plotData.data().size()-1);
+            int upperIndex = Math.clamp(zoomRect.xMax.intValue(), lowerIndex, plotData.data().size());
+            
+            System.out.println("lowerIndex: " + lowerIndex + " upperIndex: " + upperIndex + " size: " + plotData.data().size());
+    
+            getData().forEach(series -> {
+                if (series.getName().contains(_FILTERED)) {
+                    if (filteredData == null || !filteredData.rendered) {
+                        series.getData().clear();
+                        if (filteredData == null) {
+                            series.getData().add(new Data<Number,Number>(0, 0));
+                        }
+                    } 
+                    if (filteredData != null) {
+                        series.getData().addAll(getSubsampleInRange(filteredData.data, lowerIndex, upperIndex));
+                        if (!filteredData.rendered) {
+                            filteredData = filteredData.render();
+                        }
+                    }
+                } else {
+                    var node = series.getNode().lookup(".chart-series-line");
+                    node.setStyle(plotData.getPlotStyle());
+                    if (filteredData != null) {
+                            node.setStyle(node.getStyle() + "-fx-stroke-dash-array: 1 5 1 5;");
+                    }
+                    series.getData().addAll(getSubsampleInRange(plotData.data, lowerIndex, upperIndex));
+                }
+            });
+            
+            NumberAxis yAxis = (NumberAxis) getYAxis();
+            yAxis.setAutoRanging(false);
+            yAxis.setLowerBound(zoomRect.yMin.doubleValue());
+            yAxis.setUpperBound(zoomRect.yMax.doubleValue());
         }
 
         public void zoomOut() {
-            NumberAxis xAxis = (NumberAxis) getXAxis();
-            NumberAxis yAxis = (NumberAxis) getYAxis();
-            //xAxis.setAutoRanging(true);
-            //yAxis.setAutoRanging(true);
-            xAxis.setAutoRanging(false);
-            yAxis.setAutoRanging(false);
-            xAxis.setLowerBound(xLowerBound);
-            xAxis.setUpperBound(xUpperBound);
-            yAxis.setLowerBound(yLowerBound);
-            yAxis.setUpperBound(yUpperBound);
-
             // Add data to chart
             // TODO: better to recreate series because clear is too slow
             if (!plotData.data.isEmpty()) {
@@ -680,11 +761,15 @@ public class SensorLineChart {
                     System.out.println("start clear: " + System.currentTimeMillis());
                     series.getData().clear();
                     System.out.println("complete clear: " + System.currentTimeMillis());
-                    series.getData().setAll(getSubsampleInRange(this.plotData.data, xLowerBound, xUpperBound));
                 });
             }
+            updateLineChartData(outZoomRect);
         }
 
+        /**
+         * Add horizontal value marker
+         * @param marker
+         */
         public void addHorizontalValueMarker(Data<Number, Number> marker) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (horizontalMarkers.contains(marker)) return;
@@ -694,6 +779,10 @@ public class SensorLineChart {
             horizontalMarkers.add(marker);
         }
 
+        /**
+         * Remove horizontal value marker
+         * @param marker
+         */
         public void removeHorizontalValueMarker(Data<Number, Number> marker) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (marker.getNode() != null) {
@@ -703,6 +792,10 @@ public class SensorLineChart {
             horizontalMarkers.remove(marker);
         }
 
+        /**
+         * Add vertical value marker
+         * @param marker
+         */
         public void addVerticalValueMarker(Data<Number, Number> marker) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (verticalMarkers.contains(marker)) return;
@@ -724,6 +817,10 @@ public class SensorLineChart {
             verticalMarkers.add(marker);
         }
 
+        /**
+         * Remove vertical value marker
+         * @param marker
+         */
         public void removeVerticalValueMarker(Data<Number, Number> marker) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (marker.getNode() != null) {
