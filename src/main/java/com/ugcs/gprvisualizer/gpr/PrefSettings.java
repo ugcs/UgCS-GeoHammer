@@ -13,7 +13,7 @@ import java.util.Properties;
 @Service
 public class PrefSettings {
 
-    @Value("${settings.prefix:myapp.settings.}")
+    @Value("${settings.prefix:geohammer.settings.}")
     private String prefix;
 
     private final Resource resource = new ClassPathResource("dynamic-settings.properties");

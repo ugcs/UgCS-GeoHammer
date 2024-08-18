@@ -1,7 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,11 +26,13 @@ import org.springframework.util.StringUtils;
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
+import com.ugcs.gprvisualizer.app.fir.FIRFilter;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.PrefSettings;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
@@ -59,12 +61,13 @@ import javafx.scene.chart.XYChart.Series;
 
 public class SensorLineChart implements FileDataContainer {
 
-    private static final String _FILTERED = "_filtered";
+    private static final String FILTERED_SERIES_SUFFIX = "_filtered";
 
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
 
     private final Model model;
     private final Broadcast broadcast;
+    private PrefSettings settings;
 
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
     private LineChartWithMarkers lastLineChart = null;
@@ -75,9 +78,10 @@ public class SensorLineChart implements FileDataContainer {
     private CsvFile file;
     private Node rootNode;
 
-    public SensorLineChart(Model model, Broadcast broadcast) {
+    public SensorLineChart(Model model, Broadcast broadcast, PrefSettings settings) {
         this.model = model;
         this.broadcast = broadcast;
+        this.settings = settings;
     }
 
     public void setSelectedTrace(int traceNumber) {
@@ -301,7 +305,7 @@ public class SensorLineChart implements FileDataContainer {
             series.setName(plotData.semantic());
 
             Series<Number, Number> filtered = new Series<>();
-            filtered.setName(plotData.semantic() + _FILTERED);
+            filtered.setName(plotData.semantic() + FILTERED_SERIES_SUFFIX);
 
             // Add data to chart
             if (!data.isEmpty()) {
@@ -314,7 +318,7 @@ public class SensorLineChart implements FileDataContainer {
             itemBooleanMap.put(item, createBooleanProperty(item));
 
             if (!item.series.getData().isEmpty()) {
-                charts.add(lineChart);
+                charts.add(lineChart);                
                 lastLineChart = lineChart;
                 // Set random color for series
                 lineChart.getData().add(item.series());
@@ -322,6 +326,12 @@ public class SensorLineChart implements FileDataContainer {
 
                 lineChart.getData().add(filtered);
                 setStyleForSeries(filtered, plotData.getPlotStyle());
+
+                lineChart.getData().forEach(s -> {
+                    if (s.getNode() != null) {
+                        s.getNode().setVisible(itemBooleanMap.get(item).get());
+                    }
+                });
                 // Add chart to container
                 stackPane.getChildren().add(lineChart);
             }
@@ -645,10 +655,13 @@ public class SensorLineChart implements FileDataContainer {
     }
 
     private BooleanProperty createBooleanProperty(SeriesData item) {
-        final BooleanProperty booleanProperty = new SimpleBooleanProperty(item, "visible", !item.series().getData().isEmpty());
+        var settingsValue = settings.getSetting(file.getParser().getTemplate().getName() + "." + item.series, "visible");
+        boolean initialValue = !item.series().getData().isEmpty() && (settingsValue == null || settingsValue.equals("true"));
+        final BooleanProperty booleanProperty = new SimpleBooleanProperty(item, "visible", initialValue);
         booleanProperty.addListener((observable, oldValue, newValue) -> {
             item.series().getChart().getData().forEach(series -> {
                 if (series.getNode() != null) {
+                    settings.saveSetting(file.getParser().getTemplate().getName() + "." + item.series, Map.of("visible", newValue));
                     series.getNode().setVisible(newValue);
                 }
             });
@@ -720,11 +733,11 @@ public class SensorLineChart implements FileDataContainer {
     
             int lowerIndex = Math.clamp(zoomRect.xMin.intValue(), 0, plotData.data().size()-1);
             int upperIndex = Math.clamp(zoomRect.xMax.intValue(), lowerIndex, plotData.data().size());
-            
-            System.out.println("lowerIndex: " + lowerIndex + " upperIndex: " + upperIndex + " size: " + plotData.data().size());
+                        
+            //log.debug("UpdateLineChart: {} - lowerIndex: {} upperIndex: {} size: {}", plotData.semantic, lowerIndex, upperIndex, plotData.data().size());
     
             getData().forEach(series -> {
-                if (series.getName().contains(_FILTERED)) {
+                if (series.getName().contains(FILTERED_SERIES_SUFFIX)) {
                     if (filteredData == null || !filteredData.rendered) {
                         series.getData().clear();
                         if (filteredData == null) {
@@ -758,9 +771,9 @@ public class SensorLineChart implements FileDataContainer {
             // TODO: better to recreate series because clear is too slow
             if (!plotData.data.isEmpty()) {
                 getData().forEach(series -> {
-                    System.out.println("start clear: " + System.currentTimeMillis());
+                    //System.out.println("start clear: " + System.currentTimeMillis());
                     series.getData().clear();
-                    System.out.println("complete clear: " + System.currentTimeMillis());
+                    //System.out.println("complete clear: " + System.currentTimeMillis());
                 });
             }
             updateLineChartData(outZoomRect);
@@ -859,5 +872,98 @@ public class SensorLineChart implements FileDataContainer {
             }      
         }
 
+    }
+
+    public void lowPassFilter(String seriesName, int value) {
+        
+        List<Long> timestampList = file.getGeoData().stream()
+			.limit(2000)
+			.map(gd -> gd.getDateTime())
+			.map(dt -> dt.toInstant(ZoneOffset.UTC).toEpochMilli())
+			.collect(Collectors.toList());
+
+		double samplingRate = FIRFilter.calculateSamplingRate(timestampList);
+
+        //var selectedSeriesName = comboBox.getValue().series.getName();
+            
+        charts.forEach(chart -> {
+            
+            if ((seriesName.equals(chart.plotData.semantic)) && !GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
+                //double cutoffFrequency = FIRFilter.findCutoffFrequency(chart.plotData.data, samplingRate);
+                double cutoffFrequency = samplingRate / value;
+
+                //System.out.println("Series: " + chart.plotData.semantic);
+                //System.out.println("Cutoff frequency: " + cutoffFrequency);
+                //System.out.println("Sampling rate: " + samplingRate);
+
+                var filterOrder = value; //21;
+
+                FIRFilter filter = new FIRFilter(filterOrder, cutoffFrequency, samplingRate);
+
+                var shift = filterOrder / 2;    
+                var filteredList = filter.filterList(chart.plotData.data).subList(shift, chart.plotData.data.size());
+                for (int i = 0; i < shift; i++) {
+                    filteredList.add( null);
+                }
+
+                double rmsOriginal = calculateRMS(chart.plotData.data.stream().filter(Objects::nonNull).mapToDouble(v -> v.doubleValue()).toArray());
+                double rmsFiltered = calculateRMS(filteredList.stream().filter(Objects::nonNull).mapToDouble(v -> v.doubleValue()).toArray());
+
+                double scale = rmsOriginal / rmsFiltered;
+
+                for (int i = 0; i < filteredList.size(); i++) {
+                    if(filteredList.get(i) != null) {
+                        filteredList.set(i, (filteredList.get(i).doubleValue() * scale));
+                    }
+                }
+
+                chart.filteredData = chart.plotData.withData(filteredList);
+
+                assert filteredList.size() == file.getTraces().size();
+
+                for (int i = 0; i < file.getGeoData().size(); i++) {
+                    file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, filteredList.get(i));
+                }
+            }
+        });
+        zoomRect();
+    }
+
+    private static double calculateRMS(double[] signal) {
+        double sum = 0.0;
+        for (double v : signal) {
+            sum += v * v;
+        }
+        return Math.sqrt(sum / signal.length);
+    }
+
+    private Map<String, LineChartWithMarkers> getCharts() {
+        return charts.stream().collect(Collectors.toMap(c -> c.plotData.semantic, c -> c));
+    }
+
+    public void undoFilter(String seriesName) {
+        //var selectedSeriesName = comboBox.getValue().series.getName();
+        if (GeoData.Semantic.LINE.getName().equals(seriesName)) {
+            return;
+        }
+
+        log.debug("Undo filter for series: {}", seriesName);
+
+        var chart = getCharts().get(seriesName);
+
+        chart.filteredData = null;
+        for (int i = 0; i < file.getGeoData().size(); i++) {
+            file.getGeoData().get(i).undoSensorValue(seriesName);
+        }
+
+        zoomRect();
+    }
+
+    public boolean isSameTemplate(CsvFile selectedFile) {
+        return file.isSameTemplate(selectedFile);
+    }
+
+    public String getSelectedSeriesName() {
+        return comboBox.getValue().series.getName();
     }
 }

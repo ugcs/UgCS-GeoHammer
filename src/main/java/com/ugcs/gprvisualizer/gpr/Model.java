@@ -4,6 +4,7 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -324,7 +325,7 @@ public class Model implements InitializingBean {
 		if (getChart(csvFile).isPresent()) {
 			return;
 		} 
-		var sensorLineChart = new SensorLineChart(this, broadcast);
+		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
 
 		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
@@ -355,7 +356,7 @@ public class Model implements InitializingBean {
 		currentChart.get().close(false);
 		csvFiles.remove(csvFile);
 
-		var sensorLineChart = new SensorLineChart(this, broadcast);
+		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
 		chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData));
 		csvFiles.put(csvFile, sensorLineChart);
@@ -482,7 +483,7 @@ public class Model implements InitializingBean {
 		return selectedDataNode;   
 	}
 
-	public boolean selectAndScrollToChart(FileDataContainer fileDataContainer) {// Node node) {
+	public boolean selectAndScrollToChart(FileDataContainer fileDataContainer) {
 		
 		Node node = fileDataContainer.getRootNode();
 
@@ -535,5 +536,9 @@ public class Model implements InitializingBean {
 		fp.setSelected(true);
 		setControls(Arrays.asList(fp));
 	}
+
+    public Collection<SensorLineChart> getCharts() {
+		return csvFiles.values();
+    }
 
 }

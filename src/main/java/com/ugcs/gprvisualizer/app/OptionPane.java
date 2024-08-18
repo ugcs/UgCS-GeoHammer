@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import com.ugcs.gprvisualizer.math.LevelFilter;
@@ -19,11 +20,13 @@ import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
+import com.ugcs.gprvisualizer.app.fir.FIRFilter;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.PrefSettings;
 import com.ugcs.gprvisualizer.math.ExpHoughScan;
 import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.TraceStacking;
@@ -31,6 +34,7 @@ import com.ugcs.gprvisualizer.math.TraceStacking;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -45,7 +49,9 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.Mnemonic;
 import javafx.scene.control.TabPane.TabClosingPolicy;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 @Component
@@ -82,6 +88,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 	@Autowired
 	private LevelFilter levelFilter;
+
+	@Autowired
+	private PrefSettings prefSettings;
 	
 	private ToggleButton showGreenLineBtn = new ToggleButton("", 
 			ResourceImageHolder.getImageView("level.png"));
@@ -91,12 +100,16 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	private final Tab gprTab = new Tab("GPR");
 	private final Tab csvTab = new Tab("CSV");
 
+	private SgyFile selectedFile;
+
 	private static final String BORDER_STYLING = """
 		-fx-border-color: gray; 
 		-fx-border-insets: 5;
 		-fx-border-width: 1;
 		-fx-border-style: solid;
 		""";
+
+	private TextField filterInput = new TextField();
 		
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -122,7 +135,6 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
         
         Tab tab2 = new Tab("Experimental");
 
-
 		prepareCsvTab(csvTab);
 
         //tabPane.getTabs().add(gprTab);
@@ -139,13 +151,13 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	}
 
 	private void prepareCsvTab(Tab tab) {
-		Button button1 = new Button("Low-pass filter");
+		ToggleButton lowPassFilterButton = new ToggleButton("Low-pass filter");
 		Button button2 = new Button("GNSS time-lag");
 		Button button3 = new Button("Heading error compensation");
 		Button button4 = new Button("Gridding");
 		Button button5 = new Button("Quality control");
 
-		button1.setMaxWidth(Double.MAX_VALUE);
+		lowPassFilterButton.setMaxWidth(Double.MAX_VALUE);
 		button2.setMaxWidth(Double.MAX_VALUE);
 		button3.setMaxWidth(Double.MAX_VALUE);
 		button4.setMaxWidth(Double.MAX_VALUE);
@@ -154,10 +166,71 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		VBox t3 = new VBox();
 		t3.setPadding(new Insets(10,5,5,5));
 		t3.setSpacing(5);
-		t3.getChildren().addAll(List.of(button1, button2, button3, button4, button5));
 
-		button1.setOnAction(e -> {
-			showLowPassFilter();
+		VBox filterOptions = new VBox(5);
+        filterOptions.setPadding(new Insets(10, 0, 10, 0));
+		filterInput.setPromptText("Enter cutoff wavelength (fiducials)");
+		Button applyButton = new Button("Apply");
+		applyButton.setDisable(true);
+		filterInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				if (newValue == null) {
+					applyButton.setDisable(true);
+					return;
+				}
+				int value = Integer.parseInt(newValue);
+				boolean isValid = !newValue.isEmpty() && value > 1 && value < 10000;
+				applyButton.setDisable(!isValid);
+			} catch (NumberFormatException e) {
+				applyButton.setDisable(true);
+			}
+		});
+
+		Button applyAllButton = new Button("Apply to all");
+		applyAllButton.setDisable(true);
+
+		Button undoButton = new Button("Undo");
+		undoButton.setDisable(true);
+
+		undoButton.setOnAction(e -> {
+			var chart = model.getChart((CsvFile) selectedFile);
+			chart.ifPresent(c -> c.undoFilter(c.getSelectedSeriesName()));
+			undoButton.setDisable(true);
+			applyAllButton.setDisable(true);
+		});
+
+		applyButton.setOnAction(e -> {
+			applyLowPassFilter(Integer.parseInt(filterInput.getText()));
+			undoButton.setDisable(false);
+			applyAllButton.setDisable(false);
+		});
+
+		applyAllButton.setOnAction(e -> {
+			applyLowPassFilterToAll(Integer.parseInt(filterInput.getText()));
+			undoButton.setDisable(false);
+			applyAllButton.setDisable(true);
+		});
+
+		HBox filterButtons = new HBox(5);
+		HBox rightBox = new HBox();
+		HBox leftBox = new HBox(5);
+		leftBox.getChildren().addAll(applyButton, undoButton);
+		HBox.setHgrow(leftBox, Priority.ALWAYS);
+		rightBox.getChildren().addAll(applyAllButton);
+
+		filterButtons.getChildren().addAll(leftBox, rightBox);
+
+		filterOptions.getChildren().addAll(filterInput, filterButtons);
+        filterOptions.setVisible(false);
+		filterOptions.setManaged(false);
+
+		t3.getChildren().addAll(List.of(lowPassFilterButton, filterOptions, button2, button3, button4, button5));
+		t3.setPrefHeight(500);
+
+		lowPassFilterButton.setOnAction(e -> {
+			boolean visible = filterOptions.isVisible();
+            filterOptions.setVisible(!visible);
+			filterOptions.setManaged(!visible);
 		});
 		
 		button2.setOnAction(e -> {
@@ -204,8 +277,23 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		getNoImplementedDialog();
 	}
 
-	private void showLowPassFilter() {
-		getNoImplementedDialog();
+	private void applyLowPassFilter(int value) {
+		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
+	}
+
+	private void applyLowPassFilterToAll(int value) {
+		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(sc -> {
+			String seriesName = sc.getSelectedSeriesName();
+			model.getCharts().stream()
+					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.forEach(c -> c.lowPassFilter(seriesName, value));
+		});
 	}
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
@@ -378,7 +466,11 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		if (changed.isFileSelected()) {
 			SgyFile file = ((FileSelected) changed).getSelectedFile();
+			this.selectedFile = file;
+
 			if (file instanceof CsvFile) {
+				var lowpassvalue = prefSettings.getSetting("lowpass", ((CsvFile) selectedFile).getParser().getTemplate().getName());
+				filterInput.setText(lowpassvalue);
 				showTab(csvTab);
 			} else {
 				if (file == null) {
