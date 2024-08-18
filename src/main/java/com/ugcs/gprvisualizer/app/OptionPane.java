@@ -178,7 +178,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					applyButton.setDisable(true);
 					return;
 				}
-				double value = Double.parseDouble(newValue);
+				int value = Integer.parseInt(newValue);
 				boolean isValid = !newValue.isEmpty() && value > 1 && value < 10000;
 				applyButton.setDisable(!isValid);
 			} catch (NumberFormatException e) {
@@ -194,19 +194,19 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		undoButton.setOnAction(e -> {
 			var chart = model.getChart((CsvFile) selectedFile);
-			chart.ifPresent(c -> c.undoFilter());
+			chart.ifPresent(c -> c.undoFilter(c.getSelectedSeriesName()));
 			undoButton.setDisable(true);
 			applyAllButton.setDisable(true);
 		});
 
 		applyButton.setOnAction(e -> {
-			applyLowPassFilter(Double.parseDouble(filterInput.getText()));
+			applyLowPassFilter(Integer.parseInt(filterInput.getText()));
 			undoButton.setDisable(false);
 			applyAllButton.setDisable(false);
 		});
 
 		applyAllButton.setOnAction(e -> {
-			applyLowPassFilterToAll(Double.parseDouble(filterInput.getText()));
+			applyLowPassFilterToAll(Integer.parseInt(filterInput.getText()));
 			undoButton.setDisable(false);
 			applyAllButton.setDisable(true);
 		});
@@ -277,19 +277,23 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		getNoImplementedDialog();
 	}
 
-	private void applyLowPassFilter(double value) {
+	private void applyLowPassFilter(int value) {
 		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
 
 		var chart = model.getChart((CsvFile) selectedFile);
-		chart.ifPresent(c -> c.lowPassFilter(value, false));
+		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
 	}
 
-	private void applyLowPassFilterToAll(double value) {
+	private void applyLowPassFilterToAll(int value) {
 		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
 
-		model.getCharts().stream()
-				.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
-				.forEach(c -> c.lowPassFilter(value, true));
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(sc -> {
+			String seriesName = sc.getSelectedSeriesName();
+			model.getCharts().stream()
+					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.forEach(c -> c.lowPassFilter(seriesName, value));
+		});
 	}
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {

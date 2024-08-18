@@ -874,7 +874,7 @@ public class SensorLineChart implements FileDataContainer {
 
     }
 
-    public void lowPassFilter(double value, boolean applyToAll) {
+    public void lowPassFilter(String seriesName, int value) {
         
         List<Long> timestampList = file.getGeoData().stream()
 			.limit(2000)
@@ -884,11 +884,11 @@ public class SensorLineChart implements FileDataContainer {
 
 		double samplingRate = FIRFilter.calculateSamplingRate(timestampList);
 
-        var selectedSeriesName = comboBox.getValue().series.getName();
+        //var selectedSeriesName = comboBox.getValue().series.getName();
             
         charts.forEach(chart -> {
             
-            if ((applyToAll || selectedSeriesName.equals(chart.plotData.semantic)) && !GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
+            if ((seriesName.equals(chart.plotData.semantic)) && !GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
                 //double cutoffFrequency = FIRFilter.findCutoffFrequency(chart.plotData.data, samplingRate);
                 double cutoffFrequency = samplingRate / value;
 
@@ -896,9 +896,7 @@ public class SensorLineChart implements FileDataContainer {
                 //System.out.println("Cutoff frequency: " + cutoffFrequency);
                 //System.out.println("Sampling rate: " + samplingRate);
 
-                var filterOrder = 21;
-
-                //FIRFilter filter = new FIRFilter(filterOrder, cutoffWavelength, samplingRate, waveSpeed);
+                var filterOrder = value; //21;
 
                 FIRFilter filter = new FIRFilter(filterOrder, cutoffFrequency, samplingRate);
 
@@ -943,19 +941,19 @@ public class SensorLineChart implements FileDataContainer {
         return charts.stream().collect(Collectors.toMap(c -> c.plotData.semantic, c -> c));
     }
 
-    public void undoFilter() {
-        var selectedSeriesName = comboBox.getValue().series.getName();
-        if (GeoData.Semantic.LINE.getName().equals(selectedSeriesName)) {
+    public void undoFilter(String seriesName) {
+        //var selectedSeriesName = comboBox.getValue().series.getName();
+        if (GeoData.Semantic.LINE.getName().equals(seriesName)) {
             return;
         }
 
-        log.debug("Undo filter for series: {}", selectedSeriesName);
+        log.debug("Undo filter for series: {}", seriesName);
 
-        var chart = getCharts().get(selectedSeriesName);
+        var chart = getCharts().get(seriesName);
 
         chart.filteredData = null;
         for (int i = 0; i < file.getGeoData().size(); i++) {
-            file.getGeoData().get(i).undoSensorValue(selectedSeriesName);
+            file.getGeoData().get(i).undoSensorValue(seriesName);
         }
 
         zoomRect();
@@ -965,4 +963,7 @@ public class SensorLineChart implements FileDataContainer {
         return file.isSameTemplate(selectedFile);
     }
 
+    public String getSelectedSeriesName() {
+        return comboBox.getValue().series.getName();
+    }
 }
