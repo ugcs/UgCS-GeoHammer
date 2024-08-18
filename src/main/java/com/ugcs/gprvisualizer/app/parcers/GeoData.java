@@ -18,6 +18,10 @@ public class GeoData extends GeoCoordinates {
         Semantic(String name) {
             this.name = name;
         }
+
+        public String getName() {
+            return name;
+        }
     }
 
     private final List<SensorValue> sensorValues;
@@ -46,18 +50,16 @@ public class GeoData extends GeoCoordinates {
         return sensorValues;
     }
 
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
     public boolean isFit(Trace trace) {
         return new LatLon(getLatitude(), getLongitude()).equals(trace.getLatLon());
     }
 
     public void setLine(int lineNumber) {
-        for(SensorValue sensorValue : sensorValues) {
-            if (Semantic.LINE.name.equals(sensorValue.semantic())) {
-                sensorValues.add(sensorValue.withValue(lineNumber));
-                sensorValues.remove(sensorValue);
-                break;
-            }
-        }
+        setSensorValue(Semantic.LINE.name, lineNumber);
     }
 
     public SensorValue getLine() {
@@ -75,10 +77,23 @@ public class GeoData extends GeoCoordinates {
         return result;
     }
 
-    public int getLineNumber() {
-        return lineNumber;
+    public void setSensorValue(String semantic, Number value) {
+        for(SensorValue sensorValue : sensorValues) {
+            if (semantic.equals(sensorValue.semantic())) {
+                sensorValues.add(sensorValue.withValue(value));
+                sensorValues.remove(sensorValue);
+                break;
+            }
+        }
     }
 
-
-
+    public void undoSensorValue(String semantic) {
+        for(SensorValue sensorValue : sensorValues) {
+            if (semantic.equals(sensorValue.semantic())) {
+                sensorValues.add(sensorValue.withValue(sensorValue.originalData()));
+                sensorValues.remove(sensorValue);
+                break;
+            }
+        }
+    }
 }

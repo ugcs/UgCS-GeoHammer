@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,9 +19,11 @@ import org.slf4j.LoggerFactory;
 
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
 import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 
 public class CsvFile extends SgyFile {
 
@@ -107,18 +111,34 @@ public class CsvFile extends SgyFile {
 
 				Map<Integer, GeoData> geoDataMap = getGeoData().stream().collect(Collectors.toMap(GeoData::getLineNumber, gd -> gd));
 
+                Map<String, SensorData> semanticToSensorData = getParser().getTemplate().getDataMapping().getDataValues().stream()
+                    .collect(Collectors.toMap(dv -> dv.getSemantic(), dv -> dv));
+
                 String valueTemplate = isNextWPLast ? ",%s" : ",%s,";
 
             	while ((line = reader.readLine()) != null) {
                 	lineNumber++;
                 	if (geoDataMap.keySet().contains(lineNumber)) {
 						GeoData gd = geoDataMap.get(lineNumber);
-						var lineSensor = gd.getLine();
-						
-                        if(line.indexOf(String.format(valueTemplate, lineSensor.originalData())) != -1) {
-						    line = line.replaceFirst(String.format(valueTemplate, lineSensor.originalData()) + (isNextWPLast ? "$" : ""), String.format(valueTemplate, lineSensor.data()));
-                        } else {
-                            line = line + String.format(valueTemplate, lineSensor.data());
+
+                        for (var sv: gd.getSensorValues()) {   
+                            if (sv.originalData() != sv.data()) {
+                                var template = semanticToSensorData.get(sv.semantic());
+                                boolean isLast = skippedLines.endsWith(template.getHeader() + System.lineSeparator());
+                                System.out.println(template.getIndex());
+
+                                if (GeoData.Semantic.LINE.getName().equals(sv.semantic())) {
+                                    if(line.contains(String.format(valueTemplate, sv.originalData()))) {
+                                        line = line.replaceFirst(String.format(valueTemplate, sv.originalData()) + (isNextWPLast ? "$" : ""), String.format(valueTemplate, sv.data()));
+                                    } else {
+                                        line = line + String.format(valueTemplate, sv.data());
+                                    }            
+                                } else {                                    
+                                    //if(line.matches(String.format(",%s", sv.originalData()))) {
+                                    //line = line.replaceFirst(String.format(",%s", sv.originalData() + "0*" + (isLast ? "$" : ",")), String.format(",%s", sv.data()) + (isLast ? "" : ","));
+                                    line = replaceCsvValue(line, template.getIndex(), String.format("%s", sv.data()));
+                                }
+                            }
                         }
 
                     	writer.write(line);
@@ -129,6 +149,14 @@ public class CsvFile extends SgyFile {
         	} catch (IOException e) {
             	e.printStackTrace();
         	}
+    }
+
+    private static String replaceCsvValue(String input, int position, String newValue) {
+        String[] parts = input.split(",", -1); // -1 for save empty string 
+        if (position >= 0 && position < parts.length) {
+            parts[position] = newValue;
+        }
+        return String.join(",", parts);
     }
 
     public List<GeoData> getGeoData() {
@@ -176,6 +204,10 @@ public class CsvFile extends SgyFile {
     public int getSampleInterval() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getSampleInterval'");
+    }
+
+    public boolean isSameTemplate(CsvFile file) {
+        return file.getParser().getTemplate().equals(getParser().getTemplate());
     }
 
 }

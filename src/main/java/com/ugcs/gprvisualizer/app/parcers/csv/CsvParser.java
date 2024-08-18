@@ -71,7 +71,7 @@ public class CsvParser extends Parser {
                 //format = new CultureInfo("en-US", false);
                 //format.NumberFormat.NumberDecimalSeparator = template.getFileFormat().getDecimalSeparator();
 
-                var lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
+                var lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length;
 
                 var traceCount = 0;
 
