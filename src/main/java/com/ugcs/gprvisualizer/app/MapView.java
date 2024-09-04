@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
+import com.ugcs.gprvisualizer.draw.*;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -25,16 +26,6 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
-import com.ugcs.gprvisualizer.app.intf.Status;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.GpsTrack;
-import com.ugcs.gprvisualizer.draw.Layer;
-import com.ugcs.gprvisualizer.draw.RadarMap;
-import com.ugcs.gprvisualizer.draw.RepaintListener;
-import com.ugcs.gprvisualizer.draw.SatelliteMap;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
-import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
@@ -58,8 +49,8 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	@Autowired
 	private Model model;
 	
-	@Autowired
-	private Status status;
+	//@Autowired
+	//private Status status;
 
 	@Autowired
 	private Broadcast broadcast;
@@ -68,13 +59,19 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	private SatelliteMap satelliteMap;
 
 	@Autowired
-	private RadarMap radarMap;	
+	private RadarMap radarMap;
 
 	@Autowired
 	private GpsTrack gpsTrackMap;
 	
 	@Autowired
 	private Dimension wndSize;
+
+	@Autowired
+	private GridLayer gridLayer;
+
+	@Autowired
+	private List<BaseLayer> baseLayers;
 	
 	private ToolBar toolBar = new ToolBar();
 	private Dimension windowSize = new Dimension();
@@ -90,12 +87,15 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		satelliteMap.setRepaintListener(listener);
 		
 		gpsTrackMap.setRepaintListener(listener);
+
+		gridLayer.setRepaintListener(listener);
 		
 		getLayers().add(satelliteMap);
 		getLayers().add(radarMap);
+		getLayers().add(gridLayer);
 		getLayers().add(gpsTrackMap);
 		getLayers().add(new FoundTracesLayer(model));
-		
+
 		//TODO: bad
 		traceCutter.setListener(listener);		
 		getLayers().add(traceCutter);

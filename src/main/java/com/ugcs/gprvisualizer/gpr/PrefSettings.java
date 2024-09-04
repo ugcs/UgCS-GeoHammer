@@ -1,7 +1,9 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +18,16 @@ public class PrefSettings {
     @Value("${settings.prefix:geohammer.settings.}")
     private String prefix;
 
-    private final Resource resource = new ClassPathResource("dynamic-settings.properties");
+    //private final Resource resource = new ClassPathResource("dynamic-settings.properties");
+
+    private final Resource resource;
+
+    public PrefSettings(FileTemplates templates) {
+        resource = new FileSystemResourceLoader().getResource("file:" + templates.getTemplatesPath().toString() + "/templates-settings.properties");
+    }
 
     public Map<String, Map<String, String>> getAllSettings() {
+
         Properties properties = new Properties();
         try (InputStream input = resource.getInputStream()) {
             properties.load(input);

@@ -9,15 +9,15 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -29,8 +29,6 @@ import javafx.scene.control.Tooltip;
 @Component
 public class GpsTrack extends BaseLayer implements InitializingBean {
 
-	//private RepaintListener listener;
-	
 	@Autowired
 	private Model model;
 	
@@ -47,8 +45,7 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	};
 	
 	private final ToggleButton showLayerCheckbox = ResourceImageHolder.setButtonImage(ResourceImageHolder.PATH, new ToggleButton());
-			//new ToggleButton("", ResourceImageHolder.getImageView("path_20.png"));
-	
+
 	{
 		showLayerCheckbox.setTooltip(new Tooltip("Toggle GPS track layer"));
 		showLayerCheckbox.setSelected(true);
@@ -61,11 +58,8 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		q = new ThrQueue(model) {
 			protected void draw(BufferedImage backImg, MapField field) {
-				
 				Graphics2D g2 = (Graphics2D) backImg.getGraphics();
-				
 				g2.translate(backImg.getWidth() / 2, backImg.getHeight() / 2);
-				
 				drawTrack(g2, field);
 			}
 			
@@ -83,46 +77,12 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 		if (currentField.getSceneCenter() == null || !isActive()) {
 			return;
 		}
-		
 
 		q.drawImgOnChangedField(g2, currentField, q.getFront());
-	
 	}
-
-//	public void drawToScr(Graphics2D g2, MapField field, BufferedImage tmpImg) {
-//		
-//		if (tmpImg == null) {
-//			return;
-//		}
-//		
-//		Point2D offst = field.latLonToScreen(imgLatLon);
-//		
-//		g2.drawImage(tmpImg, 
-//			(int) offst.getX() - tmpImg.getWidth() / 2, 
-//			(int) offst.getY() - tmpImg.getHeight() / 2, 
-//			null);
-//	}
-
-//	public void updateImg(MapField currentField) {
-//		img = new BufferedImage(
-//				(int) getDimension().getWidth(), 
-//				(int) getDimension().getHeight(),
-//				BufferedImage.TYPE_INT_ARGB);
-//		
-//		imgLatLon = currentField.getSceneCenter();
-//		
-//		
-//		Graphics2D g2 = (Graphics2D) img.getGraphics();
-//		g2.translate(img.getWidth() / 2,  img.getHeight() / 2);
-//		drawTrack(g2, currentField);
-//		
-//		//Sout.p("GpsTrack cr img");
-//		
-//	}
 	
 	public void drawTrack(Graphics2D g2, MapField field) {
-		
-		
+
 		g2.setStroke(new BasicStroke(1.0f));		
 		
 		
@@ -181,7 +141,7 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 		}
 		return sumdist;
 	}
-	
+
 	@Override
 	public boolean isReady() {
 		
@@ -223,7 +183,6 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 
 	@Override
 	public List<Node> getToolNodes() {
-		
 		return Arrays.asList(showLayerCheckbox);
 	}
 	

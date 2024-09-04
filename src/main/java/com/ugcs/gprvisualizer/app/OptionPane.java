@@ -1,11 +1,17 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.GriddingParamsSetted;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,11 +26,6 @@ import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
 import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
-import com.ugcs.gprvisualizer.app.fir.FIRFilter;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.RadarMap;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PrefSettings;
 import com.ugcs.gprvisualizer.math.ExpHoughScan;
@@ -34,7 +35,6 @@ import com.ugcs.gprvisualizer.math.TraceStacking;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -58,12 +58,14 @@ import javafx.scene.layout.VBox;
 public class OptionPane extends VBox implements SmthChangeListener, InitializingBean {
 	
 	private static final int RIGHT_BOX_WIDTH = 350;
-	
+	private final TextField minValue = new TextField();
+	private final TextField maxValue = new TextField();
+
 	@Autowired
 	private MapView mapView;
 	
-	//@Autowired
-	//private Broadcast broadcast; 
+	@Autowired
+	private Broadcast broadcast;
 	
 	@Autowired
 	private UiUtils uiUtils;
@@ -109,8 +111,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		-fx-border-style: solid;
 		""";
 
-	private TextField filterInput = new TextField();
-		
+	private ToggleButton  gridding = new ToggleButton("Gridding");
+	private Map<String, TextField> filterInputs = new HashMap<>();
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
@@ -119,14 +122,8 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		this.setMinWidth(0);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
 
-		//this.getChildren().addAll(levelFilter.getToolNodes());
-
-		//this.getChildren().addAll(profileView.getRight());
-
 		prepareTabPane();
-		
         this.getChildren().addAll(tabPane);
-
 	}
 	
 	private void prepareTabPane() {
@@ -137,39 +134,195 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		prepareCsvTab(csvTab);
 
-        //tabPane.getTabs().add(gprTab);
-        
         if (!AppContext.PRODUCTION) {
         	tabPane.getTabs().add(tab2);
         }
-        
-        //prepareGprTab(gprTab);
-
-        //prepareTab2(tab2);
-
-		//tabPane.getTabs().add(csvTab);        
 	}
 
 	private void prepareCsvTab(Tab tab) {
 		ToggleButton lowPassFilterButton = new ToggleButton("Low-pass filter");
-		Button button2 = new Button("GNSS time-lag");
+		ToggleButton timeLagButton = new ToggleButton("GNSS time-lag");
 		Button button3 = new Button("Heading error compensation");
-		Button button4 = new Button("Gridding");
 		Button button5 = new Button("Quality control");
 
 		lowPassFilterButton.setMaxWidth(Double.MAX_VALUE);
-		button2.setMaxWidth(Double.MAX_VALUE);
+		gridding.setMaxWidth(Double.MAX_VALUE);
+
+		timeLagButton.setMaxWidth(Double.MAX_VALUE);
 		button3.setMaxWidth(Double.MAX_VALUE);
-		button4.setMaxWidth(Double.MAX_VALUE);
 		button5.setMaxWidth(Double.MAX_VALUE);
 
 		VBox t3 = new VBox();
 		t3.setPadding(new Insets(10,5,5,5));
 		t3.setSpacing(5);
 
+		VBox filterOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)", i -> {
+			applyLowPassFilter(Integer.parseInt(i));
+		});
+
+		VBox timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)", i -> {
+			applyGnssTimeLag(Integer.parseInt(i));
+		});
+
+		VBox griddingOptions = createGriddingOptions();
+
+		t3.getChildren().addAll(List.of(lowPassFilterButton, filterOptions,
+				gridding, griddingOptions,
+				timeLagButton, timeLagOptions,
+				button3, button5));
+		t3.setPrefHeight(500);
+
+		lowPassFilterButton.setOnAction(e -> {
+			boolean visible = filterOptions.isVisible();
+            filterOptions.setVisible(!visible);
+			filterOptions.setManaged(!visible);
+		});
+
+		gridding.setOnAction(e -> {
+			boolean visible = griddingOptions.isVisible();
+			griddingOptions.setVisible(!visible);
+			griddingOptions.setManaged(!visible);
+		});
+		
+		timeLagButton.setOnAction(e -> {
+			boolean visible = timeLagOptions.isVisible();
+			timeLagOptions.setVisible(!visible);
+			timeLagOptions.setManaged(!visible);
+		});
+		
+		button3.setOnAction(e -> {
+			showHeadingErrorCompensation();
+		});
+		
+		button5.setOnAction(e -> {
+			showQualityControl();
+		});
+
+		tab.setContent(t3);
+	}
+
+	public void setGriddingMinMax(float minValue, float maxValue) {
+		this.minValue.setText(String.valueOf(minValue));
+		this.minValue.setDisable(false);
+		this.maxValue.setText(String.valueOf(maxValue));
+		this.maxValue.setDisable(false);
+	}
+
+	public TextField getMinValue() {
+		return minValue;
+	}
+
+	public TextField getMaxValue() {
+		return maxValue;
+	}
+
+	private enum Filter {
+		lowpass, timelag
+	}
+
+	private VBox createGriddingOptions() {
+		VBox griddingOptions = new VBox(5);
+		griddingOptions.setPadding(new Insets(10, 0, 10, 0));
+
+		VBox filterInput = new VBox(5);
+
+		TextField gridCellSize = new TextField();
+		gridCellSize.setPromptText("Enter cell size");
+
+		TextField gridBlankingDistance = new TextField();
+		gridBlankingDistance.setPromptText("Enter blanking distance");
+
+		Button applyButton = new Button("Show");
+		applyButton.setOnAction(e -> {
+			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
+					Double.parseDouble(gridBlankingDistance.getText())));
+		});
+		applyButton.setDisable(true);
+
+		gridCellSize.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				if (newValue == null) {
+					applyButton.setDisable(true);
+					return;
+				}
+				double value = Double.parseDouble(newValue);
+				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100;
+				applyButton.setDisable(!isValid || gridBlankingDistance.getText().isEmpty());
+			} catch (NumberFormatException e) {
+				applyButton.setDisable(true);
+			}
+		});
+
+		gridBlankingDistance.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				if (newValue == null) {
+					applyButton.setDisable(true);
+					return;
+				}
+				double value = Double.parseDouble(newValue);
+				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100;
+				applyButton.setDisable(!isValid || gridCellSize.getText().isEmpty());
+			} catch (NumberFormatException e) {
+				applyButton.setDisable(true);
+			}
+		});
+
+		Label label = new Label("Colours palette");
+
+		HBox coloursInput = new HBox(5);
+
+		minValue.setPromptText("Enter min value");
+		minValue.setDisable(true);
+		minValue.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				if (newValue == null) {
+					return;
+				}
+				double value = Double.parseDouble(newValue);
+				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
+				broadcast.notifyAll(new WhatChanged(Change.justdraw));
+			} catch (NumberFormatException e) {
+				// do nothing
+			}
+		});
+
+		maxValue.setPromptText("Enter max value");
+		maxValue.setDisable(true);
+		maxValue.textProperty().addListener((observable, oldValue, newValue) -> {
+			try {
+				if (newValue == null) {
+					return;
+				}
+				double value = Double.parseDouble(newValue);
+				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
+				broadcast.notifyAll(new WhatChanged(Change.justdraw));
+			} catch (NumberFormatException e) {
+				// do nothing
+			}
+		});
+
+		coloursInput.getChildren().addAll(minValue, maxValue);
+
+		filterInput.getChildren().addAll(gridCellSize, gridBlankingDistance, label, coloursInput);
+
+		HBox filterButtons = new HBox(5);
+		filterButtons.getChildren().add(applyButton);
+
+		griddingOptions.getChildren().addAll(filterInput, filterButtons);
+		griddingOptions.setVisible(false);
+		griddingOptions.setManaged(false);
+
+		return griddingOptions;
+	}
+
+	private @NotNull VBox createFilterOptions(Filter filter, String promptText, Consumer<String> applyAction) {
 		VBox filterOptions = new VBox(5);
-        filterOptions.setPadding(new Insets(10, 0, 10, 0));
-		filterInput.setPromptText("Enter cutoff wavelength (fiducials)");
+		filterOptions.setPadding(new Insets(10, 0, 10, 0));
+
+		TextField filterInput = new TextField();
+		filterInputs.put(filter.name(), filterInput);
+		filterInput.setPromptText(promptText);
+
 		Button applyButton = new Button("Apply");
 		applyButton.setDisable(true);
 		filterInput.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -179,7 +332,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					return;
 				}
 				int value = Integer.parseInt(newValue);
-				boolean isValid = !newValue.isEmpty() && value > 1 && value < 10000;
+				boolean isValid = !newValue.isEmpty() && (value > 1 || value < -1 ) && value < 10000;
 				applyButton.setDisable(!isValid);
 			} catch (NumberFormatException e) {
 				applyButton.setDisable(true);
@@ -200,7 +353,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		});
 
 		applyButton.setOnAction(e -> {
-			applyLowPassFilter(Integer.parseInt(filterInput.getText()));
+			applyAction.accept(filterInput.getText());
 			undoButton.setDisable(false);
 			applyAllButton.setDisable(false);
 		});
@@ -221,35 +374,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		filterButtons.getChildren().addAll(leftBox, rightBox);
 
 		filterOptions.getChildren().addAll(filterInput, filterButtons);
-        filterOptions.setVisible(false);
+		filterOptions.setVisible(false);
 		filterOptions.setManaged(false);
-
-		t3.getChildren().addAll(List.of(lowPassFilterButton, filterOptions, button2, button3, button4, button5));
-		t3.setPrefHeight(500);
-
-		lowPassFilterButton.setOnAction(e -> {
-			boolean visible = filterOptions.isVisible();
-            filterOptions.setVisible(!visible);
-			filterOptions.setManaged(!visible);
-		});
-		
-		button2.setOnAction(e -> {
-			showGnssTimeLag();
-		});
-		
-		button3.setOnAction(e -> {
-			showHeadingErrorCompensation();
-		});
-		
-		button4.setOnAction(e -> {
-			showGridding();
-		});
-		
-		button5.setOnAction(e -> {
-			showQualityControl();
-		});
-
-		tab.setContent(t3);
+		return filterOptions;
 	}
 
 	private void getNoImplementedDialog() {
@@ -265,27 +392,26 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		getNoImplementedDialog();
 	}
 
-	private void showGridding() {
-		getNoImplementedDialog();
-	}
-
 	private void showHeadingErrorCompensation() {
 		getNoImplementedDialog();
 	}
 
-	private void showGnssTimeLag() {
-		getNoImplementedDialog();
+	private void applyGnssTimeLag(int value) {
+		prefSettings.saveSetting(Filter.timelag.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(c -> c.gnssTimeLag(c.getSelectedSeriesName(), value));
 	}
 
 	private void applyLowPassFilter(int value) {
-		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+		prefSettings.saveSetting(Filter.lowpass.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
 
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
 	}
 
 	private void applyLowPassFilterToAll(int value) {
-		prefSettings.saveSetting("lowpass", Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+		prefSettings.saveSetting(Filter.lowpass.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
 
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(sc -> {
@@ -469,8 +595,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			this.selectedFile = file;
 
 			if (file instanceof CsvFile) {
-				var lowpassvalue = prefSettings.getSetting("lowpass", ((CsvFile) selectedFile).getParser().getTemplate().getName());
-				filterInput.setText(lowpassvalue);
+				for(Filter filter : Filter.values()) {
+					setSavedFilterInputValue(filter);
+				}
 				showTab(csvTab);
 			} else {
 				if (file == null) {
@@ -480,6 +607,11 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 				}	
 			}
 		}
+	}
+
+	private void setSavedFilterInputValue(Filter filter) {
+		var savedValue = prefSettings.getSetting(filter.name(), ((CsvFile) selectedFile).getParser().getTemplate().getName());
+		filterInputs.get(filter.name()).setText(savedValue);
 	}
 
 	private void clear() {
@@ -494,5 +626,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
         tabPane.getSelectionModel().select(tab);
     }
 
-
+	public ToggleButton getGridding() {
+		return gridding;
+	}
 }

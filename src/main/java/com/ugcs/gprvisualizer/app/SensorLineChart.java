@@ -1,14 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javafx.beans.Observable;
@@ -191,6 +184,7 @@ public class SensorLineChart implements FileDataContainer {
     public void selectFile() {
         broadcast.fileSelected(file);
     }
+
 
     /* private List<Number> calculateAverages(List<Number> sourceList) {
         if (sourceList.isEmpty()) return sourceList;
@@ -643,7 +637,7 @@ public class SensorLineChart implements FileDataContainer {
     }
 
     private int getFloorMin(List<Number> data) {
-        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).min().orElse(0);
+        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.05)).min().orElse(0);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
         return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
     }
@@ -872,6 +866,33 @@ public class SensorLineChart implements FileDataContainer {
             }      
         }
 
+    }
+
+    public void gnssTimeLag(String seriesName, int shift) {
+        charts.forEach(chart -> {
+            if ((seriesName.equals(chart.plotData.semantic)) && !GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
+
+                var shiftedList = new ArrayList<Number>();
+                var nulls = new ArrayList<Number>(Collections.nCopies(Math.abs(shift), null));
+                if (shift > 0) {
+                    shiftedList.addAll(chart.plotData.data.subList(shift, chart.plotData.data.size()));
+                    shiftedList.addAll(nulls);
+                } else {
+                    shiftedList.addAll(nulls);
+                    shiftedList.addAll(chart.plotData.data.subList(0, chart.plotData.data.size() + shift));
+                }
+
+                chart.filteredData = chart.plotData.withData(shiftedList);
+
+                assert shiftedList.size() == file.getTraces().size();
+
+                for (int i = 0; i < file.getGeoData().size(); i++) {
+                    file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, shiftedList.get(i));
+                }
+            }
+        });
+        zoomRect();
+        broadcast.notifyAll(new WhatChanged(Change.timeLagFixed));
     }
 
     public void lowPassFilter(String seriesName, int value) {

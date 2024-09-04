@@ -60,4 +60,8 @@ public class WhatChanged {
     public boolean isFileSelected() {
 		return change == Change.fileSelected;
     }
+
+	public boolean isTimeLagFixed() { return change == Change.timeLagFixed; }
+
+	public boolean isGriddingParams() { return change == Change.setGriddingParams; }
 }

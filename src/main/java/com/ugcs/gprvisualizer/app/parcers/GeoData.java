@@ -11,7 +11,8 @@ public class GeoData extends GeoCoordinates {
     public enum Semantic {
 
         LINE("Line"),
-        ALTITUDE_AGL("Altitude AGL");
+        ALTITUDE_AGL("Altitude AGL"),
+        TMI("TMI");
 
         private String name;
 
@@ -67,9 +68,13 @@ public class GeoData extends GeoCoordinates {
     }
 
     public SensorValue getSensorValue(Semantic semantic) {
+        return getSensorValue(semantic.name);
+    }
+
+    public SensorValue getSensorValue(String semantic) {
         SensorValue result = null;
         for(SensorValue sensorValue : sensorValues) {
-            if (semantic.name.equals(sensorValue.semantic())) {
+            if (semantic.equals(sensorValue.semantic())) {
                 result = sensorValue;
                 break;
             }
