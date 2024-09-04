@@ -144,7 +144,7 @@ public class FileTemplates implements InitializingBean {
          
                     // Infinite loop to continuously watch for events
                     while (true) {
-                        System.out.println("watch started");
+                        //System.out.println("watch started");
                         WatchKey key = watchService.take();
          
                         for (WatchEvent<?> event : key.pollEvents()) 
@@ -160,9 +160,11 @@ public class FileTemplates implements InitializingBean {
                             } 
                             else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) 
                             {
-                                System.out.println("File modified: " + event.context());
-                                if (event.context() instanceof Path) {
-                                    System.out.println(((Path) event.context()).toAbsolutePath());
+                                if (event.context() instanceof Path && ((Path) event.context()).endsWith(".yaml")) {
+                                    System.out.println("File modified: " + event.context());
+                                    //System.out.println(((Path) event.context()).toAbsolutePath());
+                                } else {
+                                    continue;
                                 }
                             }
                             templates.clear();
@@ -230,5 +232,9 @@ public class FileTemplates implements InitializingBean {
                 return "Segy";
             }
         };
+    }
+
+    public Path getTemplatesPath() {
+        return templatesPath;
     }
 }

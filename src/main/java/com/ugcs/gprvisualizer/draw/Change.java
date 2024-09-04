@@ -14,6 +14,8 @@ public enum Change {
 	fileopened,
 	auxOnMapSelected,
 	updateButtons, 
-	fileSelected;
+	fileSelected,
+	timeLagFixed,
+	setGriddingParams;
 	
 }
