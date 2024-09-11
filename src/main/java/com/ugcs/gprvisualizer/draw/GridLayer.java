@@ -8,12 +8,13 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 
 import com.github.thecoldwine.sigrun.common.ext.*;
-import com.ugcs.gprvisualizer.app.FileSelected;
-import com.ugcs.gprvisualizer.app.OptionPane;
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.ugcs.gprvisualizer.app.*;
 import edu.mines.jtk.interp.SplinesGridder2;
-import edu.mines.jtk.util.ArrayMath;
 import org.jetbrains.annotations.NotNull;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.index.kdtree.KdNode;
+import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,6 +53,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	private double cellSize;
 	private double blankingDistance;
 	private boolean recalcGrid;
+	private boolean toAll;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -59,13 +61,15 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 		q = new ThrQueue(model) {
 			protected void draw(BufferedImage backImg, MapField field) {
-				
+				optionPane.griddingProgress(true);
+
 				Graphics2D g2 = (Graphics2D) backImg.getGraphics();
 				g2.translate(backImg.getWidth() / 2, backImg.getHeight() / 2);
 				drawOnMapField(g2, field);
 			}
 			
 			public void ready() {
+				optionPane.griddingProgress(false);
 				getRepaintListener().repaint();
 			}
 		};
@@ -85,8 +89,16 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 
 	public void drawOnMapField(Graphics2D g2, MapField field) {
-		if (file != null && cellSize != 0 && blankingDistance != 0) {
-			drawFileOnMapField(g2, field, file);
+		if (isActive()) {
+			if (recalcGrid) {
+				setActive(false);
+				getRepaintListener().repaint();
+			}
+
+			if (file != null && cellSize != 0 && blankingDistance != 0) {
+				drawFileOnMapField(g2, field, file);
+			}
+			setActive(optionPane.getGridding().isSelected());
 		}
 	}
 
@@ -133,6 +145,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	private float maxValue;
 
 	private void drawFileOnMapField(Graphics2D g2, MapField field, CsvFile csvFile) {
+
 		if (recalcGrid) {
 			var chart = model.getChart(csvFile);
 			String sensor = chart.get().getSelectedSeriesName();
@@ -143,8 +156,14 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 			//	sensor = GeoData.Semantic.TMI.getName();
 			//}
 
-			dataPoints = csvFile.getGeoData().stream().filter(gd -> gd.getSensorValue(sensor).data() != null)
-					.map(gd -> new DataPoint(gd.getLatitude(), gd.getLongitude(), gd.getSensorValue(sensor).data().doubleValue())).toList();
+			if (toAll) {
+				dataPoints = new ArrayList<>();
+				for(CsvFile csvFile1: model.getFileManager().getCsvFiles().stream().map(f -> (CsvFile)f).filter(f -> f.isSameTemplate(csvFile)).toList()) {
+					dataPoints.addAll(getDataPoints(csvFile1, sensor));
+				}
+			} else {
+				dataPoints = getDataPoints(csvFile, sensor);
+			}
 			dataPoints = getMedianValues(dataPoints);
 
 			double minLon = dataPoints.stream().mapToDouble(DataPoint::longitude).min().orElseThrow();
@@ -170,9 +189,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 			gridData = new float[gridSizeX][gridSizeY];
 
-			var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
-
-			average = 0.0f;
+			//var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
+			var average = 0.0f;
 
 			for (DataPoint point : dataPoints) {
 				int xIndex = (int) ((point.longitude - minLon) / lonStep);
@@ -183,13 +201,13 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					System.out.println("xIndex = " + xIndex + " yIndex = " + yIndex);
 				}
 
-				for (int i = 0; i < gridData.length; i++) {
-					for (int j = 0; j < gridData[i].length; j++) {
-						if (gridData[i][j] == 0.0f) {
-							gridData[i][j] = (float) average;
-						}
-					}
-				}
+				//for (int i = 0; i < gridData.length; i++) {
+				//	for (int j = 0; j < gridData[i].length; j++) {
+				//		if (gridData[i][j] == 0.0f) {
+				//			gridData[i][j] = (float) average;
+				//		}
+				//	}
+				//}
 			}
 
 			var gridder = new SplinesGridder2();
@@ -220,14 +238,24 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 			recalcGrid = false;
 		}
 
-		double cellWidth = 3; //width / gridSizeX;
-		double cellHeight = 3; //height / gridSizeY;
+		KdTree kdTree = buildKdTree(dataPoints);
 
 		int gridSizeX = gridData.length;
 		int gridSizeY = gridData[0].length;
 
 		double lonStep = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / gridSizeX;
 		double latStep = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / gridSizeY;
+
+		var minLatLonPoint = field.latLonToScreen(minLatLon);
+		var nextLatLonPoint = field.latLonToScreen(new LatLon(minLatLon.getLatDgr() + latStep, minLatLon.getLonDgr() + lonStep));
+
+		double cellWidth = Math.abs(minLatLonPoint.getX() - nextLatLonPoint.getX()) + 1; //3; //width / gridSizeX;
+		double cellHeight = Math.abs(minLatLonPoint.getY() - nextLatLonPoint.getY()) + 1; //3; //height / gridSizeY;
+
+		System.out.println("cellWidth = " + cellWidth + " cellHeight = " + cellHeight);
+
+		double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
+		double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
 
 		var minValue = this.minValue;
 		minValue = optionPane.getMinValue().getText().isEmpty() ? minValue : Float.parseFloat(optionPane.getMinValue().getText());
@@ -246,10 +274,18 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 						double lon = minLatLon.getLonDgr() + i * lonStep;
 
                 		//TODO: convert to use nearest neighbors
-                		if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
+						//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
+						//	gridData[i][j] = Float.NaN;
+                    	//	continue;
+                		//}
+
+						var delta = 1;
+						List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
+						if (neighbors.isEmpty()) {
 							gridData[i][j] = Float.NaN;
-                    		continue;
-                		}
+							continue;
+						}
+
 
 						Color color = getColorForValue(value, minValue, maxValue);
 						g2.setColor(color);
@@ -262,6 +298,20 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					}
 				}
 			}
+	}
+
+	private List<DataPoint> getDataPoints(CsvFile csvFile, String sensor) {
+		return csvFile.getGeoData().stream().filter(gd -> gd.getSensorValue(sensor).data() != null)
+				.map(gd -> new DataPoint(gd.getLatitude(), gd.getLongitude(), gd.getSensorValue(sensor).data().doubleValue())).toList();
+	}
+
+	private static KdTree buildKdTree(List<DataPoint> dataPoints) {
+		KdTree kdTree = new KdTree(0.0000);
+		for (DataPoint point : dataPoints) {
+			Coordinate coord = new Coordinate(point.longitude, point.latitude);
+			kdTree.insert(coord, point);
+		}
+		return kdTree;
 	}
 
 	private static boolean isInBlankingDistanceToKnownPoints(double lat, double lon, List<DataPoint> knownPoints, double blankingDistance) {
@@ -325,6 +375,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 		} else if (changed.isGriddingParams()) {
 			cellSize = ((GriddingParamsSetted) changed).getCellSize();
 			blankingDistance = ((GriddingParamsSetted) changed).getBlankingDistance();
+			toAll = ((GriddingParamsSetted) changed).isToAll();
 			recalcGrid = true;
 			q.add();
 		}

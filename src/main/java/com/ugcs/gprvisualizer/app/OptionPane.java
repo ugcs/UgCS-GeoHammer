@@ -10,6 +10,17 @@ import com.ugcs.gprvisualizer.draw.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
@@ -20,36 +31,17 @@ import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.commands.AlgorithmicScan;
-import com.ugcs.gprvisualizer.app.commands.AlgorithmicScanFull;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
-import com.ugcs.gprvisualizer.app.commands.EdgeFinder;
-import com.ugcs.gprvisualizer.app.commands.EdgeSubtractGround;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PrefSettings;
-import com.ugcs.gprvisualizer.math.ExpHoughScan;
-import com.ugcs.gprvisualizer.math.HoughScan;
 import com.ugcs.gprvisualizer.math.TraceStacking;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.Mnemonic;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -113,6 +105,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 	private ToggleButton  gridding = new ToggleButton("Gridding");
 	private Map<String, TextField> filterInputs = new HashMap<>();
+	private ProgressIndicator griddingProgressIndicator;
+	private Button showGriddingButton;
+	private Button showGriddingAllButton;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -156,40 +151,33 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		t3.setPadding(new Insets(10,5,5,5));
 		t3.setSpacing(5);
 
-		VBox filterOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)", i -> {
-			applyLowPassFilter(Integer.parseInt(i));
-		});
+		StackPane lowPassOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)",
+				i -> applyLowPassFilter(Integer.parseInt(i)),
+				i -> applyLowPassFilterToAll(Integer.parseInt(i))
+		);
 
-		VBox timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)", i -> {
-			applyGnssTimeLag(Integer.parseInt(i));
-		});
+		StackPane timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)",
+				i -> applyGnssTimeLag(Integer.parseInt(i)),
+				i -> applyGnssTimeLagToAll(Integer.parseInt(i))
+		);
 
-		VBox griddingOptions = createGriddingOptions();
+		griddingProgressIndicator = new ProgressIndicator();
+		griddingProgressIndicator.setVisible(false);
+		griddingProgressIndicator.setManaged(false);
+		VBox griddingOptions = createGriddingOptions(griddingProgressIndicator);
+		StackPane griddingPane = new StackPane(griddingOptions, griddingProgressIndicator);
 
-		t3.getChildren().addAll(List.of(lowPassFilterButton, filterOptions,
-				gridding, griddingOptions,
+		t3.getChildren().addAll(List.of(lowPassFilterButton, lowPassOptions,
+				gridding, griddingPane,
 				timeLagButton, timeLagOptions,
-				button3, button5));
+				button5,
+				button3));
 		t3.setPrefHeight(500);
 
-		lowPassFilterButton.setOnAction(e -> {
-			boolean visible = filterOptions.isVisible();
-            filterOptions.setVisible(!visible);
-			filterOptions.setManaged(!visible);
-		});
+		lowPassFilterButton.setOnAction(getChangeVisibleAction(lowPassOptions));
+		gridding.setOnAction(getChangeVisibleAction(griddingPane));
+		timeLagButton.setOnAction(getChangeVisibleAction(timeLagOptions));
 
-		gridding.setOnAction(e -> {
-			boolean visible = griddingOptions.isVisible();
-			griddingOptions.setVisible(!visible);
-			griddingOptions.setManaged(!visible);
-		});
-		
-		timeLagButton.setOnAction(e -> {
-			boolean visible = timeLagOptions.isVisible();
-			timeLagOptions.setVisible(!visible);
-			timeLagOptions.setManaged(!visible);
-		});
-		
 		button3.setOnAction(e -> {
 			showHeadingErrorCompensation();
 		});
@@ -199,6 +187,17 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		});
 
 		tab.setContent(t3);
+	}
+
+	private static @NotNull EventHandler<ActionEvent> getChangeVisibleAction(StackPane filterOptionsStackPane) {
+		return e -> {
+			filterOptionsStackPane.getChildren()
+					.stream().filter(n -> n instanceof VBox).forEach(options -> {
+						boolean visible = options.isVisible();
+						options.setVisible(!visible);
+						options.setManaged(!visible);
+					});
+		};
 	}
 
 	public void setGriddingMinMax(float minValue, float maxValue) {
@@ -217,10 +216,10 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	}
 
 	private enum Filter {
-		lowpass, timelag
+		lowpass, timelag, gridding_cellsize, gridding_blankingdistance
 	}
 
-	private VBox createGriddingOptions() {
+	private VBox createGriddingOptions(ProgressIndicator progressIndicator) {
 		VBox griddingOptions = new VBox(5);
 		griddingOptions.setPadding(new Insets(10, 0, 10, 0));
 
@@ -228,42 +227,61 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		TextField gridCellSize = new TextField();
 		gridCellSize.setPromptText("Enter cell size");
+		filterInputs.put(Filter.gridding_cellsize.name(), gridCellSize);
 
 		TextField gridBlankingDistance = new TextField();
 		gridBlankingDistance.setPromptText("Enter blanking distance");
+		filterInputs.put(Filter.gridding_blankingdistance.name(), gridBlankingDistance);
 
-		Button applyButton = new Button("Show");
-		applyButton.setOnAction(e -> {
+		showGriddingButton = new Button("Apply");
+		showGriddingButton.setOnAction(e -> {
+			prefSettings.saveSetting(Filter.gridding_cellsize.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridCellSize.getText()));
+			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
 			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText())));
 		});
-		applyButton.setDisable(true);
+		showGriddingButton.setDisable(true);
+
+		showGriddingAllButton = new Button("Apply to all");
+		showGriddingAllButton.setOnAction(e -> {
+			prefSettings.saveSetting(Filter.gridding_cellsize.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridCellSize.getText()));
+			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
+			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
+					Double.parseDouble(gridBlankingDistance.getText()), true));
+		});
+		showGriddingAllButton.setDisable(true);
 
 		gridCellSize.textProperty().addListener((observable, oldValue, newValue) -> {
 			try {
 				if (newValue == null) {
-					applyButton.setDisable(true);
+					showGriddingButton.setDisable(true);
+					showGriddingAllButton.setDisable(true);
 					return;
 				}
 				double value = Double.parseDouble(newValue);
 				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100;
-				applyButton.setDisable(!isValid || gridBlankingDistance.getText().isEmpty());
+				showGriddingButton.setDisable(!isValid || gridBlankingDistance.getText().isEmpty());
+				showGriddingAllButton.setDisable(!isValid || gridBlankingDistance.getText().isEmpty());
 			} catch (NumberFormatException e) {
-				applyButton.setDisable(true);
+				showGriddingButton.setDisable(true);
+				showGriddingAllButton.setDisable(true);
 			}
 		});
 
 		gridBlankingDistance.textProperty().addListener((observable, oldValue, newValue) -> {
 			try {
 				if (newValue == null) {
-					applyButton.setDisable(true);
+					showGriddingButton.setDisable(true);
+					showGriddingAllButton.setDisable(true);
 					return;
 				}
 				double value = Double.parseDouble(newValue);
 				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100;
-				applyButton.setDisable(!isValid || gridCellSize.getText().isEmpty());
+				showGriddingButton.setDisable(!isValid || gridCellSize.getText().isEmpty());
+				showGriddingAllButton.setDisable(!isValid || gridCellSize.getText().isEmpty());
 			} catch (NumberFormatException e) {
-				applyButton.setDisable(true);
+				showGriddingButton.setDisable(true);
+				showGriddingAllButton.setDisable(true);
 			}
 		});
 
@@ -306,7 +324,13 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		filterInput.getChildren().addAll(gridCellSize, gridBlankingDistance, label, coloursInput);
 
 		HBox filterButtons = new HBox(5);
-		filterButtons.getChildren().add(applyButton);
+		HBox rightBox = new HBox();
+		HBox leftBox = new HBox(5);
+		leftBox.getChildren().addAll(showGriddingButton);
+		HBox.setHgrow(leftBox, Priority.ALWAYS);
+		rightBox.getChildren().addAll(showGriddingAllButton);
+
+		filterButtons.getChildren().addAll(leftBox, rightBox);
 
 		griddingOptions.getChildren().addAll(filterInput, filterButtons);
 		griddingOptions.setVisible(false);
@@ -315,7 +339,14 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		return griddingOptions;
 	}
 
-	private @NotNull VBox createFilterOptions(Filter filter, String promptText, Consumer<String> applyAction) {
+	public void griddingProgress(boolean inProgress) {
+		showGriddingButton.setDisable(inProgress);
+		showGriddingAllButton.setDisable(inProgress);
+		griddingProgressIndicator.setVisible(inProgress);
+		griddingProgressIndicator.setManaged(inProgress);
+	}
+
+	private @NotNull StackPane createFilterOptions(Filter filter, String promptText, Consumer<String> applyAction, Consumer<String> applyAllAction) {
 		VBox filterOptions = new VBox(5);
 		filterOptions.setPadding(new Insets(10, 0, 10, 0));
 
@@ -332,7 +363,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					return;
 				}
 				int value = Integer.parseInt(newValue);
-				boolean isValid = !newValue.isEmpty() && (value > 1 || value < -1 ) && value < 10000;
+				boolean isValid = !newValue.isEmpty() && (value >= 1 || value <= -1 ) && value < 10000;
 				applyButton.setDisable(!isValid);
 			} catch (NumberFormatException e) {
 				applyButton.setDisable(true);
@@ -353,15 +384,25 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		});
 
 		applyButton.setOnAction(e -> {
+			prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
 			applyAction.accept(filterInput.getText());
 			undoButton.setDisable(false);
 			applyAllButton.setDisable(false);
 		});
 
+		ProgressIndicator progressIndicator = new ProgressIndicator();
+
 		applyAllButton.setOnAction(e -> {
-			applyLowPassFilterToAll(Integer.parseInt(filterInput.getText()));
+			progressIndicator.setVisible(true);
+			progressIndicator.setManaged(true);
+
+			prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
+			applyAllAction.accept(filterInput.getText());
 			undoButton.setDisable(false);
 			applyAllButton.setDisable(true);
+
+			progressIndicator.setVisible(false);
+			progressIndicator.setManaged(false);
 		});
 
 		HBox filterButtons = new HBox(5);
@@ -376,7 +417,10 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		filterOptions.getChildren().addAll(filterInput, filterButtons);
 		filterOptions.setVisible(false);
 		filterOptions.setManaged(false);
-		return filterOptions;
+
+		progressIndicator.setVisible(false);
+		progressIndicator.setManaged(false);
+		return new StackPane(filterOptions, progressIndicator);
 	}
 
 	private void getNoImplementedDialog() {
@@ -397,22 +441,26 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	}
 
 	private void applyGnssTimeLag(int value) {
-		prefSettings.saveSetting(Filter.timelag.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
-
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.gnssTimeLag(c.getSelectedSeriesName(), value));
 	}
 
-	private void applyLowPassFilter(int value) {
-		prefSettings.saveSetting(Filter.lowpass.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
+	private void applyGnssTimeLagToAll(int value) {
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(sc -> {
+			String seriesName = sc.getSelectedSeriesName();
+			model.getCharts().stream()
+					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.forEach(c -> c.gnssTimeLag(seriesName, value));
+		});
+	}
 
+	private void applyLowPassFilter(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
 	}
 
 	private void applyLowPassFilterToAll(int value) {
-		prefSettings.saveSetting(Filter.lowpass.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), value));
-
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(sc -> {
 			String seriesName = sc.getSelectedSeriesName();

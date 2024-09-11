@@ -369,7 +369,9 @@ public class Model implements InitializingBean {
 	 */
     public Optional<SensorLineChart> getChart(CsvFile csvFile) {
 		csvFiles.forEach((file, chart) -> {
-			chart.removeVerticalMarker();
+			if (Platform.isFxApplicationThread()) {
+				chart.removeVerticalMarker();
+			}
 		});
 		return Optional.ofNullable(csvFiles.get(csvFile));
     }
