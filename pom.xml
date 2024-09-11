@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>2.0.4</version>
+    <version>2.0.5-SNAPSHOT</version>
     <name>GeoHammer</name>
     <url>https://github.com/ugcs/UgCS-GeoHammer</url>
     <description>GeoHammer</description>
@@ -247,6 +247,11 @@
     		<groupId>edu.mines.jtk</groupId>
 			<artifactId>edu-mines-jtk</artifactId>
     		<version>1.1.0</version>		
+		</dependency>
+		<dependency>
+			<groupId>org.locationtech.jts</groupId>
+			<artifactId>jts-core</artifactId>
+			<version>1.20.0</version>
 		</dependency>
 
 		<dependency>
