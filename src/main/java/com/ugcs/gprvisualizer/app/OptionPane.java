@@ -10,6 +10,7 @@ import com.ugcs.gprvisualizer.draw.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -22,6 +23,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.controlsfx.control.RangeSlider;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +52,9 @@ import javafx.scene.layout.VBox;
 public class OptionPane extends VBox implements SmthChangeListener, InitializingBean {
 	
 	private static final int RIGHT_BOX_WIDTH = 350;
-	private final TextField minValue = new TextField();
-	private final TextField maxValue = new TextField();
+
+	//private final TextField minValue = new TextField();
+	//private final TextField maxValue = new TextField();
 
 	@Autowired
 	private MapView mapView;
@@ -108,6 +111,12 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	private ProgressIndicator griddingProgressIndicator;
 	private Button showGriddingButton;
 	private Button showGriddingAllButton;
+
+	public RangeSlider getGriddingRangeSlider() {
+		return griddingRangeSlider;
+	}
+
+	private RangeSlider griddingRangeSlider;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -200,20 +209,32 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		};
 	}
 
-	public void setGriddingMinMax(float minValue, float maxValue) {
-		this.minValue.setText(String.valueOf(minValue));
-		this.minValue.setDisable(false);
-		this.maxValue.setText(String.valueOf(maxValue));
-		this.maxValue.setDisable(false);
+	public void setGriddingMinMax(double min, double max, double lowValue, double highValue) {
+		//this.minValue.setText(String.valueOf(minValue));
+		//this.minValue.setDisable(false);
+		//this.maxValue.setText(String.valueOf(maxValue));
+		//this.maxValue.setDisable(false);
+
+		griddingRangeSlider.setMin(min);
+		griddingRangeSlider.setMax(max);
+
+		griddingRangeSlider.setMajorTickUnit((max - min) / 100);
+		griddingRangeSlider.setMinorTickCount((int)(max - min) / 1000);
+		griddingRangeSlider.setBlockIncrement((int)(max - min) / 1000 * 2);
+
+		griddingRangeSlider.setLowValue(min);
+		griddingRangeSlider.setHighValue(max);
+
+		griddingRangeSlider.setDisable(false);
 	}
 
-	public TextField getMinValue() {
-		return minValue;
-	}
+	//public TextField getMinValue() {
+	//	return minValue;
+	//}
 
-	public TextField getMaxValue() {
-		return maxValue;
-	}
+	//public TextField getMaxValue() {
+	//	return maxValue;
+	//}
 
 	private enum Filter {
 		lowpass, timelag, gridding_cellsize, gridding_blankingdistance
@@ -239,6 +260,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
 			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText())));
+			griddingRangeSlider.setDisable(true);
 		});
 		showGriddingButton.setDisable(true);
 
@@ -248,6 +270,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
 			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText()), true));
+			griddingRangeSlider.setDisable(true);
 		});
 		showGriddingAllButton.setDisable(true);
 
@@ -289,39 +312,66 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		HBox coloursInput = new HBox(5);
 
-		minValue.setPromptText("Enter min value");
-		minValue.setDisable(true);
-		minValue.textProperty().addListener((observable, oldValue, newValue) -> {
-			try {
-				if (newValue == null) {
-					return;
-				}
-				double value = Double.parseDouble(newValue);
-				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
-				broadcast.notifyAll(new WhatChanged(Change.justdraw));
-			} catch (NumberFormatException e) {
+		//minValue.setPromptText("Enter min value");
+		//minValue.setDisable(true);
+		//minValue.textProperty().addListener((observable, oldValue, newValue) -> {
+		//	try {
+		//		if (newValue == null) {
+		//			return;
+		//		}
+		//		double value = Double.parseDouble(newValue);
+		//		boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
+		//		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		//	} catch (NumberFormatException e) {
 				// do nothing
-			}
+		//	}
+		//});
+
+		//maxValue.setPromptText("Enter max value");
+		//maxValue.setDisable(true);
+		//maxValue.textProperty().addListener((observable, oldValue, newValue) -> {
+		//	try {
+		//		if (newValue == null) {
+		//			return;
+		//		}
+		//		double value = Double.parseDouble(newValue);
+		//		boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
+		//		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		//	} catch (NumberFormatException e) {
+				// do nothing
+		//	}
+		//});
+
+		//coloursInput.getChildren().addAll(minValue, maxValue);
+
+		griddingRangeSlider = new RangeSlider();
+		griddingRangeSlider.setShowTickLabels(true);
+		griddingRangeSlider.setShowTickMarks(true);
+		griddingRangeSlider.setLowValue(0);
+		griddingRangeSlider.setHighValue(Double.MAX_VALUE);
+		griddingRangeSlider.setDisable(true);
+		griddingRangeSlider.setShowTickLabels(false);
+		griddingRangeSlider.setShowTickMarks(false);
+
+		Label minLabel = new Label("Min. range "); //+ griddingRangeSlider.getLowValue());
+		Label maxLabel = new Label("Max. range "); //+ griddingRangeSlider.getHighValue());
+		HBox center = new HBox(5);
+		HBox.setHgrow(center, Priority.ALWAYS);
+		coloursInput.getChildren().addAll(minLabel, center, maxLabel);
+
+		griddingRangeSlider.lowValueProperty().addListener((obs, oldVal, newVal) -> {
+				minLabel.setText("Min. range: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
+				broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
-		maxValue.setPromptText("Enter max value");
-		maxValue.setDisable(true);
-		maxValue.textProperty().addListener((observable, oldValue, newValue) -> {
-			try {
-				if (newValue == null) {
-					return;
-				}
-				double value = Double.parseDouble(newValue);
-				boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
-				broadcast.notifyAll(new WhatChanged(Change.justdraw));
-			} catch (NumberFormatException e) {
-				// do nothing
-			}
+		griddingRangeSlider.highValueProperty().addListener((obs, oldVal, newVal) -> {
+			maxLabel.setText("Max. range: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
+			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
-		coloursInput.getChildren().addAll(minValue, maxValue);
+		VBox vbox = new VBox(10, griddingRangeSlider, coloursInput);
 
-		filterInput.getChildren().addAll(gridCellSize, gridBlankingDistance, label, coloursInput);
+		filterInput.getChildren().addAll(gridCellSize, gridBlankingDistance, label, vbox);
 
 		HBox filterButtons = new HBox(5);
 		HBox rightBox = new HBox();

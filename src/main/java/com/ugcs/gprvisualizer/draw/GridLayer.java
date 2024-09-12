@@ -10,6 +10,7 @@ import java.util.*;
 import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.*;
 import edu.mines.jtk.interp.SplinesGridder2;
+import javafx.application.Platform;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
@@ -218,27 +219,52 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 			//var maxValue = ArrayMath.max(gridData);
 			//System.out.println("minValue = " + minValue + " maxValue = " + maxValue);
 
+			KdTree kdTree = buildKdTree(dataPoints);
+
+			double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
+			double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
+
 			Set<Float> values = new HashSet<>();
 			for (int i = 0; i < gridData.length; i++) {
 				for (int j = 0; j < gridData[0].length; j++) {
-					values.add(gridData[i][j]);
+
+					double lat = minLatLon.getLatDgr() + j * latStep;
+					double lon = minLatLon.getLonDgr() + i * lonStep;
+
+					//TODO: convert to use nearest neighbors
+					//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
+					//	gridData[i][j] = Float.NaN;
+					//	continue;
+					//}
+
+					var delta = 1;
+					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
+					if (neighbors.isEmpty()) {
+						gridData[i][j] = Float.NaN;
+						continue;
+					} else {
+						values.add(gridData[i][j]);
+					}
+
 				}
 			}
 
 			System.out.println("values.size() = " + values.size());
 
-			minValue = (float) values.stream().filter(v -> !Float.isNaN(v)).mapToDouble(p -> p).sorted().skip((long)(values.size() * 0.1)).min().orElse(Double.MIN_VALUE);
-			System.out.println("minValue = " + minValue);
+			double min = values.stream().filter(v -> !Float.isNaN(v)).mapToDouble(p -> p).min().orElse(Double.MIN_VALUE);
+			//minValue = (float) values.stream().filter(v -> !Float.isNaN(v)).mapToDouble(p -> p).sorted().skip((long)(values.size() * 0.05)).min().orElse(Double.MIN_VALUE);
+			//System.out.println("min = " + min + ", lowValue = " + minValue);
+			this.minValue = (float) min;
 
-			maxValue = (float) values.stream().mapToDouble(p -> p).sorted().limit((long)(values.size() * 0.9)).max().orElse(Double.MAX_VALUE);
-			System.out.println("maxValue = " + maxValue);
+			double max = values.stream().mapToDouble(p -> p).max().orElse(Double.MAX_VALUE);
+			//maxValue = (float) values.stream().mapToDouble(p -> p).sorted().limit((long)(values.size() * 0.95)).max().orElse(Double.MAX_VALUE);
+			//System.out.println("max = " + max + ", highValue = " + maxValue);
+			this.maxValue = (float) max;
 
-			optionPane.setGriddingMinMax(minValue, maxValue);
+			Platform.runLater(() -> optionPane.setGriddingMinMax(min, max, minValue, maxValue));
 
 			recalcGrid = false;
 		}
-
-		KdTree kdTree = buildKdTree(dataPoints);
 
 		int gridSizeX = gridData.length;
 		int gridSizeY = gridData[0].length;
@@ -254,13 +280,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 		System.out.println("cellWidth = " + cellWidth + " cellHeight = " + cellHeight);
 
-		double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
-		double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
-
-		var minValue = this.minValue;
-		minValue = optionPane.getMinValue().getText().isEmpty() ? minValue : Float.parseFloat(optionPane.getMinValue().getText());
-		var maxValue = this.maxValue;
-		maxValue = optionPane.getMaxValue().getText().isEmpty() ? maxValue : Float.parseFloat(optionPane.getMaxValue().getText());
+		var minValue = optionPane.getGriddingRangeSlider().isDisabled() ? this.minValue : (float) optionPane.getGriddingRangeSlider().getLowValue();
+		var maxValue = optionPane.getGriddingRangeSlider().isDisabled() ? this.maxValue : (float) optionPane.getGriddingRangeSlider().getHighValue();
 
 			for (int i = 0; i < gridData.length; i++) {
 				for (int j = 0; j < gridData[0].length; j++) {
@@ -270,25 +291,11 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 							continue;
 						}
 
-						double lat = minLatLon.getLatDgr() + j * latStep;
-						double lon = minLatLon.getLonDgr() + i * lonStep;
-
-                		//TODO: convert to use nearest neighbors
-						//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
-						//	gridData[i][j] = Float.NaN;
-                    	//	continue;
-                		//}
-
-						var delta = 1;
-						List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
-						if (neighbors.isEmpty()) {
-							gridData[i][j] = Float.NaN;
-							continue;
-						}
-
-
 						Color color = getColorForValue(value, minValue, maxValue);
 						g2.setColor(color);
+
+						double lat = minLatLon.getLatDgr() + j * latStep;
+						double lon = minLatLon.getLonDgr() + i * lonStep;
 
 						var point = field.latLonToScreen(new LatLon(lat, lon));
 						g2.fillRect((int) point.getX(), (int) point.getY(), (int) cellWidth, (int) cellHeight);
