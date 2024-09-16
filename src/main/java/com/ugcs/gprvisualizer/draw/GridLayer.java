@@ -287,7 +287,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				for (int j = 0; j < gridData[0].length; j++) {
 					try {
 						var value = gridData[i][j];
-						if (value <= 0 || Double.isNaN(value) || Float.isNaN(value)) {
+						if (Double.isNaN(value) || Float.isNaN(value)) {
 							continue;
 						}
 

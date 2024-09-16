@@ -308,7 +308,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			}
 		});
 
-		Label label = new Label("Colours palette");
+		Label label = new Label("Range");
 
 		HBox coloursInput = new HBox(5);
 
@@ -353,19 +353,19 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		griddingRangeSlider.setShowTickLabels(false);
 		griddingRangeSlider.setShowTickMarks(false);
 
-		Label minLabel = new Label("Min. range "); //+ griddingRangeSlider.getLowValue());
-		Label maxLabel = new Label("Max. range "); //+ griddingRangeSlider.getHighValue());
+		Label minLabel = new Label("Min"); //+ griddingRangeSlider.getLowValue());
+		Label maxLabel = new Label("Max"); //+ griddingRangeSlider.getHighValue());
 		HBox center = new HBox(5);
 		HBox.setHgrow(center, Priority.ALWAYS);
 		coloursInput.getChildren().addAll(minLabel, center, maxLabel);
 
 		griddingRangeSlider.lowValueProperty().addListener((obs, oldVal, newVal) -> {
-				minLabel.setText("Min. range: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
+				minLabel.setText("Min: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
 				broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
 		griddingRangeSlider.highValueProperty().addListener((obs, oldVal, newVal) -> {
-			maxLabel.setText("Max. range: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
+			maxLabel.setText("Max: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
 			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 
