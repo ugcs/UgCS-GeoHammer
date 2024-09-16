@@ -3,7 +3,7 @@
     <groupId>com.ugcs</groupId>
     <artifactId>geohammer</artifactId>
     <packaging>jar</packaging>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.6-SNAPSHOT</version>
     <name>GeoHammer</name>
     <url>https://github.com/ugcs/UgCS-GeoHammer</url>
     <description>GeoHammer</description>
@@ -226,6 +226,12 @@
         	<artifactId>javafx-swing</artifactId>
         	<version>${javafx.version}</version>
     	</dependency>
+
+		<dependency>
+			<groupId>org.controlsfx</groupId>
+			<artifactId>controlsfx</artifactId>
+			<version>11.2.0</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
