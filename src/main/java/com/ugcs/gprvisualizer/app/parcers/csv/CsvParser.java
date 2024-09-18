@@ -141,8 +141,20 @@ public class CsvParser extends Parser {
                 throw new IncorrectDateFormatException("Incorrect file name. Set date of logging.");
             }
     
-            dateFromNameOfFile = parseDate(m.group(),
-                                            template.getDataMapping().getDate().getFormat());
+            dateFromNameOfFile = template.getDataMapping().getDate().getFormat() != null ?
+                    parseDate(m.group(), template.getDataMapping().getDate().getFormat()) :
+                    parseDate(m.group(), template.getDataMapping().getDate().getFormats());
+        }
+
+        private LocalDate parseDate(String date, List<String> formats) {
+            for (String format : formats) {
+                try {
+                    return parseDate(date, format);
+                } catch (IncorrectDateFormatException e) {
+                    // do nothing
+                }
+            }
+            throw new IncorrectDateFormatException("Incorrect date formats");
         }
 
         private LocalDate parseDate(String date, String format) {
