@@ -1,8 +1,11 @@
 package com.ugcs.gprvisualizer.app.yaml.data;
 
+import java.util.List;
+
 public class DateTime extends BaseData {
 
     private String format;
+    private List<String> formats;
     private Type type;
 
     public String getFormat() {
@@ -11,6 +14,14 @@ public class DateTime extends BaseData {
 
     public void setFormat(String format) {
         this.format = format;
+    }
+
+    public List<String> getFormats() {
+        return formats;
+    }
+
+    public void setFormats(List<String> formats) {
+        this.formats = formats;
     }
 
     public Type getType() {
