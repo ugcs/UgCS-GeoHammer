@@ -288,6 +288,13 @@ public class CsvParser extends Parser {
             }
         }
 
+        public void setIndexByHeaderForSensorData(String header, SensorData sd) {
+            List<String> headers = Arrays.stream(header.split(template.getFileFormat().getSeparator()))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+            setIndexIfHeaderNotNull(sd, headers);
+        }
+
         protected void findIndexesByHeaders(String line) {
             if (line == null) {
                 return;

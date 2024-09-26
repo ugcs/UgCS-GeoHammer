@@ -209,7 +209,15 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		};
 	}
 
-	public void setGriddingMinMax(double min, double max, double lowValue, double highValue) {
+	private void setGriddingMinMax() {
+		if (!(selectedFile instanceof CsvFile)) {
+			return;
+		}
+
+		double max = model.getChart((CsvFile) selectedFile).get().getSemanticMaxValue();
+		double min = model.getChart((CsvFile) selectedFile).get().getSemanticMinValue();
+
+
 		//this.minValue.setText(String.valueOf(minValue));
 		//this.minValue.setDisable(false);
 		//this.maxValue.setText(String.valueOf(maxValue));
@@ -258,9 +266,12 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		showGriddingButton.setOnAction(e -> {
 			prefSettings.saveSetting(Filter.gridding_cellsize.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridCellSize.getText()));
 			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
+
+			Platform.runLater(() -> setGriddingMinMax()); // min, max, min, max)); // minValue, maxValue));
+
 			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText())));
-			griddingRangeSlider.setDisable(true);
+			//griddingRangeSlider.setDisable(true);
 		});
 		showGriddingButton.setDisable(true);
 
@@ -268,9 +279,11 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		showGriddingAllButton.setOnAction(e -> {
 			prefSettings.saveSetting(Filter.gridding_cellsize.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridCellSize.getText()));
 			prefSettings.saveSetting(Filter.gridding_blankingdistance.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), gridBlankingDistance.getText()));
+
+			//Platform.runLater(() -> setGriddingMinMax()); // min, max, min, max)); // minValue, maxValue));
+
 			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText()), true));
-			griddingRangeSlider.setDisable(true);
 		});
 		showGriddingAllButton.setDisable(true);
 

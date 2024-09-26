@@ -77,7 +77,8 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 	private ProgressTask saveToFileTask = listener -> {
 
 		listener.progressMsg("save now");
-		File newFile = saveTo(selectedFile, saveToFile);		
+		File newFile = saveTo(model.getFileManager().getCsvFiles().stream().map(f -> (CsvFile)f)
+				.filter(f -> f.equals(selectedFile)).findAny().get(), saveToFile);
 		
 		listener.progressMsg("load now");			
 		try {

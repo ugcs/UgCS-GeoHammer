@@ -450,11 +450,6 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	}
 
 	@Override
-	public boolean isReady() {
-		return true;
-	}
-
-	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
 		if (changed.isFileopened()) {

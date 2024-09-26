@@ -222,11 +222,6 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	}
 	
 	@Override
-	public boolean isReady() {
-		return false;
-	}
-
-	@Override
 	public void somethingChanged(WhatChanged changed) {
 		
 		if (changed.isFileopened() 
