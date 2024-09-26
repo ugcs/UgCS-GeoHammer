@@ -62,11 +62,6 @@ public class FoundTracesLayer implements Layer {
 	}
 
 	@Override
-	public boolean isReady() {
-		return true;
-	}
-
-	@Override
 	public void somethingChanged(WhatChanged changed) {
 
 	}

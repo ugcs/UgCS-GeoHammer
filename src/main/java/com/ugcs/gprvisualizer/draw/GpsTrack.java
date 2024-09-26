@@ -143,12 +143,6 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	}
 
 	@Override
-	public boolean isReady() {
-		
-		return true;
-	}
-
-	@Override
 	public void somethingChanged(WhatChanged changed) {
 		if (changed.isTraceCut() 
 				|| changed.isTraceValues() 

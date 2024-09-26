@@ -272,8 +272,8 @@ public class SensorLineChart implements FileDataContainer {
             yAxis.setMinorTickVisible(false);
             var data = plotData.data();
 
-            var min = getFloorMin(data);
-            var max = getCeilMax(data);
+            var min = getFloorMin(data, plotData.semantic);
+            var max = getCeilMax(data, plotData.semantic);
 
             yAxis.setTickUnit((max - min) / 10);
             yAxis.setPrefWidth(70);
@@ -636,14 +636,27 @@ public class SensorLineChart implements FileDataContainer {
         return xAxis;
     }
 
-    private int getFloorMin(List<Number> data) {
-        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.05)).min().orElse(0);
+    private Map<String, Integer> semanticMinValues = new HashMap<>();
+    private Map<String, Integer> semanticMaxValues = new HashMap<>();
+
+    public Integer getSemanticMinValue() {
+        return semanticMinValues.getOrDefault(getSelectedSeriesName(), 0);
+    }
+
+    public Integer getSemanticMaxValue() {
+        return semanticMaxValues.getOrDefault(getSelectedSeriesName(), 0);
+    }
+
+    private int getFloorMin(List<Number> data, String semantic) {
+        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.01)).min().orElse(0);
+        semanticMinValues.put(semantic, min);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
         return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
     }
 
-    private int getCeilMax(List<Number> data) {
-        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).max().orElse(0);
+    private int getCeilMax(List<Number> data, String semantic) {
+        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().limit((int) (data.size() * 0.99)).max().orElse(0);
+        semanticMaxValues.put(semantic, max);
         int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
         return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
     }

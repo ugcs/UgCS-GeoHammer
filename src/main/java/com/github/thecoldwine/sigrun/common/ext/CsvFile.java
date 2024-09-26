@@ -87,34 +87,32 @@ public class CsvFile extends SgyFile {
 			Path inputFile = getFile().toPath();
         	Path tempFile = file.toPath();
 
+            Map<Integer, GeoData> geoDataMap = getGeoData().stream().collect(Collectors.toMap(GeoData::getLineNumber, gd -> gd));
+
+            Map<String, SensorData> semanticToSensorData = getParser().getTemplate().getDataMapping().getDataValues().stream()
+                .collect(Collectors.toMap(dv -> dv.getSemantic(), dv -> dv));
+
         	try (BufferedReader reader = Files.newBufferedReader(inputFile);
             	BufferedWriter writer = Files.newBufferedWriter(tempFile)) {
 
                 String skippedLines = parser.getSkippedLines();
-                
+
                 // check if "Next WP" exists and is it the last column
-                String nextWPColumnName = "Next WP";
-                boolean isNextWPLast = false;
+                String nextWPColumnName = semanticToSensorData.getOrDefault(GeoData.Semantic.LINE.getName(), new SensorData() {{
+                    setHeader("Next WP");
+                }}).getHeader();
+                //boolean isNextWPLast = false;
                 log.debug("Source file skippedLines: {}", skippedLines);
-                if (skippedLines.contains(nextWPColumnName)) {
-                    isNextWPLast = skippedLines.endsWith(nextWPColumnName + System.lineSeparator());
-                } else {
+                if (!skippedLines.contains(nextWPColumnName)) {
                     // add "Next WP" to the end of the header if not exists
                     skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + nextWPColumnName + System.lineSeparator());
-                    isNextWPLast = true;
+                    getParser().setIndexByHeaderForSensorData(skippedLines, semanticToSensorData.get(GeoData.Semantic.LINE.getName()));
                 }
 
 				writer.write(skippedLines);
 
             	String line;
             	int lineNumber = 0;
-
-				Map<Integer, GeoData> geoDataMap = getGeoData().stream().collect(Collectors.toMap(GeoData::getLineNumber, gd -> gd));
-
-                Map<String, SensorData> semanticToSensorData = getParser().getTemplate().getDataMapping().getDataValues().stream()
-                    .collect(Collectors.toMap(dv -> dv.getSemantic(), dv -> dv));
-
-                String valueTemplate = isNextWPLast ? ",%s" : ",%s,";
 
             	while ((line = reader.readLine()) != null) {
                 	lineNumber++;
@@ -125,19 +123,8 @@ public class CsvFile extends SgyFile {
                             if (sv.originalData() != sv.data()) {
                                 var template = semanticToSensorData.get(sv.semantic());
                                 boolean isLast = skippedLines.endsWith(template.getHeader() + System.lineSeparator());
-                                System.out.println(template.getIndex());
-
-                                if (GeoData.Semantic.LINE.getName().equals(sv.semantic())) {
-                                    if(line.contains(String.format(valueTemplate, sv.originalData()))) {
-                                        line = line.replaceFirst(String.format(valueTemplate, sv.originalData()) + (isNextWPLast ? "$" : ""), String.format(valueTemplate, sv.data()));
-                                    } else {
-                                        line = line + String.format(valueTemplate, sv.data());
-                                    }            
-                                } else {                                    
-                                    //if(line.matches(String.format(",%s", sv.originalData()))) {
-                                    //line = line.replaceFirst(String.format(",%s", sv.originalData() + "0*" + (isLast ? "$" : ",")), String.format(",%s", sv.data()) + (isLast ? "" : ","));
-                                    line = replaceCsvValue(line, template.getIndex(), String.format("%s", sv.data()));
-                                }
+                                //System.out.println(template.getIndex());
+                                line = replaceCsvValue(line, template.getIndex(), String.format("%s", sv.data()));
                             }
                         }
 

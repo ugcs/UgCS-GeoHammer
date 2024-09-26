@@ -8,11 +8,8 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 public interface Layer extends ToolProducer {
 
 	void draw(Graphics2D g2, MapField field);
-	
-	boolean isReady();
-	
+		
 	void somethingChanged(WhatChanged changed);
-	
 	
 	boolean mousePressed(Point2D point);
 	
