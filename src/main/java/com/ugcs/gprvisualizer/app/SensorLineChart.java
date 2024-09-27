@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
@@ -905,8 +906,9 @@ public class SensorLineChart implements FileDataContainer {
                 }
             }
         });
-        zoomRect();
-        broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+        Platform.runLater(() -> {
+            zoomRect();
+        });
     }
 
     public void lowPassFilter(String seriesName, int value) {
@@ -961,8 +963,9 @@ public class SensorLineChart implements FileDataContainer {
                 }
             }
         });
-        zoomRect();
-        broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+        Platform.runLater(() -> {
+            zoomRect();
+        });
     }
 
     private static double calculateRMS(double[] signal) {
