@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
+import com.ugcs.gprvisualizer.draw.GridLayer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
@@ -25,16 +26,17 @@ public class TiffImageExport {
 	private static final Dimension maxTifSize = new Dimension(1800, 1800);
 	 
 	private Model model;
+
 	private RadarMap radarMap;
 	private GpsTrack gpsTrack;
-	private boolean drawTrack;
-	
+	private GridLayer gridLayer;
+
 	public TiffImageExport(Model model, RadarMap radarMap,
-			GpsTrack gpsTrack, boolean drawTrack) {
+			GpsTrack gpsTrack, GridLayer gridLayer) {
 		this.model = model;
 		this.radarMap = radarMap;
-		this.drawTrack = drawTrack;
 		this.gpsTrack = gpsTrack;
+		this.gridLayer = gridLayer;
 	}
 	
 	public void execute() {
@@ -131,11 +133,15 @@ public class TiffImageExport {
 		
 		
 		//radarMap.draw(g2, field, imgRadar);
-		
-		if (drawTrack) {
+
+		if (gridLayer != null && gridLayer.isActive()) {
+			gridLayer.draw(g2, field);
+		}
+
+		if (gpsTrack != null && gpsTrack.isActive()) {
 			gpsTrack.drawTrack(g2, field);
 		}
-		
+
 		return img;
 	}
 	

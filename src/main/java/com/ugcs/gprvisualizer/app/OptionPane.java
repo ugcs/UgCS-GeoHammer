@@ -3,6 +3,8 @@ package com.ugcs.gprvisualizer.app;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import com.ugcs.gprvisualizer.draw.Change;
@@ -53,8 +55,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	
 	private static final int RIGHT_BOX_WIDTH = 350;
 
-	//private final TextField minValue = new TextField();
-	//private final TextField maxValue = new TextField();
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	@Autowired
 	private MapView mapView;
@@ -217,12 +218,6 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		double max = model.getChart((CsvFile) selectedFile).get().getSemanticMaxValue();
 		double min = model.getChart((CsvFile) selectedFile).get().getSemanticMinValue();
 
-
-		//this.minValue.setText(String.valueOf(minValue));
-		//this.minValue.setDisable(false);
-		//this.maxValue.setText(String.valueOf(maxValue));
-		//this.maxValue.setDisable(false);
-
 		griddingRangeSlider.setMin(min);
 		griddingRangeSlider.setMax(max);
 
@@ -235,14 +230,6 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		griddingRangeSlider.setDisable(false);
 	}
-
-	//public TextField getMinValue() {
-	//	return minValue;
-	//}
-
-	//public TextField getMaxValue() {
-	//	return maxValue;
-	//}
 
 	private enum Filter {
 		lowpass, timelag, gridding_cellsize, gridding_blankingdistance
@@ -324,38 +311,6 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		Label label = new Label("Range");
 
 		HBox coloursInput = new HBox(5);
-
-		//minValue.setPromptText("Enter min value");
-		//minValue.setDisable(true);
-		//minValue.textProperty().addListener((observable, oldValue, newValue) -> {
-		//	try {
-		//		if (newValue == null) {
-		//			return;
-		//		}
-		//		double value = Double.parseDouble(newValue);
-		//		boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
-		//		broadcast.notifyAll(new WhatChanged(Change.justdraw));
-		//	} catch (NumberFormatException e) {
-				// do nothing
-		//	}
-		//});
-
-		//maxValue.setPromptText("Enter max value");
-		//maxValue.setDisable(true);
-		//maxValue.textProperty().addListener((observable, oldValue, newValue) -> {
-		//	try {
-		//		if (newValue == null) {
-		//			return;
-		//		}
-		//		double value = Double.parseDouble(newValue);
-		//		boolean isValid = !newValue.isEmpty() && value > 0 && value < 100000;
-		//		broadcast.notifyAll(new WhatChanged(Change.justdraw));
-		//	} catch (NumberFormatException e) {
-				// do nothing
-		//	}
-		//});
-
-		//coloursInput.getChildren().addAll(minValue, maxValue);
 
 		griddingRangeSlider = new RangeSlider();
 		griddingRangeSlider.setShowTickLabels(true);
@@ -446,26 +401,52 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			applyAllButton.setDisable(true);
 		});
 
-		applyButton.setOnAction(e -> {
-			prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
-			applyAction.accept(filterInput.getText());
-			undoButton.setDisable(false);
-			applyAllButton.setDisable(false);
-		});
-
 		ProgressIndicator progressIndicator = new ProgressIndicator();
+
+		applyButton.setOnAction(e -> {
+			progressIndicator.setVisible(true);
+			progressIndicator.setManaged(true);
+
+			filterInput.setDisable(true);
+			applyButton.setDisable(true);
+			undoButton.setDisable(true);
+			applyAllButton.setDisable(true);
+
+			executor.submit(() -> {
+				prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
+				applyAction.accept(filterInput.getText());
+
+				filterInput.setDisable(false);
+				applyButton.setDisable(false);
+				undoButton.setDisable(false);
+				applyAllButton.setDisable(false);
+
+				progressIndicator.setVisible(false);
+				progressIndicator.setManaged(false);
+			});
+		});
 
 		applyAllButton.setOnAction(e -> {
 			progressIndicator.setVisible(true);
 			progressIndicator.setManaged(true);
 
-			prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
-			applyAllAction.accept(filterInput.getText());
-			undoButton.setDisable(false);
+			filterInput.setDisable(true);
+			applyButton.setDisable(true);
+			undoButton.setDisable(true);
 			applyAllButton.setDisable(true);
 
-			progressIndicator.setVisible(false);
-			progressIndicator.setManaged(false);
+			executor.submit(() -> {
+				prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
+				applyAllAction.accept(filterInput.getText());
+
+				filterInput.setDisable(false);
+				applyButton.setDisable(false);
+				undoButton.setDisable(false);
+
+				progressIndicator.setVisible(false);
+				progressIndicator.setManaged(false);
+
+			});
 		});
 
 		HBox filterButtons = new HBox(5);

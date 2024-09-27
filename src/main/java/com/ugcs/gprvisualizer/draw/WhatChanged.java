@@ -61,7 +61,7 @@ public class WhatChanged {
 		return change == Change.fileSelected;
     }
 
-	public boolean isTimeLagFixed() { return change == Change.timeLagFixed; }
+	public boolean isCsvDataFiltered() { return change == Change.csvDataFiltered; }
 
 	public boolean isGriddingParams() { return change == Change.setGriddingParams; }
 }
