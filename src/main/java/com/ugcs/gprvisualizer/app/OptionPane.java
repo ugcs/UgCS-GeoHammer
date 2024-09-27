@@ -487,6 +487,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	private void applyGnssTimeLag(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.gnssTimeLag(c.getSelectedSeriesName(), value));
+		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
 	}
 
 	private void applyGnssTimeLagToAll(int value) {
@@ -497,11 +498,13 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.gnssTimeLag(seriesName, value));
 		});
+		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
 	}
 
 	private void applyLowPassFilter(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
+		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
 	}
 
 	private void applyLowPassFilterToAll(int value) {
@@ -512,6 +515,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.lowPassFilter(seriesName, value));
 		});
+		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
 	}
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
