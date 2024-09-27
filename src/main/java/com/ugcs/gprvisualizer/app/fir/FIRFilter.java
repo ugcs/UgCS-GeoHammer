@@ -67,8 +67,27 @@ public class FIRFilter {
     }
 
     public List<Number> filterList(List<Number> data) {
+
+        var paddingLength = coefficients.length;
+        for (int i = 0; i < paddingLength; i++) {
+            var value = data.get(paddingLength - 1 - i);
+            if (value != null) {
+                filter(value.doubleValue());
+            }
+            //filter(data.get(0).doubleValue());
+        }
+
         List<Number> result = new ArrayList<>();
         for (Number value : data) {
+            if (value != null) {
+                result.add(filter(value.doubleValue()));
+            } else {
+                result.add(null);
+            }
+        }
+
+        for (int i = 0; i < paddingLength; i++) {
+            var value = data.get(data.size() - paddingLength - 1 - i);
             if (value != null) {
                 result.add(filter(value.doubleValue()));
             } else {

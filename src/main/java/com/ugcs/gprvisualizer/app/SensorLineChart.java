@@ -4,6 +4,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import javafx.beans.Observable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
@@ -905,14 +906,14 @@ public class SensorLineChart implements FileDataContainer {
             }
         });
         zoomRect();
-        broadcast.notifyAll(new WhatChanged(Change.timeLagFixed));
+        broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
     }
 
     public void lowPassFilter(String seriesName, int value) {
         
         List<Long> timestampList = file.getGeoData().stream()
 			.limit(2000)
-			.map(gd -> gd.getDateTime())
+			.map(GeoCoordinates::getDateTime)
 			.map(dt -> dt.toInstant(ZoneOffset.UTC).toEpochMilli())
 			.collect(Collectors.toList());
 
@@ -935,10 +936,10 @@ public class SensorLineChart implements FileDataContainer {
                 FIRFilter filter = new FIRFilter(filterOrder, cutoffFrequency, samplingRate);
 
                 var shift = filterOrder / 2;    
-                var filteredList = filter.filterList(chart.plotData.data).subList(shift, chart.plotData.data.size());
-                for (int i = 0; i < shift; i++) {
-                    filteredList.add( null);
-                }
+                var filteredList = filter.filterList(chart.plotData.data).subList(shift, chart.plotData.data.size() + shift);
+                //for (int i = 0; i < shift; i++) {
+                //    filteredList.add( null);
+                //}
 
                 double rmsOriginal = calculateRMS(chart.plotData.data.stream().filter(Objects::nonNull).mapToDouble(v -> v.doubleValue()).toArray());
                 double rmsFiltered = calculateRMS(filteredList.stream().filter(Objects::nonNull).mapToDouble(v -> v.doubleValue()).toArray());
@@ -961,6 +962,7 @@ public class SensorLineChart implements FileDataContainer {
             }
         });
         zoomRect();
+        broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
     }
 
     private static double calculateRMS(double[] signal) {

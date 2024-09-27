@@ -332,21 +332,24 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				|| changed.isJustdraw()) {
 			q.add();
 		} else if (changed.isTraceCut()
-				|| changed.isTimeLagFixed()) {
+				|| changed.isCsvDataFiltered()) {
 			recalcGrid = true;
 			q.add();
 		} else if (changed.isFileSelected()) {
 			var file = ((FileSelected) changed).getSelectedFile();
 			if (file instanceof CsvFile) {
 				this.file = (CsvFile) file;
+				toAll = false;
 			}
 			recalcGrid = true;
+			setActive(false);
 			q.add();
 		} else if (changed.isGriddingParams()) {
 			cellSize = ((GriddingParamsSetted) changed).getCellSize();
 			blankingDistance = ((GriddingParamsSetted) changed).getBlankingDistance();
 			toAll = ((GriddingParamsSetted) changed).isToAll();
 			recalcGrid = true;
+			setActive(true);
 			q.add();
 		}
 	}

@@ -15,7 +15,7 @@ public enum Change {
 	auxOnMapSelected,
 	updateButtons, 
 	fileSelected,
-	timeLagFixed,
+	csvDataFiltered,
 	setGriddingParams;
 	
 }

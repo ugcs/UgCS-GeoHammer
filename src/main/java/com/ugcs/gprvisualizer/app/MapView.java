@@ -202,8 +202,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 						ResourceImageHolder.getImageView("geotiff.png"),
 						"export map to GeoTIFF image",
 						event -> {
-							new TiffImageExport(model, radarMap, gpsTrackMap,
-										gpsTrackMap.isActive())
+							new TiffImageExport(model, radarMap, gpsTrackMap, gridLayer)
 									.execute();
 						}));
 		

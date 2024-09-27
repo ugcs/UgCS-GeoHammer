@@ -124,10 +124,9 @@ public class CsvFile extends SgyFile {
                                 var template = semanticToSensorData.get(sv.semantic());
                                 boolean isLast = skippedLines.endsWith(template.getHeader() + System.lineSeparator());
                                 //System.out.println(template.getIndex());
-                                line = replaceCsvValue(line, template.getIndex(), String.format("%s", sv.data()));
+                                line = replaceCsvValue(line, template.getIndex(), sv.data() != null ? String.format("%s", sv.data()) : "");
                             }
                         }
-
                     	writer.write(line);
                     	writer.newLine();
                 	}
