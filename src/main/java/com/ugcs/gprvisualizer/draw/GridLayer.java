@@ -185,8 +185,10 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 			gridData = new float[gridSizeX][gridSizeY];
 
-			//var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
-			var average = 0.0f;
+			var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
+            //List<Double> valuesList = new ArrayList<>(dataPoints.stream().map(p -> p.value).toList());
+			//var average = calculateMedian(valuesList);
+			//var average = 0.0f;
 
 			for (DataPoint point : dataPoints) {
 				int xIndex = (int) ((point.longitude - minLon) / lonStep);
@@ -198,19 +200,62 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				}
 			}
 
-			var gridder = new SplinesGridder2();
-			gridder.setTension(0.999f);
-			gridder.gridMissing((float) average, gridData);
-
-			//var minValue = ArrayMath.min(gridData);
-			//var maxValue = ArrayMath.max(gridData);
-			//System.out.println("minValue = " + minValue + " maxValue = " + maxValue);
+			int n1 = gridData[0].length;
+			int n2 = gridData.length;
+			boolean[][] m = new boolean[n2][n1];
+			for (int i2=0; i2<n2; ++i2)
+				for (int i1=0; i1<n1; ++i1)
+					m[i2][i1] = gridData[i2][i1] == 0; //average;
 
 			KdTree kdTree = buildKdTree(dataPoints);
 
 			double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
 			double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
 
+			int count = 0;
+			for (int i = 0; i < gridData.length; i++) {
+				for (int j = 0; j < gridData[0].length; j++) {
+
+					if (gridData[i][j] != 0) {
+						continue;
+					}
+
+					double lat = minLatLon.getLatDgr() + j * latStep;
+					double lon = minLatLon.getLonDgr() + i * lonStep;
+
+					//TODO: convert to use nearest neighbors
+					//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
+					//	gridData[i][j] = Float.NaN;
+					//	continue;
+					//}
+
+					var delta = 1;
+					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
+
+
+					if (neighbors.isEmpty()) {
+						gridData[i][j] = (float) average;//Float.NaN;
+						m[i][j] = false;
+						count++;
+					}
+				}
+			}
+
+
+			var gridder = new SplinesGridder2();
+			gridder.setTension(0.999f);
+			gridder.gridMissing(m, gridData);
+
+			//var minValue = ArrayMath.min(gridData);
+			//var maxValue = ArrayMath.max(gridData);
+			//System.out.println("minValue = " + minValue + " maxValue = " + maxValue);
+
+			//KdTree kdTree = buildKdTree(dataPoints);
+
+			//double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
+			//double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
+
+			//int count = 0;
 			for (int i = 0; i < gridData.length; i++) {
 				for (int j = 0; j < gridData[0].length; j++) {
 
@@ -227,6 +272,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
 					if (neighbors.isEmpty()) {
 						gridData[i][j] = Float.NaN;
+						//count++;
 					}
 				}
 			}
