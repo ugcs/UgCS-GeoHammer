@@ -232,9 +232,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					var delta = 1;
 					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
 
-
 					if (neighbors.isEmpty()) {
-						gridData[i][j] = (float) average;//Float.NaN;
+						//gridData[i][j] = (float) average;//Float.NaN;
 						m[i][j] = false;
 						count++;
 					}
