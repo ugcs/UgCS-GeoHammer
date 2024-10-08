@@ -232,6 +232,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					var delta = 1;
 					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
 
+					gridData[i][j] = (float) average;//Float.NaN;
+
 					if (neighbors.isEmpty()) {
 						//gridData[i][j] = (float) average;//Float.NaN;
 						m[i][j] = false;
@@ -242,7 +244,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 
 			var gridder = new SplinesGridder2();
-			gridder.setTension(0.999f);
+			//gridder.setTension(0.999f);
+			gridder.setTension(0.0f);
 			gridder.gridMissing(m, gridData);
 
 			//var minValue = ArrayMath.min(gridData);
