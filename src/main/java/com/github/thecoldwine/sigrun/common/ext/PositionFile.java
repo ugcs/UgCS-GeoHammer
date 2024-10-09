@@ -65,7 +65,7 @@ public class PositionFile {
 				double hair =  100 / sgyFile.getSamplesToCmAir();
 
 				for (GeoCoordinates coord : coordinates) {
-					if (coord instanceof GeoData) {
+					if (coord instanceof GeoData && ((GeoData) coord).getSensorValue(GeoData.Semantic.ALTITUDE_AGL).data() != null) {
 						double alt = ((GeoData) coord).getSensorValue(GeoData.Semantic.ALTITUDE_AGL).data().doubleValue();
 						altArr.add((int) (alt * hair));
 					}

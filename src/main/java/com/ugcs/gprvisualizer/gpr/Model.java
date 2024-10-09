@@ -368,13 +368,16 @@ public class Model implements InitializingBean {
 	 * @return Optional of SensorLineChart
 	 */
     public Optional<SensorLineChart> getChart(CsvFile csvFile) {
+		return Optional.ofNullable(csvFiles.get(csvFile));
+    }
+
+	public void chartsClearSelection() {
 		csvFiles.forEach((file, chart) -> {
 			if (Platform.isFxApplicationThread()) {
 				chart.removeVerticalMarker();
 			}
 		});
-		return Optional.ofNullable(csvFiles.get(csvFile));
-    }
+	}
 
 	public void chartsZoomOut() {
 		csvFiles.forEach((file, chart) -> {

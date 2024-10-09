@@ -196,4 +196,11 @@ public class CsvFile extends SgyFile {
         return file.getParser().getTemplate().equals(getParser().getTemplate());
     }
 
+    @Override
+    public void updateInternalIndexes() {
+        super.updateInternalIndexes();
+        for (int i = 0; i < getTraces().size(); i++) {
+            getGeoData().get(i).setTraceNumber(i);
+        }
+    }
 }
