@@ -4,11 +4,13 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
+import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.ImageView;
@@ -18,9 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.github.thecoldwine.sigrun.common.ext.CsvFile;
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.ugcs.gprvisualizer.app.fir.FIRFilter;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
@@ -114,20 +113,20 @@ public class SensorLineChart implements FileDataContainer {
     private EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-        	
         	if (event.getClickCount() == 2) {
+                log.debug("Double click,  x: " + event.getX() + " y: " + event.getY() + " source: " + event.getSource());
 
-                log.debug("Double click " + event.getX() + " " + event.getY() + " " + event.getSource());
-                model.getChart(null); // clear selection
-                                
+                model.chartsClearSelection();
+
                 if (event.getSource() instanceof LineChart) {
                     Axis<Number> xAxis = ((LineChart) event.getSource()).getXAxis();
-                    Number xValue = xAxis.getValueForDisplay(event.getX() - xAxis.getLayoutX());
-                    System.out.println("xValue: " + xValue.intValue()); //* scale);
+                    Point2D point = xAxis.screenToLocal(event.getScreenX(), event.getScreenY());
+                    Number xValue = xAxis.getValueForDisplay(point.getX());
+                    System.out.println("xValue: " + xValue.intValue());
 
                     putVerticalMarker(xValue.intValue());
 
-                    int traceIndex = xValue.intValue(); //* scale;
+                    int traceIndex = xValue.intValue();
                     if (traceIndex >= 0 && traceIndex < file.getTraces().size()) {//model.getCsvTracesCount()) {
                         GeoData geoData = file.getGeoData().get(traceIndex);
                         model.getMapField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
@@ -263,7 +262,7 @@ public class SensorLineChart implements FileDataContainer {
         for (int i = 0; i < plotDataList.size(); i++) {
 
             var plotData = plotDataList.get(i);
-            
+
             // X-axis, common for all charts
             NumberAxis xAxis = getXAxis(plotData.data().size() / 10);
 
@@ -410,6 +409,66 @@ public class SensorLineChart implements FileDataContainer {
                 log.debug("MouseClicked: " + event.getX() + ", " + event.getY());
             });
 
+            charts.forEach(chart -> {
+                if (GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
+                    int yValue = -1;
+                    for (int i = 0; i < chart.plotData.data.size(); i++) {
+                        if (chart.plotData.data.get(i) == null) {
+                            continue;
+                        }
+                        var currentYValue = chart.plotData.data.get(i).intValue();
+                        if (yValue != currentYValue) {
+                            yValue = currentYValue;
+                            Data<Number, Number> verticalMarker = new Data<>(i, 0);
+
+                            Line line = new Line();
+                            line.setStroke(chart.plotData.color);
+                            line.setStrokeWidth(0.8);
+
+                            Tooltip tooltip = new Tooltip("Remove Line " + currentYValue);
+                            ImageView imageView = ResourceImageHolder.getImageView("closeFile.png");
+                            Tooltip.install(imageView, tooltip);
+
+                            imageView.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                                imageView.setCursor(Cursor.HAND);
+                            });
+                            imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                                System.out.println(event.getX() + ", " + event.getY() + ", " + currentYValue);
+
+                                List<GeoData> geoDataLinesList = new ArrayList<>();
+                                List<Trace> sublist = new ArrayList<>();
+                                for(GeoData geoData: file.getGeoData()) {
+                                    if (geoData.getLine().data() != null && geoData.getLine().data().intValue() != currentYValue) {
+                                        sublist.add(file.getTraces().get(geoData.getTraceNumber()));
+                                        GeoData gd = new GeoData(geoData);
+                                        if (geoData.getLine().data().intValue() > currentYValue) {
+                                            gd.setLine(gd.getLine().data().intValue() - 1);
+                                        }
+                                        geoDataLinesList.add(gd);
+                                    }
+                                }
+                                CsvFile subfile = file.copy();
+                                subfile.setUnsaved(true);
+
+                                subfile.setTraces(sublist);
+                                subfile.getGeoData().addAll(geoDataLinesList);
+                                subfile.updateInternalIndexes();
+
+                                model.getFileManager().removeFile(file);
+                                model.getFileManager().addFile(subfile);
+                                model.updateChart((CsvFile) subfile, broadcast);
+
+                                model.init();
+                                model.initField();
+                                model.getProfileField().clear();
+                                broadcast.notifyAll(new WhatChanged(Change.traceCut));
+                            });
+
+                            lastLineChart.addVerticalValueMarkerWithButton(verticalMarker, line, imageView);
+                        }
+                    }
+                }
+            });
         }
 
         Button close = new Button("X");
@@ -705,6 +764,7 @@ public class SensorLineChart implements FileDataContainer {
 
         private final ObservableList<Data<Number, Number>> horizontalMarkers;
         private final ObservableList<Data<Number, Number>> verticalMarkers;
+        private final ObservableList<Data<Number, Number>> buttonMarkers;
 
         private final ZoomRect outZoomRect;
         private ZoomRect currentZoomRect;
@@ -723,7 +783,10 @@ public class SensorLineChart implements FileDataContainer {
             horizontalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
             verticalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
             verticalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
-            
+            buttonMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
+            buttonMarkers.addListener((InvalidationListener) observable -> layoutPlotChildren());
+
+
             this.plotData = plotData;
         }
 
@@ -814,24 +877,56 @@ public class SensorLineChart implements FileDataContainer {
             horizontalMarkers.remove(marker);
         }
 
-        /**
-         * Add vertical value marker
-         * @param marker
-         */
         public void addVerticalValueMarker(Data<Number, Number> marker) {
-            Objects.requireNonNull(marker, "the marker must not be null");
-            if (verticalMarkers.contains(marker)) return;
             Line line = new Line();
-            
             line.setStroke(Color.RED); // Bright color for white background
             line.setStrokeWidth(2);
 
-
             ImageView imageView = ResourceImageHolder.getImageView("gps32.png");
+
+            addVerticalValueMarker(marker, line, imageView);
+        }
+
+        /**
+         * Add vertical value marker with button
+         * @param marker
+         */
+        public void addVerticalValueMarkerWithButton(Data<Number, Number> marker, Line line, ImageView imageView) {
+            Objects.requireNonNull(marker, "the marker must not be null");
+            if (verticalMarkers.contains(marker)) return;
 
             VBox markerBox = new VBox();
             markerBox.setAlignment(Pos.TOP_CENTER);
-            markerBox.getChildren().addAll(imageView, line);
+            markerBox.getChildren().addAll(line);
+
+            marker.setNode(markerBox);
+
+            Data<Number, Number> buttonMarker = new Data<>(marker.getXValue().intValue() + 5, marker.getYValue());
+            buttonMarker.setNode(imageView);
+
+            getPlotChildren().add(markerBox);
+            getPlotChildren().add(imageView);
+            verticalMarkers.add(marker);
+            buttonMarkers.add(buttonMarker);
+        }
+
+        /**
+         * Add a vertical value marker to the chart.
+         *
+         * @param marker    the data point to be marked
+         * @param line      the line to be used for the marker
+         * @param imageView the image to be displayed at the marker
+         */
+        public void addVerticalValueMarker(Data<Number, Number> marker, Line line, ImageView imageView) {
+            Objects.requireNonNull(marker, "the marker must not be null");
+            if (verticalMarkers.contains(marker)) return;
+
+            VBox markerBox = new VBox();
+            markerBox.setAlignment(Pos.TOP_CENTER);
+            if (imageView != null) {
+                markerBox.getChildren().add(imageView);
+            }
+            markerBox.getChildren().add(line);
 
             marker.setNode(markerBox);
 
@@ -856,6 +951,7 @@ public class SensorLineChart implements FileDataContainer {
         @Override
         protected void layoutPlotChildren() {
             super.layoutPlotChildren();
+
             for (Data<Number, Number> horizontalMarker : horizontalMarkers) {
                 Line line = (Line) horizontalMarker.getNode();
                 line.setStartX(0);
@@ -864,6 +960,7 @@ public class SensorLineChart implements FileDataContainer {
                 line.setEndY(line.getStartY());
                 line.toFront();
             }
+
             for (Data<Number, Number> verticalMarker : verticalMarkers) {
                 VBox line = (VBox) verticalMarker.getNode();
                 line.setLayoutX(getXAxis().getDisplayPosition(verticalMarker.getXValue()));// + 0.5);  // 0.5 for crispness
@@ -878,7 +975,13 @@ public class SensorLineChart implements FileDataContainer {
                 line.setLayoutY(0d);
                 line.setMinHeight(getBoundsInLocal().getHeight());
                 line.toFront();
-            }      
+            }
+
+            for (Data<Number, Number> buttonMarker : buttonMarkers) {
+                Node b = buttonMarker.getNode();
+                b.setLayoutX(getXAxis().getDisplayPosition(buttonMarker.getXValue()) + 0.5);
+                b.toFront();
+            }
         }
 
     }
