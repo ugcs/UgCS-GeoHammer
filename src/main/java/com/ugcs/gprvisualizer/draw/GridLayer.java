@@ -134,7 +134,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 		value = Math.clamp(value, min, max);
 		double normalized = (value - min) / (max - min);
 
-		javafx.scene.paint.Color color = javafx.scene.paint.Color.hsb(normalized * 280, 0.8f, 0.8f);
+		javafx.scene.paint.Color color = javafx.scene.paint.Color.hsb((1 - normalized) * 280, 0.8f, 0.8f);
 		return new Color((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue(), (float) color.getOpacity());
 	}
 
