@@ -1,13 +1,12 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
@@ -17,8 +16,6 @@ import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.stage.FileChooser;
 
 public class TiffImageExport {
@@ -126,6 +123,10 @@ public class TiffImageExport {
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		
 		Graphics2D g2 = (Graphics2D) img.getGraphics();
+
+		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
+		g2.setColor(new Color(0, 0, 0, 0)); // Transparent
+		g2.fillRect(0, 0, width, height);
 		
 		g2.translate(width / 2, height / 2);
 		

@@ -245,7 +245,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 			var gridder = new SplinesGridder2();
 			//gridder.setTension(0.999f);
-			gridder.setTension(0.0f);
+			gridder.setTension(0.9999f);
+			//gridder.setTension(0.0f);
 			gridder.gridMissing(m, gridData);
 
 			//var minValue = ArrayMath.min(gridData);
