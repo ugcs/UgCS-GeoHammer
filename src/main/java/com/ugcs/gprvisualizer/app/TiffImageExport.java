@@ -114,26 +114,26 @@ public class TiffImageExport {
 		return tiffFile;
 	}
 	
-	protected BufferedImage drawTiff(MapField field, 
-			int width, int height) {
+	protected BufferedImage drawTiff(MapField field, int width, int height) {
 		if (width <= 0 || height <= 0) {
 			return null;
 		}
-		
+
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		
+
 		Graphics2D g2 = (Graphics2D) img.getGraphics();
 
-		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
-		g2.setColor(new Color(0, 0, 0, 0)); // Transparent
-		g2.fillRect(0, 0, width, height);
-		
+		g2.setComposite(AlphaComposite.Src);
+
+		// g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
+		// g2.setColor(new Color(0, 0, 0, 0)); // Transparent
+		// g2.fillRect(0, 0, width, height);
+
 		g2.translate(width / 2, height / 2);
-		
+
 		radarMap.createHiRes(field, img);
-		
-		
-		//radarMap.draw(g2, field, imgRadar);
+
+		// radarMap.draw(g2, field, imgRadar);
 
 		if (gridLayer != null && gridLayer.isActive()) {
 			gridLayer.draw(g2, field);
@@ -146,5 +146,4 @@ public class TiffImageExport {
 		return img;
 	}
 	
-
 }
