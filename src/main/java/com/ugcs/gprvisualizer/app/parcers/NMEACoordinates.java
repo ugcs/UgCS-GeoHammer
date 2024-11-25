@@ -26,23 +26,12 @@ public class NMEACoordinates extends GeoCoordinates {
     private String varDir;
     private String modeInd;
 
-    private double latitude;
-    private double longitude;
-
     //private Locale format;
 
     private NumberFormat format;
 
     public NMEACoordinates(NumberFormat format) {
         this.format = format;
-    }
-
-    public NMEACoordinates(NumberFormat format, double latitude, double longitude, String northOrSouth, String eastOrWest) {
-        this.format = format;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.northOrSouth = northOrSouth;
-        this.eastOrWest = eastOrWest;
     }
 
     public NMEACoordinates(NumberFormat format, String NMEALatitude, String NMEALongitude, String northOrSouth, String eastOrWest) {
@@ -165,7 +154,7 @@ public class NMEACoordinates extends GeoCoordinates {
         this.format = format;
     }*/
 
-    public String convertToNMEACoordinates(double coordinate) {
+    public static String convertToNMEACoordinates(double coordinate) {
         return String.format("%.4f", Math.abs(Math.floor(coordinate) * 100 + (coordinate - Math.floor(coordinate)) * 60));
     }
 
@@ -213,14 +202,16 @@ public class NMEACoordinates extends GeoCoordinates {
         magneticVariationDegrees = data[10];
         varDir = data[11];
         modeInd = Character.toString(data[12].charAt(0));
-        latitude = convertToGoogleCoordinates(NMEALatitude, northOrSouth);
-        longitude = convertToGoogleCoordinates(NMEALongitude, eastOrWest);
+        setLatitude(convertToGoogleCoordinates(NMEALatitude, northOrSouth));
+        setLongitude(convertToGoogleCoordinates(NMEALongitude, eastOrWest));
     }
     
     public void setNewNmeaCoordinates() {
-        NMEALatitude = convertToNMEACoordinates(latitude);
-        NMEALongitude = convertToNMEACoordinates(longitude);
-        northOrSouth = latitude > 0 ? North : South;
-        eastOrWest = longitude > 0 ? East : West;
+        NMEALatitude = convertToNMEACoordinates(getLatitude());
+        NMEALongitude = convertToNMEACoordinates(getLongitude());
+        northOrSouth = getLatitude() > 0 ? North : South;
+        eastOrWest = getLongitude() > 0 ? East : West;
     }
+
+
 }
