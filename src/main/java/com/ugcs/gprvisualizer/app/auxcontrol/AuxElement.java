@@ -2,13 +2,12 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.geom.Point2D;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import javafx.geometry.Point2D;
 
 public class AuxElement {
 
@@ -25,16 +24,14 @@ public class AuxElement {
 		
 		TraceSample ts = new TraceSample(traceStart.getIndexInSet(), 
 				sampleStart != null ? sampleStart : 0);
-		Point scr = field.traceSampleToScreen(ts);
+		Point2D scr = field.traceSampleToScreen(ts);
 		
 		g2.setColor(Color.MAGENTA);
-		g2.fillOval(scr.x - r, scr.y - r, r * 2, r * 2);
+		g2.fillOval((int) scr.getX() - r, (int) scr.getY() - r, r * 2, r * 2);
 	}
 
 	public void drawOnMap(Graphics2D g2, MapField field) {
-		
 		Point2D scr = field.latLonToScreen(traceStart.getLatLon());
-		
 		g2.fillOval((int) scr.getX() - r, (int) scr.getY() - r, r * 2, r * 2);		
 	}
 

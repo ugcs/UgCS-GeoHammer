@@ -12,7 +12,7 @@ public class GeoCoordinates {
     private Integer traceNumber;
     private LocalDateTime dateTime;
 
-    public GeoCoordinates() {
+    protected GeoCoordinates() {
     }
 
     public GeoCoordinates(double latitude, double longitude, Double altitude, Double timeInMs, int traceNumber,
@@ -76,5 +76,4 @@ public class GeoCoordinates {
     public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
     }
-
 }

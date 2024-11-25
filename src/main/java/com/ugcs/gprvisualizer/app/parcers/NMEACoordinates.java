@@ -34,14 +34,6 @@ public class NMEACoordinates extends GeoCoordinates {
         this.format = format;
     }
 
-    public NMEACoordinates(NumberFormat format, double latitude, double longitude, String northOrSouth, String eastOrWest) {
-        this.format = format;
-        this.setLatitude(latitude);
-        this.setLongitude(longitude);
-        this.northOrSouth = northOrSouth;
-        this.eastOrWest = eastOrWest;
-    }
-
     public NMEACoordinates(NumberFormat format, String NMEALatitude, String NMEALongitude, String northOrSouth, String eastOrWest) {
         this.format = format;
         this.NMEALatitude = NMEALatitude;
@@ -162,7 +154,7 @@ public class NMEACoordinates extends GeoCoordinates {
         this.format = format;
     }*/
 
-    public String convertToNMEACoordinates(double coordinate) {
+    public static String convertToNMEACoordinates(double coordinate) {
         return String.format("%.4f", Math.abs(Math.floor(coordinate) * 100 + (coordinate - Math.floor(coordinate)) * 60));
     }
 
@@ -220,4 +212,6 @@ public class NMEACoordinates extends GeoCoordinates {
         northOrSouth = getLatitude() > 0 ? North : South;
         eastOrWest = getLongitude() > 0 ? East : West;
     }
+
+
 }

@@ -14,10 +14,6 @@ public abstract class BaseObjectImpl implements BaseObject {
 	public boolean isSelected() {
 		return selected;
 	}
-	
-	public int getGlobalTrace() {
-		return -1;
-	}
 
 	protected void setClip(Graphics2D g2, Rectangle r) {
 		g2.setClip(r.x, r.y, r.width, r.height);

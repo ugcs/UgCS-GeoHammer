@@ -1,14 +1,17 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.awt.Point;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
+import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -26,11 +29,10 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, InitializingBean {
+public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeListener, InitializingBean {
 
 	@Autowired
 	private Model model;
@@ -43,22 +45,13 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	
 	private ProfileField field;	
 	private BaseObject selected;
-	private MouseHandler mouseInput;
-	
-	//private Button addSurfaceBtn = new Button("", ResourceImageHolder.getImageView("addSurf.png"));
-	
+	private BaseObject mouseInput;
+
 	private final Button addFoundBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ADD_MARK, new Button());
-	//new Button("",  ResourceImageHolder.getImageView("addFlag.png"));
-	
+
 	private final Button delBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE, new Button());
-	//new Button("", ResourceImageHolder.getImageView("delete-20.png"));
-	
+
 	private final Button clearBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE_ALL, new Button());
-	//new Button("", ResourceImageHolder.getImageView("delete-all-20.png"));
-	
-	public AuxElementEditHandler() {
-		
-	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -66,18 +59,18 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		initButtons();		
 	}
 
-	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	//@Override
+	public boolean mousePressHandle(Point2D localPoint, ProfileField profField) {
 		
 		boolean processed = false;
 		if (model.getControls() != null) {
 			processed = processPress(model.getControls(), localPoint, profField);
 		}
 		
-		if (!processed && getSelected() != null) {
-			processed = getSelected().mousePressHandle(localPoint, profField);
+		if (!processed && selected != null) {
+			processed = selected.mousePressHandle(localPoint, profField);
 			if (processed) {
-				mouseInput = getSelected();
+				mouseInput = selected;
 			}
 		}
 		
@@ -102,16 +95,9 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	
 	public List<Node> getRightPanelTools() {
 		return Arrays.asList(addFoundBtn, 
-				//getSpacer(), 
-				delBtn, clearBtn);	
+				delBtn, clearBtn);
 	}
-	
-	private Region getSpacer() {
-		Region region = new Region();
-		region.setPrefWidth(7);
-		return region;
-	}
-	
+
 	public Node getRight() {
 		return new VBox();
 	}
@@ -136,54 +122,67 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 			}
 		});
 		
-		delBtn.setOnAction(e -> {		
-			
-			if (getSelected() != null) {
+		delBtn.setOnAction(e -> {
+
+			model.getFileManager().getCsvFiles().forEach( f -> {
+				model.getChart((CsvFile) f).get().clearFlags();
+				var selected = f.getAuxElements().stream().filter(bo -> bo.isSelected()).findFirst();
+				if (selected.isPresent()) {
+					this.selected = selected.get();
+					f.getAuxElements().remove(selected.get());
+					f.setUnsaved(true);
+				}
+			});
+
+			if (selected != null) {
 				for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
-					if (sgyFile.getAuxElements().contains(getSelected())) {
-						sgyFile.getAuxElements().remove(getSelected());
+					if (sgyFile.getAuxElements().contains(selected)) {
+						sgyFile.getAuxElements().remove(selected);
 						sgyFile.setUnsaved(true);
 					}					
-				}				
-				
+				}
+
 				mouseInput = null;
 				setSelected(null);
 				model.setControls(null);
 			}
 			
 			model.updateAuxElements();
-			
 			profileView.repaintEvent();
-			
 			broadcast.notifyAll(new WhatChanged(Change.justdraw));
 		});
 		
 		addFoundBtn.setOnAction(e -> {				
 			
 			int trace;
+			SgyFile sf;
 			if (model.getControls() != null 
-					&& !model.getControls().isEmpty() 
-					&& model.getControls().get(0).getGlobalTrace() >= 0) {
-				
-				trace = model.getControls().get(0).getGlobalTrace();
+					&& !model.getControls().isEmpty()) {
+					//&& model.getControls().get(0).getGlobalTrace() >= 0) {
+						
+					var tr = ((ClickPlace) model.getControls().get(0)).getTrace();
+					sf = tr.getFile();
+					trace = sf instanceof CsvFile ? tr.getIndexInFile():tr.getIndexInSet();
 				
 			} else {
-				trace = field.getSelectedTrace();
+				trace = field.getMiddleTrace();
+				sf = model.getSgyFileByTrace(trace);
 			}
-			SgyFile sf = model.getSgyFileByTrace(trace);
+			//SgyFile sf = model.getSgyFileByTrace(trace);
 			
 			if (sf == null) {
 				return;
 			}
 				
 			FoundPlace rect = new FoundPlace(
-					sf.getOffset().globalToLocal(trace), sf.getOffset());
+					sf.getTraces().get(sf.getOffset().globalToLocal(trace)), sf.getOffset());
 			
 			sf.getAuxElements().add(rect);
 			sf.setUnsaved(true);
-			
-			model.updateAuxElements();
+
 			selectControl(rect);
+			model.updateAuxElements();
+
 			updateViews();
 		});
 		
@@ -194,25 +193,31 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 
 	private void clearAuxElements() {
+
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
+			model.getChart((CsvFile) file).get().clearFlags();
+			file.getAuxElements().clear();			
+			file.setUnsaved(true);
+		}
+
 		for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
 			sgyFile.getAuxElements().clear();			
 			sgyFile.setUnsaved(true);
-		}				
+		}
 			
 		mouseInput = null;
 		setSelected(null);
 		model.setControls(null);
 
 		
-		model.updateAuxElements();
-		
+		model.updateAuxElements();		
 		profileView.repaintEvent();
 		
 		broadcast.notifyAll(new WhatChanged(Change.justdraw));
 	}
 
 	private boolean processPress(List<BaseObject> controls2, 
-			Point localPoint, ProfileField profField) {
+			Point2D localPoint, ProfileField profField) {
 		
 		for (BaseObject o : controls2) {
 			if (o.isPointInside(localPoint, profField)) {
@@ -228,32 +233,28 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 	}
 
 	private boolean processPress1(List<BaseObject> controls2, 
-			Point localPoint, ProfileField profField) {
+			Point2D localPoint, ProfileField profField) {
 		for (BaseObject o : controls2) {
 			if (o.mousePressHandle(localPoint, profField)) {
-				
 				selectControl(o);
-				
-				mouseInput = getSelected();
-				
+				mouseInput = selected;
 				return true;
 			}
 		}
-		
 		return false;
 	}
 
 	public void selectControl(BaseObject o) {
 		setSelected(o);
 		model.setControls(null);
-		List<BaseObject> c = getSelected().getControls();
+		List<BaseObject> c = selected.getControls();
 		if (c != null) {
 			model.setControls(c);
 		}
 	}
 
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
+	//@Override
+	public boolean mouseReleaseHandle(Point2D localPoint, ProfileField profField) {
 
 		if (mouseInput != null) {			
 			mouseInput.mouseReleaseHandle(localPoint, profField);
@@ -267,8 +268,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		return false;
 	}
 
-	@Override
-	public boolean mouseMoveHandle(Point localPoint, ProfileField profField) {
+	//@Override
+	public boolean mouseMoveHandle(Point2D localPoint, ProfileField profField) {
 
 		if (mouseInput != null) {			
 			mouseInput.mouseMoveHandle(localPoint, profField);
@@ -289,7 +290,7 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		return false;
 	}
 
-	private boolean aboveControl(Point localPoint, ProfileField profField) {
+	private boolean aboveControl(Point2D localPoint, ProfileField profField) {
 		if (model.getControls() == null) {
 			return false;
 		}
@@ -301,8 +302,8 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		}
 		return false;
 	}
-	
-	private boolean aboveElement(Point localPoint, ProfileField profField) {
+
+	private boolean aboveElement(Point2D localPoint, ProfileField profField) {
 		if (model.getAuxElements() == null) {
 			return false;
 		}
@@ -316,20 +317,20 @@ public class AuxElementEditHandler implements MouseHandler, SmthChangeListener, 
 		return false;
 	}
 
-	public BaseObject getSelected() {
+	/*private BaseObject getSelected() {
 		return selected;
-	}
+	}*/
 
-	private void setSelected(BaseObject newselected) {
+	private void setSelected(BaseObject selected) {
 		if (this.selected != null) {
 			this.selected.setSelected(false);
 		}
 		
-		if (newselected != null) {
-			newselected.setSelected(true);
+		if (selected != null) {
+			selected.setSelected(true);
 		}
 		
-		this.selected = newselected;
+		this.selected = selected;
 	}
 
 	@Override

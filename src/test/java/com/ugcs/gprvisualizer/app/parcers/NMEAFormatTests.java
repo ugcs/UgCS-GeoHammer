@@ -35,12 +35,13 @@ public class NMEAFormatTests {
         NumberFormat nf = NumberFormat.getInstance(locale);
         nf.setMaximumFractionDigits(5);
         NMEACoordinates nmeaCoordinate = new NMEACoordinates(
-                nf,
-                56.86241,
-                24.113221,
-                "N",
-                "E"
-        );
+                nf);
+        //        56.86241,
+        //        24.113221,
+        //        "N",
+        //        "E"
+        nmeaCoordinate.setLatitude(56.86241);
+        nmeaCoordinate.setLongitude(24.113221);
         double latitude = Double.parseDouble(nmeaCoordinate.convertToNMEACoordinates(nmeaCoordinate.getLatitude())); //, locale));
         double longitude = Double.parseDouble(nmeaCoordinate.convertToNMEACoordinates(nmeaCoordinate.getLongitude())); //, locale));
         assertTrue(latitude - 5651.7446 < Delta && longitude - 2406.7933 < Delta);

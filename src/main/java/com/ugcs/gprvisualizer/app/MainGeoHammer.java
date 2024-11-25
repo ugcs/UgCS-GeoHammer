@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -26,11 +27,14 @@ public class MainGeoHammer extends Application {
 	private static final String TITLE_VERSION = "GeoHammer v.";
 	
 	private Model model;
-	private RootControls rootControls;
+	//private RootControls rootControls;
 	private ApplicationContext context;
 
-	private FileTemplates fileTemplates; 
-		
+	private FileTemplates fileTemplates;
+
+	private Loader loader;
+	private SceneContent sceneContent;
+
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -43,11 +47,15 @@ public class MainGeoHammer extends Application {
 		
 		model = context.getBean(Model.class);
 		  
-		rootControls = context.getBean(RootControls.class);
+		//rootControls = context.getBean(RootControls.class);
 
 		appBuildInfo = context.getBean(BuildInfo.class);
 
 		fileTemplates = context.getBean(FileTemplates.class);
+
+		sceneContent = context.getBean(SceneContent.class);
+
+		loader = context.getBean(Loader.class);
     }	
 
 	@Override
@@ -61,7 +69,7 @@ public class MainGeoHammer extends Application {
 		
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         
-		Scene scene = new Scene(rootControls.getSceneContent(), screenSize.getWidth()-80, 700);
+		Scene scene = new Scene(sceneContent, screenSize.getWidth()-80, 700);
 		//scene.set
 		stage.setScene(scene);
 		//stage.setMaximized(true);
@@ -93,7 +101,7 @@ public class MainGeoHammer extends Application {
 		if (!getParameters().getRaw().isEmpty()) {
 			String name = getParameters().getRaw().get(0);
 			List<File> f = Arrays.asList(new File(name));			
-			rootControls.getLoader().loadWithNotify(f, emptyListener);
+			loader.loadWithNotify(f, emptyListener);
 		}
 	}
 

@@ -1,9 +1,9 @@
 package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
+import javafx.geometry.Point2D;
 
 public interface Layer extends ToolProducer {
 
@@ -11,10 +11,16 @@ public interface Layer extends ToolProducer {
 		
 	void somethingChanged(WhatChanged changed);
 	
-	boolean mousePressed(Point2D point);
+	default boolean mousePressed(Point2D point) {
+		return false;
+	};
 	
-	boolean mouseRelease(Point2D point);
+	default boolean mouseRelease(Point2D point) {
+		return false;
+	};
 	
-	boolean mouseMove(Point2D point);
+	default boolean mouseMove(Point2D point) {
+		return false;
+	};
 
 }

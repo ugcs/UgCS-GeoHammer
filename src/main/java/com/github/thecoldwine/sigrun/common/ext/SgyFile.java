@@ -20,12 +20,11 @@ public abstract class SgyFile {
 	
     private List<Trace> traces = new ArrayList<>(); 
     
-    private VerticalCutPart offset = new VerticalCutPart();
+    private final VerticalCutPart offset = new VerticalCutPart();
     
 	private File file;
 	
 	private boolean unsaved = true;
-	
 	
     //horizontal cohesive lines of edges
     public List<HorizontalProfile> profiles;
@@ -75,7 +74,8 @@ public abstract class SgyFile {
 
 			if (trace.isMarked()) {
 				this.getAuxElements().add(
-						new FoundPlace(trace.getIndexInFile(), offset));
+						//new FoundPlace(trace.getIndexInFile(), offset));
+						new FoundPlace(trace, offset));
 			}
 		}
 	}

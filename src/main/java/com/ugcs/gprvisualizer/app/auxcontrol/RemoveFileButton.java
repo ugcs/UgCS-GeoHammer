@@ -1,30 +1,29 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Point2D;
-import java.util.List;
 import java.util.Optional;
 
-import org.json.simple.JSONObject;
+import com.ugcs.gprvisualizer.app.ScrollableData;
+//import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.MapField;
+//import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
+//import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 
+import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 
-public class RemoveFileButton extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class RemoveFileButton extends BaseObjectImpl {//implements BaseObject //, MouseHandler {
 
 	static int R_HOR = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
 	static int R_VER = ResourceImageHolder.IMG_CLOSE_FILE.getHeight(null);
@@ -33,14 +32,13 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	private VerticalCutPart offset;	
 	private SgyFile sgyFile;
 	
-	public int getTraceInFile() {
-		return traceInFile;
-	}
+	//public int getTraceInFile() {
+	//	return traceInFile;
+	//}
 	
-	public static RemoveFileButton loadFromJson(JSONObject json, SgyFile sgyFile) {
-				
-		return null;
-	}
+	//public static RemoveFileButton loadFromJson(JSONObject json, SgyFile sgyFile) {
+	//	return null;
+	//}
 	
 	public RemoveFileButton(int trace, VerticalCutPart offset, SgyFile sgyFile) {
 		this.offset = offset;
@@ -51,7 +49,7 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		
 		if (isPointInside(localPoint, profField)) {			
 			 
@@ -82,13 +80,6 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		
 		return false;
 	}
-	
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		
-		
-		return false;
-	}
 
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
@@ -102,21 +93,6 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	public boolean isFit(int begin, int end) {
 		
 		return traceInFile >= begin && traceInFile <= end;
-	}
-	
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		return false;
-	}	
-
-	@Override
-	public void drawOnMap(Graphics2D g2, MapField mapField) {
-		
 	}
 
 	@Override
@@ -133,7 +109,7 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		
 	}
 	
-	public Rectangle getRect(ProfileField profField) {
+	private Rectangle getRect(ScrollableData profField) {
 		
 		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
 				
@@ -142,9 +118,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField mapField) {		
-		return null;
-	}
+	//public Rectangle getRect(MapField mapField) {
+	//	return null;
+	//}
 
 	/*private Trace getTrace() {
 		return AppContext.model.getFileManager().getTraces()
@@ -152,25 +128,9 @@ public class RemoveFileButton extends BaseObjectImpl implements BaseObject, Mous
 	}*/
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		
+	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
 		Rectangle rect = getRect(profField);
-		
-		return rect.contains(localPoint);
+		return rect.contains(localPoint.getX(), localPoint.getY());
 	}
 
-	@Override
-	public void signal(Object obj) {
-		
-	}
-
-	@Override
-	public List<BaseObject> getControls() {
-		return null;
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
-	}
 }

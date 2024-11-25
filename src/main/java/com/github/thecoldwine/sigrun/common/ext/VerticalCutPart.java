@@ -45,6 +45,5 @@ public class VerticalCutPart {
 	public void setMaxSamples(int maxSamples) {
 		this.maxSamples = maxSamples;
 	}
-	
-	
+
 }

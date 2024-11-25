@@ -2,14 +2,10 @@ package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
+import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -325,24 +321,6 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 				
 			}
 		}
-	}
-	
-	@Override
-	public boolean mousePressed(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseRelease(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseMove(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 	
 	public List<Node> getControlNodes() {

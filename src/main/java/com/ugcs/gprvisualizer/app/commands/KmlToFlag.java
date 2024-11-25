@@ -35,8 +35,8 @@ public class KmlToFlag implements Command {
 
                 SgyFile sf = model.getSgyFileByTrace(traceIndex);
 
-                FoundPlace rect = new FoundPlace(
-                    sf.getOffset().globalToLocal(traceIndex), sf.getOffset());
+                FoundPlace rect = new FoundPlace(sf.getTraces().get(
+                    sf.getOffset().globalToLocal(traceIndex)), sf.getOffset());
 
                 sf.getAuxElements().add(rect);
                 sf.setUnsaved(true);

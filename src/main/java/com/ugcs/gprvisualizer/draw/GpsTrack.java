@@ -4,7 +4,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +13,7 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -89,7 +89,7 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 		double sumdist = 0;
 		
 		LatLon ll = field.screenTolatLon(
-				new Point2D.Double(0, 5));
+				new Point2D(0, 5));
 		
 		// meter to cm
 		double threshold =				

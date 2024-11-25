@@ -1,7 +1,5 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.Dimension;
-
 public abstract class BaseLayer implements Layer {
 	
 	private boolean active = true;

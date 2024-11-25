@@ -3,12 +3,18 @@ package com.ugcs.gprvisualizer.draw;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import com.github.thecoldwine.sigrun.common.ext.*;
-import com.ugcs.gprvisualizer.app.*;
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
+import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.ugcs.gprvisualizer.app.FileSelected;
+import com.ugcs.gprvisualizer.app.OptionPane;
 import edu.mines.jtk.interp.SplinesGridder2;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Coordinate;
@@ -401,29 +407,5 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 			setActive(true);
 			q.add();
 		}
-	}
-
-	@Override
-	public boolean mousePressed(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseRelease(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseMove(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public List<Node> getToolNodes() {
-		return List.of();
-		//return Arrays.asList(showLayerCheckbox);
 	}
 }

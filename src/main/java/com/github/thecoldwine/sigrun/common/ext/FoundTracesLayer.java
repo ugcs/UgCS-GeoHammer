@@ -2,8 +2,6 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
-import java.util.Arrays;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
@@ -11,6 +9,7 @@ import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 
 public class FoundTracesLayer implements Layer {
@@ -24,8 +23,7 @@ public class FoundTracesLayer implements Layer {
 
 	@Override
 	public List<Node> getToolNodes() {
-
-		return Arrays.asList();
+		return List.of();
 	}
 
 	@Override
@@ -68,29 +66,12 @@ public class FoundTracesLayer implements Layer {
 
 	@Override
 	public boolean mousePressed(Point2D point) {
-
 		for(BaseObject bo : model.getAuxElements()) {
-			
-			
 			if(bo.mousePressHandle(point, model.getMapField())) {
-				
 				return true;
 			}			
 		}
 		
 		return false;
 	}
-
-	@Override
-	public boolean mouseRelease(Point2D point) {
-
-		return false;
-	}
-
-	@Override
-	public boolean mouseMove(Point2D point) {
-
-		return false;
-	}
-
 }

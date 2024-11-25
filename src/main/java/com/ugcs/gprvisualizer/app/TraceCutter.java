@@ -2,14 +2,15 @@ package com.ugcs.gprvisualizer.app;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,9 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutInitializer;
+import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
@@ -52,11 +55,8 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	private RepaintListener listener;
 	
 	private ToggleButton buttonCutMode = ResourceImageHolder.setButtonImage(ResourceImageHolder.SELECT_RECT, new ToggleButton());
-	//new ToggleButton("Select", ResourceImageHolder.getImageView("select_rect20.png"));
 	private Button buttonSet = ResourceImageHolder.setButtonImage(ResourceImageHolder.CROP, new Button());
-	//new Button("Crop", ResourceImageHolder.getImageView("scisors3-20.png"));	
 	private Button buttonUndo = ResourceImageHolder.setButtonImage(ResourceImageHolder.UNDO, new Button());
-	//new Button("", ResourceImageHolder.getImageView("undo.png"));
 
 	private List<SgyFile> undoFiles;
 	
@@ -260,16 +260,17 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		
 	}
 	
-	public boolean isTraceInsideSelection(MapField fld, List<Point2D> border, Trace trace) {
-		Point2D p = fld.latLonToScreen(trace.getLatLon());
-		boolean ins = inside(p, border);
-		return ins;
+	private boolean isTraceInsideSelection(MapField fld, List<Point2D> border, Trace trace) {
+		return isInsideSelection(fld, border, trace.getLatLon());
 	}
 
-	public boolean isGeoDataInsideSelection(MapField fld, List<Point2D> border, GeoData geoData) {
-		Point2D p = fld.latLonToScreen(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
-		boolean ins = inside(p, border);
-		return ins;
+	private boolean isGeoDataInsideSelection(MapField fld, List<Point2D> border, GeoData geoData) {
+		return isInsideSelection(fld, border, new LatLon(geoData.getLatitude(), geoData.getLongitude()));
+	}
+
+	private boolean isInsideSelection(MapField fld, List<Point2D> border, LatLon ll) {
+		Point2D p = fld.latLonToScreen(ll);
+		return inside(p, border);
 	}
 
 	private SgyFile generateSgyFileFrom(SgyFile sourceFile, List<Trace> traces, int part) {
@@ -341,7 +342,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 						geoDataLineList.add(new GeoData(geoData));
 				} else {
 					if (!geoDataLineList.isEmpty()) {
-						if (isGoodForFile(geoDataLineList)) { //filter too small lines
+						if (isGoodForFile(geoDataLineList)) { // filter too small lines
 							for(GeoData gd: geoDataLineList) {
 								gd.setLine(lineNumber);
 							}
@@ -366,7 +367,10 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 			
 			CsvFile subfile = csvFile.copy();
 			subfile.setUnsaved(true);
-		
+			
+			subfile.setAuxElements(csvFile.getAuxElements().stream()
+					.filter(aux -> isInsideSelection(field, border, ((FoundPlace) aux).getLatLon()))
+					.collect(Collectors.toList()));
 			subfile.setTraces(sublist);
 			subfile.getGeoData().addAll(geoDataList);
 			subfile.updateInternalIndexes();
