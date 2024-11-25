@@ -59,12 +59,17 @@ public class CsvParser extends Parser {
             try (var reader = new BufferedReader(new FileReader(logPath))) {
                 String line = skipLines(reader);
 
+                var markSensorData = new SensorData() {{
+                    setHeader(GeoData.Semantic.MARK.getName());
+                }};
+
                 if (template.getFileFormat().isHasHeader()) {
                     if (line == null) {
                         line = reader.readLine();
                     }
 
                     findIndexesByHeaders(line);
+                    setIndexByHeaderForSensorData(line, markSensorData);
                     skippedLines.append(line + "\n");
                 }
 
@@ -124,7 +129,12 @@ public class CsvParser extends Parser {
 
                     var date = parseDateTime(data);
 
-                    coordinates.add(new GeoData(lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
+                    boolean marked = false;
+                    if (markSensorData.getIndex() != null && markSensorData.getIndex() != -1 && markSensorData.getIndex() < data.length) {
+                        marked = Integer.parseInt(data[markSensorData.getIndex()]) == 1;
+                    }
+
+                    coordinates.add(new GeoData(marked, lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

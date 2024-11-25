@@ -1,10 +1,11 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
-import java.awt.Point;
 import java.awt.Shape;
 
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 
 public class DepthHeight extends DepthStart {
 	
@@ -22,10 +23,11 @@ public class DepthHeight extends DepthStart {
 	}
 	
 	@Override
-	public Point getCenter(ProfileField profField) {
-		Point scr = profField.traceSampleToScreen(new TraceSample(
+	public Point2D getCenter(ScrollableData profField) {
+		Point2D scr = profField.traceSampleToScreen(new TraceSample(
 				0, model.getSettings().getLayer() + model.getSettings().hpage));
-		scr.x = profField.visibleStart;
+		//FIXME:
+		//scr.x = profField.visibleStart;
 		return scr;
 	}	
 }

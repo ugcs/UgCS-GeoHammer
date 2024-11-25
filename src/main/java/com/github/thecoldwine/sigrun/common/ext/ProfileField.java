@@ -1,30 +1,26 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.Rectangle;
 
-import com.ugcs.gprvisualizer.app.Navigator;
+import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.gpr.Model;
+import javafx.geometry.Point2D;
 
-public class ProfileField {
+public class ProfileField extends ScrollableData {
 	
 	public static final double ZOOM_A = 1.2;
 	public static final double ASPECT_A = 1.14;
 
-	private Model model;
-	
-	private int selectedTrace = 0;
-	private int startSample = 0;
+	private final Model model;
+
 	private int zoom = 1;
-	
 	private double aspect = -15;
 	
 	// screen coordinates
 	private Dimension viewDimension = new Dimension();
 	private Rectangle topRuleRect = new Rectangle();
 	private Rectangle leftRuleRect = new Rectangle();
-	private Rectangle mainRectRect = new Rectangle();
 	private Rectangle infoRect = new Rectangle();
 
 	//draw coordinates
@@ -36,21 +32,25 @@ public class ProfileField {
 	//
 	public int visibleStart;
 	public int visibleFinish;
-	
+
+	private double vertScale = 1;
 
 	public ProfileField(Model model) {
 		this.model  = model;		
 	}
 
-	public ProfileField(ProfileField copy) {
+/*	public ProfileField(ProfileField copy) {
+
 		this.model  = copy.model;
-		this.selectedTrace = copy.selectedTrace;
+
+		setMiddleTrace(copy.getMiddleTrace());
+		setRealAspect(copy.getRealAspect());
+
 		this.startSample = copy.startSample;
 		this.zoom = copy.zoom;
 		this.vertScale = copy.vertScale;
 		this.aspect = copy.aspect;
-		this.realAspect = copy.realAspect;
-		
+
 		this.visibleStart = copy.visibleStart;
 		this.visibleFinish = copy.visibleFinish;
 		
@@ -63,7 +63,7 @@ public class ProfileField {
 		this.clipLeftMainRect = copy.clipLeftMainRect; 
 		this.clipTopMainRect = copy.clipTopMainRect; 
 		this.clipInfoRect = copy.clipInfoRect; 	
-	}
+	}*/
 
 	public void clear() {
 		zoom = 1;
@@ -75,7 +75,7 @@ public class ProfileField {
 	}
 
 	private void fitFull() {		
-		setSelectedTrace(model.getGprTracesCount() / 2);
+		setMiddleTrace(model.getGprTracesCount() / 2);
 		int maxSamples = model.getMaxHeightInSamples();
 		fit(maxSamples * 2, model.getGprTracesCount());
 	}
@@ -94,115 +94,54 @@ public class ProfileField {
 		
 		double realAspect = h / getVScale();
 
-		setAspectReal(realAspect);		
+		setRealAspect(realAspect);
 	}
 	
-	public TraceSample screenToTraceSample(Point point, VerticalCutPart vcp) {
-		int trace = vcp.globalToLocal(getSelectedTrace() 
+	public TraceSample screenToTraceSample(Point2D point, VerticalCutPart vcp) {
+		int trace = vcp.globalToLocal(getMiddleTrace()
 				+ (int)((point.getX()) / getHScale()));
 		
 		int sample = getStartSample() 
 				+ (int) ((point.getY() - getTopMargin()) / getVScale());
 		
 		return new TraceSample(trace, sample);
-		
-	}
-	
-	public TraceSample screenToTraceSample(Point point) {
-	
-		int trace = getSelectedTrace() + (int) (-1 + (point.getX()) / getHScale()); 
-		int sample = getStartSample() + (int) ((point.getY() - getTopMargin()) / getVScale());
-		
-		return new TraceSample(trace, sample);
-	}
-	
-	public int traceToScreen(int trace) {
-		return (int) ((trace - getSelectedTrace()) * getHScale());
 	}
 
-	public int sampleToScreen(int sample) {
-		return (int) ((sample - getStartSample()) * getVScale() + getTopMargin());
-	}
-	
-	public Point traceSampleToScreen(TraceSample ts) {
-		return new Point(traceToScreen(ts.getTrace()), sampleToScreen(ts.getSample()));
-	}
-
-	public Point traceSampleToScreenCenter(TraceSample ts) {
-		
-		return new Point(
-			traceToScreen(ts.getTrace()) + (int) (getHScale() / 2), 
-			sampleToScreen(ts.getSample()) + (int) (getVScale() / 2));
-	}
-	
 	public int getVisibleNumberOfTrace() {
-		
-		Point p = traceSampleToScreen(new TraceSample(0,0));
-		Point p2 = new Point(p.x + getMainRect().width, 0); 
+		Point2D p = traceSampleToScreen(new TraceSample(0,0));
+		Point2D p2 = new Point2D(p.getX() + getMainRect().width, 0);
 		TraceSample t2 = screenToTraceSample(p2);		
 		
 		return t2.getTrace();
 	}
-	
+
+	@Override
+	public int getTracesCount() {
+		return model.getGprTracesCount();
+	}
+
 	public int getFirstVisibleTrace() {		
-		return Math.clamp(screenToTraceSample(new Point(-getMainRect().width / 2, 0)).getTrace(),
+		return Math.clamp(screenToTraceSample(new Point2D(-getMainRect().width / 2, 0)).getTrace(),
 				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleTrace() {
-		return Math.clamp(screenToTraceSample(new Point(getMainRect().width / 2, 0)).getTrace(),
+		return Math.clamp(screenToTraceSample(new Point2D(getMainRect().width / 2, 0)).getTrace(),
 				0, model.getGprTracesCount() - 1);
 	}
 
 	public int getLastVisibleSample(int height) {
-		return screenToTraceSample(new Point( 0, height)).getSample();
-	}
-	
-	public int getSelectedTrace() {
-		return selectedTrace;
-	}
-
-	public void setSelectedTrace(int selectedTrace) {
-		this.selectedTrace =
-			Math.clamp(selectedTrace, 0, 
-			Math.max(0, model.getGprTracesCount() - 1));
-	}
-
-	public int getStartSample() {
-		return startSample;
+		return screenToTraceSample(new Point2D( 0, height)).getSample();
 	}
 
 	public void setStartSample(int startSample) {
-		
 		if(getScreenImageSize().height < getViewDimension().height){
 			startSample = 0;
-		}		
-		
+		}
 		this.startSample = Math.max(0, startSample);
 	}
 
-	double vertScale = 1;
-
-	public double getVScale() {	
-		return vertScale;
-	}
-
-	public double getHScale() {
-		return getVScale()*getAspectReal();
-	}
-
-	double realAspect = 0.5;
-
-	public double getAspectReal() {
-		return realAspect;
-	}
-	
-	public void setAspectReal(double realAspect) {
-		this.realAspect = realAspect;
-	}
-	
 	public Dimension getScreenImageSize() {
-		
 		return new Dimension(
 				(int) (model.getGprTracesCount() * getHScale()), 
 				(int) (model.getMaxHeightInSamples() * getVScale()));
@@ -242,10 +181,6 @@ public class ProfileField {
 		vertScale = Math.pow(ZOOM_A, getZoom());
 	}
 
-	private int getTopMargin() {
-		return mainRectRect.y;
-	}
-	
 	public Rectangle getTopRuleRect() {
 		return topRuleRect;
 	}
@@ -293,6 +228,5 @@ public class ProfileField {
 
 		clipInfoRect = new Rectangle(
 				-getMainRect().x - getMainRect().width / 2, 0, getInfoRect().width, getInfoRect().height);
-				
 	}
 }

@@ -29,6 +29,8 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Component
 public class Loader {
 
@@ -182,8 +184,11 @@ public class Loader {
 					//when open file by dnd (not after save)
 					model.initField();
 
-					model.initChart(csvFile, broadcast);
 					csvFile.updateInternalIndexes();
+
+					model.initChart(csvFile, broadcast);
+
+					model.updateAuxElements();
 				}
 			}
 		} catch (Exception e) {

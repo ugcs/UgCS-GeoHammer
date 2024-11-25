@@ -1,8 +1,9 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Image;
-import java.awt.Point;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -37,7 +38,7 @@ public class ToggleButton extends DragAnchor {
 	
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		
 		if (isPointInside(localPoint, profField)) {
 			
@@ -46,12 +47,6 @@ public class ToggleButton extends DragAnchor {
 			signal(isSelected());
 			return true;
 		}
-		return false;
-	}
-	
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		
 		return false;
 	}
 

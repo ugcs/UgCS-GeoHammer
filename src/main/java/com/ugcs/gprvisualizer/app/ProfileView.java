@@ -5,14 +5,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -22,16 +19,12 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
-import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.SmthChangeListener;
@@ -40,11 +33,8 @@ import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
-import com.ugcs.gprvisualizer.math.HoughDiscretizer;
-import com.ugcs.gprvisualizer.math.HyperFinder;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 import com.ugcs.gprvisualizer.ui.BaseSlider;
-import com.ugcs.gprvisualizer.ui.SliderFactory;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -95,35 +85,30 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	
 	private ImageView imageView = new ImageView();
 	private VBox vbox = new VBox();
+
+	//TODO: кажется тут располлагаются данные GPR
 	private Pane topPane = new Pane();
 
 	private BufferedImage img;
 	private Image image;
-	private int width;
-	private int height;
+	private double width;
+	private double height;
 
 	private double contrast = 50;
 
 	private ContrastSlider contrastSlider;
 
-	//private HyperbolaSlider hyperbolaSlider;
-	//private HyperGoodSizeSlider hyperGoodSizeSlider;
-	//private MiddleAmplitudeSlider middleAmplitudeSlider;
-
 	private ToggleButton auxModeBtn = new ToggleButton("aux");
 	ToolBar toolBar = new ToolBar();
 	
 	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
-	 // new Button("", ResourceImageHolder.getImageView("zoom-in_20.png"));
-	
-	private Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
-	// new Button("", ResourceImageHolder.getImageView("zoom-out_20.png"));
-	
 
-	private MouseHandler selectedMouseHandler;
-	private MouseHandler scrollHandler;
+	private Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
+
+	private BaseObject selectedMouseHandler;
+	private BaseObject scrollHandler;
 	
-	private final HyperFinder hyperFinder;
+	//private final HyperFinder hyperFinder;
 
 	private final ProfileScroll profileScroll;
 	
@@ -151,8 +136,8 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	public ProfileView(Model model) {
 		this.model = model;
 
-		profileScroll = new ProfileScroll(model);
-		hyperFinder = new HyperFinder(model);
+		profileScroll = new ProfileScroll(model, model.getProfileField());
+		//hyperFinder = new HyperFinder(model);
 		prismDrawer = new PrismDrawer(model);
 
 		contrastSlider = new ContrastSlider(model.getSettings(), 
@@ -225,7 +210,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 			return null;
 		}
 
-		ProfileField field = new ProfileField(getField());
+		ProfileField field = getField();//new ProfileField(getField());
 
 		BufferedImage bi;
 		if (img != null && img.getWidth() == width && img.getHeight() == height) {
@@ -266,7 +251,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 					field.getClipTopMainRect().width,
 					field.getClipTopMainRect().height);
 
-			drawHyperliveView(field, g2);
+			//drawHyperliveView(field, g2);
 
 			drawFileNames(height, field, g2);
 		}
@@ -275,12 +260,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		g2.dispose();
 		///
 		return bi;
-	}
-
-	public void drawHyperliveView(ProfileField field, Graphics2D g2) {
-		if (model.getSettings().getHyperliveview().booleanValue()) {
-			hyperFinder.drawHyperbolaLine(g2, field);
-		}
 	}
 
 	private void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
@@ -347,15 +326,14 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		g2.setColor(Color.MAGENTA);
 		g2.setStroke(dashed);
 
-		int y = field.traceSampleToScreen(new TraceSample(0, model.getSettings().getLayer())).y;
-		g2.drawLine(-width / 2, y, width / 2, y);
+		int y = (int) field.traceSampleToScreen(new TraceSample(0, model.getSettings().getLayer())).getY();
+		g2.drawLine((int) -width / 2, y, (int) width / 2, y);
 
 		int bottomSelectedSmp = model.getSettings().getLayer() + model.getSettings().hpage;
-		int y2 = field.traceSampleToScreen(new TraceSample(
-				0, bottomSelectedSmp)).y;
+		int y2 = (int) field.traceSampleToScreen(new TraceSample(
+				0, bottomSelectedSmp)).getY();
 		
-		g2.drawLine(-width / 2, y2, width / 2, y2);
-
+		g2.drawLine((int) -width / 2, y2, (int) width / 2, y2);
 	}
 
 	private void drawAuxElements(ProfileField field, Graphics2D g2) {
@@ -409,7 +387,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 			int voffset) {
 
 		g2.setColor(pf.color);
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(
+		Point2D p1 = field.traceSampleToScreenCenter(new TraceSample(
 				startTraceIndex, pf.deep[0] + voffset));
 		int max2 = 0;
 
@@ -417,11 +395,11 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 			max2 = Math.max(max2, pf.deep[i] + voffset);
 
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
+			Point2D p2 = field.traceSampleToScreenCenter(new TraceSample(
 					startTraceIndex + i, max2));
 
-			if (p2.x - p1.x > 0 || Math.abs(p2.y - p1.y) > 0) {
-				g2.drawLine(p1.x, p1.y, p2.x, p2.y);
+			if (p2.getX() - p1.getX() > 0 || Math.abs(p2.getY() - p1.getY()) > 0) {
+				g2.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
 				p1 = p2;
 				max2 = 0;
 			}
@@ -431,7 +409,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	private void drawScanProfile(ProfileField field, Graphics2D g2, 
 			int startTraceIndex, ScanProfile pf) {
 
-		Point p1 = field.traceSampleToScreenCenter(new TraceSample(
+		Point2D p1 = field.traceSampleToScreenCenter(new TraceSample(
 				startTraceIndex, 0));
 		int max2 = 0;
 		int offsety = field.getMainRect().y;
@@ -440,14 +418,14 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 			max2 = Math.max(max2, (int) pf.intensity[i]);
 
-			Point p2 = field.traceSampleToScreenCenter(new TraceSample(
+			Point2D p2 = field.traceSampleToScreenCenter(new TraceSample(
 					startTraceIndex + i, 0));
 			
-			p2.y = max2;
+			//p2.y = max2;
 
-			if (p2.x - p1.x > 2) {
+			if (p2.getX() - p1.getX() > 2) {
 
-				g2.drawLine(p1.x, offsety + p1.y, p2.x, offsety + p2.y);
+				g2.drawLine((int) p1.getX(), (int) (offsety + p1.getY()), (int) p2.getX(), offsety + max2);
 
 				p1 = p2;
 				max2 = 0;
@@ -459,12 +437,12 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 
 		SgyFile currentFile = model.getSgyFileByTrace(
-				model.getProfileField().getSelectedTrace());
+				model.getProfileField().getMiddleTrace());
 
 		int selectedX1 = 0;
 		int selectedX2 = 0;
-		Point p = null;
-		Point p2 = null;
+		Point2D p = null;
+		Point2D p2 = null;
 
 		int leftMargin = -getField().getMainRect().width / 2;
 
@@ -482,28 +460,28 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 				g2.setColor(Color.YELLOW);
 				g2.setFont(fontB);
 
-				selectedX1 = p.x;
-				selectedX2 = p2.x;
+				selectedX1 = (int) p.getX();
+				selectedX2 = (int) p2.getX();
 			} else {
 				g2.setColor(Color.WHITE);
 				g2.setFont(fontP);
 			}
 			/// separator
-			if (p.x > -getField().getMainRect().width / 2) {
-				g2.drawLine(p.x, 0, p.x, height);
+			if (p.getX() > -getField().getMainRect().width / 2) {
+				g2.drawLine((int) p.getX(), 0, (int) p.getX(), height);
 			}
 
-			p.x = Math.max(p.x, leftMargin);
+			p = new Point2D(Math.max(p.getX(), leftMargin), p.getY());
 
 			int iconImageWidth = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
-			g2.setClip(p.x, 0, p2.x - p.x - iconImageWidth, 20);
+			g2.setClip((int) p.getX(), 0, (int) (p2.getX() - p.getX() - iconImageWidth), 20);
 			String fileName = (fl.isUnsaved() ? "*" : "") + fl.getFile().getName();
-			g2.drawString(fileName, p.x + 7, 11);
+			g2.drawString(fileName, (int) p.getX() + 7, 11);
 			g2.setClip(null);
 		}
 
 		if (p2 != null) {
-			g2.drawLine(p2.x, 0, p2.x, height);
+			g2.drawLine((int) p2.getX(), 0, (int) p2.getX(), height);
 		}
 
 		if (currentFile != null) {
@@ -524,12 +502,13 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		centerScrollPane.setStyle("-fx-focus-color: transparent; -fx-faint-focus-color: transparent;");
 
         centerScrollPane.setFitToWidth(true);
+		centerScrollPane.setFitToHeight(true);
         centerScrollPane.setContent(model.getChartsContainer());
 
 		center.getChildren().addAll(toolBar, centerScrollPane);
 
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			this.setSize((int) (topPane.getWidth()), (int) (400)); //topPane.getHeight()));
+			this.setSize(topPane.getWidth(), 400); //topPane.getHeight()));
 		};
 		topPane.widthProperty().addListener(sp2SizeListener);
 		//topPane.heightProperty().addListener(sp2SizeListener);
@@ -542,11 +521,9 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		//topPane.getChildren().addAll(scrollPane);
 
 
+		//Это все для GPR данных
 		topPane.getChildren().addAll(vbox);
 		model.getChartsContainer().getChildren().add(topPane);
-
-		//model.getChartsContainer().getChildren().add(topPane);
-
 		topPane.setOnMouseClicked(event -> {
 			select();
 		});
@@ -657,17 +634,17 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	}
 
 	private void zoom(int ch, double ex, double ey, boolean justHorizont) {
-		Point t = getLocalCoords(ex, ey);
+		Point2D t = getLocalCoords(ex, ey);
 
 		TraceSample ts = getField().screenToTraceSample(t);
 
 		if (justHorizont) {
 
-			double realAspect = getField().getAspectReal()
+			double realAspect = getField().getRealAspect()
 					* (ch > 0 ? ProfileField.ASPECT_A : 
 						1 / ProfileField.ASPECT_A);
 
-			getField().setAspectReal(realAspect);
+			getField().setRealAspect(realAspect);
 
 		} else {
 			getField().setZoom(getField().getZoom() + ch);
@@ -675,10 +652,10 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 		////
 
-		Point t2 = getLocalCoords(ex, ey);
+		Point2D t2 = getLocalCoords(ex, ey);
 		TraceSample ts2 = getField().screenToTraceSample(t2);
 
-		getField().setSelectedTrace(getField().getSelectedTrace()
+		getField().setMiddleTrace(getField().getMiddleTrace()
 				- (ts2.getTrace() - ts.getTrace()));
 
 		int starts = getField().getStartSample() - (ts2.getSample() - ts.getSample());
@@ -705,7 +682,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		@Override
 		public void handle(MouseDragEvent event) {
 
-			Point p = getLocalCoords(event);
+			Point2D p = getLocalCoords(event);
 
 			if (selectedMouseHandler != null) {
 				selectedMouseHandler.mouseReleaseHandle(p, getField());
@@ -724,40 +701,34 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		@Override
 		public void handle(MouseEvent event) {
 
-			Point p = getLocalCoords(event);
+			Point2D p = getLocalCoords(event);
 
-			if (model.getSettings().getHyperliveview().booleanValue()) {
-				TraceSample ts = getField().screenToTraceSample(p);
-				hyperFinder.setPoint(ts);
-				repaintEvent();
-			} 
-			
-			{
+			//if (model.getSettings().getHyperliveview().booleanValue()) {
+			//	TraceSample ts = getField().screenToTraceSample(p);
+			//	hyperFinder.setPoint(ts);
+			//	repaintEvent();
+			//}
 
-				if (selectedMouseHandler != null) {
-
-					selectedMouseHandler.mouseMoveHandle(p, getField());
-				} else {
-					if (!auxEditHandler.mouseMoveHandle(p, getField())) {
-						//do nothing
-					}
+			if (selectedMouseHandler != null) {
+				selectedMouseHandler.mouseMoveHandle(p, getField());
+			} else {
+				if (!auxEditHandler.mouseMoveHandle(p, getField())) {
+					//do nothing
 				}
 			}
 		}
 	};
 
-	private Point getLocalCoords(MouseEvent event) {
-
+	private Point2D getLocalCoords(MouseEvent event) {
 		return getLocalCoords(event.getSceneX(), event.getSceneY());
-
 	}
 
-	protected Point getLocalCoords(double x, double y) {
+	protected Point2D getLocalCoords(double x, double y) {
 		Point2D sceneCoords = new Point2D(x, y);
 		Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
-		Point p = new Point((int) (imgCoord.getX() - getField().getMainRect().x
-				- getField().getMainRect().width / 2),
-				(int) (imgCoord.getY()));
+		Point2D p = new Point2D(imgCoord.getX() - getField().getMainRect().x
+				- getField().getMainRect().width / 2,
+				imgCoord.getY());
 		return p;
 	}
 
@@ -767,7 +738,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 			if (event.getClickCount() == 2) {
 				// add tmp flag
-				Point p = getLocalCoords(event);
+				Point2D p = getLocalCoords(event);
 
 				int traceIndex = getField().screenToTraceSample(p).getTrace();
 
@@ -793,7 +764,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		@Override
 		public void handle(MouseEvent event) {
 
-			Point p = getLocalCoords(event);
+			Point2D p = getLocalCoords(event);
 			if (auxEditHandler.mousePressHandle(p, getField())) {
 				selectedMouseHandler = auxEditHandler;
 			} else if (scrollHandler.mousePressHandle(p, getField())) {
@@ -811,7 +782,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		@Override
 		public void handle(MouseEvent event) {
 
-			Point p = getLocalCoords(event);
+			Point2D p = getLocalCoords(event);
 
 			if (selectedMouseHandler != null) {
 				selectedMouseHandler.mouseReleaseHandle(p, getField());
@@ -829,7 +800,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 	protected void repaint() {
 
-		img = draw(width, height);
+		img = draw((int) width, (int) height);
 		if (img != null) {
 			image = SwingFXUtils.toFXImage(img, null);
 		} else {
@@ -1007,16 +978,16 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		}
 	}*/
 
-	public void setSize(int width, int height) {
+	public void setSize(double width, double height) {
 
 		this.width = width;
 		this.height = height;
-		getField().setViewDimension(new Dimension(this.width, this.height));
+		getField().setViewDimension(new Dimension((int) this.width, (int) this.height));
 
 		repaintEvent();
 	}
 
-	MouseHandler getMouseHandler() {
+	BaseObject getMouseHandler() {
 		if (auxModeBtn.isSelected()) {
 			return auxEditHandler;
 		} else {
@@ -1024,7 +995,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		}
 	}
 
-	void setScrollHandler(MouseHandler scrollHandler) {
+	void setScrollHandler(BaseObject scrollHandler) {
 		this.scrollHandler = scrollHandler;
 	}
 
@@ -1036,10 +1007,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		Region r3 = new Region();
 		r3.setPrefWidth(7);
 		return r3;
-	}
-
-	public AuxElementEditHandler getAuxEditHandler() {
-		return auxEditHandler;
 	}
 
 	public Node getPrintHoughSlider() {

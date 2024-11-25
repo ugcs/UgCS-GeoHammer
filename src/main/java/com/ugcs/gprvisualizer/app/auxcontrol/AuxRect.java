@@ -3,14 +3,14 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -28,25 +28,25 @@ import javafx.scene.control.ChoiceDialog;
 @SuppressWarnings("unchecked")
 public class AuxRect extends BaseObjectImpl {
 	
-	public static final Color maskColor = new Color(50, 0, 255, 70);
+	private static final Color maskColor = new Color(50, 0, 255, 70);
+	private static final int TRACE_W = 40;
+	private static final int SAMPLE_W = 20;
+
+	//MutableInt kfc = new  MutableInt();
+	private final VerticalCutPart offset;
 	
-	MutableInt kfc = new  MutableInt();
-	VerticalCutPart offset;
+	private BufferedImage img;
+	private DragAnchor top;
+	private DragAnchor bottom;
+	private DragAnchor left;
+	private DragAnchor right;
+	private ToggleButton lock;
+	private ToggleButton selectType;
 	
-	BufferedImage img;
-	DragAnchor top;
-	DragAnchor bottom;
-	DragAnchor left;
-	DragAnchor right;
-	ToggleButton lock;
-	ToggleButton selectType;
-	
-	static int TRACE_W = 40;
-	static int SAMPLE_W = 20;
-	int[] topCut;
-	int[] botCut;
-	boolean sideTop = true;
-	boolean locked = false;
+	private int[] topCut;
+	private int[] botCut;
+	private boolean sideTop = true;
+	private boolean locked = false;
 	private AreaType type = AreaType.Hyperbola;
 	
 	public boolean saveTo(JSONObject json) {
@@ -142,7 +142,6 @@ public class AuxRect extends BaseObjectImpl {
 			sampleCenter - SAMPLE_W,
 			sampleCenter + SAMPLE_W,
 			offset);
-		
 	}
 	
 	
@@ -332,18 +331,15 @@ public class AuxRect extends BaseObjectImpl {
 	}
 	
 	public List<BaseObject> getControls() {
-		
-		return 
-			Arrays.asList(left, top, right, bottom, lock, selectType); 
-				
+		return List.of(left, top, right, bottom, lock, selectType);
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 
 		if (isPointInside(localPoint, profField)) {			
 		
-			TraceSample ts = profField.screenToTraceSample(localPoint, offset);
+			TraceSample ts = profField.screenToTraceSample(localPoint); //, offset);
 			int x = ts.getTrace() - getTraceStartLocal();
 			int y = ts.getSample() - getSampleStart();
 			if (x >= 0 && x < topCut.length) {
@@ -359,28 +355,17 @@ public class AuxRect extends BaseObjectImpl {
 		
 		return false;
 	}
-	
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-
-		return false;
-	}
 
 	private int lastX = -1;
 	
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
 
 		if (img == null) {
 			return false;
 		}
 		
-		TraceSample ts = profField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point); //, offset);
 		
 		if (locked) {		
 			drawCutOnImg(ts);
@@ -449,20 +434,13 @@ public class AuxRect extends BaseObjectImpl {
 		g2.drawLine(x, img.getHeight(), x, botCut[x]);
 	}
 
-	@Override
-	public void drawOnMap(Graphics2D g2, MapField mapField) {
-		
-	}
-
-	public Rectangle getRect(ProfileField profField) {
-		
-		Point lt = profField.traceSampleToScreen(
+	public Rectangle getRect(ScrollableData profField) {
+		var lt = profField.traceSampleToScreen(
 				new TraceSample(getTraceStartGlobal(), getSampleStart()));
 		
-		Point rb = profField.traceSampleToScreen(
+		var rb = profField.traceSampleToScreen(
 				new TraceSample(getTraceFinishGlobal(), getSampleFinish()));
-		return new Rectangle(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-		
+		return new Rectangle((int) lt.getX(), (int) lt.getY(), (int) (rb.getX() - lt.getY()), (int) (rb.getY() - lt.getY()));
 	}
 	
 	@Override
@@ -484,16 +462,9 @@ public class AuxRect extends BaseObjectImpl {
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		
+	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
 		Rectangle rect = getRect(profField);
-		
-		return rect.contains(localPoint);
-	}
-
-	@Override
-	public void signal(Object obj) {
-		
+		return rect.contains(localPoint.getX(), localPoint.getY());
 	}
 
 	public AreaType getType() {

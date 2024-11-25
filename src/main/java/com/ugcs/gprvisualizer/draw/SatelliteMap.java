@@ -1,12 +1,11 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import javafx.geometry.Point2D;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.RadioMenuItem;
 

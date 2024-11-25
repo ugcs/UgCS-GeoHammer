@@ -4,7 +4,6 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -16,6 +15,7 @@ import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.GeoTiffImagingCreation;
 
+import javafx.geometry.Point2D;
 import javafx.stage.FileChooser;
 
 public class TiffImageExport {
@@ -57,11 +57,11 @@ public class TiffImageExport {
 		
 
 		LatLon lt = field.screenTolatLon(
-				new Point2D.Double(
+				new Point2D(
 						-tiffImg.getWidth() / 2,
 						-tiffImg.getHeight() / 2));
 		LatLon rb = field.screenTolatLon(
-				new Point2D.Double(
+				new Point2D(
 						+tiffImg.getWidth() / 2,
 						+tiffImg.getHeight() / 2));
 

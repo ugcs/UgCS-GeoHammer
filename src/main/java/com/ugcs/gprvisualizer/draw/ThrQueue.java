@@ -4,7 +4,6 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.ugcs.gprvisualizer.gpr.Model;
+import javafx.geometry.Point2D;
 
 public abstract class ThrQueue {
 	

@@ -1,10 +1,10 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.gpr.Model;
+import javafx.geometry.Point2D;
 
 public class TraceCutInitializer {
 
@@ -23,7 +23,7 @@ public class TraceCutInitializer {
 			sy += p.getY();
 			scrpos.add(p);
 		}
-		Point2D center = new Point2D.Double(sx / traces.size(), sy / traces.size());
+		Point2D center = new Point2D(sx / traces.size(), sy / traces.size());
 		
 		double maxrad = 0;
 		//double
@@ -55,25 +55,25 @@ public class TraceCutInitializer {
 		
 		List<LatLon> points = new ArrayList<>();
 		
-		points.add(f.screenTolatLon(new Point2D.Double(
+		points.add(f.screenTolatLon(new Point2D(
 				Math.cos(ang) * maxrad + center.getX(),
 				Math.sin(ang) * maxrad + center.getY())));
 		
 		ang += Math.PI / 2;
 		
-		points.add(f.screenTolatLon(new Point2D.Double(
+		points.add(f.screenTolatLon(new Point2D(
 				Math.cos(ang) * maxrad + center.getX(),
 				Math.sin(ang) * maxrad + center.getY())));
 		
 		ang += Math.PI / 2;
 		
-		points.add(f.screenTolatLon(new Point2D.Double(
+		points.add(f.screenTolatLon(new Point2D(
 				Math.cos(ang) * maxrad + center.getX(),
 				Math.sin(ang) * maxrad + center.getY())));
 		
 		ang += Math.PI / 2;
 				
-		points.add(f.screenTolatLon(new Point2D.Double(
+		points.add(f.screenTolatLon(new Point2D(
 				Math.cos(ang) * maxrad + center.getX(),
 				Math.sin(ang) * maxrad + center.getY())));
 				

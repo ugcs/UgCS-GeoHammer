@@ -4,11 +4,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Point2D;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONObject;
 
@@ -16,10 +16,10 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 
 public class DragAnchor extends BaseObjectImpl 
-	implements BaseObject, MouseHandler {
+	implements BaseObject {//, MouseHandler {
 
 	private MutableInt trace = new MutableInt();
 	
@@ -82,23 +82,23 @@ public class DragAnchor extends BaseObjectImpl
 		}
 	}
 
-	public Rectangle getRect(ProfileField profField) {
+	private Rectangle getRect(ScrollableData profField) {
 		TraceSample ts = new TraceSample(offset.localToGlobal(
 				this.getTrace()), getSample());
-		Point scr = profField.traceSampleToScreen(ts);		
+		Point2D scr = profField.traceSampleToScreen(ts);
 		Rectangle rect = alignRect.getRect(scr, dim);
 		return rect;
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
+	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
 		if (!isVisible()) {
 			return false;
 		}		
 		
 		Rectangle rect = getRect(profField);
 		
-		return rect.contains(localPoint);
+		return rect.contains(localPoint.getX(), localPoint.getY());
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class DragAnchor extends BaseObjectImpl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		if (isPointInside(localPoint, profField)) {
 			signal(null);
 			return true;
@@ -116,17 +116,17 @@ public class DragAnchor extends BaseObjectImpl
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
+	public boolean mouseReleaseHandle(Point2D localPoint, ScrollableData profField) {
 		return true;
 	}
 
 	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
 		if (!isVisible()) {
 			return false;
 		}
 
-		TraceSample ts = profField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point); // , offset);
 		setTrace(ts.getTrace());
 		setSample(ts.getSample());
 		
@@ -171,20 +171,10 @@ public class DragAnchor extends BaseObjectImpl
 	}
 
 	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
-	}
-
-	@Override
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
 		return null;
 	}
 
-	@Override
-	public boolean isFit(int begin, int end) {
-		return false;
-	}
-	
 	public MutableInt getSampleMtl() {
 		return sample;
 	}

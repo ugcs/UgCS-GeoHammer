@@ -13,8 +13,11 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
-import com.ugcs.gprvisualizer.app.FileDataContainer;
+import com.ugcs.gprvisualizer.app.*;
+import com.ugcs.gprvisualizer.app.auxcontrol.*;
+import javafx.scene.layout.*;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -24,14 +27,6 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.Broadcast;
-import com.ugcs.gprvisualizer.app.SensorLineChart;
-import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
-import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
-import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
-import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
 import com.ugcs.gprvisualizer.app.ext.FileManager;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
@@ -44,14 +39,14 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 @Component
 public class Model implements InitializingBean {
 
 	public static final int TOP_MARGIN = 50;
-	
+	public static final int CHART_MIN_HEIGHT = 400;
+
 	private boolean loading = false; 
 	
 	private MapField field = new MapField();
@@ -77,16 +72,22 @@ public class Model implements InitializingBean {
 	
 	private boolean kmlToFlagAvailable = false;
 
-	private PrefSettings prefSettings;
+	private final PrefSettings prefSettings;
+
+	private final AuxElementEditHandler auxEditHandler;
 
 	private final VBox chartsContainer = new VBox(); // Charts container
 
 	Map<CsvFile, SensorLineChart> csvFiles = new HashMap<>();
 	
-	public Model(FileManager fileManager, PrefSettings prefSettings) {
+	private SgyFile currentFile;
+	private final Map<String, SgyFile> loadedFiles = new HashMap<>();
+
+	public Model(FileManager fileManager, PrefSettings prefSettings, AuxElementEditHandler auxEditHandler) {
 		//Sout.p("create model");
 		this.prefSettings = prefSettings;
 		this.fileManager = fileManager;
+		this.auxEditHandler = auxEditHandler;
 	}
 	
 	public Settings getSettings() {
@@ -139,6 +140,13 @@ public class Model implements InitializingBean {
 			auxElements.add(rfb);
 			
 		}
+
+        getFileManager().getCsvFiles().forEach(sf -> {
+            auxElements.addAll(sf.getAuxElements());
+            sf.getAuxElements().forEach(element -> {
+                getChart((CsvFile) sf).get().addFlag((FoundPlace) element);
+            });
+        });
 		
 		auxElements.add(new DepthStart(ShapeHolder.topSelection));
 		auxElements.add(new DepthHeight(ShapeHolder.botSelection));
@@ -245,7 +253,7 @@ public class Model implements InitializingBean {
 			
 			this.getMapField().setPathEdgeLL(lt, rb);
 			
-			this.getMapField().adjustZoom(400, 700);
+			this.getMapField().adjustZoom(CHART_MIN_HEIGHT, 700);
 			
 		} else {
 			//Sout.p("GPS coordinates not found");
@@ -324,27 +332,13 @@ public class Model implements InitializingBean {
 	public void initChart(CsvFile csvFile, Broadcast broadcast) {
 		if (getChart(csvFile).isPresent()) {
 			return;
-		} 
-		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings);
-		var plotData = sensorLineChart.generatePlotData(csvFile);
-
-		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
-		chartsContainer.getChildren().add(sensorLineChartBox);
-		
-
-		csvFiles.put(csvFile, sensorLineChart);
+		}
+		var sensorLineChart = createSensorLineChart(csvFile, broadcast);
 		saveColorSettings(semanticColors);
 
 		Platform.runLater(() -> {
 			selectAndScrollToChart(sensorLineChart);
 		});
-
-		//selectAndScrollToChart(sensorLineChartBox);
-	}
-
-	private void saveColorSettings(Map<String, Color> semanticColors) {
-		String group = "colors";
-		prefSettings.saveSetting(group, semanticColors);
 	}
 
 	public void updateChart(CsvFile csvFile, Broadcast broadcast) {
@@ -356,10 +350,27 @@ public class Model implements InitializingBean {
 		currentChart.get().close(false);
 		csvFiles.remove(csvFile);
 
-		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings);
+		createSensorLineChart(csvFile, broadcast);
+	}
+
+	private SensorLineChart createSensorLineChart(CsvFile csvFile, Broadcast broadcast) {
+		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings, auxEditHandler);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
-		chartsContainer.getChildren().add(sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData));
+		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
+		chartsContainer.getChildren().add(sensorLineChartBox);
+		sensorLineChartBox.getChildren().forEach(node -> {
+			if (node instanceof StackPane) {
+				((StackPane) node).setPrefHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight()));
+				((StackPane) node).setMinHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight() / 2));
+			}
+		});
 		csvFiles.put(csvFile, sensorLineChart);
+		return sensorLineChart;
+	}
+
+	private void saveColorSettings(Map<String, Color> semanticColors) {
+		String group = "colors";
+		prefSettings.saveSetting(group, semanticColors);
 	}
 
 	/**
@@ -545,5 +556,26 @@ public class Model implements InitializingBean {
     public Collection<SensorLineChart> getCharts() {
 		return csvFiles.values();
     }
+
+	public void addFile(SgyFile file) {
+		loadedFiles.put(file.getFile().getPath(), file);
+		setCurrentFile(file);
+	}
+
+	public void setCurrentFile(SgyFile file) {
+		this.currentFile = file;
+		// Обновляем состояние модели для текущего файла
+		this.field = new MapField();
+		this.profField = new ProfileField(this);
+		// ... обновление других полей
+	}
+
+	public SgyFile getCurrentFile() {
+		return currentFile;
+	}
+
+	public Collection<SgyFile> getLoadedFiles() {
+		return loadedFiles.values();
+	}
 
 }

@@ -5,5 +5,7 @@ import java.util.List;
 import javafx.scene.Node;
 
 public interface ToolProducer {
-	List<Node> getToolNodes();
+	default List<Node> getToolNodes() {
+		return List.of();
+	};
 }

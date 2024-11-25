@@ -1,6 +1,7 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.awt.geom.Point2D;
+
+import javafx.geometry.Point2D;
 
 public class GoogleCoordUtils {
 
@@ -14,7 +15,7 @@ public class GoogleCoordUtils {
 	
 		int scale = 1 << zoom;
 		
-		Point2D pixelCoordinate = new Point2D.Double(
+		Point2D pixelCoordinate = new Point2D(
 				p.getX() / scale,
 				p.getY() / scale);
 		
@@ -27,11 +28,11 @@ public class GoogleCoordUtils {
 
 		Point2D worldCoordinate = project(latLng);
 
-		Point2D pixelCoordinate = new Point2D.Double(
+		Point2D pixelCoordinate = new Point2D(
 			Math.floor(worldCoordinate.getX() * scale),
 			Math.floor(worldCoordinate.getY() * scale));
 
-		Point2D tileCoordinate = new Point2D.Double(Math.floor(worldCoordinate.getX() * scale / TILE_SIZE),
+		Point2D tileCoordinate = new Point2D(Math.floor(worldCoordinate.getX() * scale / TILE_SIZE),
 				Math.floor(worldCoordinate.getY() * scale / TILE_SIZE));
 
 		return pixelCoordinate;
@@ -46,7 +47,7 @@ public class GoogleCoordUtils {
 		// about a third of a tile past the edge of the world tile.
 		siny = Math.min(Math.max(siny, -0.9999), 0.9999);
 
-		return new Point2D.Double(TILE_SIZE * (0.5 + latLng.getLonDgr() / 360),
+		return new Point2D(TILE_SIZE * (0.5 + latLng.getLonDgr() / 360),
 				TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)));
 	}
 	

@@ -3,12 +3,11 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
-import java.awt.geom.Point2D;
 import java.util.List;
 
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -18,14 +17,12 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class ClickPlace extends BaseObjectImpl { //, MouseHandler {
 
-	private static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null) / 2;
-	private static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null) / 2;
+	private final static int R_HOR = ResourceImageHolder.IMG_GPS.getWidth(null) / 2;
+	private final static int R_VER = ResourceImageHolder.IMG_GPS.getHeight(null) / 2;
 
 	public static Stroke SELECTED_STROKE = new BasicStroke(2.0f);
 	
@@ -38,13 +35,17 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 
 	private Color flagColor = Color.getHSBColor((float) Math.random(), 1, 1f); 
 	
-	private Trace trace;
+	private final Trace trace;
 
-	private SgyFile file;
+	private final SgyFile file;
 
 	public ClickPlace(SgyFile file, Trace trace) {
 		this.file = file;
 		this.trace = trace;
+	}
+
+	public Trace getTrace() {
+		return trace;
 	}
 
 	@Override
@@ -53,33 +54,9 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		
-		return false;
-	}
-	
-	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
 		ClickPlace result = new ClickPlace(file, trace); 	
 		return result;
-	}
-
-	@Override
-	public boolean isFit(int begin, int end) {
-		
-		return false;
-	}
-	
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		
-		return false;
 	}
 
 	@Override
@@ -147,15 +124,7 @@ public class ClickPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	//	return AppContext.model.getGprTraces().get(traceInAll);
 	//}
 
-	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		
-		return false;
-	}
 
-	@Override
-	public void signal(Object obj) {
-	}
 
 	@Override
 	public List<BaseObject> getControls() {

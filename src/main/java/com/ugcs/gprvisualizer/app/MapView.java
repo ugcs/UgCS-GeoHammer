@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -12,9 +11,20 @@ import java.util.List;
 import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
-import com.ugcs.gprvisualizer.draw.*;
+import com.ugcs.gprvisualizer.draw.BaseLayer;
+import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.draw.GpsTrack;
+import com.ugcs.gprvisualizer.draw.GridLayer;
+import com.ugcs.gprvisualizer.draw.Layer;
+import com.ugcs.gprvisualizer.draw.RadarMap;
+import com.ugcs.gprvisualizer.draw.RepaintListener;
+import com.ugcs.gprvisualizer.draw.SatelliteMap;
+import com.ugcs.gprvisualizer.draw.SmthChangeListener;
+import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.draw.Work;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
 
+import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -133,7 +143,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 			model.getMapField().setZoom(zoom);
 	    	
 	    	Point2D p2 = model.getMapField().latLonToScreen(ll);
-	    	Point2D pdist = new Point2D.Double(p2.getX() - p.getX(), p2.getY() - p.getY());
+	    	Point2D pdist = new Point2D(p2.getX() - p.getX(), p2.getY() - p.getY());
 	    	
 	    	LatLon sceneCenter = model.getMapField().screenTolatLon(pdist);			
 			model.getMapField().setSceneCenter(sceneCenter);
@@ -184,7 +194,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 						chart.get().setSelectedTrace(trace.getIndexInFile());
 					} 
 				} else {
-					model.getProfileField().setSelectedTrace(trace.getIndexInSet());
+					model.getProfileField().setMiddleTrace(trace.getIndexInSet());
 				}				
 				model.createClickPlace(trace.getFile(), trace);
 			}

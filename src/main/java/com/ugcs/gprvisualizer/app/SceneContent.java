@@ -4,7 +4,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 
@@ -16,9 +15,6 @@ public class SceneContent extends BorderPane implements InitializingBean {
 
 	@Autowired
 	private StatusBar statusBar;
-	
-//	@Autowired
-//	private GeoHammerToolbar toolBar;
 
 	@Autowired
 	private MapView mapView;
@@ -33,7 +29,6 @@ public class SceneContent extends BorderPane implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		this.setOnDragOver(loader.getDragHandler());
 		this.setOnDragDropped(loader.getDropHandler());
-		//this.setTop(toolBar);
 		this.setCenter(createSplitPane());
 		this.setBottom(statusBar);
 		
@@ -41,7 +36,7 @@ public class SceneContent extends BorderPane implements InitializingBean {
 
 	private SplitPane createSplitPane() {
 		SplitPane sp = new SplitPane();
-		sp.setDividerPositions(0.15f, 0.65f, 0.2f);
+		sp.setDividerPositions(0.2f, 0.6f, 0.2f);
 		
 		//map view
 		sp.getItems().add(mapView.getCenter());

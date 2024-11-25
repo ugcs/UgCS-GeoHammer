@@ -9,11 +9,13 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,10 +75,14 @@ public class CsvFile extends SgyFile {
                             - getGeoData().get(0).getLatitude().intValue()) <= 1  
                         && Math.abs(coord.getLongitude().intValue() 
                             - getGeoData().get(0).getLongitude().intValue()) <= 1))) {
-                getTraces().add(new Trace(this, null, null, new float[] {},
-                    new LatLon(coord.getLatitude(), coord.getLongitude())));
+                Trace tr = new Trace(this, null, null, new float[] {},
+                        new LatLon(coord.getLatitude(), coord.getLongitude()));
+                getTraces().add(tr);
                 if (coord instanceof GeoData) {
                     getGeoData().add((GeoData) coord);
+                }
+                if (((GeoData) coord).isMarked()) {
+                    getAuxElements().add(new FoundPlace(tr, getOffset()));
                 }
             }            
         }
@@ -86,6 +92,12 @@ public class CsvFile extends SgyFile {
     public void save(File file) throws Exception {
 			Path inputFile = getFile().toPath();
         	Path tempFile = file.toPath();
+
+            var foundPalces = getAuxElements().stream().filter(bo -> bo instanceof FoundPlace).map(bo -> ((FoundPlace) bo).getTraceInFile()).collect(Collectors.toSet());
+            getGeoData().forEach(gd -> {
+                gd.setSensorValue(GeoData.Semantic.MARK.getName(), gd.isMarked() ? 1 : 0);
+                gd.setSensorValue(GeoData.Semantic.MARK.getName(), foundPalces.contains(gd.getTraceNumber()) ? 1 : 0);
+            });
 
             Map<Integer, GeoData> geoDataMap = getGeoData().stream().collect(Collectors.toMap(GeoData::getLineNumber, gd -> gd));
 
@@ -98,16 +110,26 @@ public class CsvFile extends SgyFile {
                 String skippedLines = parser.getSkippedLines();
 
                 // check if "Next WP" exists and is it the last column
-                String nextWPColumnName = semanticToSensorData.getOrDefault(GeoData.Semantic.LINE.getName(), new SensorData() {{
+                SensorData nextWPColumn = semanticToSensorData.getOrDefault(GeoData.Semantic.LINE.getName(), new SensorData() {{
                     setHeader("Next WP");
-                }}).getHeader();
-                //boolean isNextWPLast = false;
+                }});
+                SensorData markColumn = semanticToSensorData.getOrDefault(GeoData.Semantic.MARK.getName(), new SensorData() {{
+                    setHeader("Mark");
+                }});
                 log.debug("Source file skippedLines: {}", skippedLines);
-                if (!skippedLines.contains(nextWPColumnName)) {
+
+                if (!skippedLines.contains(nextWPColumn.getHeader())) {
                     // add "Next WP" to the end of the header if not exists
-                    skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + nextWPColumnName + System.lineSeparator());
-                    getParser().setIndexByHeaderForSensorData(skippedLines, semanticToSensorData.get(GeoData.Semantic.LINE.getName()));
+                    skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + nextWPColumn.getHeader() + System.lineSeparator());
+                    getParser().setIndexByHeaderForSensorData(skippedLines, nextWPColumn);
                 }
+
+                if (!skippedLines.contains(markColumn.getHeader())) {
+                    // add "Next WP" to the end of the header if not exists
+                    skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + markColumn.getHeader() + System.lineSeparator());
+                }
+                getParser().setIndexByHeaderForSensorData(skippedLines, markColumn);
+                semanticToSensorData.put(markColumn.getHeader(), markColumn);
 
 				writer.write(skippedLines);
 
@@ -122,7 +144,10 @@ public class CsvFile extends SgyFile {
                         for (var sv: gd.getSensorValues()) {   
                             if (sv.originalData() != sv.data()) {
                                 var template = semanticToSensorData.get(sv.semantic());
-                                boolean isLast = skippedLines.endsWith(template.getHeader() + System.lineSeparator());
+                                //if (template == null) {
+                                //    template = markColumn;
+                                //}
+                                //boolean isLast = skippedLines.endsWith(template.getHeader() + System.lineSeparator());
                                 //System.out.println(template.getIndex());
                                 line = replaceCsvValue(line, template.getIndex(), sv.data() != null ? String.format("%s", sv.data()) : "");
                             }
@@ -141,6 +166,9 @@ public class CsvFile extends SgyFile {
         String[] parts = input.split(",", -1); // -1 for save empty string 
         if (position >= 0 && position < parts.length) {
             parts[position] = newValue;
+        } else if (position == parts.length) {
+            parts = Arrays.copyOf(parts, parts.length + 1);
+            parts[parts.length - 1] = newValue;
         }
         return String.join(",", parts);
     }

@@ -1,8 +1,5 @@
 package com.ugcs.gprvisualizer.draw;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +7,7 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -23,12 +21,6 @@ public class Work {
 	
 	protected void repaintEvent() {
 		
-	}
-	
-
-	
-	public Work() {
-
 	}
 
 	public List<Layer> getLayers() {
@@ -127,7 +119,7 @@ public class Work {
 	protected Point2D getLocalCoords(double x, double y) {
 		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
     	javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
-    	Point2D p = new Point2D.Double(
+    	Point2D p = new Point2D(
     			imgCoord.getX() - imageView.getBoundsInLocal().getWidth() / 2, 
     			imgCoord.getY() - imageView.getBoundsInLocal().getHeight() / 2);
 		return p;

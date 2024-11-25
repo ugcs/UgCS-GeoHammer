@@ -2,12 +2,11 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.util.List;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
@@ -15,12 +14,12 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class DepthStart extends BaseObjectImpl { //implements BaseObject, MouseHandler {
 
 	int horM;
 	int verM;
@@ -40,16 +39,10 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 	
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		if (isPointInside(localPoint, profField)) {
 			return true;
 		}
-		
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
 		return false;
 	}
 
@@ -58,18 +51,9 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 		return null;
 	}
 
-	@Override
-	public boolean isFit(int begin, int end) {
-		return false;
-	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
 		TraceSample ts = profField.screenToTraceSample(point);
 		
 		controlToSettings(ts);
@@ -86,20 +70,15 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public void drawOnMap(Graphics2D g2, MapField mapField) {
-		
-	}
-
-	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
 		
 		setClip(g2, profField.getClipLeftMainRect());
 		
-		Point p = getCenter(profField);
+		Point2D p = getCenter(profField);
 
 		g2.setColor(Color.BLUE);
 		
-		g2.translate(p.x, p.y);
+		g2.translate(p.getX(), p.getY());
 		g2.fill(shape);
 		
 		if (isSelected()) {
@@ -108,44 +87,28 @@ public class DepthStart extends BaseObjectImpl implements BaseObject, MouseHandl
 			g2.draw(shape);
 		}
 		
-		g2.translate(-p.x, -p.y);
+		g2.translate(-p.getX(), -p.getY());
 	}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
+	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
 		Rectangle rect = getRect(profField);
-		
-		return rect.contains(localPoint);
+		return rect.contains(localPoint.getX(), localPoint.getY());
 	}
 	
 	//@Override
-	private Rectangle getRect(ProfileField profField) {
-		
-		Point scr = getCenter(profField);
-		Rectangle rect = new Rectangle(scr.x + offsetX, scr.y + offsetY, horM, verM);
+	private Rectangle getRect(ScrollableData profField) {
+		Point2D scr = getCenter(profField);
+		Rectangle rect = new Rectangle((int) scr.getX() + offsetX,(int) scr.getY() + offsetY, horM, verM);
 		return rect;
 	}
 
-	public Point getCenter(ProfileField profField) {
-		Point scr = profField.traceSampleToScreen(new TraceSample(
+	public Point2D getCenter(ScrollableData profField) {
+		Point2D scr = profField.traceSampleToScreen(new TraceSample(
 				0, model.getSettings().getLayer()));
-		scr.x = profField.visibleStart;
+		//FIXME:
+		//scr.x = profField.visibleStart;
 		return scr;
-	}
-
-	@Override
-	public void signal(Object obj) {
-		
-	}
-
-	@Override
-	public List<BaseObject> getControls() {
-		return null;
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
 	}
 
 }

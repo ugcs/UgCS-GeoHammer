@@ -5,13 +5,11 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
 import java.util.List;
 
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
@@ -21,19 +19,18 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
-public class RulerTool extends BaseObjectImpl 
-	implements BaseObject, MouseHandler {
+public class RulerTool extends BaseObjectImpl { //implements BaseObject {
 	
-	private static Font fontB = new Font("Verdana", Font.BOLD, 11);
+	private static final Font fontB = new Font("Verdana", Font.BOLD, 11);
 	private static final double MARGIN = 1.0;
 		
-	private DragAnchor anch1;
-	private DragAnchor anch2;
-	private VerticalCutPart offset;
-	private SgyFile file;
+	private final DragAnchor anch1;
+	private final DragAnchor anch2;
+	private final VerticalCutPart offset;
+	private final SgyFile file;
 	
 	
 	public static RulerTool createRulerTool(ProfileField field, SgyFile file) {
@@ -114,17 +111,17 @@ public class RulerTool extends BaseObjectImpl
 	
 	@Override
 	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		Point lt = profField.traceSampleToScreen(new TraceSample(
+		Point2D lt = profField.traceSampleToScreen(new TraceSample(
 				offset.localToGlobal(anch1.getTrace()), anch1.getSample()));
-		Point rb = profField.traceSampleToScreen(new TraceSample(
+		Point2D rb = profField.traceSampleToScreen(new TraceSample(
 				offset.localToGlobal(anch2.getTrace()), anch2.getSample()));
 		
 		g2.setColor(Color.RED);
-		g2.drawLine(lt.x, lt.y, rb.x, rb.y);
+		g2.drawLine((int) lt.getX(), (int) lt.getY(), (int) rb.getX(), (int) rb.getY());
 		
-		g2.drawLine(lt.x, lt.y, lt.x, rb.y);
+		g2.drawLine((int) lt.getX(), (int) lt.getY(), (int) lt.getX(), (int) rb.getY());
 		
-		g2.drawLine(lt.x, rb.y, rb.x, rb.y);
+		g2.drawLine((int) lt.getX(), (int) rb.getY(), (int) rb.getX(), (int) rb.getY());
 		
 		g2.setColor(Color.GRAY);
 		
@@ -139,16 +136,16 @@ public class RulerTool extends BaseObjectImpl
 		
 		String distDsp = String.format("%.2f cm", dist());
 		
-		drawText(g2, lt.x + 3, (lt.y + rb.y) / 2, smpDsp);		
+		drawText(g2, lt.getX() + 3, (lt.getY() + rb.getY()) / 2, smpDsp);
 		
-		drawText(g2, (lt.x + rb.x) / 2, rb.y - 3, trcDsp);
+		drawText(g2, (lt.getX() + rb.getX()) / 2, rb.getY() - 3, trcDsp);
 		
-		drawText(g2, (lt.x + rb.x) / 2 + 5 * fontHeight, 
-				(lt.y + rb.y) / 2 + 2 * fontHeight, distDsp);
+		drawText(g2, (lt.getX() + rb.getX()) / 2 + 5 * fontHeight,
+				(lt.getY() + rb.getY()) / 2 + 2 * fontHeight, distDsp);
 		
 	}
 	
-	private void drawText(Graphics2D g2, int x, int y, String str) {
+	private void drawText(Graphics2D g2, double x, double y, String str) {
         FontMetrics fm = g2.getFontMetrics();
         Rectangle2D rect = fm.getStringBounds(str, g2);
 
@@ -159,35 +156,31 @@ public class RulerTool extends BaseObjectImpl
         
         g2.setColor(Color.BLACK);
         
-        g2.fillRoundRect(x + (int) rect.getX(),
-			y + (int) rect.getY(), 
-			(int) rect.getWidth(),
-			(int) rect.getHeight(), 
-			5, 5);
+        g2.fillRoundRect((int) (x + rect.getX()),
+				(int) (y + rect.getY()),
+				(int) rect.getWidth(),
+				(int) rect.getHeight(),
+				5, 5);
         
         g2.setColor(Color.YELLOW.darker());
-        g2.drawRoundRect(x + (int) rect.getX(),
-			y + (int) rect.getY(),
-			(int) rect.getWidth(),
-			(int) rect.getHeight(), 
-			5, 5);
+        g2.drawRoundRect((int) (x + rect.getX()),
+				(int) (y + rect.getY()),
+				(int) rect.getWidth(),
+				(int) rect.getHeight(),
+				5, 5);
 
         g2.setColor(Color.MAGENTA);
-        g2.drawString(str, x, y);		
+        g2.drawString(str, (int) x, (int) y);
 	}
 	
 	private double dist() {
-		
-		
+
 		int tr1 = anch1.getTrace();
 		int tr2 = anch2.getTrace();
 		int smp1 = anch1.getSample();
 		int smp2 = anch2.getSample();
 		
-		
-		
 		double diag = distanceCm(file, tr1, tr2, smp1, smp2);
-		
 		
 		return diag;
 	}
@@ -245,8 +238,6 @@ public class RulerTool extends BaseObjectImpl
 		return diag;
 	}
 
-
-	
 	public static int diagonalToSmp(SgyFile file, int tr, int smp, double c) {
 		
 		int grn = file.getGroundProfile().deep[tr];
@@ -289,48 +280,10 @@ public class RulerTool extends BaseObjectImpl
 		
 		return (int) smpSum;
 	}
-	
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField mapField) {
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public void drawOnMap(Graphics2D g2, MapField mapField) {
-	}
-	
-	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public void signal(Object obj) {
-	}
 
 	@Override
 	public List<BaseObject> getControls() {
-		return Arrays.asList(anch1, anch2);	
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
+		return List.of(anch1, anch2);
 	}
 
 	@Override

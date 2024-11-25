@@ -3,33 +3,26 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
-import java.awt.geom.Point2D;
-import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.*;
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import com.ugcs.gprvisualizer.app.SensorLineChart;
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
-import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.common.ext.TraceSample;
-import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class FoundPlace extends BaseObjectImpl implements BaseObject { //, MouseHandler {
 
-	static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null) / 2;
-	static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null) / 2;
+	//static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null) / 2;
+	//static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null) / 2;
 	static int R_HOR_M = ShapeHolder.flag.getBounds().width / 2;
 	static int R_VER_M = ShapeHolder.flag.getBounds().height / 2;
 
@@ -42,80 +35,72 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
                 BasicStroke.JOIN_MITER,
                 10.0f, dash1, 0.0f);
 
-	private Color flagColor = Color.getHSBColor((float) Math.random(), 0.9f, 0.97f); 
-	private int traceInFile;
+	private final Color flagColor = Color.getHSBColor((float) Math.random(), 0.9f, 0.97f);
+	private Trace traceInFile;
 	private VerticalCutPart offset;	
 	
 	public int getTraceInFile() {
-		return traceInFile;
+		return traceInFile.getIndexInFile();
+	}
+
+	public Color getFlagColor() {
+		return flagColor;
 	}
 	
-	public static FoundPlace loadFromJson(JSONObject json, SgyFile sgyFile) {
+	/*public static FoundPlace loadFromJson(JSONObject json, SgyFile sgyFile) {
 		int traceNum = (int) (long) (Long) json.get("trace");		
 		return new FoundPlace(traceNum, sgyFile.getOffset());
-	}
+	}*/
 	
-	public FoundPlace(int trace, VerticalCutPart offset) {
+	public FoundPlace(Trace trace, VerticalCutPart offset) {
 		this.offset = offset;
-			
 		this.traceInFile = trace;
 	}
 
 	@Override
 	public boolean mousePressHandle(Point2D point, MapField field) {
-		
 		Rectangle r = getRect(field);
-		if (r.contains(point)) {
-			
-			AppContext.model.getProfileField().setSelectedTrace(
-					offset.localToGlobal(traceInFile));
-		
+		if (r.contains(point.getX(), point.getY())) {
+			ScrollableData scrollable;
+			if (traceInFile.getFile() instanceof CsvFile) {
+				scrollable = AppContext.model.getChart((CsvFile) traceInFile.getFile()).get();
+			} else {
+				scrollable = AppContext.model.getProfileField();
+			}
+			scrollable.setMiddleTrace(offset.localToGlobal(traceInFile.getIndexInFile()));
+
 			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
-			
 			coordinatesToStatus();
-			
 			return true;
 		}
-		
 		return false;
 	}
 
 	public void coordinatesToStatus() {
-		Trace tr = getTrace();
+		Trace tr = traceInFile;//getTrace();
 		if (tr != null && tr.getLatLon() != null) {
 			AppContext.status.showProgressText(tr.getLatLon().toString());
 		}
 	}
 	
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
-		
-		if (isPointInside(localPoint, profField)) {
-				
-			AppContext.model.getMapField().setSceneCenter(getTrace().getLatLon());
-			
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
+		if (profField instanceof SensorLineChart || isPointInside(localPoint, profField)) {
+			AppContext.model.getMapField().setSceneCenter(getLatLon());
 			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
-			
 			coordinatesToStatus();
-			
 			return true;
 		}
-		
 		return false;
 	}
 
 	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
+	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
 		
-		TraceSample ts = profField.screenToTraceSample(point, offset);
+		TraceSample ts = profField.screenToTraceSample(point); //, offset);
 		
-		traceInFile = Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace()));
+		traceInFile = traceInFile.getFile()
+				.getTraces().get(Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace())));
 		
 		AppContext.notifyAll(new WhatChanged(Change.justdraw));
 		
@@ -172,20 +157,19 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		}
 		
 		g2.translate(-rect.x, -(rect.y + rect.height));
-		
 	}
 	
-	public Rectangle getRect(ProfileField profField) {
-		
-		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
-				
+	private Rectangle getRect(ScrollableData profField) {
+		int x = profField.traceToScreen(offset.localToGlobal(traceInFile.getIndexInFile()));
 		Rectangle rect = new Rectangle(x, 
-				Model.TOP_MARGIN - R_VER_M * 2, R_HOR_M * 2, R_VER_M * 2);
+				Model.TOP_MARGIN - R_VER_M * 2,
+				R_HOR_M * 2,
+				R_VER_M * 2);
 		return rect;
 	}
 	
-	public Rectangle getRect(MapField mapField) {
-		Trace tr = getTrace();		
+	private Rectangle getRect(MapField mapField) {
+		Trace tr = traceInFile;//getTrace();
 		Point2D p =  mapField.latLonToScreen(tr.getLatLon());		
 		
 		Rectangle rect = new Rectangle((int) p.getX(), (int) p.getY() - R_VER_M * 2, 
@@ -193,49 +177,32 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return rect;
 	}
 
-	private Trace getTrace() {
-		return AppContext.model.getGprTraces().get(
-				offset.localToGlobal(traceInFile));
-	}
+	//private Trace getTrace() {
+	//	return AppContext.model.getGprTraces().get(
+	//			offset.localToGlobal(traceInFile));
+	//}
 
 	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-		
+	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
 		Rectangle rect = getRect(profField);
-		
-		return rect.contains(localPoint);
-	}
-
-	@Override
-	public void signal(Object obj) {
-		
-	}
-
-	@Override
-	public List<BaseObject> getControls() {
-		return null;
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
+		return rect.contains(localPoint.getX(), localPoint.getY());
 	}
 
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
-		FoundPlace result = new FoundPlace(traceInFile - traceoffset, verticalCutPart); 
+		FoundPlace result = new FoundPlace(
+				traceInFile.getFile().getTraces().get(traceInFile.getIndexInFile() - traceoffset), verticalCutPart);
 		
 		return result;
 	}
 
 	@Override
 	public boolean isFit(int begin, int end) {
-		
-		return traceInFile >= begin && traceInFile <= end;
+		return traceInFile.getIndexInFile() >= begin && traceInFile.getIndexInFile() <= end;
 	}
 
 	public LatLon getLatLon() {
-		return getTrace().getLatLon();
+		return traceInFile.getLatLon();
 	}
 
 }

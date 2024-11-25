@@ -12,7 +12,7 @@ public class GeoData extends GeoCoordinates {
 
         LINE("Line"),
         ALTITUDE_AGL("Altitude AGL"),
-        TMI("TMI");
+        TMI("TMI"), MARK("Mark"),;
 
         private String name;
 
@@ -32,10 +32,13 @@ public class GeoData extends GeoCoordinates {
      */
     private final int lineNumber;
 
-    public GeoData(int lineNumber, List<SensorValue> sensorValues, GeoCoordinates geoCoordinates) {
+    private final boolean marked;
+
+    public GeoData(boolean marked, int lineNumber, List<SensorValue> sensorValues, GeoCoordinates geoCoordinates) {
         super(geoCoordinates.getLatitude(), geoCoordinates.getLongitude(), geoCoordinates.getAltitude(), geoCoordinates.getTimeInMs(), geoCoordinates.getTraceNumber(), geoCoordinates.getDateTime());
         this.sensorValues = sensorValues;
         this.lineNumber = lineNumber;
+        this.marked = marked;
     }
 
     public GeoData(GeoData geoData) {
@@ -45,6 +48,7 @@ public class GeoData extends GeoCoordinates {
             sensorValues.add(new SensorValue(sensorValue));
         }
         this.lineNumber = geoData.lineNumber;
+        this.marked = geoData.marked;
     }
 
     public List<SensorValue> getSensorValues() {
@@ -87,9 +91,10 @@ public class GeoData extends GeoCoordinates {
             if (semantic.equals(sensorValue.semantic())) {
                 sensorValues.add(sensorValue.withValue(value));
                 sensorValues.remove(sensorValue);
-                break;
+                return;
             }
         }
+        sensorValues.add(new SensorValue(semantic, "", value, value));
     }
 
     public void undoSensorValue(String semantic) {
@@ -100,5 +105,9 @@ public class GeoData extends GeoCoordinates {
                 break;
             }
         }
+    }
+
+    public boolean isMarked() {
+        return marked;
     }
 }

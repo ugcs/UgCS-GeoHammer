@@ -2,6 +2,8 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.Set;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.beans.value.ChangeListener;
@@ -32,7 +34,8 @@ public class ProfileScroll extends Canvas {
 	double pressXInBar;
 	
 	ChangeListener<Number> changeListener;
-	
+	private ScrollableData scrollable;
+
 	public void setChangeListener(ChangeListener<Number> changeListener) {
 		this.changeListener = changeListener;
 	}
@@ -109,7 +112,7 @@ public class ProfileScroll extends Canvas {
 			double trCenter = centerPos * tracesFull / getWidth();
 			
 			
-			model.getProfileField().setSelectedTrace((int) trCenter);
+			scrollable.setMiddleTrace((int) trCenter);
 			
 			double rectWidth = finish - start;
 			start = centerPos - rectWidth / 2;
@@ -123,11 +126,11 @@ public class ProfileScroll extends Canvas {
 	};	
 	
 	private MouseSInput selected;
-	private Set<MouseSInput> bars = Set.of(centerInput, leftInput, rightInput); 
- 
-	
-	public ProfileScroll(Model model) {
+	private Set<MouseSInput> bars = Set.of(centerInput, leftInput, rightInput);
+
+	public ProfileScroll(Model model, ScrollableData scrollable) {
 		this.model = model;
+		this.scrollable = scrollable;
 		
 		setWidth(400);
 		setHeight(HEIGHT);		
@@ -233,19 +236,29 @@ public class ProfileScroll extends Canvas {
 	void recalc() {
 		
 		if (!model.isActive() || model.getGprTracesCount() == 0) {
-			GraphicsContext gc = this.getGraphicsContext2D();	
-			gc.clearRect(0, 0, getWidth(), getHeight());
-			return;
+		//	GraphicsContext gc = this.getGraphicsContext2D();
+		//	gc.clearRect(0, 0, getWidth(), getHeight());
+		//	return;
 		}
 		
 		int width = (int) getWidth();
 		int height = (int) getHeight();
-		
-		double tracesFull = model.getGprTracesCount();
-		double center = model.getProfileField().getSelectedTrace();
-		
-		double tracesVisible = model.getProfileField().getVisibleNumberOfTrace();
-		
+
+		double tracesFull = 0;
+		double center;
+		double tracesVisible;
+		if (model.getGprTracesCount() != 0) {
+			tracesFull = model.getGprTracesCount();
+			center = scrollable.getMiddleTrace();
+			tracesVisible = scrollable.getVisibleNumberOfTrace();
+		} else {
+			if (scrollable instanceof SensorLineChart) {
+				tracesFull = scrollable.getTracesCount();
+			}
+			center = tracesFull / 2;
+			tracesVisible = tracesFull;
+		}
+
 		double centerPos =  center / tracesFull * (double) width;
 		double rectWidth = tracesVisible / tracesFull * (double) width;
 		
@@ -350,17 +363,17 @@ public class ProfileScroll extends Canvas {
 
 	}
 	
-	public void recalcField() {
+	private void recalcField() {
 		double scrCenter = (finish + start) / 2;			
 		double scrWidth = (finish - start);
 		
 		double visibletracesCount = scrWidth / (double) getWidth() 
-				* (double) model.getGprTracesCount();
+				* (double) scrollable.getTracesCount();
 		double hsc = getWidth() / visibletracesCount;
-		double aspect = hsc / model.getProfileField().getVScale();
+		double aspect = hsc / scrollable.getVScale();
 		
 		double trCenter = scrCenter / (double) getWidth() * (double) model.getGprTracesCount();
-		model.getProfileField().setSelectedTrace((int) trCenter);
-		model.getProfileField().setAspectReal(aspect);
+		scrollable.setMiddleTrace((int) trCenter);
+		scrollable.setRealAspect(aspect);
 	}
 }

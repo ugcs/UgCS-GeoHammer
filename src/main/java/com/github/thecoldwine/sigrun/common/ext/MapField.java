@@ -1,11 +1,10 @@
 package com.github.thecoldwine.sigrun.common.ext;
 
-import java.awt.geom.Point2D;
-
 import com.ugcs.gprvisualizer.draw.GoogleMapProvider;
 import com.ugcs.gprvisualizer.draw.HereMapProvider;
 import com.ugcs.gprvisualizer.draw.MapProvider;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
+import javafx.geometry.Point2D;
 
 public class MapField {
 
@@ -54,11 +53,11 @@ public class MapField {
 		tst(new LatLon(15.001, 40.001));
 		tst(new LatLon(15.002, 40.002));
 		
-		tst2(new Point2D.Double(0, 0));
-		tst2(new Point2D.Double(10, 10));
-		tst2(new Point2D.Double(20, 20));
-		tst2(new Point2D.Double(40, 40));
-		tst2(new Point2D.Double(100, 100));
+		tst2(new Point2D(0, 0));
+		tst2(new Point2D(10, 10));
+		tst2(new Point2D(20, 20));
+		tst2(new Point2D(40, 40));
+		tst2(new Point2D(100, 100));
 	}
 	
 	public Point2D latLonToScreen(LatLon latlon) {
@@ -66,7 +65,7 @@ public class MapField {
 		Point2D psc = GoogleCoordUtils.createInfoWindowContent(getSceneCenter(), getZoom());
 		Point2D p2d = GoogleCoordUtils.createInfoWindowContent(latlon, getZoom());
 		
-		Point2D result = new Point2D.Double(
+		Point2D result = new Point2D(
 			(p2d.getX() - psc.getX()), 
 			(p2d.getY() - psc.getY()));
 		
@@ -76,7 +75,7 @@ public class MapField {
 	public LatLon screenTolatLon(Point2D point) {
 		
 		Point2D psc = GoogleCoordUtils.createInfoWindowContent(getSceneCenter(), getZoom());
-		Point2D p = new Point2D.Double(
+		Point2D p = new Point2D(
 			psc.getX() + point.getX(), 
 			psc.getY() + point.getY());
 		

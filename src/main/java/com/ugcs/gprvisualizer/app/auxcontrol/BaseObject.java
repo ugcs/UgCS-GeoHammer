@@ -1,44 +1,69 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.geom.Point2D;
+import java.awt.*;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
-import com.ugcs.gprvisualizer.app.MouseHandler;
+//import com.ugcs.gprvisualizer.app.MouseHandler;
 
-public interface BaseObject extends MouseHandler {
+public interface BaseObject {//extends MouseHandler {
+	
+	default void drawOnMap(Graphics2D g2, MapField mapField) {
 
+	}
 	
-	void drawOnMap(Graphics2D g2, MapField mapField);
+	default void drawOnCut(Graphics2D g2, ProfileField profField) {
+
+	}
 	
-	void drawOnCut(Graphics2D g2, ProfileField profField);
+	default boolean isPointInside(Point2D localPoint, ScrollableData profField) {
+		return false;
+	}
+
+	default void signal(Object obj) {
+
+	}
 	
-	boolean isPointInside(Point localPoint, ProfileField profField);
+	default List<BaseObject> getControls() {
+		return List.of();
+	}
 	
-	//Rectangle getRect(ProfileField profField);
+	default boolean saveTo(JSONObject json) {
+		return false;
+	}
 	
-	void signal(Object obj);
-	
-	List<BaseObject> getControls();
-	
-	boolean saveTo(JSONObject json);
-	
-	boolean mousePressHandle(Point2D point, MapField mapField);
+	default boolean mousePressHandle(Point2D point, MapField mapField) {
+		return false;
+	}
 		
-	BaseObject copy(int offset, VerticalCutPart verticalCutPart);
+	default BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
+		throw new RuntimeException("not implemented");
+	}
 	
-	boolean isFit(int begin, int end);
+	default boolean isFit(int begin, int end) {
+		return false;
+	}
 	
 	void setSelected(boolean selected);
 	
 	boolean isSelected();
-	
-	int getGlobalTrace();
+
+	default boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
+		return false;
+	}
+
+	default boolean mouseReleaseHandle(Point2D localPoint, ScrollableData profField) {
+		return false;
+	}
+
+	default boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
+		return false;
+	}
+
 }

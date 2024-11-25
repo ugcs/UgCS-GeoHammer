@@ -2,12 +2,11 @@ package com.ugcs.gprvisualizer.app.auxcontrol;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.geom.Point2D;
-import java.util.List;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
+import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -17,12 +16,11 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandler {
+public class ConstPlace extends BaseObjectImpl implements BaseObject {
 
 	private LatLon latLon;
 	private int traceInFile;
@@ -45,7 +43,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 	}
 
 	@Override
-	public boolean mousePressHandle(Point localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		
 		if (isPointInside(localPoint, profField)) {
 				
@@ -81,24 +79,6 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		return null;
 	}
 
-	@Override
-	public boolean isFit(int begin, int end) {
-		return false;
-	}
-	
-	@Override
-	public boolean mouseReleaseHandle(Point localPoint, ProfileField profField) {
-
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoveHandle(Point point, ProfileField profField) {
-		
-		return false;
-	}
-	
-	
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField mapField) {
@@ -116,11 +96,6 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
-	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-
-	}
-	
 	public Rectangle getRect(ProfileField profField) {
 
 		if (offset == null) {
@@ -146,30 +121,8 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject, MouseHandl
 				.get(offset.localToGlobal(traceInFile));
 	}
 
-	@Override
-	public boolean isPointInside(Point localPoint, ProfileField profField) {
-
-		return false;
-	}
-
-	@Override
-	public void signal(Object obj) {
-		
-	}
-
-	@Override
-	public List<BaseObject> getControls() {
-		return null;
-	}
-
-	@Override
-	public boolean saveTo(JSONObject json) {
-		return false;
-	}
-
 	public LatLon getLatLon() {
 		return latLon;
 	}
-
 
 }

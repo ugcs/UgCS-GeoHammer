@@ -2,22 +2,33 @@ package com.ugcs.gprvisualizer.app;
 
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.github.thecoldwine.sigrun.common.ext.*;
+import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.ImageView;
 
+import javafx.scene.layout.*;
+import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Shape;
+import javafx.scene.shape.StrokeType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import com.ugcs.gprvisualizer.app.fir.FIRFilter;
@@ -39,9 +50,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -53,7 +61,7 @@ import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
 
 
-public class SensorLineChart implements FileDataContainer {
+public class SensorLineChart extends ScrollableData implements FileDataContainer {
 
     private static final String FILTERED_SERIES_SUFFIX = "_filtered";
 
@@ -61,21 +69,36 @@ public class SensorLineChart implements FileDataContainer {
 
     private final Model model;
     private final Broadcast broadcast;
-    private PrefSettings settings;
+    private final PrefSettings settings;
+    private final AuxElementEditHandler auxEditHandler;
 
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
     private LineChartWithMarkers lastLineChart = null;
     private Set<LineChartWithMarkers> charts = new HashSet<>();
     private Rectangle zoomRect = new Rectangle();
 
+    private final ProfileScroll profileScroll;
+
     //private int scale;
     private CsvFile file;
     private Node rootNode;
 
-    public SensorLineChart(Model model, Broadcast broadcast, PrefSettings settings) {
+    public SensorLineChart(Model model, Broadcast broadcast, PrefSettings settings, AuxElementEditHandler auxEditHandler) {
         this.model = model;
         this.broadcast = broadcast;
         this.settings = settings;
+        this.auxEditHandler = auxEditHandler;
+        this.profileScroll = new ProfileScroll(model, this);
+    }
+
+    public void addFlag(FoundPlace fp) {
+        if (!foundPlaces.containsKey(fp)) {
+            putFoundPlace(fp);
+            removeVerticalMarker();
+            if (fp.isSelected()) {
+                selectFlag(fp);
+            }
+        }
     }
 
     public void setSelectedTrace(int traceNumber) {
@@ -186,24 +209,10 @@ public class SensorLineChart implements FileDataContainer {
         broadcast.fileSelected(file);
     }
 
-
-    /* private List<Number> calculateAverages(List<Number> sourceList) {
-        if (sourceList.isEmpty()) return sourceList;
-        //check if sourceList have only nulls
-        if (sourceList.stream().allMatch(Objects::isNull)) {
-            return new ArrayList<>();
-        }
-
-        var scale = sourceList.size() / Math.clamp(sourceList.size(), 1, 2000);
-        return IntStream.range(0, sourceList.size() / scale) // Create an index stream from 0 to 999
-                .mapToObj(i -> sourceList.subList(i * scale, (i + 1) * scale) // Transform each index into a sublist of 100 elements
-                    .stream()    
-                    .filter(Objects::nonNull)
-                    .mapToDouble(Number::doubleValue)
-                    .average())
-                .map(optAvg -> optAvg.isPresent() ? optAvg.getAsDouble() : null) // Calculate average value
-                .collect(Collectors.toList()); // Collect results in a list
-    } */
+    @Override
+    public int getTracesCount() {
+        return file.getTraces().size();
+    }
 
     public record PlotData(String semantic, String units, Color color, List<Number> data, boolean rendered) {
         
@@ -257,6 +266,7 @@ public class SensorLineChart implements FileDataContainer {
 
         // Using StackPane to overlay charts
         StackPane stackPane = new StackPane();
+
         ObservableList<SeriesData> seriesList = FXCollections.observableArrayList();
 
         for (int i = 0; i < plotDataList.size(); i++) {
@@ -437,6 +447,7 @@ public class SensorLineChart implements FileDataContainer {
 
                                 List<GeoData> geoDataLinesList = new ArrayList<>();
                                 List<Trace> sublist = new ArrayList<>();
+                                List<BaseObject> auxElements = new ArrayList<>();
                                 for(GeoData geoData: file.getGeoData()) {
                                     if (geoData.getLine().data() != null && geoData.getLine().data().intValue() != currentYValue) {
                                         sublist.add(file.getTraces().get(geoData.getTraceNumber()));
@@ -444,6 +455,10 @@ public class SensorLineChart implements FileDataContainer {
                                         if (geoData.getLine().data().intValue() > currentYValue) {
                                             gd.setLine(gd.getLine().data().intValue() - 1);
                                         }
+                                        file.getAuxElements().stream().filter(FoundPlace.class::isInstance)
+                                                .map(o -> ((FoundPlace) o))
+                                                .filter(fp -> fp.getTraceInFile() == geoData.getTraceNumber())
+                                                .forEach(fp -> auxElements.add(fp));
                                         geoDataLinesList.add(gd);
                                     }
                                 }
@@ -452,6 +467,7 @@ public class SensorLineChart implements FileDataContainer {
 
                                 subfile.setTraces(sublist);
                                 subfile.getGeoData().addAll(geoDataLinesList);
+                                subfile.setAuxElements(auxElements);
                                 subfile.updateInternalIndexes();
 
                                 model.getFileManager().removeFile(file);
@@ -464,12 +480,22 @@ public class SensorLineChart implements FileDataContainer {
                                 broadcast.notifyAll(new WhatChanged(Change.traceCut));
                             });
 
-                            lastLineChart.addVerticalValueMarkerWithButton(verticalMarker, line, imageView);
+                            imageView.setTranslateX(1);
+                            imageView.setTranslateY(1);
+
+                            Pane pane = new Pane();
+                            pane.getChildren().add(imageView);
+
+                            //lastLineChart.addVerticalValueMarkerWithButton(verticalMarker, line, imageView);
+                            lastLineChart.addVerticalValueMarker(verticalMarker, line, null, pane);
                         }
                     }
                 }
             });
         }
+
+        file.getAuxElements().stream().map(o -> ((FoundPlace) o))
+                .forEach(this::putFoundPlace);
 
         Button close = new Button("X");
         HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
@@ -481,9 +507,11 @@ public class SensorLineChart implements FileDataContainer {
         zoomRect.setStroke(Color.BLUE);
 
         root = new VBox(top, stackPane, zoomRect);
+        root.setFillWidth(true);
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
         root.setPadding(new Insets(10));
+
         close.setOnMouseClicked(event -> {
             close();
         });
@@ -497,7 +525,78 @@ public class SensorLineChart implements FileDataContainer {
 
         this.rootNode = root;
 
+        //root.getChildren().add(0, profileScroll);
+        profileScroll.widthProperty().bind(top.widthProperty());
+
         return root;
+    }
+
+    private Map<FoundPlace, Data<Number, Number>> foundPlaces = new HashMap<>();
+
+    private void putFoundPlace(FoundPlace fp) {
+        Data<Number, Number> verticalMarker = new Data<>(fp.getTraceInFile(), 0);
+
+        var color = javafx.scene.paint.Color.rgb(
+            fp.getFlagColor().getRed(),
+            fp.getFlagColor().getGreen(),
+            fp.getFlagColor().getBlue(),
+            fp.getFlagColor().getAlpha() / 255.0
+        );
+        Line line = new Line();
+        line.setStroke(color);
+        line.setStrokeWidth(0.8);
+        line.setTranslateY(46);
+
+        var flagMarker = createFlagMarker(color);
+        flagMarker.setTranslateX(0);
+        flagMarker.setTranslateY(28);
+
+        flagMarker.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+            flagMarker.setCursor(Cursor.HAND);
+        });
+
+        flagMarker.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            selectFlag(fp);
+            fp.mousePressHandle(new Point2D(event.getScreenX(), event.getScreenY()), this);
+            event.consume();
+        });
+
+        flagMarker.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> {
+            event.consume();
+        });
+
+        foundPlaces.put(fp, verticalMarker);
+        lastLineChart.addVerticalValueMarker(verticalMarker, line, null, flagMarker);
+    }
+
+    @Override
+    public void setMiddleTrace(int trace) {
+        super.setMiddleTrace(trace);
+        foundPlaces.keySet().stream().filter(f -> f.getTraceInFile() == trace ).forEach(fp -> {
+            selectFlag(fp);
+        });
+    }
+
+    private void selectFlag(FoundPlace fp) {
+        foundPlaces.keySet().forEach(f -> {
+            var markerBox = (Pane) foundPlaces.get(f).getNode();
+            Line l = (Line) markerBox.getChildren().get(1);
+            l.setStrokeType(StrokeType.CENTERED);
+            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
+            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
+                    ch -> ((Shape) ch).setStrokeType(StrokeType.CENTERED)
+            );
+            f.setSelected(false);
+        });
+
+        var markerBox = (Pane) foundPlaces.get(fp).getNode();
+        Line l = (Line) markerBox.getChildren().get(1);
+        l.setStrokeType(StrokeType.OUTSIDE);
+        var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
+        fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
+                ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
+        );
+        fp.setSelected(true);
     }
 
     private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex) {
@@ -764,7 +863,8 @@ public class SensorLineChart implements FileDataContainer {
 
         private final ObservableList<Data<Number, Number>> horizontalMarkers;
         private final ObservableList<Data<Number, Number>> verticalMarkers;
-        private final ObservableList<Data<Number, Number>> buttonMarkers;
+        //private final List<Data<Number, Number>> buttonMarkers;
+        //private final List<Data<Number, Number>> flagMarkers;
 
         private final ZoomRect outZoomRect;
         private ZoomRect currentZoomRect;
@@ -783,9 +883,9 @@ public class SensorLineChart implements FileDataContainer {
             horizontalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
             verticalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
             verticalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
-            buttonMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
-            buttonMarkers.addListener((InvalidationListener) observable -> layoutPlotChildren());
-
+            //buttonMarkers = new ArrayList<>();// FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
+            //buttonMarkers.addListener((InvalidationListener) observable -> layoutPlotChildren());
+            //flagMarkers = new ArrayList<>();
 
             this.plotData = plotData;
         }
@@ -880,34 +980,13 @@ public class SensorLineChart implements FileDataContainer {
         public void addVerticalValueMarker(Data<Number, Number> marker) {
             Line line = new Line();
             line.setStroke(Color.RED); // Bright color for white background
-            line.setStrokeWidth(2);
+            line.setStrokeWidth(1);
+            line.setTranslateY(15);
 
             ImageView imageView = ResourceImageHolder.getImageView("gps32.png");
+            imageView.setTranslateY(17);
 
-            addVerticalValueMarker(marker, line, imageView);
-        }
-
-        /**
-         * Add vertical value marker with button
-         * @param marker
-         */
-        public void addVerticalValueMarkerWithButton(Data<Number, Number> marker, Line line, ImageView imageView) {
-            Objects.requireNonNull(marker, "the marker must not be null");
-            if (verticalMarkers.contains(marker)) return;
-
-            VBox markerBox = new VBox();
-            markerBox.setAlignment(Pos.TOP_CENTER);
-            markerBox.getChildren().addAll(line);
-
-            marker.setNode(markerBox);
-
-            Data<Number, Number> buttonMarker = new Data<>(marker.getXValue().intValue() + 5, marker.getYValue());
-            buttonMarker.setNode(imageView);
-
-            getPlotChildren().add(markerBox);
-            getPlotChildren().add(imageView);
-            verticalMarkers.add(marker);
-            buttonMarkers.add(buttonMarker);
+            addVerticalValueMarker(marker, line, imageView, null);
         }
 
         /**
@@ -917,20 +996,34 @@ public class SensorLineChart implements FileDataContainer {
          * @param line      the line to be used for the marker
          * @param imageView the image to be displayed at the marker
          */
-        public void addVerticalValueMarker(Data<Number, Number> marker, Line line, ImageView imageView) {
+        public void addVerticalValueMarker(Data<Number, Number> marker, Line line, ImageView imageView, Pane flag) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (verticalMarkers.contains(marker)) return;
 
             VBox markerBox = new VBox();
             markerBox.setAlignment(Pos.TOP_CENTER);
+            
+            // Создаем контейнер для изображений/флагов
+            VBox imageContainer = new VBox();
+            imageContainer.setAlignment(Pos.TOP_CENTER);
+            
             if (imageView != null) {
-                markerBox.getChildren().add(imageView);
+                imageContainer.getChildren().add(imageView);
             }
+
+            if (flag != null) {
+                imageContainer.getChildren().add(flag);
+            }
+            
+            // Добавляем контейнер с изображениями
+            markerBox.getChildren().add(imageContainer);
+            
+            // Добавляем линию
             markerBox.getChildren().add(line);
 
             marker.setNode(markerBox);
-
             getPlotChildren().add(markerBox);
+
             verticalMarkers.add(marker);
         }
 
@@ -962,28 +1055,51 @@ public class SensorLineChart implements FileDataContainer {
             }
 
             for (Data<Number, Number> verticalMarker : verticalMarkers) {
-                VBox line = (VBox) verticalMarker.getNode();
-                line.setLayoutX(getXAxis().getDisplayPosition(verticalMarker.getXValue()));// + 0.5);  // 0.5 for crispness
-                for(Node node: line.getChildren()) {
-                    if (node instanceof Line) {
-                        Line l = (Line) node;
-                        l.setStartY(0d);
-                        l.setEndY(getBoundsInLocal().getHeight());
-                        l.toFront();
-                    }
-                }
-                line.setLayoutY(0d);
-                line.setMinHeight(getBoundsInLocal().getHeight());
-                line.toFront();
-            }
-
-            for (Data<Number, Number> buttonMarker : buttonMarkers) {
-                Node b = buttonMarker.getNode();
-                b.setLayoutX(getXAxis().getDisplayPosition(buttonMarker.getXValue()) + 0.5);
-                b.toFront();
+                VBox markerBox = (VBox) verticalMarker.getNode();
+                markerBox.setLayoutX(getXAxis().getDisplayPosition(verticalMarker.getXValue()));
+                
+                // Получаем контейнер с изображениями (первый элемент)
+                VBox imageContainer = (VBox) markerBox.getChildren().get(0);
+                double imageHeight = imageContainer.getChildren().stream()
+                    .mapToDouble(node -> node.getBoundsInLocal().getHeight())
+                    .sum();
+                    
+                // Получаем линию (второй элемент)
+                Line line = (Line) markerBox.getChildren().get(1);
+                line.setStartY(imageHeight);
+                line.setEndY(getBoundsInLocal().getHeight());
+                
+                markerBox.setLayoutY(0d);
+                markerBox.setMinHeight(getBoundsInLocal().getHeight());
+                markerBox.toFront();
             }
         }
+    }
 
+    // Create flag marker
+    private Pane createFlagMarker(Color color) {
+        Line flagPole = new Line(0, 0, 0, 18);
+        flagPole.setStroke(Color.BLACK);
+        flagPole.setStrokeWidth(0.8);
+
+        Polygon flag = new Polygon();
+        flag.getPoints().addAll(0.0, 0.0, 
+        15.0, 0.0, 
+        10.0, 5.0, 
+        15.0, 10.0, 
+        0.0, 10.0);
+
+        flag.setFill(color);
+        flag.setStroke(Color.BLACK);
+        flag.setStrokeWidth(0.8);
+
+        Pane flagMarker = new Pane();
+        flagMarker.getChildren().addAll(flagPole, flag);
+
+        flag.setTranslateX(0);
+        flag.setTranslateY(-10);
+
+        return flagMarker;
     }
 
     public void gnssTimeLag(String seriesName, int shift) {
@@ -1107,5 +1223,18 @@ public class SensorLineChart implements FileDataContainer {
 
     public String getSelectedSeriesName() {
         return comboBox.getValue().series.getName();
+    }
+
+    public void clearFlags() {
+        for (FoundPlace fp: foundPlaces.keySet()) {
+            removeFlag(fp);
+        }
+        foundPlaces.clear();
+    }
+
+    public void removeFlag(FoundPlace fp) {
+        if (lastLineChart != null) {
+            lastLineChart.removeVerticalValueMarker(foundPlaces.get(fp));
+        }
     }
 }

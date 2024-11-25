@@ -3,10 +3,8 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.draw.Change;
@@ -63,7 +61,7 @@ public class Navigator implements ToolProducer {
 	
 
 	public void fitNext() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField().getSelectedTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField().getMiddleTrace());
 		
 		index = Math.min(model.getFileManager().getGprFiles().size() - 1, index + 1);
 		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
@@ -72,7 +70,7 @@ public class Navigator implements ToolProducer {
 	}
 
 	public void fitBack() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField().getSelectedTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField().getMiddleTrace());
 		
 		index = Math.max(0, index - 1);
 		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
@@ -81,7 +79,7 @@ public class Navigator implements ToolProducer {
 	}
 
 	public void fitCurrent() {
-		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField().getSelectedTrace());
+		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField().getMiddleTrace());
 		model.chartsZoomOut();
 		fitFile(sgyFile);
 	}
@@ -91,7 +89,7 @@ public class Navigator implements ToolProducer {
 			return;
 		}
 		
-		model.getProfileField().setSelectedTrace(
+		model.getProfileField().setMiddleTrace(
 				(sgyFile.getOffset().getStartTrace() 
 				+ sgyFile.getOffset().getFinishTrace()) 
 				/ 2);
