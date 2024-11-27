@@ -140,6 +140,11 @@ public class CsvParser extends Parser {
                 e.printStackTrace();
             }
 
+            // timestamps could be in wrong order in the file
+            if (template.getDataMapping().getTimestamp() != null && template.getDataMapping().getTimestamp().getIndex() != -1) {
+                coordinates.sort((o1, o2) -> o1.getDateTime().compareTo(o2.getDateTime()));
+            }
+
             return coordinates;
         }
 
