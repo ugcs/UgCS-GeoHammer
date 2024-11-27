@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -147,6 +149,28 @@ public abstract class Parser implements IGeoCoordinateParser {
         }
     }
 
+    protected Long parseLong(BaseData data, String column) {
+        long result;
+        if (StringUtils.hasText(data.getRegex())) {
+            var match = findByRegex(data.getRegex(), column);
+            if (match.matches()) {
+                try {
+                    result = Long.parseLong(match.group());
+                    return result;
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+
+        try {
+            result = Long.parseLong(column);
+            return result;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     protected LocalDateTime parseDateTime(String[] data) {
 
         if (template.getDataMapping().getDateTime() != null
@@ -180,6 +204,13 @@ public abstract class Parser implements IGeoCoordinateParser {
             //var totalMS = calculateTotalMS(time);
             var dateTime = LocalDateTime.of(dateFromNameOfFile, time);
             return dateTime;
+        }
+
+        if (template.getDataMapping().getTimestamp() != null
+                && template.getDataMapping().getTimestamp().getIndex() != -1) {
+            long timestamp = parseLong(getTemplate().getDataMapping().getTimestamp(), data[getTemplate().getDataMapping().getTimestamp().getIndex()]);
+            System.out.println("timestamp: " + timestamp);
+            return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
         }
 
         throw new RuntimeException("Cannot parse DateTime form file");

@@ -61,7 +61,7 @@ public class MagDroneCsvParser extends CsvParser {
 
             int traceCount = 0;
             LocalDateTime firstDateTime = null;
-            int timestampOfTheFirstDatetime = 0;
+            long timestampOfTheFirstDatetime = 0;
 
             int lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
 
@@ -78,7 +78,7 @@ public class MagDroneCsvParser extends CsvParser {
                 double lon = parseDouble(getTemplate().getDataMapping().getLongitude(), data[getTemplate().getDataMapping().getLongitude().getIndex()]);
                 double alt = getTemplate().getDataMapping().getAltitude().getIndex() != null &&
                         getTemplate().getDataMapping().getAltitude().getIndex() != -1 ? parseDouble(getTemplate().getDataMapping().getAltitude(), data[getTemplate().getDataMapping().getAltitude().getIndex()]) : 0.00;
-                int timestamp = parseInt(getTemplate().getDataMapping().getTimestamp(), data[getTemplate().getDataMapping().getTimestamp().getIndex()]);
+                long timestamp = parseLong(getTemplate().getDataMapping().getTimestamp(), data[getTemplate().getDataMapping().getTimestamp().getIndex()]);
                 int traceNumber = getTemplate().getDataMapping().getTraceNumber() != null && getTemplate().getDataMapping().getTraceNumber().getIndex() != -1 ?
                         parseInt(getTemplate().getDataMapping().getTraceNumber(), data[getTemplate().getDataMapping().getTraceNumber().getIndex()]) : traceCount;
             
