@@ -6,9 +6,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
-
 
 /**
  * find ground profile from file.profiles 
@@ -69,12 +67,6 @@ public class HorizontalGroupFilter implements Command {
 	public String getButtonText() {
 
 		return "Ground from profiles";
-	}
-
-	@Override
-	public Change getChange() {
-
-		return Change.justdraw;
 	}
 
 	public static HorizontalProfile getBrightest(List<HorizontalProfile> tmpStraight) {

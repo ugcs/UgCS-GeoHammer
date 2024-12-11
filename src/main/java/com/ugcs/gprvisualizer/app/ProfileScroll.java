@@ -21,19 +21,20 @@ import javafx.scene.shape.Rectangle;
 
 public class ProfileScroll extends Canvas {
 
-	private Model model;
 	static final int HEIGHT = 24;
 	static final int SIDE_WIDTH = 20;
 	static final int CENTER_MARGIN = 5; 
 	static final int V_MARGIN = 4;
 	static final int V_GRAY_MARGIN = 7;
+
 	double start;
 	double finish;
 	
 	double pressX;
 	double pressXInBar;
-	
-	ChangeListener<Number> changeListener;
+
+	private Model model;
+	private ChangeListener<Number> changeListener;
 	private ScrollableData scrollable;
 
 	public void setChangeListener(ChangeListener<Number> changeListener) {
@@ -42,10 +43,8 @@ public class ProfileScroll extends Canvas {
 	
 	interface MouseSInput {
 		Rectangle getRect();
-		
 		void move(Point2D localPoint);
 	}
-	
 	
 	MouseSInput leftInput = new MouseSInput() {
 
@@ -67,6 +66,7 @@ public class ProfileScroll extends Canvas {
 			//recalc back
 		}
 	};
+
 	MouseSInput rightInput = new MouseSInput() {
 
 		@Override
@@ -76,15 +76,10 @@ public class ProfileScroll extends Canvas {
 
 		@Override
 		public void move(Point2D localPoint) {
-			
 			double barStart = localPoint.getX() - pressXInBar;
-			
-			
 			finish = barStart - CENTER_MARGIN;
-			
 			//recalc back			
 			recalcField();
-			
 			draw();
 			changeListener.changed(null, null, null);
 			
@@ -137,8 +132,6 @@ public class ProfileScroll extends Canvas {
 		
         widthProperty().addListener(evt -> recalc());
         heightProperty().addListener(evt -> recalc());
-        
-
         
 		this.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		this.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
@@ -268,7 +261,7 @@ public class ProfileScroll extends Canvas {
 		draw();
 	}
 	
-	public void draw() {
+	private void draw() {
 		GraphicsContext gc = this.getGraphicsContext2D();	
 		gc.clearRect(0, 0, getWidth(), getHeight());
 		

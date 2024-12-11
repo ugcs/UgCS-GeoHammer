@@ -1,11 +1,13 @@
 package com.ugcs.gprvisualizer.app.commands;
 
-import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 
 public interface BaseCommand {
 
 	String getButtonText();
-	
-	Change getChange();
+
+	default WhatChanged.Change getChange() {
+		return WhatChanged.Change.justdraw;
+	}
 
 }

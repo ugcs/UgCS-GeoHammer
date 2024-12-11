@@ -4,8 +4,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -13,10 +17,7 @@ import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.intf.Status;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -28,7 +29,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
 @Component
-public class Saver implements ToolProducer, InitializingBean, SmthChangeListener {
+public class Saver implements ToolProducer, InitializingBean {
 
 	private final Button buttonSave = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE, new Button());
 	private final Button buttonSaveTo = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE_TO, new Button());
@@ -48,7 +49,7 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 	private Status status;
 
 	@Autowired
-	private Broadcast broadcast;
+	private ApplicationEventPublisher eventPublisher;
 
 	private SgyFile selectedFile;
 	
@@ -68,7 +69,7 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 			MessageBoxHelper.showError("error reopening files", "");
 		}
 	    	
-		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+		eventPublisher.publishEvent(new FileOpenedEvent(this));
 	    	
 	    status.showProgressText("saved " 
 	    		+ model.getFileManager().getFilesCount() + " files");
@@ -87,7 +88,7 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 			MessageBoxHelper.showError("error reopening files", "");
 		}
 	    	
-		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+		eventPublisher.publishEvent(new FileOpenedEvent(this));
 	    	
 	    status.showProgressText("saved " 
 	    		+ model.getFileManager().getFilesCount() + " files");
@@ -106,7 +107,7 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 			MessageBoxHelper.showError("error reopening files", "");
 		}
 				
-		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+		eventPublisher.publishEvent(new FileOpenedEvent(this));
 		
 		status.showProgressText("saved " 
 				+ model.getFileManager().getFilesCount() + " files");
@@ -261,11 +262,8 @@ public class Saver implements ToolProducer, InitializingBean, SmthChangeListener
 		return oldFile;
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		if (changed.isFileSelected()) {
-			SgyFile file = ((FileSelected) changed).getSelectedFile();
-			this.selectedFile = file;
-		}	
+	@EventListener
+	public void handleFileSelectedEvent(FileSelectedEvent event) {
+		this.selectedFile = event.getFile();
 	}
 }

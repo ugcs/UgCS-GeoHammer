@@ -7,7 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.BackgroundRemovalFilter;
 
@@ -47,9 +47,8 @@ public class BackgroundNoiseRemover implements Command {
 
 
 	@Override
-	public Change getChange() {
-		
-		return Change.traceValues;
+	public WhatChanged.Change getChange() {
+		return WhatChanged.Change.traceValues;
 	}
 
 	

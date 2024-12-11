@@ -9,6 +9,10 @@ import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
 import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
@@ -19,8 +23,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.StretchArray;
 
 import com.ugcs.gprvisualizer.app.intf.Status;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
@@ -29,19 +31,18 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 @Component
 public class Loader {
 
 	private final Model model;
 	private final Status status; 
-	private final Broadcast broadcast;
+	private final ApplicationEventPublisher eventPublisher;
 
-	public Loader(Model model, Status status, Broadcast broadcast) {
+	@Autowired
+	public Loader(Model model, Status status, ApplicationEventPublisher eventPublisher) {
 		this.model = model;
 		this.status = status;
-		this.broadcast = broadcast;
+		this.eventPublisher = eventPublisher;
 	}
 	
 	public EventHandler<DragEvent> getDragHandler() {
@@ -52,7 +53,7 @@ public class Loader {
 		return dropHandler;
 	}
 	
-	private EventHandler<DragEvent> dragHandler = new EventHandler<DragEvent>() {
+	private final EventHandler<DragEvent> dragHandler = new EventHandler<DragEvent>() {
 
         @Override
         public void handle(DragEvent event) {
@@ -63,7 +64,7 @@ public class Loader {
         }
     };
     
-    private EventHandler<DragEvent> dropHandler = new EventHandler<DragEvent>() {
+    private final EventHandler<DragEvent> dropHandler = new EventHandler<DragEvent>() {
         @Override
         public void handle(DragEvent event) {
         	
@@ -91,9 +92,10 @@ public class Loader {
 				return;
 			}
 
-			if (model.stopUnsaved()) {
-        		return;
-        	}
+			//TODO: fix unsaved for the CSV files
+			//if (model.stopUnsaved()) {
+        	//	return;
+        	//}
 
         	
         	ProgressTask loadTask = new ProgressTask() {
@@ -117,10 +119,8 @@ public class Loader {
 						model.updateAuxElements();
 						model.initField();
 						model.getProfileField().clear();
-						
-						
-						broadcast.notifyAll(
-								new WhatChanged(Change.fileopened));
+
+						eventPublisher.publishEvent(new FileOpenedEvent(this));
 					}
 				}
         	};
@@ -145,29 +145,6 @@ public class Loader {
     };
 
 	private void openCSVFiles(List<File> files) {
-		//if (model.getFileManager().getFiles().size() == 0) {
-			
-		//	MessageBoxHelper.showError(
-		//			"Can`t open position file", 
-		//			"Open GPR file at first");
-			
-		//	return;
-		//}
-		//if (model.getFileManager().getFiles().size() > 1) {
-		//	MessageBoxHelper.showError(
-		//			"Can`t open position file", 
-		//			"Only one GPR file must be opened");
-			
-		//	return;
-		//}
-		//if (files.size() > 1) {
-		//	MessageBoxHelper.showError(
-		//			"Can`t open position file", 
-		//			"Only one position file must be opened");
-			
-		//	return;
-		//}
-			
 		try {
 			//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
 			//	model.getFileManager().getFiles().get(0) : new GprFile();
@@ -186,7 +163,7 @@ public class Loader {
 
 					csvFile.updateInternalIndexes();
 
-					model.initChart(csvFile, broadcast);
+					model.initChart(csvFile);
 
 					model.updateAuxElements();
 				}
@@ -198,10 +175,8 @@ public class Loader {
 					"Probably file has incorrect format");
 		}
 		
-		broadcast.notifyAll(new WhatChanged(Change.updateButtons));				
-		broadcast.notifyAll(new WhatChanged(Change.fileopened));
-
-		//broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.updateButtons));
+		eventPublisher.publishEvent(new FileOpenedEvent(this));
 	}
 
 	private void openKmlFile(List<File> files) {
@@ -228,8 +203,8 @@ public class Loader {
 				"Probably file has incorrect format");
 		}
 
-		broadcast.notifyAll(new WhatChanged(Change.updateButtons));
-		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.updateButtons));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 
@@ -241,7 +216,7 @@ public class Loader {
 		
 		model.getProfileField().clear();
 		
-		broadcast.notifyAll(new WhatChanged(Change.fileopened));
+		eventPublisher.publishEvent(new FileOpenedEvent(this));
 	}
 
     
@@ -270,8 +245,8 @@ public class Loader {
     
 	public void load2(List<File> files, ProgressListener listener) throws Exception {
 		/// clear
-		model.getAuxElements().clear();
-		model.getChanges().clear();
+		//model.getAuxElements().clear();
+		//model.getChanges().clear();
 		
 		listener.progressMsg("load");
 
@@ -281,22 +256,20 @@ public class Loader {
 			openCSVFiles(files);
 		} else {
 			model.getFileManager().processList(files, listener);
-			model.closeAllCharts();
+			//model.closeAllCharts();
 			model.init();			
 		
 			//when open file by dnd (not after save)
 			model.initField();	
 		
-			//
-			SgyFile file = model.getFileManager().getGprFiles().get(0);
+			// FIXME: not need? remove it
+			/*SgyFile file = model.getFileManager().getGprFiles().get(0);
 			if (file.getSampleInterval() < 105) {
 				model.getSettings().hyperkfc = 25;
-				
 			} else {
 				double i = file.getSampleInterval() / 104.0;
-				
 				model.getSettings().hyperkfc = (int) (25.0 + i * 1.25);
-			}
+			}*/
 		}			
 	}
 

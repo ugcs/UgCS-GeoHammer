@@ -1,6 +1,6 @@
-package com.ugcs.gprvisualizer.draw;
+package com.ugcs.gprvisualizer.event;
 
-public class WhatChanged {
+public class WhatChanged extends BaseEvent {
 
 	private Change change;
 	
@@ -8,8 +8,8 @@ public class WhatChanged {
 		return change.name();
 	}
 	
-	public WhatChanged(Change change) {		
-		
+	public WhatChanged(Object source, Change change) {
+		super(source);
 		this.change = change;
 	}
 	
@@ -25,9 +25,9 @@ public class WhatChanged {
 		return change == Change.traceCut;
 	}
 	
-	public boolean isFileopened() {
+	/*public boolean isFileopened() {
 		return change == Change.fileopened;
-	}
+	}*/
 	
 	public boolean isUpdateButtons() {
 		return change == Change.updateButtons;
@@ -52,16 +52,23 @@ public class WhatChanged {
 	public boolean isTraceValues() {
 		return change == Change.traceValues;
 	}
-	
-	public boolean isAuxOnMapSelected() {
-		return change == Change.auxOnMapSelected;
-	}
-
-    public boolean isFileSelected() {
-		return change == Change.fileSelected;
-    }
 
 	public boolean isCsvDataFiltered() { return change == Change.csvDataFiltered; }
 
-	public boolean isGriddingParams() { return change == Change.setGriddingParams; }
+
+	public enum Change {
+
+		traceValues,
+		traceCut,
+		windowresized,
+		justdraw,
+		mapscroll,
+		profilescroll,
+		mapzoom,
+
+		adjusting,
+		updateButtons,
+		fileSelected,
+		csvDataFiltered;
+	}
 }

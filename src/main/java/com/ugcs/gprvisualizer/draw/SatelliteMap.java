@@ -5,18 +5,21 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.RadioMenuItem;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -31,14 +34,14 @@ import javafx.scene.layout.HBox;
 public class SatelliteMap extends BaseLayer implements InitializingBean {
 
 	@Autowired
+	private ApplicationEventPublisher eventPublisher;
+
+	@Autowired
 	protected Model model; 
 	
 	@Autowired
 	private Status status;
 	
-	@Autowired
-	private Broadcast broadcast;
-
 	private LatLon click;
 
 	private ThrQueue recalcQueue;
@@ -96,21 +99,21 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 			model.getMapField().setMapProvider(new GoogleMapProvider());
 			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
-			broadcast.notifyAll(new WhatChanged(Change.mapzoom));		        
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
 		});
 
 		menuItem2.setOnAction(e -> {
 			model.getMapField().setMapProvider(new HereMapProvider());
 			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
-			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
 		});
 
 		menuItem3.setOnAction(e -> {
 			model.getMapField().setMapProvider(null);
 			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
-			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
 		});
 		
 		///optionsMenuBtn.setStyle("padding-left: 2px; padding-right: 2px");
@@ -145,12 +148,9 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		}
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		
-		
-		if (changed.isFileopened() || changed.isZoom()) {
-			
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
+		if (changed.isZoom()) {
 			if (model.isActive()) {
 				//loadMap();
 				recalcQueue.add();
@@ -158,6 +158,16 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 				recalcQueue.clear();
 			}			
 		}		
+	}
+
+	@EventListener
+	private void fileOpened(FileOpenedEvent event) {
+		if (model.isActive()) {
+			//loadMap();
+			recalcQueue.add();
+		} else {
+			recalcQueue.clear();
+		}
 	}
 	
 	MapField dragField = null;
@@ -186,7 +196,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		dragField = null;
 		click = null;
 		
-		broadcast.notifyAll(new WhatChanged(Change.mapscroll));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 		
 		return true;
 	}

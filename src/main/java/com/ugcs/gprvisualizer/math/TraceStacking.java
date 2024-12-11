@@ -8,7 +8,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.commands.Command;
-import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class TraceStacking implements Command {
@@ -110,15 +110,16 @@ public class TraceStacking implements Command {
 
 
 	@Override
-	public Change getChange() {
+	public WhatChanged.Change getChange() {
 
+		//TODO:
 		model.getFileManager().clearTraces();
 		
 		model.init();
 
 		model.getProfileField().clear();
 		
-		return Change.traceCut;
+		return WhatChanged.Change.traceCut;
 	}
 	
 }

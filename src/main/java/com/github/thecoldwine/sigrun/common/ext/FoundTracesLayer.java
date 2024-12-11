@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.draw.Layer;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.geometry.Point2D;
@@ -60,18 +59,12 @@ public class FoundTracesLayer implements Layer {
 	}
 
 	@Override
-	public void somethingChanged(WhatChanged changed) {
-
-	}
-
-	@Override
 	public boolean mousePressed(Point2D point) {
 		for(BaseObject bo : model.getAuxElements()) {
 			if(bo.mousePressHandle(point, model.getMapField())) {
 				return true;
 			}			
 		}
-		
 		return false;
 	}
 }

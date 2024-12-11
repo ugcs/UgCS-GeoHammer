@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PaletteBuilder;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
@@ -26,12 +25,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.springframework.context.event.EventListener;
 
 /**
  * not used.
  *
  */
-public class VerticalCut implements SmthChangeListener {
+public class VerticalCut {
 
 	private Model model;
 	private ImageView imageView = new ImageView();
@@ -328,9 +328,8 @@ public class VerticalCut implements SmthChangeListener {
 				
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		
+	@EventListener(WhatChanged.class)
+	private void somethingChanged(WhatChanged changed) {
 		if (changed.isTraceValues()) {
 			recalc();
 		}		

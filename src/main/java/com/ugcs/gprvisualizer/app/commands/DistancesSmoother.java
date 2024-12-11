@@ -6,7 +6,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.auxcontrol.RulerTool;
-import com.ugcs.gprvisualizer.draw.Change;
 
 public class DistancesSmoother implements Command {
 
@@ -15,11 +14,6 @@ public class DistancesSmoother implements Command {
 	@Override
 	public String getButtonText() {	
 		return "Smooth distances";
-	}
-
-	@Override
-	public Change getChange() {
-		return null;
 	}
 
 	@Override

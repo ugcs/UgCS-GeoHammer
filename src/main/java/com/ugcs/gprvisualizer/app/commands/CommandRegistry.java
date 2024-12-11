@@ -2,20 +2,19 @@ package com.ugcs.gprvisualizer.app.commands;
 
 import java.util.function.Consumer;
 
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.ProgressTask;
 import com.ugcs.gprvisualizer.app.TaskRunner;
 import com.ugcs.gprvisualizer.app.intf.Status;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.ActionEvent;
@@ -28,11 +27,11 @@ import javafx.scene.control.Tooltip;
 public class CommandRegistry {
 	
 	@Autowired
-	private Model model;
+	private ApplicationEventPublisher eventPublisher;
 
 	@Autowired
-	private Broadcast broadcast;
-	
+	private Model model;
+
 	@Autowired
 	private Status status; 
 	
@@ -80,9 +79,9 @@ public class CommandRegistry {
 			}
 		}
 		
-		Change ch = command.getChange();
+		WhatChanged.Change ch = command.getChange();
 		if (ch != null) {
-			AppContext.notifyAll(new WhatChanged(ch));
+			eventPublisher.publishEvent(new WhatChanged(command, ch));
 		}
 		
 		listener.progressMsg("process finished '" + command.getButtonText() + "'");
@@ -132,9 +131,9 @@ public class CommandRegistry {
 					listener.progressMsg("error");
 				}
 				
-				Change ch = command.getChange();
+				WhatChanged.Change ch = command.getChange();
 				if (ch != null) {
-					broadcast.notifyAll(new WhatChanged(ch));
+					eventPublisher.publishEvent(new WhatChanged(command, ch));
 				}
 				
 				listener.progressMsg("process finished '" 

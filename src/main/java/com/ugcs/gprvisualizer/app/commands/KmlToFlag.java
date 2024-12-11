@@ -5,8 +5,7 @@ import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.auxcontrol.ConstPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
 
@@ -14,11 +13,6 @@ public class KmlToFlag implements Command {
     @Override
     public String getButtonText() {
         return "insert marks into SEG-Y file";
-    }
-
-    @Override
-    public Change getChange() {
-        return Change.justdraw;
     }
 
     @Override
@@ -48,6 +42,6 @@ public class KmlToFlag implements Command {
 
         model.setKmlToFlagAvailable(false);
 
-        AppContext.notifyAll(new WhatChanged(Change.updateButtons));
+        model.publishEvent(new WhatChanged(this, WhatChanged.Change.updateButtons));
     }
 }

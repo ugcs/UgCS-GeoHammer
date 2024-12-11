@@ -3,31 +3,32 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+
 @Component
 public class Navigator implements ToolProducer {
 
-	//@Autowired
+
+	private final ApplicationEventPublisher eventPublisher;
+
 	private final Model model;
 	
-	//@Autowired
-	private final Broadcast broadcast;
-	
-	public Navigator(Model model, Broadcast broadcast) {
+	public Navigator(Model model, ApplicationEventPublisher eventPublisher) {
 		this.model = model;
-		this.broadcast = broadcast;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Override
@@ -99,7 +100,7 @@ public class Navigator implements ToolProducer {
 		
 		model.getProfileField().fit(maxSamples, tracesCount);
 		
-		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 }

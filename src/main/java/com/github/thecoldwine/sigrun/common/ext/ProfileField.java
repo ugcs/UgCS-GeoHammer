@@ -9,12 +9,10 @@ import javafx.geometry.Point2D;
 
 public class ProfileField extends ScrollableData {
 	
-	public static final double ZOOM_A = 1.2;
 	public static final double ASPECT_A = 1.14;
 
 	private final Model model;
 
-	private int zoom = 1;
 	private double aspect = -15;
 	
 	// screen coordinates
@@ -30,16 +28,18 @@ public class ProfileField extends ScrollableData {
 	private Rectangle clipInfoRect = new Rectangle();
 	
 	//
-	public int visibleStart;
-	public int visibleFinish;
-
-	private double vertScale = 1;
+	private int visibleStart;
+	//private int visibleFinish;
 
 	public ProfileField(Model model) {
 		this.model  = model;		
 	}
 
-/*	public ProfileField(ProfileField copy) {
+	public int getVisibleStart() {
+		return visibleStart;
+	}
+
+	/*	public ProfileField(ProfileField copy) {
 
 		this.model  = copy.model;
 
@@ -65,9 +65,10 @@ public class ProfileField extends ScrollableData {
 		this.clipInfoRect = copy.clipInfoRect; 	
 	}*/
 
+	@Override
 	public void clear() {
-		zoom = 1;
-		aspect = -15;		
+		super.clear();
+		aspect = -15;
 		startSample = 0;
 		if (model.isActive() && model.getGprTracesCount() > 0) {
 			fitFull();
@@ -170,15 +171,6 @@ public class ProfileField extends ScrollableData {
 
 	public void setAspect(double aspect) {
 		this.aspect = aspect;
-	}
-
-	public int getZoom() {
-		return zoom;
-	}
-
-	public void setZoom(int zoom) {
-		this.zoom = zoom;
-		vertScale = Math.pow(ZOOM_A, getZoom());
 	}
 
 	public Rectangle getTopRuleRect() {

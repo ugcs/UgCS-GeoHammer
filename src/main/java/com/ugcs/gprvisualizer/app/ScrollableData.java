@@ -11,10 +11,21 @@ public abstract class ScrollableData {
     protected Rectangle mainRectRect = new Rectangle();
     private double realAspect = 0.5;
     private int middleTrace;
-    private double vertScale;
+    private double vertScale = 1.0;
 
+    private int zoom = 1;
+    public static final double ZOOM_A = 1.2;
 
-    public int getMiddleTrace() {
+    public int getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(int zoom) {
+        this.zoom = Math.clamp(zoom, 1, 100);
+        vertScale = Math.pow(ZOOM_A, zoom);
+    }
+
+    public final int getMiddleTrace() {
         return middleTrace;
     }
 
@@ -25,7 +36,7 @@ public abstract class ScrollableData {
 
     public TraceSample screenToTraceSample(Point2D point) {
 
-        int trace = getMiddleTrace() + (int) (-1 + (point.getX()) / getHScale());
+        int trace = middleTrace + (int) (-1 + (point.getX()) / getHScale());
         int sample = getStartSample() + (int) ((point.getY() - getTopMargin()) / getVScale());
 
         return new TraceSample(trace, sample);
@@ -45,9 +56,7 @@ public abstract class ScrollableData {
             sampleToScreen(ts.getSample()) + (int) (getVScale() / 2));
     }
 
-    public int getVisibleNumberOfTrace() {
-        return 0;
-    }
+    public abstract int getVisibleNumberOfTrace();
 
     public abstract int getTracesCount();
 
@@ -64,18 +73,22 @@ public abstract class ScrollableData {
     }
 
     public double getHScale() {
-        return vertScale * getRealAspect();
+        return vertScale * realAspect;
     }
 
     public int traceToScreen(int trace) {
-        return (int) ((trace - getMiddleTrace()) * getHScale());
+        return (int) ((trace - middleTrace) * getHScale());
     }
 
-    public int getStartSample() {
+    public final int getStartSample() {
         return startSample;
     }
 
     protected int getTopMargin() {
         return mainRectRect.y;
+    }
+
+    protected void clear() {
+        setZoom(1);
     }
 }

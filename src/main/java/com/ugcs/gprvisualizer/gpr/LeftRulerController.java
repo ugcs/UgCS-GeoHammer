@@ -117,7 +117,7 @@ public class LeftRulerController {
 		private Rectangle getRect(ScrollableData profField) {
 			if (profField instanceof ProfileField) {
 				Rectangle  r = ((ProfileField) profField).getInfoRect();
-				return new Rectangle(((ProfileField) profField).visibleStart + r.x + 5, r.y + r.height - 25,
+				return new Rectangle(((ProfileField) profField).getVisibleStart() + r.x + 5, r.y + r.height - 25,
 						r.width - 10, 20);
 			} else {
 				return null;

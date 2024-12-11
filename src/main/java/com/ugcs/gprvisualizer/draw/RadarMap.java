@@ -5,9 +5,13 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -15,7 +19,6 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.app.commands.RadarMapScan;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
@@ -57,10 +60,10 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		""";
 	
 	@Autowired
-	private Model model;
-	
+	private ApplicationEventPublisher eventPublisher;
+
 	@Autowired
-	private Broadcast broadcast;
+	private Model model;
 	
 	@Autowired
 	private CommandRegistry commandRegistry;
@@ -140,7 +143,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 			
 			q.add();
 			
-			broadcast.notifyAll(new WhatChanged(Change.adjusting));
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.adjusting));
 		}
 	};
 	
@@ -217,11 +220,9 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		q.drawImgOnChangedField(g2, currentField, q.getFront());
 	}
 	
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		
-		if (changed.isFileopened() 
-				|| changed.isTraceCut() 
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
+		if (changed.isTraceCut()
 				|| changed.isTraceValues() 
 				) {
 			autoArrayBuilder.clear();
@@ -233,14 +234,8 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 			scaleArrayBuilder.clear();
 		}
 		
-		if (changed.isFileopened()) {
-			
-			q.clear();
-		}
-		
 		if (changed.isTraceCut() 
-				|| changed.isTraceValues() 
-				|| changed.isFileopened() 
+				|| changed.isTraceValues()
 				|| changed.isZoom() 
 				|| changed.isAdjusting() 
 				|| changed.isMapscroll() 
@@ -249,6 +244,14 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 			//System.out.println("RadarMap start asinq");
 			q.add();
 		}		
+	}
+
+	@EventListener
+	private void fileOpened(FileOpenedEvent event) {
+			autoArrayBuilder.clear();
+			scaleArrayBuilder.clear();
+			q.clear();
+			q.add();
 	}
 
 	// prepare image in thread

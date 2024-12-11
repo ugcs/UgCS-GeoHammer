@@ -6,7 +6,7 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.math.HalfHyperDst;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
@@ -189,12 +189,12 @@ public class AlgorithmicScan implements AsinqCommand {
 	
 	@Override
 	public String getButtonText() {
-	
 		return "internal algorithmic scan";
 	}
 
-	public Change getChange() {
-		return Change.traceValues;
+	@Override
+	public WhatChanged.Change getChange() {
+		return WhatChanged.Change.traceValues;
 	}
 	
 }

@@ -5,18 +5,11 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.commands.Command;
-import com.ugcs.gprvisualizer.draw.Change;
 
 public class ScanGood implements Command {
 
 	@Override
 	public String getButtonText() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Change getChange() {
 		// TODO Auto-generated method stub
 		return null;
 	}
