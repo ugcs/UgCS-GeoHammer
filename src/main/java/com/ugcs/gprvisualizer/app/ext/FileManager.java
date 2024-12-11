@@ -21,8 +21,6 @@ import com.github.thecoldwine.sigrun.common.ext.MarkupFile;
 import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.github.thecoldwine.sigrun.converters.ByteANumberConverter;
-import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.yaml.FileTemplates;
 import com.ugcs.gprvisualizer.dzt.DztFile;
@@ -42,12 +40,8 @@ public class FileManager {
 
 	private final FileTemplates fileTemplates;
 
-	//@Autowired
-	//private Broadcast broadcast;
-
-	FileManager(FileTemplates fileTemplates) { //, Broadcast broadcast) {
+	FileManager(FileTemplates fileTemplates) {
 		this.fileTemplates = fileTemplates;
-		//this.broadcast = broadcast;
 	}
 
 	public boolean isActive() {
@@ -55,7 +49,7 @@ public class FileManager {
 	}
 
 	public void processList(List<File> fileList, ProgressListener listener) throws Exception {
-		clear();
+		//clear();
 
 		Set<File> sf = new TreeSet<File>(fileList);
 

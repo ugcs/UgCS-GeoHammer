@@ -1,6 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+@FunctionalInterface
 public interface ProgressTask {
-
-	public void run(ProgressListener listener);
+	void run(ProgressListener listener);
 }

@@ -13,9 +13,12 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -29,11 +32,13 @@ import javafx.scene.control.Tooltip;
 @Component
 public class GpsTrack extends BaseLayer implements InitializingBean {
 
-	@Autowired
-	private Model model;
-	
-	@Autowired
-	private Dimension wndSize;
+	private final Model model;
+	private final Dimension wndSize;
+
+	public GpsTrack(Model model, Dimension wndSize) {
+		this.model = model;
+		this.wndSize = wndSize;
+	}
 
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
@@ -82,9 +87,11 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	}
 	
 	public void drawTrack(Graphics2D g2, MapField field) {
+		if (!field.isActive()) {
+			return;
+		}
 
-		g2.setStroke(new BasicStroke(1.0f));		
-		
+		g2.setStroke(new BasicStroke(1.0f));
 		
 		double sumdist = 0;
 		
@@ -142,37 +149,21 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 		return sumdist;
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
 		if (changed.isTraceCut() 
 				|| changed.isTraceValues() 
-				|| changed.isFileopened() 
-				|| changed.isZoom() 
+				|| changed.isZoom()
 				|| changed.isAdjusting() 
 				|| changed.isMapscroll() 
 				|| changed.isWindowresized()) {
-			
 			q.add();
-		}		
-
+		}
 	}
 
-	@Override
-	public boolean mousePressed(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseRelease(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean mouseMove(Point2D point) {
-		// TODO Auto-generated method stub
-		return false;
+	@EventListener
+	private void fileOpened(FileOpenedEvent fileOpenedEvent) {
+		q.add();
 	}
 
 	@Override

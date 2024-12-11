@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -25,11 +29,8 @@ import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.dzt.DztFile;
 import com.ugcs.gprvisualizer.gpr.Model;
 
@@ -39,7 +40,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 
 @Component
-public class TraceCutter implements Layer, SmthChangeListener, InitializingBean {
+public class TraceCutter implements Layer, InitializingBean {
 
 	private static final int RADIUS = 5;
 	
@@ -50,7 +51,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	Map<Integer, Boolean> activePoints = new HashMap<>();
 	
 	private final Model model;
-	private final Broadcast broadcast;
+	private final ApplicationEventPublisher eventPublisher;
 	
 	private RepaintListener listener;
 	
@@ -66,11 +67,11 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		buttonSet.setTooltip(new Tooltip("Apply Crop"));
 	}
 
-	public TraceCutter(Model model, Broadcast broadcast) {
+	public TraceCutter(Model model, ApplicationEventPublisher eventPublisher) {
 		this.model = model;
-		this.broadcast = broadcast;
+		this.eventPublisher = eventPublisher;
 	}
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		this.field = model.getMapField();
@@ -230,7 +231,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		model.getFileManager().updateFiles(slicedSgyFiles);
 
 		for (SgyFile sf : model.getFileManager().getCsvFiles()) {
-			model.updateChart((CsvFile) sf, broadcast);
+			model.updateChart((CsvFile) sf);
 		}
 		
 		model.init();
@@ -250,7 +251,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 			}
 
 			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
-				model.updateChart((CsvFile) sf, broadcast);
+				model.updateChart((CsvFile) sf);
 			}
 			
 			model.init();
@@ -453,25 +454,13 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 		return result;
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		
-		if (changed.isFileopened()) {
-			clear();
-			setUndoFiles(null);
-			initButtons();
-		}
-	}
+	@EventListener
+    public void onFileOpened(FileOpenedEvent event) {
+        clear();
+        setUndoFiles(null);
+        initButtons();
+    }
 
-	public List<SgyFile> getUndoFiles() {
-		return undoFiles;
-	}
-
-	public void setUndoFiles(List<SgyFile> undoFiles) {
-		this.undoFiles = undoFiles;
-	}
-
-	@Override
 	public List<Node> getToolNodes() {
 		return Arrays.asList();
 	}
@@ -489,10 +478,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	    	buttonCutMode.setSelected(false);
 	    	updateCutMode();
 	    	buttonUndo.setDisable(false);
-
-	    	
-	    	broadcast.notifyAll(new WhatChanged(Change.traceCut));
-	    	
+	    	eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceCut));
 		});
 		
 		
@@ -502,9 +488,7 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	    	buttonCutMode.setSelected(false);
 	    	updateCutMode();
 	    	buttonUndo.setDisable(true);
-
-	    	broadcast.notifyAll(new WhatChanged(Change.traceCut));
-	    	
+	    	eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceCut));
 		});
 		
 		return Arrays.asList(buttonCutMode, buttonSet, buttonUndo);
@@ -534,5 +518,12 @@ public class TraceCutter implements Layer, SmthChangeListener, InitializingBean 
 	public void setListener(RepaintListener listener) {
 		this.listener = listener;
 	}	
-}
+	
+	public List<SgyFile> getUndoFiles() {
+		return undoFiles;
+	}
 
+	public void setUndoFiles(List<SgyFile> undoFiles) {
+		this.undoFiles = undoFiles;
+	}
+}

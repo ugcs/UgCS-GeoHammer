@@ -1,17 +1,17 @@
-package com.ugcs.gprvisualizer.draw;
+package com.ugcs.gprvisualizer.event;
 
-public class GriddingParamsSetted extends WhatChanged {
+public class GriddingParamsSetted extends BaseEvent {
 
     private final double cellSize;
     private final double blankingDistance;
     private final boolean toAll;
 
-    public GriddingParamsSetted(double cellSize, double blankingDistance) {
-        this(cellSize, blankingDistance, false);
+    public GriddingParamsSetted(Object source, double cellSize, double blankingDistance) {
+        this(source, cellSize, blankingDistance, false);
     }
 
-    public GriddingParamsSetted(double cellSize, double blankingDistance, boolean toAll) {
-        super(Change.setGriddingParams);
+    public GriddingParamsSetted(Object source, double cellSize, double blankingDistance, boolean toAll) {
+        super(source);
         this.cellSize = cellSize;
         this.blankingDistance = blankingDistance;
         this.toAll = toAll;

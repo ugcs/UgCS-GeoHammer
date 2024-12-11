@@ -7,10 +7,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.GriddingParamsSetted;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -29,6 +29,8 @@ import org.controlsfx.control.RangeSlider;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -51,7 +53,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 @Component
-public class OptionPane extends VBox implements SmthChangeListener, InitializingBean {
+public class OptionPane extends VBox implements InitializingBean {
 	
 	private static final int RIGHT_BOX_WIDTH = 350;
 
@@ -61,7 +63,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	private MapView mapView;
 	
 	@Autowired
-	private Broadcast broadcast;
+	private ApplicationEventPublisher eventPublisher;
 	
 	@Autowired
 	private UiUtils uiUtils;
@@ -256,7 +258,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 			Platform.runLater(() -> setGriddingMinMax()); // min, max, min, max)); // minValue, maxValue));
 
-			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
+			eventPublisher.publishEvent(new GriddingParamsSetted(this, Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText())));
 			//griddingRangeSlider.setDisable(true);
 		});
@@ -269,7 +271,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 			//Platform.runLater(() -> setGriddingMinMax()); // min, max, min, max)); // minValue, maxValue));
 
-			broadcast.notifyAll(new GriddingParamsSetted(Double.parseDouble(gridCellSize.getText()),
+			eventPublisher.publishEvent(new GriddingParamsSetted(this, Double.parseDouble(gridCellSize.getText()),
 					Double.parseDouble(gridBlankingDistance.getText()), true));
 		});
 		showGriddingAllButton.setDisable(true);
@@ -329,12 +331,12 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 		griddingRangeSlider.lowValueProperty().addListener((obs, oldVal, newVal) -> {
 				minLabel.setText("Min: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
-				broadcast.notifyAll(new WhatChanged(Change.justdraw));
+				eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		});
 
 		griddingRangeSlider.highValueProperty().addListener((obs, oldVal, newVal) -> {
 			maxLabel.setText("Max: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
-			broadcast.notifyAll(new WhatChanged(Change.justdraw));
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		});
 
 		VBox vbox = new VBox(10, griddingRangeSlider, coloursInput);
@@ -487,7 +489,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 	private void applyGnssTimeLag(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.gnssTimeLag(c.getSelectedSeriesName(), value));
-		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
 	private void applyGnssTimeLagToAll(int value) {
@@ -498,13 +500,13 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.gnssTimeLag(seriesName, value));
 		});
-		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
 	private void applyLowPassFilter(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.lowPassFilter(c.getSelectedSeriesName(), value));
-		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
 	private void applyLowPassFilterToAll(int value) {
@@ -515,7 +517,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.lowPassFilter(seriesName, value));
 		});
-		broadcast.notifyAll(new WhatChanged(Change.csvDataFiltered));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
@@ -563,7 +565,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 			public void handle(ActionEvent event) {
 				bool.setValue(btn.isSelected());
 				
-				//broadcast.notifyAll(new WhatChanged(change));
+				//eventPublisher.publishEvent(new WhatChanged(change));
 				
 				consumer.accept(btn);
 			}
@@ -578,7 +580,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
 		showGreenLineBtn.setOnAction(e -> {
 			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
-			//broadcast.notifyAll(new WhatChanged(Change.justdraw));
+			//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
 		});
 		
 		
@@ -620,7 +622,7 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 						"hypLive.png", 
 						model.getSettings().getHyperliveview(),
 						e -> {
-							//broadcast.notifyAll(new WhatChanged(Change.justdraw));
+							//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
 							
 							profileView.getPrintHoughSlider().requestFocus();
 						}),
@@ -638,16 +640,16 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 						shEdge = 
 							uiUtils.prepareToggleButton("show edge", null, 
 								model.getSettings().showEdge, 
-								Change.justdraw),
+								WhatChanged.Change.justdraw),
 						
 							uiUtils.prepareToggleButton("show good", null, 
 								model.getSettings().showGood, 
-								Change.justdraw)
+								WhatChanged.Change.justdraw)
 						),
 				commandRegistry.createButton(new TraceStacking()), 
 				commandRegistry.createButton(new LevelScanHP(), 
 						e -> {
-							//broadcast.notifyAll(new WhatChanged(Change.justdraw));
+							//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
 							//levelCalculated = true; 
 							//updateButtons(); 
 						})
@@ -664,46 +666,28 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
         tab2.setContent(t2);
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		if (changed.isFileopened()) {
-			
-			//if (gprTab.getContent() instanceof VBox) {
-			//	((VBox)gprTab.getContent()).getChildren().forEach(node -> {
-			//		node.setDisable(!model.isActive() && !model.getFileManager().getGprFiles().isEmpty());
-			//	});
-			//}
+	@EventListener
+    private void handleFileSelectedEvent(FileSelectedEvent event) {
+        selectedFile = event.getFile();
+		if (selectedFile == null) {return;}
+        if (selectedFile instanceof CsvFile) {
+            showTab(csvTab);
+            setGriddingMinMax();
+            setSavedFilterInputValue(Filter.lowpass);
+            setSavedFilterInputValue(Filter.timelag);
+            setSavedFilterInputValue(Filter.gridding_cellsize);
+            setSavedFilterInputValue(Filter.gridding_blankingdistance);
+        } else {
+            showTab(gprTab);
+            prepareGprTab(gprTab, selectedFile);
+        }
+    }
 
-			if (model.isActive()) {
-				if (!model.getFileManager().getGprFiles().isEmpty()) {
-					showTab(prepareGprTab(gprTab, model.getFileManager().getGprFiles().get(0)));
-				} else {
-					showTab(csvTab);
-				}
-			} else {
-				clear();
-			}
-
-		}
-
-		if (changed.isFileSelected()) {
-			SgyFile file = ((FileSelected) changed).getSelectedFile();
-			this.selectedFile = file;
-
-			if (file instanceof CsvFile) {
-				for(Filter filter : Filter.values()) {
-					setSavedFilterInputValue(filter);
-				}
-				showTab(csvTab);
-			} else {
-				if (file == null) {
-					clear();
-				} else {
-					showTab(prepareGprTab(gprTab, file));
-				}	
-			}
-		}
-	}
+    //@EventListener(condition = "#event.isFileopened()")
+	@EventListener
+    private void fileOpened(FileOpenedEvent event) {
+            clear();
+    }
 
 	private void setSavedFilterInputValue(Filter filter) {
 		var savedValue = prefSettings.getSetting(filter.name(), ((CsvFile) selectedFile).getParser().getTemplate().getName());
@@ -724,5 +708,9 @@ public class OptionPane extends VBox implements SmthChangeListener, Initializing
 
 	public ToggleButton getGridding() {
 		return gridding;
+	}
+
+	public void handleGriddingParamsSetted(double cellSize, double blankingDistance) {
+		eventPublisher.publishEvent(new GriddingParamsSetted(this, cellSize, blankingDistance));
 	}
 }

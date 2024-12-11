@@ -5,7 +5,6 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 public class DistCalculator implements Command {
@@ -17,16 +16,8 @@ public class DistCalculator implements Command {
 	}
 
 	@Override
-	public Change getChange() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public void execute(SgyFile file, ProgressListener listener) {
-		
 		calcDistances(file.getTraces());
-		
 	}
 
 	private void calcDistances(List<Trace> traces) {

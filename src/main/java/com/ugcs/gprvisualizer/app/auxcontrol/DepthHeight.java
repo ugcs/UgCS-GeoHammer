@@ -21,13 +21,12 @@ public class DepthHeight extends DepthStart {
 			Math.min(max - model.getSettings().getLayer(), Math.max(
 				0, ts.getSample() - model.getSettings().getLayer()));
 	}
-	
+
 	@Override
 	public Point2D getCenter(ScrollableData profField) {
 		Point2D scr = profField.traceSampleToScreen(new TraceSample(
 				0, model.getSettings().getLayer() + model.getSettings().hpage));
-		//FIXME:
-		//scr.x = profField.visibleStart;
-		return scr;
-	}	
+		return profField instanceof ProfileField ?
+				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
+	}
 }

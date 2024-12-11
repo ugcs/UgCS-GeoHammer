@@ -6,9 +6,13 @@ import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
 import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -17,9 +21,6 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.scene.Cursor;
@@ -32,16 +33,16 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
 @Component
-public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeListener, InitializingBean {
+public class AuxElementEditHandler extends BaseObjectImpl implements InitializingBean {
+
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 
 	@Autowired
 	private Model model;
 	
 	@Autowired
 	private ProfileView profileView;
-	
-	@Autowired
-	private Broadcast broadcast;
 	
 	private ProfileField field;	
 	private BaseObject selected;
@@ -87,7 +88,8 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 		}
 		
 		if (processed) {
-			profileView.repaintEvent();
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+			//profileView.repaintEvent();
 		}
 
 		return processed;
@@ -148,8 +150,8 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 			}
 			
 			model.updateAuxElements();
-			profileView.repaintEvent();
-			broadcast.notifyAll(new WhatChanged(Change.justdraw));
+			//profileView.repaintEvent();
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		});
 		
 		addFoundBtn.setOnAction(e -> {				
@@ -189,7 +191,7 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 	}
 	
 	protected void updateViews() {
-		broadcast.notifyAll(new WhatChanged(Change.justdraw));		
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private void clearAuxElements() {
@@ -211,9 +213,9 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 
 		
 		model.updateAuxElements();		
-		profileView.repaintEvent();
+		//profileView.repaintEvent();
 		
-		broadcast.notifyAll(new WhatChanged(Change.justdraw));
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private boolean processPress(List<BaseObject> controls2, 
@@ -253,29 +255,26 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 		}
 	}
 
-	//@Override
-	public boolean mouseReleaseHandle(Point2D localPoint, ProfileField profField) {
+	@Override
+	public boolean mouseReleaseHandle(Point2D localPoint, ScrollableData profField) {
 
 		if (mouseInput != null) {			
 			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
 			
 			profileView.getImageView().setCursor(Cursor.DEFAULT);
-			
-			profileView.repaintEvent();
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		}
 		return false;
 	}
 
-	//@Override
-	public boolean mouseMoveHandle(Point2D localPoint, ProfileField profField) {
+	@Override
+	public boolean mouseMoveHandle(Point2D localPoint, ScrollableData profField) {
 
 		if (mouseInput != null) {			
 			mouseInput.mouseMoveHandle(localPoint, profField);
-			
-			profileView.repaintEvent();
-			
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		} else {
 			if (aboveControl(localPoint, profField)) {
@@ -285,12 +284,11 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 			} else {
 				profileView.getImageView().setCursor(Cursor.DEFAULT);
 			}			
-		}		
-		
+		}
 		return false;
 	}
 
-	private boolean aboveControl(Point2D localPoint, ProfileField profField) {
+	private boolean aboveControl(Point2D localPoint, ScrollableData profField) {
 		if (model.getControls() == null) {
 			return false;
 		}
@@ -303,7 +301,7 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 		return false;
 	}
 
-	private boolean aboveElement(Point2D localPoint, ProfileField profField) {
+	private boolean aboveElement(Point2D localPoint, ScrollableData profField) {
 		if (model.getAuxElements() == null) {
 			return false;
 		}
@@ -333,13 +331,19 @@ public class AuxElementEditHandler extends BaseObjectImpl implements SmthChangeL
 		this.selected = selected;
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		if (changed.isFileopened() || changed.isTraceCut()) {
-			
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
+		if (changed.isTraceCut()) {
 			mouseInput = null;
 			setSelected(null);
 			model.setControls(null);			
-		}		
+		}
+	}
+
+	@EventListener
+	private void fileOpened(FileOpenedEvent fileOpenedEvent) {
+		mouseInput = null;
+		setSelected(null);
+		model.setControls(null);
 	}
 }

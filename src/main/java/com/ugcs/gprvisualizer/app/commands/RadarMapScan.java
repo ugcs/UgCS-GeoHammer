@@ -4,7 +4,6 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.math.ScanProfile;
@@ -72,9 +71,4 @@ public class RadarMapScan implements Command {
 		return null;
 	}
 
-	@Override
-	public Change getChange() {
-		return null;
-	}
-	
 }

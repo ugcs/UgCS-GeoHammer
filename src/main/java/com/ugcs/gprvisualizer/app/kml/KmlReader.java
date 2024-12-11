@@ -2,8 +2,6 @@ package com.ugcs.gprvisualizer.app.kml;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.ugcs.gprvisualizer.app.auxcontrol.ConstPlace;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.Feature;
@@ -61,7 +59,6 @@ public class KmlReader {
         });
 
         model.setKmlToFlagAvailable(true);
-        //broadcast.notifyAll(new WhatChanged(Change.updateButtons));
     }
 
 }

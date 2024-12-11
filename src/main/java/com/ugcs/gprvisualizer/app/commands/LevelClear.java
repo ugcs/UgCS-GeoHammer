@@ -2,7 +2,7 @@ package com.ugcs.gprvisualizer.app.commands;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.ProgressListener;
-import com.ugcs.gprvisualizer.draw.Change;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
 public class LevelClear implements Command {
@@ -34,8 +34,8 @@ public class LevelClear implements Command {
 	}
 
 	@Override
-	public Change getChange() {
-		return Change.traceValues;
+	public WhatChanged.Change getChange() {
+		return WhatChanged.Change.traceValues;
 	}
 
 }

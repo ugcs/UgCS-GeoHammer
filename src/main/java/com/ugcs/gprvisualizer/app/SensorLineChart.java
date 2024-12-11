@@ -10,6 +10,9 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.geometry.Point2D;
@@ -29,13 +32,12 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.StringUtils;
 
 import com.ugcs.gprvisualizer.app.fir.FIRFilter;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PrefSettings;
 
@@ -60,7 +62,6 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
 
-
 public class SensorLineChart extends ScrollableData implements FileDataContainer {
 
     private static final String FILTERED_SERIES_SUFFIX = "_filtered";
@@ -68,7 +69,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
 
     private final Model model;
-    private final Broadcast broadcast;
+    private final ApplicationEventPublisher eventPublisher;
     private final PrefSettings settings;
     private final AuxElementEditHandler auxEditHandler;
 
@@ -81,11 +82,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     //private int scale;
     private CsvFile file;
-    private Node rootNode;
+    //private Node rootNode;
 
-    public SensorLineChart(Model model, Broadcast broadcast, PrefSettings settings, AuxElementEditHandler auxEditHandler) {
+    public SensorLineChart(Model model, ApplicationEventPublisher eventPublisher, PrefSettings settings, AuxElementEditHandler auxEditHandler) {
         this.model = model;
-        this.broadcast = broadcast;
+        this.eventPublisher = eventPublisher;
         this.settings = settings;
         this.auxEditHandler = auxEditHandler;
         this.profileScroll = new ProfileScroll(model, this);
@@ -154,7 +155,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                         GeoData geoData = file.getGeoData().get(traceIndex);
                         model.getMapField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
                         model.createClickPlace(file, file.getTraces().get(traceIndex));
-                        broadcast.notifyAll(new WhatChanged(Change.mapscroll));
+                        eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
                     }
                 }
                 event.consume();
@@ -189,7 +190,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             
             //calculateAverages(e.getValue().stream()
             //        .map(SensorValue::data)
-            //        .collect(Collectors.toList())));
+            //        .collect(Collectors.toList()));
             plotDataList.add(plotData);
         }
         return plotDataList;
@@ -201,12 +202,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     @Override
     public Node getRootNode() {
-        return rootNode;
+        return root;
     }
 
     @Override
     public void selectFile() {
-        broadcast.fileSelected(file);
+        eventPublisher.publishEvent(new FileSelectedEvent(this, file));
     }
 
     @Override
@@ -472,12 +473,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
                                 model.getFileManager().removeFile(file);
                                 model.getFileManager().addFile(subfile);
-                                model.updateChart((CsvFile) subfile, broadcast);
+                                model.updateChart((CsvFile) subfile);
 
                                 model.init();
                                 model.initField();
                                 model.getProfileField().clear();
-                                broadcast.notifyAll(new WhatChanged(Change.traceCut));
+                                eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceCut));
                             });
 
                             imageView.setTranslateX(1);
@@ -519,13 +520,14 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         root.setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
         root.setOnMouseClicked(event -> {
             if (model.selectAndScrollToChart(this)) {
-                //broadcast.fileSelected(file);
+                //eventPublisher.publishEvent(new FileSelectedEvent(file));
             }
         });
 
-        this.rootNode = root;
+        //this.rootNode = root;
 
         //root.getChildren().add(0, profileScroll);
+
         profileScroll.widthProperty().bind(top.widthProperty());
 
         return root;
@@ -575,6 +577,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         foundPlaces.keySet().stream().filter(f -> f.getTraceInFile() == trace ).forEach(fp -> {
             selectFlag(fp);
         });
+    }
+
+    @Override
+    public int getVisibleNumberOfTrace() {
+        //TODO: for scroll
+        return 0;
     }
 
     private void selectFlag(FoundPlace fp) {
@@ -685,7 +693,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 model.getFileManager().removeFile(file);
                 model.removeChart(file);
                 model.initField();
-                broadcast.notifyAll(new WhatChanged(Change.fileopened));
+                eventPublisher.publishEvent(new FileOpenedEvent(this));
             }
         }
     }

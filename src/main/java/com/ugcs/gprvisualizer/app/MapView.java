@@ -12,21 +12,23 @@ import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.kml.KMLExport;
 import com.ugcs.gprvisualizer.draw.BaseLayer;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.GridLayer;
 import com.ugcs.gprvisualizer.draw.Layer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
-import com.ugcs.gprvisualizer.draw.Work;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point2D;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -50,8 +52,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+
 @Component
-public class MapView extends Work implements SmthChangeListener, InitializingBean {
+public class MapView implements InitializingBean {
 	
 	@Autowired
 	private TraceCutter traceCutter;
@@ -63,7 +67,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	//private Status status;
 
 	@Autowired
-	private Broadcast broadcast;
+	private ApplicationEventPublisher eventPublisher;
 	
 	@Autowired
 	private SatelliteMap satelliteMap;
@@ -82,12 +86,21 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 
 	@Autowired
 	private List<BaseLayer> baseLayers;
-	
+
+	private List<Layer> layers = new ArrayList<>();
+
+	public List<Layer> getLayers() {
+		return layers;
+	}
+
+	protected ImageView imageView = new ImageView();
+	protected BufferedImage img;
+
+
 	private ToolBar toolBar = new ToolBar();
 	private Dimension windowSize = new Dimension();
-	
-	
-	protected RepaintListener listener = this::repaintEvent;
+
+	protected RepaintListener listener = this::updateUI;
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -114,17 +127,24 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		
 	}
 	
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-		super.somethingChanged(changed);
-		if (changed.isFileopened()) {
-			toolBar.setDisable(!model.isActive() || !isGpsPresent());
-			repaintEvent();
-		}	
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
+		if (!isGpsPresent()) {
+			return;
+		}
+
+		if (changed.isJustdraw()) {
+			updateUI();
+		}
+	}
+
+	@EventListener
+	private void fileOpened(FileOpenedEvent event) {
+		toolBar.setDisable(!model.isActive() || !isGpsPresent());
+		updateUI();
 	}
 	
-	@Override
-	protected boolean isGpsPresent() {	
+	private boolean isGpsPresent() {
 		return model.getMapField().isActive();
 	}
 		
@@ -147,8 +167,8 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	    	
 	    	LatLon sceneCenter = model.getMapField().screenTolatLon(pdist);			
 			model.getMapField().setSceneCenter(sceneCenter);
-	    	
-			broadcast.notifyAll(new WhatChanged(Change.mapzoom));
+
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
 	    });		
 	
 		imageView.setOnMouseClicked(mouseClickHandler);
@@ -299,7 +319,7 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 	
 	int entercount = 0;
 	
-	protected void repaintEvent() {
+	protected void updateUI() {
 		
 		Platform.runLater(() -> { //new Runnable() {
 		//	 @Override
@@ -323,16 +343,28 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		//});
 	}
 
+	protected void updateWindow() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				toImageView();
+			}
+		});
+	}
+
+	public void toImageView() {
+		if (img == null) {
+			return;
+		}
+		Image i = SwingFXUtils.toFXImage(img, null);
+
+		imageView.setImage(i);
+	}
+
 	public void setSize(int width, int height) {
-		
 		windowSize.setSize(width, height);
-		
 		wndSize.setSize(width, height);
-		
-		//repaintEvent();
-		
-		broadcast.notifyAll(new WhatChanged(Change.windowresized));
-		
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.windowresized));
 	}
 
 	public BufferedImage drawStub() {
@@ -359,6 +391,73 @@ public class MapView extends Work implements SmthChangeListener, InitializingBea
 		Region r3 = new Region();
 		r3.setPrefWidth(7);
 		return r3;
+	}
+
+	protected EventHandler<MouseEvent> mousePressHandler = new EventHandler<MouseEvent>() {
+		@Override
+		public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+
+			Point2D p = getLocalCoords(event);
+
+			for (int i = getLayers().size() - 1; i >= 0; i--) {
+				Layer layer = getLayers().get(i);
+				try {
+					if (layer.mousePressed(p)) {
+						return;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	};
+
+	private EventHandler<MouseEvent> mouseReleaseHandler = new EventHandler<MouseEvent>() {
+		@Override
+		public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+			Point2D p = getLocalCoords(event);
+			for (int i = getLayers().size() - 1; i >= 0; i--) {
+				Layer layer = getLayers().get(i);
+				if (layer.mouseRelease(p)) {
+					return;
+				}
+			}
+		}
+	};
+
+	private EventHandler<MouseEvent> mouseMoveHandler = new EventHandler<MouseEvent>() {
+		@Override
+		public void handle(MouseEvent event) {
+			if (!isGpsPresent()) {
+				return;
+			}
+			Point2D p = getLocalCoords(event);
+			for (int i = getLayers().size() - 1; i >= 0; i--) {
+				Layer layer = getLayers().get(i);
+				if (layer.mouseMove(p)) {
+					return;
+				}
+			}
+		}
+	};
+
+	private Point2D getLocalCoords(MouseEvent event) {
+		return getLocalCoords(event.getSceneX(), event.getSceneY());
+	}
+
+	private Point2D getLocalCoords(double x, double y) {
+		javafx.geometry.Point2D sceneCoords  = new javafx.geometry.Point2D(x, y);
+		javafx.geometry.Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
+		Point2D p = new Point2D(
+				imgCoord.getX() - imageView.getBoundsInLocal().getWidth() / 2,
+				imgCoord.getY() - imageView.getBoundsInLocal().getHeight() / 2);
+		return p;
 	}
 	
 }

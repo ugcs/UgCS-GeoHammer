@@ -13,8 +13,10 @@ import java.util.Map;
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.ugcs.gprvisualizer.app.FileSelected;
 import com.ugcs.gprvisualizer.app.OptionPane;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import edu.mines.jtk.interp.SplinesGridder2;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Coordinate;
@@ -23,6 +25,7 @@ import org.locationtech.jts.index.kdtree.KdNode;
 import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -378,8 +381,17 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 		return medianDataPoints;
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
+	@EventListener
+	public void handleFileSelectedEvent(FileSelectedEvent event) {
+		this.file = event.getFile() instanceof CsvFile ? (CsvFile) event.getFile() : null;
+		toAll = false;
+		recalcGrid = true;
+		setActive(false);
+		q.add();
+	}
+
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
 		if (changed.isZoom()
 				|| changed.isAdjusting() 
 				|| changed.isMapscroll() 
@@ -390,22 +402,16 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				|| changed.isCsvDataFiltered()) {
 			recalcGrid = true;
 			q.add();
-		} else if (changed.isFileSelected()) {
-			var file = ((FileSelected) changed).getSelectedFile();
-			if (file instanceof CsvFile) {
-				this.file = (CsvFile) file;
-				toAll = false;
-			}
-			recalcGrid = true;
-			setActive(false);
-			q.add();
-		} else if (changed.isGriddingParams()) {
-			cellSize = ((GriddingParamsSetted) changed).getCellSize();
-			blankingDistance = ((GriddingParamsSetted) changed).getBlankingDistance();
-			toAll = ((GriddingParamsSetted) changed).isToAll();
-			recalcGrid = true;
-			setActive(true);
-			q.add();
 		}
+	}
+
+	@EventListener(GriddingParamsSetted.class)
+	private void gridParamsSetted(GriddingParamsSetted griddingParamsSetted) {
+		cellSize = griddingParamsSetted.getCellSize();
+		blankingDistance = griddingParamsSetted.getBlankingDistance();
+		toAll = griddingParamsSetted.isToAll();
+		recalcGrid = true;
+		setActive(true);
+		q.add();
 	}
 }

@@ -4,6 +4,7 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 
 public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseHandler {
@@ -24,7 +25,9 @@ public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseH
     	dragField = field;//new ProfileField(field);
 		dragPoint = localPoint;    		
 		oldCenter = dragField.screenToTraceSample(dragPoint);
-		cleverView.repaintEvent();
+
+		//TODO:
+		//cleverView.repaintEvent();
 		
     	return true;
 	}
@@ -54,7 +57,7 @@ public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseH
     		field.setStartSample(dragField.getStartSample() 
     				+ oldCenter.getSample() - newCenter.getSample());
 
-    		cleverView.repaintEvent();
+			AppContext.model.publishEvent(new WhatChanged(cleverView, WhatChanged.Change.justdraw));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

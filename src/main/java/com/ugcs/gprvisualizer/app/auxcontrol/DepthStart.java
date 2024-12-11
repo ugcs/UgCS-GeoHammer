@@ -14,12 +14,10 @@ import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-//import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class DepthStart extends BaseObjectImpl { //implements BaseObject, MouseHandler {
+public class DepthStart extends BaseObjectImpl {
 
 	int horM;
 	int verM;
@@ -55,11 +53,10 @@ public class DepthStart extends BaseObjectImpl { //implements BaseObject, MouseH
 	@Override
 	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
 		TraceSample ts = profField.screenToTraceSample(point);
-		
 		controlToSettings(ts);
-		
-		AppContext.notifyAll(new WhatChanged(Change.adjusting));
-		
+
+		AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.adjusting));
+
 		return true;
 	}
 
@@ -106,9 +103,7 @@ public class DepthStart extends BaseObjectImpl { //implements BaseObject, MouseH
 	public Point2D getCenter(ScrollableData profField) {
 		Point2D scr = profField.traceSampleToScreen(new TraceSample(
 				0, model.getSettings().getLayer()));
-		//FIXME:
-		//scr.x = profField.visibleStart;
-		return scr;
+		return profField instanceof ProfileField ?
+				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
 	}
-
 }

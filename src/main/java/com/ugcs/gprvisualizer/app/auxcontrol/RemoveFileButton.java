@@ -5,25 +5,19 @@ import java.awt.Rectangle;
 import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.ScrollableData;
-//import org.json.simple.JSONObject;
-
-//import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-//import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-//import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
-
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 
-public class RemoveFileButton extends BaseObjectImpl {//implements BaseObject //, MouseHandler {
+public class RemoveFileButton extends BaseObjectImpl {
 
 	static int R_HOR = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
 	static int R_VER = ResourceImageHolder.IMG_CLOSE_FILE.getHeight(null);
@@ -70,9 +64,9 @@ public class RemoveFileButton extends BaseObjectImpl {//implements BaseObject //
 				
 				//AppContext.model.init();
 				AppContext.model.initField();
-				AppContext.model.getProfileField().clear();	
-				
-				AppContext.notifyAll(new WhatChanged(Change.fileopened));
+				AppContext.model.getProfileField().clear();
+
+				AppContext.model.publishEvent(new FileOpenedEvent(this));
 			}
 			
 			return true;

@@ -7,9 +7,8 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.app.TraceCutter;
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.dzt.DztFile;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 
@@ -96,8 +95,8 @@ public class LevelGround implements Command {
 	}
 
 	@Override
-	public Change getChange() {
-		return Change.traceValues;
+	public WhatChanged.Change getChange() {
+		return WhatChanged.Change.traceValues;
 	}
 
 }

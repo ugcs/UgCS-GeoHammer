@@ -15,9 +15,12 @@ import java.util.Set;
 
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
+import com.ugcs.gprvisualizer.event.BaseEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.scene.layout.*;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -51,12 +54,9 @@ public class Model implements InitializingBean {
 	
 	private MapField field = new MapField();
 	private ProfileField profField = new ProfileField(this);
-	
+
 	private final FileManager fileManager;
-	 // = new FileManager();
-	private List<SgyFile> undoFiles = null;
-	
-	
+
 	private final Settings settings = new Settings();
 
 	private final LeftRulerController leftRulerController = new LeftRulerController(this);
@@ -68,6 +68,8 @@ public class Model implements InitializingBean {
 	private List<BaseObject> controls = null;
 	
 	private Rectangle2D.Double bounds;
+
+	// TODO: перенести в profile
 	private int maxHeightInSamples = 0;
 	
 	private boolean kmlToFlagAvailable = false;
@@ -79,15 +81,14 @@ public class Model implements InitializingBean {
 	private final VBox chartsContainer = new VBox(); // Charts container
 
 	Map<CsvFile, SensorLineChart> csvFiles = new HashMap<>();
-	
-	private SgyFile currentFile;
-	private final Map<String, SgyFile> loadedFiles = new HashMap<>();
 
-	public Model(FileManager fileManager, PrefSettings prefSettings, AuxElementEditHandler auxEditHandler) {
-		//Sout.p("create model");
+	private final ApplicationEventPublisher eventPublisher;
+
+	public Model(FileManager fileManager, PrefSettings prefSettings, AuxElementEditHandler auxEditHandler, ApplicationEventPublisher eventPublisher) {
 		this.prefSettings = prefSettings;
 		this.fileManager = fileManager;
 		this.auxEditHandler = auxEditHandler;
+		this.eventPublisher = eventPublisher;
 	}
 	
 	public Settings getSettings() {
@@ -326,14 +327,13 @@ public class Model implements InitializingBean {
 	/** 
 	 * Initialize chart for the given CSV file
 	 * @param csvFile CSV file to initialize chart for
-	 * @param broadcast Broadcast to notify listeners
 	 * @return void
 	 */
-	public void initChart(CsvFile csvFile, Broadcast broadcast) {
+	public void initChart(CsvFile csvFile) {
 		if (getChart(csvFile).isPresent()) {
 			return;
 		}
-		var sensorLineChart = createSensorLineChart(csvFile, broadcast);
+		var sensorLineChart = createSensorLineChart(csvFile);
 		saveColorSettings(semanticColors);
 
 		Platform.runLater(() -> {
@@ -341,7 +341,7 @@ public class Model implements InitializingBean {
 		});
 	}
 
-	public void updateChart(CsvFile csvFile, Broadcast broadcast) {
+	public void updateChart(CsvFile csvFile) {
 		Optional<SensorLineChart> currentChart = getChart(csvFile);
 		if (currentChart.isEmpty()) {
 			return;
@@ -350,11 +350,11 @@ public class Model implements InitializingBean {
 		currentChart.get().close(false);
 		csvFiles.remove(csvFile);
 
-		createSensorLineChart(csvFile, broadcast);
+		createSensorLineChart(csvFile);
 	}
 
-	private SensorLineChart createSensorLineChart(CsvFile csvFile, Broadcast broadcast) {
-		var sensorLineChart = new SensorLineChart(this, broadcast, prefSettings, auxEditHandler);
+	private SensorLineChart createSensorLineChart(CsvFile csvFile) {
+		var sensorLineChart = new SensorLineChart(this, eventPublisher, prefSettings, auxEditHandler);
 		var plotData = sensorLineChart.generatePlotData(csvFile);
 		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
 		chartsContainer.getChildren().add(sensorLineChartBox);
@@ -557,25 +557,7 @@ public class Model implements InitializingBean {
 		return csvFiles.values();
     }
 
-	public void addFile(SgyFile file) {
-		loadedFiles.put(file.getFile().getPath(), file);
-		setCurrentFile(file);
+	public void publishEvent(BaseEvent event) {
+		eventPublisher.publishEvent(event);
 	}
-
-	public void setCurrentFile(SgyFile file) {
-		this.currentFile = file;
-		// Обновляем состояние модели для текущего файла
-		this.field = new MapField();
-		this.profField = new ProfileField(this);
-		// ... обновление других полей
-	}
-
-	public SgyFile getCurrentFile() {
-		return currentFile;
-	}
-
-	public Collection<SgyFile> getLoadedFiles() {
-		return loadedFiles.values();
-	}
-
 }

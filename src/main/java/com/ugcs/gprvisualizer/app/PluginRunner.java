@@ -14,7 +14,6 @@ import org.json.simple.parser.JSONParser;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.AuxRect;
 import com.ugcs.gprvisualizer.app.commands.SingleCommand;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class PluginRunner implements SingleCommand {
@@ -130,16 +129,9 @@ public class PluginRunner implements SingleCommand {
 		}
 	}
 
-
 	@Override
 	public String getButtonText() {
-
 		return "Neural network scan";
-	}
-
-	@Override
-	public Change getChange() {		
-		return Change.justdraw;
 	}
 
 	@Override

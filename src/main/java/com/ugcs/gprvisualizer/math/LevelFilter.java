@@ -7,18 +7,21 @@ import java.util.List;
 import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
 import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.app.Broadcast;
 import com.ugcs.gprvisualizer.app.UiUtils;
 import com.ugcs.gprvisualizer.app.commands.BackgroundNoiseRemover;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
@@ -28,10 +31,7 @@ import com.ugcs.gprvisualizer.app.commands.LevelManualSetter;
 import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.app.commands.LevelScanner;
 import com.ugcs.gprvisualizer.app.commands.SpreadCoordinates;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
 import com.ugcs.gprvisualizer.draw.ToolProducer;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.beans.value.ChangeListener;
@@ -40,9 +40,14 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 
-
+/**
+ * 
+ */
 @Component
-public class LevelFilter implements ToolProducer, SmthChangeListener { 
+public class LevelFilter implements ToolProducer {
+
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 
 	@Autowired
 	private Model model;	
@@ -52,9 +57,6 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 	@Autowired
 	private CommandRegistry commandRegistry;
-
-	@Autowired
-	private Broadcast broadcast;
 
 	private Button buttonRemoveLevel;
 
@@ -148,8 +150,8 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 			});
 
 		levelPreview = uiUtils.prepareToggleButton("Level preview", null, 
-				model.getSettings().levelPreview, 
-				Change.justdraw);
+				model.getSettings().levelPreview,
+				WhatChanged.Change.justdraw);
 
 		if (buttonRemoveLevel == null) {	
 			buttonRemoveLevel = commandRegistry.createButton(new LevelClear(this), e -> { 
@@ -176,7 +178,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 
 			//model.getSettings().levelPreviewShift
 
-			slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, Change.justdraw, -50, 50, """
+			slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, WhatChanged.Change.justdraw, -50, 50, """
 			Elevation lag, 
 			traces""", 	new ChangeListener<Number>() {
 				@Override
@@ -186,7 +188,7 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 					Number newValue) {
 					SgyFile file = model.getFileManager().getGprFiles().get(0);
 					file.getGroundProfile().shift(newValue.intValue());
-					broadcast.notifyAll(new WhatChanged(Change.traceValues));
+					eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
 				}
 		});
 		}
@@ -277,10 +279,9 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		updateButtons(); 
 	}
 	
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-
-		if (changed.isFileopened() || changed.isUpdateButtons() || changed.isTraceCut()) {
+	@EventListener
+	private void somethingChanged(WhatChanged changed) {
+		if (changed.isUpdateButtons() || changed.isTraceCut()) {
 			
 			clearForNewFile();
 			
@@ -301,6 +302,25 @@ public class LevelFilter implements ToolProducer, SmthChangeListener {
 		}
 	}
 
+	@EventListener
+	private void fileOpened(FileOpenedEvent event) {
+		clearForNewFile();
+
+		if (buttonSpreadCoord != null) {
+			buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
+			//buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());
+		}
+
+		if (buttonKmlToFlag != null) {
+			buttonKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+			buttonKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+		}
+
+		if (buttonCancelKmlToFlag != null) {
+			buttonCancelKmlToFlag.setVisible(model.isKmlToFlagAvailable());
+			buttonCancelKmlToFlag.setManaged(model.isKmlToFlagAvailable());
+		}
+	}
 	
 	public List<SgyFile> getUndoFiles() {
 		return undoFiles;

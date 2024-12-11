@@ -8,9 +8,7 @@ import javafx.geometry.Point2D;
 public interface Layer extends ToolProducer {
 
 	void draw(Graphics2D g2, MapField field);
-		
-	void somethingChanged(WhatChanged changed);
-	
+			
 	default boolean mousePressed(Point2D point) {
 		return false;
 	};

@@ -9,17 +9,15 @@ import java.awt.Stroke;
 import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.app.SensorLineChart;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.ugcs.gprvisualizer.app.AppContext;
-//import com.ugcs.gprvisualizer.app.MouseHandler;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class FoundPlace extends BaseObjectImpl implements BaseObject { //, MouseHandler {
+public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 
 	//static int R_HOR = ResourceImageHolder.IMG_SHOVEL.getWidth(null) / 2;
 	//static int R_VER = ResourceImageHolder.IMG_SHOVEL.getHeight(null) / 2;
@@ -69,7 +67,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject { //, Mouse
 			}
 			scrollable.setMiddleTrace(offset.localToGlobal(traceInFile.getIndexInFile()));
 
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
+			AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+
 			coordinatesToStatus();
 			return true;
 		}
@@ -87,7 +86,7 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject { //, Mouse
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		if (profField instanceof SensorLineChart || isPointInside(localPoint, profField)) {
 			AppContext.model.getMapField().setSceneCenter(getLatLon());
-			AppContext.notifyAll(new WhatChanged(Change.mapscroll));
+			AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 			coordinatesToStatus();
 			return true;
 		}
@@ -101,8 +100,8 @@ public class FoundPlace extends BaseObjectImpl implements BaseObject { //, Mouse
 		
 		traceInFile = traceInFile.getFile()
 				.getTraces().get(Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace())));
-		
-		AppContext.notifyAll(new WhatChanged(Change.justdraw));
+
+		AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		
 		coordinatesToStatus();
 		

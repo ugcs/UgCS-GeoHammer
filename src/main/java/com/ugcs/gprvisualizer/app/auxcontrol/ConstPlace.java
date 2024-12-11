@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
@@ -16,61 +17,35 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
-import com.ugcs.gprvisualizer.draw.Change;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 public class ConstPlace extends BaseObjectImpl implements BaseObject {
 
-	private LatLon latLon;
-	private int traceInFile;
-	private VerticalCutPart offset;
+	private final LatLon latLon;
+	private final int traceInFile;
+	private final VerticalCutPart offset;
 	static int R_HOR = ShapeHolder.flag2.getBounds().width / 2;
 	static int R_VER = ShapeHolder.flag2.getBounds().height / 2;
 
 		
 	public static ConstPlace loadFromJson(JSONObject json, Model model, SgyFile sgyFile) {
 		int traceNum = (int) (long) (Long) json.get("trace");
-		
 		return new ConstPlace(traceNum, null, sgyFile.getOffset());
 	}
 	
 	public ConstPlace(int trace, LatLon latLon,  VerticalCutPart offset) {
 		this.offset = offset;
 		this.latLon = latLon;
-			
 		this.traceInFile = trace;
 	}
 
 	@Override
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
-		
 		if (isPointInside(localPoint, profField)) {
-				
 			AppContext.model.getMapField().setSceneCenter(getTrace().getLatLon());
-			
-			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-			
+			AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		}
-		
-		return false;
-	}
-
-	@Override
-	public boolean mousePressHandle(Point2D point, MapField field) {
-		
-//		Rectangle r = getRect(field);
-//		if (r.contains(point)) {
-//
-//			AppContext.model.getVField().setSelectedTrace(
-//					offset.localToGlobal(traceInFile));
-//
-//			AppContext.notifyAll(new WhatChanged(Change.justdraw));
-//
-//			return true;
-//		}
-		
 		return false;
 	}
 
@@ -78,7 +53,6 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject {
 	public BaseObject copy(int offset, VerticalCutPart verticalCutPart) {
 		return null;
 	}
-
 
 	@Override
 	public void drawOnMap(Graphics2D g2, MapField mapField) {

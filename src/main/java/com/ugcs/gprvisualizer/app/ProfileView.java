@@ -13,10 +13,15 @@ import java.awt.image.DataBufferInt;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
@@ -25,10 +30,7 @@ import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
-import com.ugcs.gprvisualizer.draw.Change;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
-import com.ugcs.gprvisualizer.draw.SmthChangeListener;
-import com.ugcs.gprvisualizer.draw.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.RecalculationController;
 import com.ugcs.gprvisualizer.gpr.Settings;
@@ -52,12 +54,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 @Component
-public class ProfileView implements SmthChangeListener, InitializingBean, FileDataContainer {
+public class ProfileView implements InitializingBean, FileDataContainer {
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
 	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
 
@@ -68,9 +69,6 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 					10.0f, dash1, 0.0f);
 
 	private final Model model;
-	
-	@Autowired
-	private Broadcast broadcast;
 
 	@Autowired
 	private AuxElementEditHandler auxEditHandler;
@@ -81,13 +79,15 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	@Autowired
 	private Saver saver;
 
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
+
 	private PrismDrawer prismDrawer;
 	
-	private ImageView imageView = new ImageView();
-	private VBox vbox = new VBox();
+	private final ImageView imageView = new ImageView();
+	private final VBox vbox = new VBox();
+	private final ProfileScroll profileScroll;
 
-	//TODO: кажется тут располлагаются данные GPR
-	private Pane topPane = new Pane();
 
 	private BufferedImage img;
 	private Image image;
@@ -107,11 +107,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 	private BaseObject selectedMouseHandler;
 	private BaseObject scrollHandler;
-	
-	//private final HyperFinder hyperFinder;
 
-	private final ProfileScroll profileScroll;
-	
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
 
@@ -120,10 +116,13 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, 
 				Number oldValue, Number newValue) {
-			repaintEvent();
+			if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
+				repaintEvent();
+			}
 		}
 	};
-	private ChangeListener<Number> aspectSliderListener 
+
+	/*private ChangeListener<Number> aspectSliderListener
 		= new ChangeListener<Number>() {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, 
@@ -131,7 +130,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 			updateScroll();
 			repaintEvent();
 		}
-	};
+	};*/
 
 	public ProfileView(Model model) {
 		this.model = model;
@@ -156,32 +155,30 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
-		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
-		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
-		
 		initImageView();
 		
 		profileScroll.setChangeListener(new ChangeListener<Number>() {
+			//TODO: fix with change listener
+			Number currentValue;
+
 			public void changed(ObservableValue<? extends Number> ov, 
 					Number oldVal, Number newVal) {
-				repaintEvent();
+				if (currentValue == null) { currentValue = newVal;}
+				if (currentValue != null && newVal != null && Math.abs(newVal.intValue() - currentValue.intValue()) > 3) {
+					currentValue = newVal;
+					repaintEvent();
+				}
 			}
 		});
 
 		scrollHandler = new CleverViewScrollHandler(this);
+		vbox.getChildren().addAll(imageView);
 
 		prepareToolbar();
-
-		//VBox outerBox = new VBox(toolBar, vbox);
-
-		//vbox.getChildren().addAll(toolBar, profileScroll, imageView);
-		vbox.getChildren().addAll(profileScroll, imageView);
-
-		profileScroll.widthProperty().bind(topPane.widthProperty());
-
+		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
+		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
 		zoomInBtn.setOnAction(e -> {
 			zoom(1, width / 2, height / 2, false);
-
 		});
 		zoomOutBtn.setOnAction(e -> {
 			zoom(-1, width / 2, height / 2, false);
@@ -505,31 +502,24 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		centerScrollPane.setFitToHeight(true);
         centerScrollPane.setContent(model.getChartsContainer());
 
-		center.getChildren().addAll(toolBar, centerScrollPane);
+		center.getChildren().addAll(toolBar, profileScroll, centerScrollPane);
 
-		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			this.setSize(topPane.getWidth(), 400); //topPane.getHeight()));
-		};
-		topPane.widthProperty().addListener(sp2SizeListener);
-		//topPane.heightProperty().addListener(sp2SizeListener);
-
-		//ScrollPane scrollPane = new ScrollPane(vbox);
-		//scrollPane.setFitToWidth(true);
-
-		//scrollPane.setFitToHeight(true);
-
-		//topPane.getChildren().addAll(scrollPane);
-
-
-		//Это все для GPR данных
-		topPane.getChildren().addAll(vbox);
-		model.getChartsContainer().getChildren().add(topPane);
-		topPane.setOnMouseClicked(event -> {
+		vbox.setOnMouseClicked(event -> {
 			select();
 		});
 
-		//return topPane;
-        return center;
+		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
+			if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
+				this.setSize(center.getWidth() - 21, Math.max(400, vbox.getHeight()) - 4);
+			}
+		};
+
+		center.widthProperty().addListener(sp2SizeListener);
+		vbox.heightProperty().addListener(sp2SizeListener);
+
+		profileScroll.widthProperty().bind(vbox.widthProperty());
+
+		return center;
 	}
 
 	private void select() {
@@ -538,12 +528,12 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 	@Override
 	public Node getRootNode() {
-		return topPane;
+		return vbox;//topPane;
 	}
 
 	@Override
 	public void selectFile() {
-		broadcast.fileSelected(model.getFileManager().getGprFiles());
+		eventPublisher.publishEvent(new FileSelectedEvent(this, model.getFileManager().getGprFiles()));
 	}
 
 	public List<Node> getRight() {
@@ -612,7 +602,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		return List.of();
 	}
 
-	protected void initImageView() {
+	private void initImageView() {
 		imageView.setOnScroll(event -> {
 			int ch = (event.getDeltaY() > 0 ? 1 : -1);
 
@@ -753,7 +743,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 
 					model.createClickPlace(trace.getFile(), trace);
 
-					broadcast.notifyAll(new WhatChanged(Change.mapscroll));
+					eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 				}
 			}
 		}
@@ -778,7 +768,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 	};
 
 	protected EventHandler<MouseEvent> mouseReleaseHandler = 
-			new EventHandler<MouseEvent>() {
+			new EventHandler<>() {
 		@Override
 		public void handle(MouseEvent event) {
 
@@ -792,7 +782,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		}
 	};
 
-	protected void repaintEvent() {
+	private void repaintEvent() {
 		if (!model.isLoading() && model.getGprTracesCount() > 0) {
 			controller.render();
 		}
@@ -818,29 +808,30 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		});
 	}
 
-	@Override
-	public void somethingChanged(WhatChanged changed) {
-
-		if (changed.isFileopened()) {
-			profileScroll.setVisible(model.isActive() && model.getGprTracesCount() > 0);
-			topPane.setVisible(model.isActive() && model.getGprTracesCount() > 0);
-			vbox.setVisible(model.isActive() && model.getGprTracesCount() > 0);
-			
-			if (!topPane.isVisible()) {
-				model.getChartsContainer().getChildren().remove(topPane);
-			} else {
-				if (model.getChartsContainer().getChildren().indexOf(topPane) == -1) {
-					model.getChartsContainer().getChildren().add(topPane);
-				}
-			}
-
-			toolBar.setDisable(!model.isActive());
-			
-			//hyperbolaSlider.updateUI();
-		}
-
+	@EventListener(classes = WhatChanged.class)
+	private void somethingChanged(WhatChanged changed) {
 		repaintEvent();
 		updateScroll();
+	}
+
+	@EventListener
+	private void fileOpened(FileOpenedEvent event) {
+		profileScroll.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+		//topPane.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+		vbox.setVisible(model.isActive() && model.getGprTracesCount() > 0);
+
+		if (!vbox.isVisible()) {
+			model.getChartsContainer().getChildren().remove(vbox);
+		} else {
+			if (!model.getChartsContainer().getChildren().contains(vbox)) {
+				model.getChartsContainer().getChildren().add(vbox);
+				vbox.setPrefHeight(Math.max(400, vbox.getScene().getHeight()));
+				vbox.setMinHeight(Math.max(400, vbox.getScene().getHeight() / 2));
+			}
+		}
+
+		toolBar.setDisable(!model.isActive());
+		//hyperbolaSlider.updateUI();
 	}
 
 	private void updateScroll() {
@@ -983,7 +974,7 @@ public class ProfileView implements SmthChangeListener, InitializingBean, FileDa
 		this.width = width;
 		this.height = height;
 		getField().setViewDimension(new Dimension((int) this.width, (int) this.height));
-
+		System.out.println("setSize: " + width + "x" + height);
 		repaintEvent();
 	}
 
