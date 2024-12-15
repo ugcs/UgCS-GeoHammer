@@ -33,9 +33,9 @@ public class ProfileScroll extends Canvas {
 	double pressX;
 	double pressXInBar;
 
-	private Model model;
+	private final Model model;
 	private ChangeListener<Number> changeListener;
-	private ScrollableData scrollable;
+	private final ScrollableData scrollable;
 
 	public void setChangeListener(ChangeListener<Number> changeListener) {
 		this.changeListener = changeListener;
@@ -126,12 +126,6 @@ public class ProfileScroll extends Canvas {
 	public ProfileScroll(Model model, ScrollableData scrollable) {
 		this.model = model;
 		this.scrollable = scrollable;
-		
-		setWidth(400);
-		setHeight(HEIGHT);		
-		
-        widthProperty().addListener(evt -> recalc());
-        heightProperty().addListener(evt -> recalc());
         
 		this.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
 		this.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
@@ -139,7 +133,41 @@ public class ProfileScroll extends Canvas {
 				dragReleaseHandler);		
 		this.setOnMouseReleased(mouseReleaseHandler);  
 	}
-	
+
+	@Override
+	public void resize(double width, double height) {
+		if (width >= 0 && Math.abs(getWidth() - width) > 1) {
+			System.out.println("ProfileScroll.resize = " + width + " " + height);
+			setWidth(width);
+			setHeight(height);
+		}
+	}
+
+	@Override
+	public boolean isResizable() {
+		return true;
+	}
+
+	@Override
+	public double minWidth(double height) {
+		return 50; // Minimum reasonable width
+	}
+
+	@Override
+	public double maxWidth(double height) {
+		return Double.MAX_VALUE;
+	}
+
+	@Override
+	public double prefWidth(double height) {
+		return getWidth();
+	}
+
+	@Override
+	public double prefHeight(double width) {
+		return HEIGHT;
+	}
+
 	protected EventHandler<MouseEvent> mouseReleaseHandler = 
 			new EventHandler<MouseEvent>() {
         @Override
@@ -296,20 +324,19 @@ public class ProfileScroll extends Canvas {
 		
 	}
 	
-    @Override
-    public boolean isResizable() {
-        return true;
-    }
-
-    @Override
-    public double prefWidth(double height) {
-        return getWidth();
-    }
-
-    @Override
-    public double prefHeight(double width) {
-        return HEIGHT;
-    }	
+	private void recalcField() {
+		double scrCenter = (finish + start) / 2;			
+		double scrWidth = (finish - start);
+		
+		double visibletracesCount = scrWidth / (double) getWidth() 
+				* (double) scrollable.getTracesCount();
+		double hsc = getWidth() / visibletracesCount;
+		double aspect = hsc / scrollable.getVScale();
+		
+		double trCenter = scrCenter / (double) getWidth() * (double) model.getGprTracesCount();
+		scrollable.setMiddleTrace((int) trCenter);
+		scrollable.setRealAspect(aspect);
+	}
 	
 	private Node makeDraggable(final Node node) {
 		class DragContext {
@@ -353,20 +380,5 @@ public class ProfileScroll extends Canvas {
 		});
 
 		return wrapGroup;
-
-	}
-	
-	private void recalcField() {
-		double scrCenter = (finish + start) / 2;			
-		double scrWidth = (finish - start);
-		
-		double visibletracesCount = scrWidth / (double) getWidth() 
-				* (double) scrollable.getTracesCount();
-		double hsc = getWidth() / visibletracesCount;
-		double aspect = hsc / scrollable.getVScale();
-		
-		double trCenter = scrCenter / (double) getWidth() * (double) model.getGprTracesCount();
-		scrollable.setMiddleTrace((int) trCenter);
-		scrollable.setRealAspect(aspect);
 	}
 }

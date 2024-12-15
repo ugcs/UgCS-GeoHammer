@@ -495,6 +495,8 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 	public Node getCenter() {
 
 		VBox center = new VBox();
+		center.setMinWidth(100);
+        
         ScrollPane centerScrollPane = new ScrollPane();
 		centerScrollPane.setStyle("-fx-focus-color: transparent; -fx-faint-focus-color: transparent;");
 
@@ -509,15 +511,13 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		});
 
 		ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-			if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
+			if (Math.abs(newValue.intValue() - oldValue.intValue()) > 1) {
 				this.setSize(center.getWidth() - 21, Math.max(400, vbox.getHeight()) - 4);
 			}
 		};
 
 		center.widthProperty().addListener(sp2SizeListener);
 		vbox.heightProperty().addListener(sp2SizeListener);
-
-		profileScroll.widthProperty().bind(vbox.widthProperty());
 
 		return center;
 	}
@@ -817,7 +817,6 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 	@EventListener
 	private void fileOpened(FileOpenedEvent event) {
 		profileScroll.setVisible(model.isActive() && model.getGprTracesCount() > 0);
-		//topPane.setVisible(model.isActive() && model.getGprTracesCount() > 0);
 		vbox.setVisible(model.isActive() && model.getGprTracesCount() > 0);
 
 		if (!vbox.isVisible()) {
@@ -831,7 +830,6 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 
 		toolBar.setDisable(!model.isActive());
-		//hyperbolaSlider.updateUI();
 	}
 
 	private void updateScroll() {
@@ -899,80 +897,10 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 			return (int) getField().getAspect();
 		}
 	}
-
-	/*public class HyperbolaSlider extends BaseSlider {
-
-		public HyperbolaSlider(Settings settings, ChangeListener<Number> listenerExt) {
-			super(settings, listenerExt);
-			name = "Hyp.size";
-			units = "";
-			tickUnits = 10;
-		}
-
-		public void updateUI() {
-			slider.setMax(70);
-			slider.setMin(10);
-			slider.setValue(settings.hyperkfc);
-		}
-
-		public int updateModel() {
-			settings.hyperkfc = (int) slider.getValue();
-			return (int) settings.hyperkfc;
-		}
-	}*/
-
-	/*public class HyperGoodSizeSlider extends BaseSlider {
-
-		public HyperGoodSizeSlider(Settings settings, ChangeListener<Number> listenerExt) {
-			super(settings, listenerExt);
-			name = "Sensitivity";
-			units = "%";
-			tickUnits = 10;
-		}
-
-		public void updateUI() {
-			
-			slider.setMajorTickUnit(1);
-			slider.setShowTickLabels(true);
-			slider.setSnapToTicks(true);			
-			//slider.set
-			slider.setMax(100);
-			slider.setMin(0);
-			slider.setValue(settings.hyperSensitivity.intValue());
-		}
-
-		public int updateModel() {
-			settings.hyperSensitivity.setValue((int) slider.getValue());
-			return (int) settings.hyperSensitivity.intValue();
-		}
-	}*/
-
-	/*public class MiddleAmplitudeSlider extends BaseSlider {
-
-		public MiddleAmplitudeSlider(Settings settings,
-				ChangeListener<Number> listenerExt) {
-			super(settings, listenerExt);
-			name = "Middle amp";
-			units = "";
-			tickUnits = 5200;
-		}
-
-		public void updateUI() {
-			slider.setMax(91000);
-			slider.setMin(-91000);
-			slider.setValue(settings.hypermiddleamp);
-		}
-
-		public int updateModel() {
-			settings.hypermiddleamp = (int) slider.getValue();
-			return (int) settings.hypermiddleamp;
-		}
-	}*/
-
 	public void setSize(double width, double height) {
-
 		this.width = width;
 		this.height = height;
+				
 		getField().setViewDimension(new Dimension((int) this.width, (int) this.height));
 		System.out.println("setSize: " + width + "x" + height);
 		repaintEvent();
