@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
@@ -164,11 +165,19 @@ public class OptionPane extends VBox implements InitializingBean {
 		t3.setSpacing(5);
 
 		StackPane lowPassOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)",
+				i -> {
+					int value = Integer.parseInt(i);
+					return value != 0 && value < 10000;
+				},
 				i -> applyLowPassFilter(Integer.parseInt(i)),
 				i -> applyLowPassFilterToAll(Integer.parseInt(i))
 		);
 
 		StackPane timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)",
+				i -> {
+					int value = Integer.parseInt(i);
+					return value < 10000;
+				},
 				i -> applyGnssTimeLag(Integer.parseInt(i)),
 				i -> applyGnssTimeLagToAll(Integer.parseInt(i))
 		);
@@ -366,7 +375,8 @@ public class OptionPane extends VBox implements InitializingBean {
 		griddingProgressIndicator.setManaged(inProgress);
 	}
 
-	private @NotNull StackPane createFilterOptions(Filter filter, String promptText, Consumer<String> applyAction, Consumer<String> applyAllAction) {
+	private @NotNull StackPane createFilterOptions(Filter filter, String promptText, Predicate<String> valueConstraint,
+												   Consumer<String> applyAction, Consumer<String> applyAllAction) {
 		VBox filterOptions = new VBox(5);
 		filterOptions.setPadding(new Insets(10, 0, 10, 0));
 
@@ -382,8 +392,8 @@ public class OptionPane extends VBox implements InitializingBean {
 					applyButton.setDisable(true);
 					return;
 				}
-				int value = Integer.parseInt(newValue);
-				boolean isValid = !newValue.isEmpty() && value < 10000;
+				boolean isValid = !newValue.isEmpty()
+						&& (valueConstraint == null || valueConstraint.test(newValue));
 				applyButton.setDisable(!isValid);
 			} catch (NumberFormatException e) {
 				applyButton.setDisable(true);
