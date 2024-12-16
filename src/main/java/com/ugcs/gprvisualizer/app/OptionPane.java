@@ -383,7 +383,7 @@ public class OptionPane extends VBox implements InitializingBean {
 					return;
 				}
 				int value = Integer.parseInt(newValue);
-				boolean isValid = !newValue.isEmpty() && (value >= 1 || value <= -1 ) && value < 10000;
+				boolean isValid = !newValue.isEmpty() && value < 10000;
 				applyButton.setDisable(!isValid);
 			} catch (NumberFormatException e) {
 				applyButton.setDisable(true);
