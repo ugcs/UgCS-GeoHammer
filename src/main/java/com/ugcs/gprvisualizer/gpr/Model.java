@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Rectangle2D;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,10 +15,8 @@ import java.util.Set;
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
 import com.ugcs.gprvisualizer.event.BaseEvent;
-import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.scene.layout.*;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -392,7 +389,7 @@ public class Model implements InitializingBean {
 
 	public void chartsZoomOut() {
 		csvFiles.forEach((file, chart) -> {
-			chart.zoomOut();
+			chart.zoomToFit();
 		});
 	}
 
