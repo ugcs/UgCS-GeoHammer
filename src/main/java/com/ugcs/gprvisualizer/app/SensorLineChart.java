@@ -2,22 +2,28 @@ package com.ugcs.gprvisualizer.app;
 
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
-import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.utils.Nodes;
+import com.ugcs.gprvisualizer.utils.Range;
 import javafx.application.Platform;
 import javafx.beans.Observable;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -28,10 +34,8 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.StringUtils;
 
@@ -76,13 +80,24 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
     private LineChartWithMarkers lastLineChart = null;
     private Set<LineChartWithMarkers> charts = new HashSet<>();
-    private Rectangle zoomRect = new Rectangle();
-
+    private Rectangle selectionRect = new Rectangle();
     private final ProfileScroll profileScroll;
 
     //private int scale;
     private CsvFile file;
     //private Node rootNode;
+
+    // data filters: allow to skip duplicate points in chart on add
+    private Map<List<Number>, Set<Number>> dataFilters = new HashMap<>();
+
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private ScheduledFuture<?> updateTask;
+
+    static {
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(scheduler::shutdownNow));
+    }
 
     public SensorLineChart(Model model, ApplicationEventPublisher eventPublisher, PrefSettings settings, AuxElementEditHandler auxEditHandler) {
         this.model = model;
@@ -126,13 +141,15 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
             for (LineChartWithMarkers chart: charts) {
                 var yAxis = (NumberAxis) chart.getYAxis();
-                chart.updateLineChartData(new ZoomRect(lowerIndex, upperIndex, yAxis.getLowerBound(), yAxis.getUpperBound()));
-            }        
+
+                ZoomRect zoomRect = new ZoomRect(lowerIndex, upperIndex, yAxis.getLowerBound(), yAxis.getUpperBound());
+                chart.setZoomRect(zoomRect);
+                chart.updateLineChartData();
+            }
         }
         model.selectAndScrollToChart(this);
         putVerticalMarker(selectedX);
     }
-
 
     private EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
         @Override
@@ -236,7 +253,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         public String getPlotStyle() {
             return "-fx-stroke: " + getColorString(color) + ";" + "-fx-stroke-width: 0.6px;";
         }
-
     }
 
     private static String getColorString(Color color) {
@@ -294,8 +310,9 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             }
 
             // Creating chart
-            LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, new ZoomRect(0, plotData.data().size(), min, max), plotData);
-            lineChart.zoomOut();
+            LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis,
+                    new ZoomRect(0, plotData.data().size(), min, max), plotData);
+            lineChart.resetZoomRect();
 
             lineChart.setLegendVisible(false); // Hide legend
             lineChart.setCreateSymbols(false); // Disable symbols
@@ -315,7 +332,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
             // Add data to chart
             if (!data.isEmpty()) {
-                series.getData().setAll(getSubsampleInRange(data, 0, plotData.data().size()));
+                addSeriesDataFiltered(series, data, 0, data.size());
             }
 
             SeriesData item = new SeriesData(series, plotData.color());
@@ -394,25 +411,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         });
 
         if (lastLineChart != null) {
-            double zoomFactor = 1.1;
-            lastLineChart.setOnScroll((ScrollEvent event) -> {
-                // scroll amount
-                double translateY = event.getDeltaY() / 40;
-                for(LineChart<Number, Number> chart: charts) {
-                    NumberAxis axis = (NumberAxis) chart.getXAxis();
-                    double mous = axis.getValueForDisplay(event.getX() - axis.getLayoutX()).doubleValue();
-                    zoom(axis, mous, translateY, zoomFactor);
-
-                    if(!event.isControlDown()) {
-                        axis = (NumberAxis) chart.getYAxis();
-                        mous = axis.getValueForDisplay(event.getY() - axis.getLayoutY()).doubleValue();
-                        zoom(axis, mous, translateY, zoomFactor);
-                    }
-                }
-                event.consume(); // for prevent to scroll parent pane
-            });
-
-            setZoomHandlers(lastLineChart);
+            setSelectionHandlers(lastLineChart);
+            setScrollHandlers(lastLineChart);
 
             lastLineChart.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseClickHandler);
 
@@ -503,11 +503,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
 
-        zoomRect.setManaged(false);
-        zoomRect.setFill(null);
-        zoomRect.setStroke(Color.BLUE);
+        selectionRect.setManaged(false);
+        selectionRect.setFill(null);
+        selectionRect.setStroke(Color.BLUE);
 
-        root = new VBox(top, stackPane, zoomRect);
+        root = new VBox(top, stackPane, selectionRect);
         root.setFillWidth(true);
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
@@ -607,7 +607,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         fp.setSelected(true);
     }
 
-    private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex) {
+    private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex,
+            Set<Number> filter) {
         // Validate indices
         if (lowerIndex < 0 || upperIndex > data.size() || lowerIndex >= upperIndex) {
             throw new IllegalArgumentException("Invalid range specified.");
@@ -626,49 +627,67 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
         if (actualNumberOfPoints > 0) {
             int step = Math.max(1, range / actualNumberOfPoints);
-            //if (step == 1) {
-            //    actualNumberOfPoints = range;
-            //}
             for (int i = lowerIndex; i < upperIndex; i += step) {
-                subsample.add(new Data<>(i, data.get(i)));
+                Number key = i;
+                if (filter != null && filter.contains(key))
+                    continue;
+                subsample.add(new Data<>(key, data.get(i)));
             }
         }
 
         return subsample;
     }
 
-    private void zoomRect(double startX, double endX, double startY, double endY) {
-        startX = startX - 25;
-        endX = endX - 25;
-        startY = startY - 60;
-        endY = endY - 60;
-        for(LineChartWithMarkers c: charts) {
-            NumberAxis xAxis = (NumberAxis) c.getXAxis();
-            Number xMin = xAxis.getValueForDisplay(startX);
-            Number xMax = xAxis.getValueForDisplay(endX);
-
-            NumberAxis yAxis = (NumberAxis) c.getYAxis();
-            Number yMax = yAxis.getValueForDisplay(startY);
-            Number yMin = yAxis.getValueForDisplay(endY);
-
-            c.setCurrentZoomRect(new ZoomRect(xMin, xMax, yMin, yMax));
-        }
-        zoomRect();
+    private void addSeriesDataFiltered(XYChart.Series<Number, Number> series,
+                                       List<Number> data, int lowerIndex, int upperIndex) {
+        Set<Number> dataFilter = dataFilters.computeIfAbsent(data, k -> new HashSet<>());
+        List<Data<Number, Number>> subsample = getSubsampleInRange(data, lowerIndex, upperIndex, dataFilter);
+        series.getData().addAll(subsample);
+        subsample.forEach(v -> {
+            dataFilter.add(v.getXValue());
+        });
     }
-    
-    private void zoomRect() {
-        for(LineChartWithMarkers c: charts) {
-            c.updateLineChartData(c.currentZoomRect);
-        }
-    }
-
-    private record ZoomRect(Number xMin, Number xMax, Number yMin, Number yMax) {}
 
     /**
      * Zoom to full range
      */
+    public void zoomToFit() {
+        for (LineChartWithMarkers chart : charts) {
+            chart.resetZoomRect();
+        }
+        Platform.runLater(this::updateChartData);
+    }
+
+    public void zoomIn() {
+        double scale = 1.0 / 1.25;
+        zoom(scale, scale, null);
+        Platform.runLater(this::updateChartData);
+    }
+
     public void zoomOut() {
-        charts.forEach(LineChartWithMarkers::zoomOut);
+        double scale = 1.25;
+        zoom(scale, scale, null);
+        Platform.runLater(this::updateChartData);
+    }
+
+    private void zoomToArea(Point2D start, Point2D end) {
+        for (LineChartWithMarkers chart : charts) {
+            ZoomRect zoomRect = chart.createZoomRectForArea(start, end);
+            chart.setZoomRect(zoomRect);
+        }
+    }
+
+    private void zoom(double scaleX, double scaleY, Point2D scaleCenter) {
+        for (LineChartWithMarkers chart : charts) {
+            ZoomRect zoomRect = chart.scaleZoomRect(chart.zoomRect, scaleX, scaleY, scaleCenter);
+            chart.setZoomRect(zoomRect);
+        }
+    }
+
+    private void updateChartData() {
+        for (LineChartWithMarkers chart : charts) {
+            chart.updateLineChartData();
+        }
     }
 
     /**
@@ -698,43 +717,78 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
     }
 
-    private void setZoomHandlers(LineChartWithMarkers chart) { //, Set<LineChartWithMarkers> charts) {
-        
+    private void setSelectionRectFromDragBounds(DragBounds bounds) {
+        selectionRect.setX(bounds.getMinX());
+        selectionRect.setY(bounds.getMinY());
+        selectionRect.setWidth(bounds.getWidth());
+        selectionRect.setHeight(bounds.getHeight());
+    }
+
+    private void setSelectionHandlers(LineChartWithMarkers chart) {
+        // selection coordinates in a root coordinate space
+        DragBounds dragBounds = new DragBounds(Point2D.ZERO, Point2D.ZERO);
+
         chart.setOnMousePressed(event -> {
-            Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
-            System.out.println(pointInScene);
-            zoomRect.setX(pointInScene.getX());
-            zoomRect.setY(pointInScene.getY());
-            zoomRect.setWidth(0);
-            zoomRect.setHeight(0);
-            zoomRect.setVisible(true);
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            Point2D pointInScene = new Point2D(
+                    event.getX() + chartBounds.getMinX(),
+                    event.getY() + chartBounds.getMinY());
+            dragBounds.setStart(pointInScene);
+            dragBounds.setStop(pointInScene);
+            setSelectionRectFromDragBounds(dragBounds);
+            selectionRect.setVisible(true);
         });
 
         chart.setOnMouseDragged(event -> {
-            Point2D pointInScene = chart.parentToLocal(event.getX()+10, event.getY()+45);
-            zoomRect.setWidth(Math.abs(pointInScene.getX() - zoomRect.getX()));
-            zoomRect.setHeight(Math.abs(pointInScene.getY() - zoomRect.getY()));
-            zoomRect.setX(Math.min(pointInScene.getX(), zoomRect.getX()));
-            zoomRect.setY(Math.min(pointInScene.getY(), zoomRect.getY()));
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            Point2D pointInScene = new Point2D(
+                    event.getX() + chartBounds.getMinX(),
+                    event.getY() + chartBounds.getMinY());
+            dragBounds.setStop(pointInScene);
+            setSelectionRectFromDragBounds(dragBounds);
         });
 
         chart.setOnMouseReleased(event -> {
-            double startX = zoomRect.getX();
-            double endX = startX + zoomRect.getWidth();
-            System.out.println("w: " + zoomRect.getWidth() + " h:" + zoomRect.getHeight());
-
-            double startY = zoomRect.getY();
-            double endY = startY + zoomRect.getHeight();
-
-            if (zoomRect.getWidth() < 10 || zoomRect.getHeight() < 10) {
-                zoomRect.setVisible(false);
+            selectionRect.setVisible(false);
+            if (selectionRect.getWidth() < 10 || selectionRect.getHeight() < 10) {
                 return;
             }
-            
-            zoomRect(startX, endX, startY, endY);
 
-            zoomRect.setVisible(false); 
+            // convert selection coordinates to chart coordinates
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            double startX = selectionRect.getX() - chartBounds.getMinX();
+            double startY = selectionRect.getY() - chartBounds.getMinY();
+            double endX = startX + selectionRect.getWidth();
+            double endY = startY + selectionRect.getHeight();
+
+            zoomToArea(new Point2D(startX, startY), new Point2D(endX, endY));
+            updateChartData();
         });
+    }
+
+    private void setScrollHandlers(LineChartWithMarkers chart) {
+        chart.setOnScroll((ScrollEvent event) -> {
+            Point2D scaleCenter = new Point2D(event.getX(), event.getY());
+            boolean scaleY = !event.isControlDown();
+            double scaleFactor = 1.1;
+            if (event.getDeltaY() > 0) {
+                scaleFactor = 1 / scaleFactor;
+            }
+
+            zoom(scaleFactor, scaleY ? scaleFactor : 1, scaleCenter);
+            scheduleUpdate(() -> {
+                Platform.runLater(this::updateChartData);
+            }, 300);
+
+            event.consume(); // don't scroll parent pane
+        });
+    }
+
+    private void scheduleUpdate(Runnable update, long delayMillis) {
+        if (updateTask != null) {
+            updateTask.cancel(false);
+        }
+        updateTask = scheduler.schedule(update, delayMillis, TimeUnit.MILLISECONDS);
     }
 
     private SeriesData getNonEmptySeries(ObservableList<SeriesData> seriesList) {
@@ -766,30 +820,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             currentVerticalMarker = new Data<>(x, 0);
             lastLineChart.addVerticalValueMarker(currentVerticalMarker);
         }
-    }
-
-    private static void zoom(NumberAxis axis, double mous, double translateY, double zoomFactor) {
-        ZoomDeltas zoom = getZoomDeltas(axis, mous, translateY, zoomFactor);
-        axis.setAutoRanging(false);
-        axis.setLowerBound(mous - zoom.deltaLower);
-        axis.setUpperBound(mous + zoom.deltaUpper);
-    }
-
-    private static @NotNull ZoomDeltas getZoomDeltas(NumberAxis axis, double mous, double translateY, double zoomFactor) {
-        double deltaLower  = (mous - axis.getLowerBound());
-        double deltaUpper = (axis.getUpperBound() - mous);
-        if (translateY > 0) {
-            deltaLower = deltaLower / zoomFactor;
-            deltaUpper = deltaUpper / zoomFactor;
-        } else {
-            deltaLower = deltaLower * zoomFactor;
-            deltaUpper = deltaUpper * zoomFactor;
-        }
-        ZoomDeltas zoom = new ZoomDeltas(deltaLower, deltaUpper);
-        return zoom;
-    }
-
-    private record ZoomDeltas(double deltaLower, double deltaUpper) {
     }
 
     private NumberAxis getXAxis(int tickUnit) {
@@ -864,6 +894,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         //.setStyle("-fx-stroke: " + colorString + ";" + "-fx-stroke-width: 0.6px;");
     }
 
+    private record ZoomRect(Number xMin, Number xMax, Number yMin, Number yMax) {}
+
     /**
      * Line chart with markers
      */
@@ -875,7 +907,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         //private final List<Data<Number, Number>> flagMarkers;
 
         private final ZoomRect outZoomRect;
-        private ZoomRect currentZoomRect;
+        private ZoomRect zoomRect;
 
         private PlotData plotData;
         private PlotData filteredData;
@@ -898,24 +930,101 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             this.plotData = plotData;
         }
 
-        public void setCurrentZoomRect(ZoomRect zoomRect) {
-            this.currentZoomRect = zoomRect;
+        public ZoomRect createZoomRectForArea(Point2D start, Point2D end) {
+            // start and end are in chart coordinates
+            Node plot = lookup(".chart-plot-background");
+            Bounds plotBounds = Nodes.getBoundsInParent(plot, this);
+            // translate coordinates to a plot space
+            Point2D plotStart = new Point2D(
+                    Math.clamp(start.getX() - plotBounds.getMinX(), 0, plotBounds.getWidth()),
+                    Math.clamp(start.getY() - plotBounds.getMinY(), 0, plotBounds.getHeight()));
+            Point2D plotEnd = new Point2D(
+                    Math.clamp(end.getX() - plotBounds.getMinX(), 0, plotBounds.getWidth()),
+                    Math.clamp(end.getY() - plotBounds.getMinY(), 0, plotBounds.getHeight()));
+
+            NumberAxis xAxis = (NumberAxis)getXAxis();
+            Number xMin = xAxis.getValueForDisplay(plotStart.getX());
+            Number xMax = xAxis.getValueForDisplay(plotEnd.getX());
+
+            NumberAxis yAxis = (NumberAxis)getYAxis();
+            Number yMax = yAxis.getValueForDisplay(plotStart.getY());
+            Number yMin = yAxis.getValueForDisplay(plotEnd.getY());
+
+            return new ZoomRect(xMin, xMax, yMin, yMax);
         }
 
-        private void updateLineChartData(ZoomRect zoomRect) {
-            
-            setCurrentZoomRect(zoomRect);
+        public ZoomRect scaleZoomRect(ZoomRect zoomRect, double xScale, double yScale, Point2D scaleCenter) {
+            if (zoomRect == null)
+                return null;
 
-            NumberAxis xAxis = (NumberAxis) getXAxis();
+            // scale center is in chart coordinates
+            // translate chart coordinates to plot coordinates
+            Node plot = lookup(".chart-plot-background");
+            Bounds plotBounds = Nodes.getBoundsInParent(plot, this);
+            Point2D plotScaleCenter = null;
+            if (scaleCenter != null ) {
+                plotScaleCenter = new Point2D(
+                        scaleCenter.getX() - plotBounds.getMinX(),
+                        scaleCenter.getY() - plotBounds.getMinY());
+            }
+
+            // convert center coordinates to x and y ratios [0, 1]
+            // when scale center is null zoom at plot center
+            double xCenterRatio = plotScaleCenter != null && plotBounds.getWidth() > 1e-9
+                    ? Math.clamp(plotScaleCenter.getX() / plotBounds.getWidth(), 0, 1)
+                    : 0.5;
+            double yCenterRatio = plotScaleCenter != null && plotBounds.getHeight() > 1e-9
+                    ? Math.clamp(1 - plotScaleCenter.getY() / plotBounds.getHeight(), 0, 1)
+                    : 0.5;
+
+            Range xRange = new Range(zoomRect.xMin, zoomRect.xMax)
+                    .scale(xScale, xCenterRatio);
+            Range yRange = new Range(zoomRect.yMin, zoomRect.yMax)
+                    .scale(yScale, yCenterRatio);
+
+            return new ZoomRect(
+                    xRange.getMin(), xRange.getMax(),
+                    yRange.getMin(), yRange.getMax());
+        }
+
+        public ZoomRect cropZoomRect(ZoomRect zoomRect, ZoomRect cropRect) {
+            if (zoomRect == null || cropRect == null)
+                return zoomRect;
+
+            return new ZoomRect(
+                    Math.max(zoomRect.xMin.doubleValue(), cropRect.xMin.doubleValue()),
+                    Math.min(zoomRect.xMax.doubleValue(), cropRect.xMax.doubleValue()),
+                    Math.max(zoomRect.yMin.doubleValue(), cropRect.yMin.doubleValue()),
+                    Math.min(zoomRect.yMax.doubleValue(), cropRect.yMax.doubleValue()));
+        }
+
+        public void setZoomRect(ZoomRect zoomRect) {
+            this.zoomRect = zoomRect != outZoomRect
+                    ? cropZoomRect(zoomRect, outZoomRect)
+                    : zoomRect;
+            applyZoom();
+        }
+
+        public void resetZoomRect() {
+            setZoomRect(outZoomRect);
+        }
+
+        private void applyZoom() {
+            NumberAxis xAxis = (NumberAxis)getXAxis();
             xAxis.setAutoRanging(false);
             xAxis.setLowerBound(zoomRect.xMin.doubleValue());
             xAxis.setUpperBound(zoomRect.xMax.doubleValue());
-    
-            int lowerIndex = Math.clamp(zoomRect.xMin.intValue(), 0, plotData.data().size()-1);
+
+            NumberAxis yAxis = (NumberAxis) getYAxis();
+            yAxis.setAutoRanging(false);
+            yAxis.setLowerBound(zoomRect.yMin.doubleValue());
+            yAxis.setUpperBound(zoomRect.yMax.doubleValue());
+        }
+
+        private void updateLineChartData() {
+            int lowerIndex = Math.clamp(zoomRect.xMin.intValue(), 0, plotData.data().size() - 1);
             int upperIndex = Math.clamp(zoomRect.xMax.intValue(), lowerIndex, plotData.data().size());
                         
-            //log.debug("UpdateLineChart: {} - lowerIndex: {} upperIndex: {} size: {}", plotData.semantic, lowerIndex, upperIndex, plotData.data().size());
-    
             getData().forEach(series -> {
                 if (series.getName().contains(FILTERED_SERIES_SUFFIX)) {
                     if (filteredData == null || !filteredData.rendered) {
@@ -925,7 +1034,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                         }
                     } 
                     if (filteredData != null) {
-                        series.getData().addAll(getSubsampleInRange(filteredData.data, lowerIndex, upperIndex));
+                        addSeriesDataFiltered(series, filteredData.data, lowerIndex, upperIndex);
                         if (!filteredData.rendered) {
                             filteredData = filteredData.render();
                         }
@@ -936,18 +1045,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     if (filteredData != null) {
                             node.setStyle(node.getStyle() + "-fx-stroke-dash-array: 1 5 1 5;");
                     }
-                    series.getData().addAll(getSubsampleInRange(plotData.data, lowerIndex, upperIndex));
+                    addSeriesDataFiltered(series, plotData.data, lowerIndex, upperIndex);
                 }
             });
-            
-            NumberAxis yAxis = (NumberAxis) getYAxis();
-            yAxis.setAutoRanging(false);
-            yAxis.setLowerBound(zoomRect.yMin.doubleValue());
-            yAxis.setUpperBound(zoomRect.yMax.doubleValue());
         }
 
-        public void zoomOut() {
-            // Add data to chart
+        private void clearLineChartData() {
             // TODO: better to recreate series because clear is too slow
             if (!plotData.data.isEmpty()) {
                 getData().forEach(series -> {
@@ -956,7 +1059,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     //System.out.println("complete clear: " + System.currentTimeMillis());
                 });
             }
-            updateLineChartData(outZoomRect);
         }
 
         /**
@@ -1134,7 +1236,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             }
         });
         Platform.runLater(() -> {
-            zoomRect();
+            updateChartData();
         });
     }
 
@@ -1191,7 +1293,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             }
         });
         Platform.runLater(() -> {
-            zoomRect();
+            updateChartData();
         });
     }
 
@@ -1222,7 +1324,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             file.getGeoData().get(i).undoSensorValue(seriesName);
         }
 
-        zoomRect();
+        updateChartData();
     }
 
     public boolean isSameTemplate(CsvFile selectedFile) {
