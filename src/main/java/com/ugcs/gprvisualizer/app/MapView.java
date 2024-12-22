@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.ugcs.gprvisualizer.app.kml.KMLExport;
 import com.ugcs.gprvisualizer.draw.BaseLayer;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.GridLayer;
@@ -35,18 +34,14 @@ import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.FoundTracesLayer;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
-import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.ToolBar;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -227,27 +222,8 @@ public class MapView implements InitializingBean {
 		toolBar.setDisable(true);
 		toolBar.getItems().addAll(traceCutter.getToolNodes2());
 		toolBar.getItems().add(getSpacer());
-		toolBar.getItems().add(
-				CommandRegistry.createButton("",
-						ResourceImageHolder.getImageView("geotiff.png"),
-						"export map to GeoTIFF image",
-						event -> {
-							new TiffImageExport(model, radarMap, gpsTrackMap, gridLayer)
-									.execute();
-						}));
-		
-		Button kml = new Button("", ResourceImageHolder.getImageView("kml.png"));
-		//ResourceImageHolder.setButtonImage(ResourceImageHolder.KML, new Button());
-		kml.setTooltip(new Tooltip("Export marks to KML"));
-		kml.setOnAction(event -> new KMLExport(model).execute());
 
-		toolBar.getItems().add(kml);
-		toolBar.getItems().add(getSpacer());
 
-			/*CommandRegistry.createButton("", 
-				ResourceImageHolder.getImageView("kml.png"), 
-				"export marks to KML", 
-				event -> new KMLExport(model).execute()));*/
 				
 		toolBar.getItems().addAll(getToolNodes());
 		

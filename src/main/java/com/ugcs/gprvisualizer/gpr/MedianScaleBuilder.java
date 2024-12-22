@@ -27,23 +27,23 @@ public class MedianScaleBuilder implements ArrayBuilder {
 		if (scale != null) {
 			return scale;
 		}
+
+		var maxHeightInSamples = model.getProfileField().getMaxHeightInSamples();
+
+		double[][] underconstruction = new double[2][maxHeightInSamples];
 		
-		double[][] underconstruction = new double[2][model.getMaxHeightInSamples()];
-		
-		for (int smp = 0; smp < model.getMaxHeightInSamples(); smp++) {
+		for (int smp = 0; smp < maxHeightInSamples; smp++) {
 
 			//all edge values of sample layer
 			List<Float> all = new ArrayList<>();
-			
-			for (int traceIndex = 0; traceIndex < traces.size(); traceIndex++) {
-				Trace trace = traces.get(traceIndex);
-				
-				float[] vals = trace.getNormValues();
-				
-				if (trace.edge[smp] >= 3) {
-					all.add(Math.abs(smp < vals.length ? vals[smp] : 0));
-				}
-			}
+
+            for (Trace trace : traces) {
+                float[] vals = trace.getNormValues();
+
+                if (trace.edge[smp] >= 3) {
+                    all.add(Math.abs(smp < vals.length ? vals[smp] : 0));
+                }
+            }
 			
 			if (all.isEmpty()) {
 				underconstruction[0][smp] = 0;

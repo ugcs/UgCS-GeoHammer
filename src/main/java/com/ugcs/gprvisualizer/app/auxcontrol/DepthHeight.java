@@ -9,23 +9,23 @@ import javafx.geometry.Point2D;
 
 public class DepthHeight extends DepthStart {
 	
-	public DepthHeight(Shape shape) {
-		super(shape);
+	public DepthHeight(Shape shape, ProfileField profField) {
+		super(shape, profField);
 	}
 
 	@Override
 	public void controlToSettings(TraceSample ts) {
-		int max = model.getMaxHeightInSamples();
+		int max = profField.getMaxHeightInSamples();
 		
-		model.getSettings().hpage = 
-			Math.min(max - model.getSettings().getLayer(), Math.max(
-				0, ts.getSample() - model.getSettings().getLayer()));
+		profField.getProfileSettings().hpage =
+			Math.min(max - profField.getProfileSettings().getLayer(), Math.max(
+				0, ts.getSample() - profField.getProfileSettings().getLayer()));
 	}
 
 	@Override
 	public Point2D getCenter(ScrollableData profField) {
 		Point2D scr = profField.traceSampleToScreen(new TraceSample(
-				0, model.getSettings().getLayer() + model.getSettings().hpage));
+				0, this.profField.getProfileSettings().getLayer() + this.profField.getProfileSettings().hpage));
 		return profField instanceof ProfileField ?
 				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
 	}

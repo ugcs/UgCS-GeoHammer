@@ -97,20 +97,19 @@ public class LeftRulerController {
 
 		@Override
 		public void drawOnCut(Graphics2D g2, ProfileField profField) {
-			
-			setClip(g2, profField.getClipInfoRect());
-			
-			Rectangle  r = getRect(profField);
-			
+			//setClip(g2, profField.getInfoRect());
+			g2.setClip(null);
+
+			Rectangle r = getRect(profField);
+
 			g2.setStroke(STROKE);
-			g2.setColor(Color.YELLOW);
+			g2.setColor(Color.lightGray);
 			g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);			
 			
-			g2.setColor(Color.white);
+			g2.setColor(Color.darkGray);
 			String text = getConverter().getUnit();
 			int width = g2.getFontMetrics().stringWidth(text);
 			g2.drawString(text, r.x + r.width - width - 4, r.y + r.height - 5);
-			
 		}
 
 		//@Override

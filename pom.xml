@@ -210,6 +210,11 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.jfree</groupId>
+			<artifactId>org.jfree.fxgraphics2d</artifactId>
+			<version>2.1.4</version>
+		</dependency>
 		<!-- Core JavaFX modules -->
     	<dependency>
         	<groupId>org.openjfx</groupId>

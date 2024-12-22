@@ -2,9 +2,11 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.util.List;
 
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.Settings;
 import javafx.geometry.Point2D;
 
 public class ProfileField extends ScrollableData {
@@ -30,6 +32,46 @@ public class ProfileField extends ScrollableData {
 	//
 	private int visibleStart;
 	//private int visibleFinish;
+
+	private int maxHeightInSamples = 0;
+	private Settings profileSettings = new Settings();
+
+
+	public int getMaxHeightInSamples() {
+		return maxHeightInSamples;
+	}
+
+	public void updateMaxHeightInSamples() {
+
+		//set index of traces
+		int maxHeight = 0;
+		for (int i = 0; i < getGprTracesCount(); i++) {
+			Trace tr = getGprTraces().get(i);
+			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
+		}
+
+		this.maxHeightInSamples = maxHeight;
+		getProfileSettings().maxsamples = maxHeightInSamples;
+
+
+		if (getProfileSettings().getLayer() + getProfileSettings().hpage > maxHeightInSamples) {
+			getProfileSettings().setLayer(maxHeightInSamples / 4);
+			getProfileSettings().hpage = maxHeightInSamples / 4;
+		}
+
+	}
+
+	public Settings getProfileSettings() {
+		return profileSettings;
+	}
+
+	public List<Trace> getGprTraces() {
+		return model.getFileManager().getGprTraces();
+	}
+
+	public int getGprTracesCount() {
+		return getGprTraces().size();
+	}
 
 	public ProfileField(Model model) {
 		this.model  = model;		
@@ -76,9 +118,8 @@ public class ProfileField extends ScrollableData {
 	}
 
 	private void fitFull() {		
-		setMiddleTrace(model.getGprTracesCount() / 2);
-		int maxSamples = model.getMaxHeightInSamples();
-		fit(maxSamples * 2, model.getGprTracesCount());
+		setMiddleTrace(getGprTracesCount() / 2);
+		fit(maxHeightInSamples * 2, getGprTracesCount());
 	}
 
 	public void fit(int maxSamples, int tracesCount) {
@@ -144,8 +185,8 @@ public class ProfileField extends ScrollableData {
 
 	public Dimension getScreenImageSize() {
 		return new Dimension(
-				(int) (model.getGprTracesCount() * getHScale()), 
-				(int) (model.getMaxHeightInSamples() * getVScale()));
+				(int) (getGprTracesCount() * getHScale()),
+				(int) (getMaxHeightInSamples() * getVScale()));
 	}
 
 	public Dimension getViewDimension() {
@@ -154,16 +195,19 @@ public class ProfileField extends ScrollableData {
 
 	public void setViewDimension(Dimension viewDimension) {
 		this.viewDimension = viewDimension;
+
+		int leftMargin = 30;
+		int ruleWidth = 90;
 		
-		infoRect = new Rectangle(0, 0, Model.TOP_MARGIN - 1, Model.TOP_MARGIN - 1);
-		topRuleRect = new Rectangle(Model.TOP_MARGIN, 0, viewDimension.width - Model.TOP_MARGIN, Model.TOP_MARGIN - 1);
-		leftRuleRect = new Rectangle(0, Model.TOP_MARGIN - 1, Model.TOP_MARGIN-1, viewDimension.height - Model.TOP_MARGIN);
-		mainRectRect = new Rectangle(Model.TOP_MARGIN, Model.TOP_MARGIN, viewDimension.width - Model.TOP_MARGIN, viewDimension.height - Model.TOP_MARGIN);
+		topRuleRect = new Rectangle(leftMargin, 0, viewDimension.width - leftMargin - ruleWidth, Model.TOP_MARGIN - 1);
+		infoRect = new Rectangle(leftMargin + topRuleRect.width, 0, Model.TOP_MARGIN - 1, Model.TOP_MARGIN - 1);
+		leftRuleRect = new Rectangle(leftMargin + topRuleRect.width, Model.TOP_MARGIN, ruleWidth, viewDimension.height - leftMargin);
+		mainRectRect = new Rectangle(leftMargin, Model.TOP_MARGIN, viewDimension.width - leftMargin - ruleWidth, viewDimension.height - leftMargin);
 		
 		visibleStart = -mainRectRect.x -mainRectRect.width / 2;
 		
 		initClipRects();
-	}
+ 	}
 
 	public double getAspect() {
 		return aspect;
