@@ -69,9 +69,6 @@ public class Model implements InitializingBean {
 	
 	private Rectangle2D.Double bounds;
 
-	// TODO: перенести в profile
-	private int maxHeightInSamples = 0;
-	
 	private boolean kmlToFlagAvailable = false;
 
 	private final PrefSettings prefSettings;
@@ -149,8 +146,8 @@ public class Model implements InitializingBean {
             });
         });
 		
-		auxElements.add(new DepthStart(ShapeHolder.topSelection));
-		auxElements.add(new DepthHeight(ShapeHolder.botSelection));
+		auxElements.add(new DepthStart(ShapeHolder.topSelection, getProfileField()));
+		auxElements.add(new DepthHeight(ShapeHolder.botSelection, getProfileField()));
 		auxElements.add(getLeftRulerController().tb);
 	}
 	
@@ -184,30 +181,6 @@ public class Model implements InitializingBean {
 		return profField;
 	}
 
-	public int getMaxHeightInSamples() {
-		return maxHeightInSamples;
-	}
-
-	public void updateMaxHeightInSamples() {
-		
-		//set index of traces
-		int maxHeight = 0;
-		for (int i = 0; i < getGprTracesCount(); i++) {
-			Trace tr = getGprTraces().get(i);
-			maxHeight = Math.max(maxHeight, tr.getNormValues().length);
-		}
-		
-		this.maxHeightInSamples = maxHeight;
-		getSettings().maxsamples = maxHeightInSamples;
-		
-		
-		if (getSettings().getLayer() + getSettings().hpage > maxHeightInSamples) {
-			getSettings().setLayer(maxHeightInSamples / 4);
-			getSettings().hpage = maxHeightInSamples / 4;			
-		}
-		
-	}
-
 	public boolean isLoading() {
 		return loading;
 	}
@@ -222,7 +195,7 @@ public class Model implements InitializingBean {
 			sgyFile.getOffset().setStartTrace(startTraceNum);
 			startTraceNum += sgyFile.getTraces().size();
 			sgyFile.getOffset().setFinishTrace(startTraceNum);
-			sgyFile.getOffset().setMaxSamples(maxHeightInSamples);
+			sgyFile.getOffset().setMaxSamples(getProfileField().getMaxHeightInSamples());
 		}
 	}
 
@@ -265,7 +238,7 @@ public class Model implements InitializingBean {
 
 	public void init() {
 		
-		this.updateMaxHeightInSamples();
+		this.profField.updateMaxHeightInSamples();
 		
 		this.updateSgyFileOffsets();
 		
@@ -469,7 +442,7 @@ public class Model implements InitializingBean {
 	}*/
 
 	public List<Trace> getGprTraces() {
-		return getFileManager().getGprTraces();
+		return profField.getGprTraces();
 	}
 
 	public List<Trace> getCsvTraces() {

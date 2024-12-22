@@ -7,15 +7,12 @@ import java.awt.Shape;
 
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
-import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.event.WhatChanged;
-import com.ugcs.gprvisualizer.gpr.Model;
 
 public class DepthStart extends BaseObjectImpl {
 
@@ -23,13 +20,14 @@ public class DepthStart extends BaseObjectImpl {
 	int verM;
 	int offsetX;
 	int offsetY;
-	
-	Model model = AppContext.model;
-	
+		
 	Shape shape;
+	ProfileField profField;
 	
-	public DepthStart(Shape shape) {
+	public DepthStart(Shape shape, ProfileField profField) {
 		this.shape = shape;
+		this.profField = profField;
+
 		horM = shape.getBounds().width;
 		verM = shape.getBounds().height;
 		offsetX = shape.getBounds().x;
@@ -61,8 +59,8 @@ public class DepthStart extends BaseObjectImpl {
 	}
 
 	public void controlToSettings(TraceSample ts) {
-		int max = model.getMaxHeightInSamples();
-		model.getSettings().setLayer(Math.min(max - model.getSettings().hpage, 
+		int max = profField.getMaxHeightInSamples();
+		profField.getProfileSettings().setLayer(Math.min(max - profField.getProfileSettings().hpage,
 			Math.max(0, ts.getSample())));
 	}
 
@@ -102,7 +100,7 @@ public class DepthStart extends BaseObjectImpl {
 
 	public Point2D getCenter(ScrollableData profField) {
 		Point2D scr = profField.traceSampleToScreen(new TraceSample(
-				0, model.getSettings().getLayer()));
+				0, this.profField.getProfileSettings().getLayer()));
 		return profField instanceof ProfileField ?
 				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
 	}

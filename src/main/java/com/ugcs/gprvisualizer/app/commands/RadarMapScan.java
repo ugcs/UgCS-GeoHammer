@@ -6,6 +6,7 @@ import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.ScanProfile;
 
 public class RadarMapScan implements Command {
@@ -24,10 +25,11 @@ public class RadarMapScan implements Command {
 			file.amplScan = new ScanProfile(file.size());
 		}		
 		
-		int start = Math.clamp(model.getSettings().getLayer(),
-				0, model.getMaxHeightInSamples());
-		int finish = Math.clamp(model.getSettings().getLayer() + model.getSettings().hpage,
-				0, model.getMaxHeightInSamples());
+		int start = Math.clamp(model.getProfileField().getProfileSettings().getLayer(),
+				0, model.getProfileField().getMaxHeightInSamples());
+
+		int finish = Math.clamp(model.getProfileField().getProfileSettings().getLayer() + model.getProfileField().getProfileSettings().hpage,
+				0, model.getProfileField().getMaxHeightInSamples());
 		
 		
 		
@@ -47,8 +49,9 @@ public class RadarMapScan implements Command {
 
 		start = Math.clamp(start, 0, values.length);
 		finish = Math.clamp(finish, 0, values.length);
-		
-		double additionalThreshold = model.getSettings().autogain ? model.getSettings().threshold : 0;
+
+		Settings profileSettings = model.getProfileField().getProfileSettings();
+		double additionalThreshold = profileSettings.autogain ? profileSettings.threshold : 0;
 		
 		for (int i = start; i < finish; i++) {
 			double threshold = scaleArray[0][i];

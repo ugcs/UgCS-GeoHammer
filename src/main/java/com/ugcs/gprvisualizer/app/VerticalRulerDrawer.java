@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
@@ -12,21 +13,14 @@ import com.ugcs.gprvisualizer.gpr.Model;
 
 public class VerticalRulerDrawer {
 	
-	private Model model;
+	private final Model model;
 	
 	VerticalRulerDrawer(Model model) {
 		this.model = model;
 	}
 	
 	public void draw(Graphics2D g2, ProfileField field) {
-		 
-		
-		Rectangle ir = field.getInfoRect();
-		g2.setColor(new Color(10, 10, 20));
-		g2.fillRect(ir.x, ir.y, ir.width, ir.height);
-		
-		
-		
+
 		Rectangle rect = field.getLeftRuleRect(); 
 		int firstSample;		
 		int lastSample; 
@@ -35,7 +29,7 @@ public class VerticalRulerDrawer {
 		lastSample = 
 				Math.min(
 					field.getLastVisibleSample(rect.height),
-					model.getMaxHeightInSamples());
+					field.getMaxHeightInSamples());
 		
 		Converter converter = getConverter();
 		Pair<Integer, Integer> p = converter.convert(firstSample, lastSample);
@@ -46,7 +40,6 @@ public class VerticalRulerDrawer {
 		
 		int sz = 21;
 		
-		g2.setColor(Color.WHITE);
 		for (int b : tick) {
 			
 			int s = (first / b + 1) * b;
@@ -57,11 +50,14 @@ public class VerticalRulerDrawer {
 				
 				int y = field.sampleToScreen(converter.back(i));
 				
-				g2.drawLine(rect.x + rect.width - sz, y, rect.x + rect.width, y);
-				
-				if (drawText) {
+				g2.setColor(Color.lightGray);
+                g2.drawLine(rect.x , y, rect.x + sz, y);
+
+                if (drawText) {
+					g2.setColor(Color.darkGray);
+					g2.setFont(new Font("Arial", Font.PLAIN, 12));
 					g2.drawString(String.format("%1$3s", i), 
-							rect.x + rect.width - 30, y - 2);
+							rect.x + rect.width / 3, y + 4);
 				}
 				
 			}

@@ -7,6 +7,7 @@ import java.util.List;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.gpr.Model;
+import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class PrismDrawer {
@@ -56,14 +57,15 @@ public class PrismDrawer {
 		}
 		
 		Rectangle rect = field.getMainRect();
-		
-		boolean showInlineHyperbolas = model.getSettings().showGood.booleanValue();
-		boolean showEdge = model.getSettings().showEdge.booleanValue();
-		boolean shiftGround = model.getSettings().levelPreview.booleanValue();
+
+		Settings profileSettings = field.getProfileSettings();
+		boolean showInlineHyperbolas = profileSettings.showGood.booleanValue();
+		boolean showEdge = profileSettings.showEdge.booleanValue();
+		boolean shiftGround = profileSettings.levelPreview.booleanValue();
 		
 		HorizontalProfile gp = model.getFileManager().getGprFiles().get(0).getGroundProfile();
 		
-		List<Trace> traces = model.getGprTraces();
+		List<Trace> traces = field.getGprTraces();
 		
 		tanh.setThreshold((float) threshold);
 		
@@ -81,10 +83,10 @@ public class PrismDrawer {
 			}
 			
 			Trace trace = traces.get(i);
-			float middleAmp = model.getSettings().hypermiddleamp;
+			float middleAmp = profileSettings.hypermiddleamp;
 			float[] values = trace.getNormValues();
 			
-			int horshift = model.getSettings().levelPreviewShift.intValue();
+			int horshift = profileSettings.levelPreviewShift.intValue();
 			int gpi = i + horshift;
 			int vertshift = shiftGround && gp != null && gpi >=0 && gpi < gp.deep.length ? gp.deep[i + horshift] - gp.avgdeep : 0;
 			

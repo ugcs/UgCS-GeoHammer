@@ -17,9 +17,10 @@ import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
+import javafx.scene.canvas.Canvas;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jfree.fx.FXGraphics2D;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,6 @@ import com.ugcs.gprvisualizer.ui.BaseSlider;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -50,8 +50,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
@@ -59,8 +57,9 @@ import javafx.scene.layout.VBox;
 
 @Component
 public class ProfileView implements InitializingBean, FileDataContainer {
+	public static final Color BACK_GROUD_COLOR = new Color(244, 244, 244);
 	public static Stroke AMP_STROKE = new BasicStroke(1.0f);
-	public static Stroke LEVEL_STROKE = new BasicStroke(2.0f);
+	public static Stroke LEVEL_STROKE = new BasicStroke(1.0f);
 
 	private static final float[] dash1 = {5.0f};
 	private static final BasicStroke dashed = 
@@ -69,37 +68,26 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 					10.0f, dash1, 0.0f);
 
 	private final Model model;
+	private final AuxElementEditHandler auxEditHandler;
+	private final Navigator navigator;
+	private final Saver saver;
+	private final ApplicationEventPublisher eventPublisher;
 
-	@Autowired
-	private AuxElementEditHandler auxEditHandler;
-
-	@Autowired
-	private Navigator navigator;
-
-	@Autowired
-	private Saver saver;
-
-	@Autowired
-	private ApplicationEventPublisher eventPublisher;
-
-	private PrismDrawer prismDrawer;
+	private final PrismDrawer prismDrawer;
 	
-	private final ImageView imageView = new ImageView();
 	private final VBox vbox = new VBox();
 	private final ProfileScroll profileScroll;
 
-
-	private BufferedImage img;
-	private Image image;
-	private double width;
-	private double height;
+	// default values
+	private double width = 10;
+	private double height = 10;
 
 	private double contrast = 50;
 
-	private ContrastSlider contrastSlider;
+	private final ContrastSlider contrastSlider;
+	private final ToggleButton auxModeBtn = new ToggleButton("aux");
 
-	private ToggleButton auxModeBtn = new ToggleButton("aux");
-	ToolBar toolBar = new ToolBar();
+	private final ToolBar toolBar = new ToolBar();
 	
 	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
 
@@ -111,7 +99,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 	static Font fontB = new Font("Verdana", Font.BOLD, 8);
 	static Font fontP = new Font("Verdana", Font.PLAIN, 8);
 
-	private ChangeListener<Number> sliderListener 
+	private final ChangeListener<Number> sliderListener
 		= new ChangeListener<Number>() {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, 
@@ -122,34 +110,20 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 	};
 
-	/*private ChangeListener<Number> aspectSliderListener
-		= new ChangeListener<Number>() {
-		@Override
-		public void changed(ObservableValue<? extends Number> observable, 
-				Number oldValue, Number newValue) {
-			updateScroll();
-			repaintEvent();
-		}
-	};*/
+	public ProfileView(Model model, AuxElementEditHandler auxEditHandler, Navigator navigator,
+					   Saver saver,
+					   ApplicationEventPublisher eventPublisher) {
 
-	public ProfileView(Model model) {
 		this.model = model;
+		this.auxEditHandler = auxEditHandler;
+		this.navigator = navigator;
+		this.saver = saver;
+		this.eventPublisher = eventPublisher;
 
 		profileScroll = new ProfileScroll(model, model.getProfileField());
-		//hyperFinder = new HyperFinder(model);
 		prismDrawer = new PrismDrawer(model);
-
-		contrastSlider = new ContrastSlider(model.getSettings(), 
+		contrastSlider = new ContrastSlider(model.getProfileField().getProfileSettings(),
 				sliderListener);
-		
-		//hyperbolaSlider = new HyperbolaSlider(model.getSettings(), 
-		//		aspectSliderListener);
-		
-		//hyperGoodSizeSlider = new HyperGoodSizeSlider(model.getSettings(), 
-		//		sliderListener);
-		
-		//middleAmplitudeSlider = new MiddleAmplitudeSlider(model.getSettings(), 
-		//		sliderListener);
 	}
 	
 	@Override
@@ -172,7 +146,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		});
 
 		scrollHandler = new CleverViewScrollHandler(this);
-		vbox.getChildren().addAll(imageView);
+		vbox.getChildren().addAll(canvas);
 
 		prepareToolbar();
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
@@ -202,34 +176,44 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		toolBar.getItems().add(getSpacer());
 	}
 
-	protected BufferedImage draw(int width, int height) {
+	private final Canvas canvas = new Canvas(width, height);
+	private final FXGraphics2D g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
+
+	private void draw(int width, int height) {
 		if (width <= 0 || height <= 0 || !model.isActive() || model.getGprTracesCount() == 0) {
-			return null;
+			return;
 		}
 
-		ProfileField field = getField();//new ProfileField(getField());
-
-		BufferedImage bi;
-		if (img != null && img.getWidth() == width && img.getHeight() == height) {
-			bi = img;
-		} else {
-			bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		ProfileField field = getField();
+		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		int[] buffer = ((DataBufferInt) bi.getRaster().getDataBuffer()).getData();
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = BACK_GROUD_COLOR.getRGB();
 		}
-		
 
-		Graphics2D g2 = (Graphics2D) bi.getGraphics();
+		if (!(canvas.getWidth() == width && canvas.getHeight() == height)) {
+			canvas.setWidth(width);
+			canvas.setHeight(height);
+			System.out.println("change sizes: " + width + "x" + height);
+		}
 
-		RenderingHints rh = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
-				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2.setRenderingHints(rh);
+		System.out.println("draw: " + width + "x" + height);
 
-		clearBitmap(bi, g2, field);
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+			// Очистка канвы
+			g2.setColor(BACK_GROUD_COLOR);
+			g2.fillRect(0, 0, (int) canvas.getWidth(), (int) canvas.getHeight());
+
+
+
+		drawAxis(g2, field);
 		new VerticalRulerDrawer(model).draw(g2, field);
 
-		int[] buffer = ((DataBufferInt) bi.getRaster().getDataBuffer()).getData();
-		
+		g2.setClip(field.getMainRect().x, field.getMainRect().y, field.getMainRect().width, field.getMainRect().height);
 		prismDrawer.draw(width, field, g2, buffer, getRealContrast());
+		g2.drawImage(bi, 0, 0, (int) width, (int) height, null);
 
 		g2.translate(field.getMainRect().x + field.getMainRect().width / 2, 0);
 
@@ -248,15 +232,10 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 					field.getClipTopMainRect().width,
 					field.getClipTopMainRect().height);
 
-			//drawHyperliveView(field, g2);
-
-			drawFileNames(height, field, g2);
+			drawFileNames(height - 30, field, g2);
 		}
 
-		//
-		g2.dispose();
-		///
-		return bi;
+		g2.translate(-(field.getMainRect().x + field.getMainRect().width / 2), 0);
 	}
 
 	private void drawAuxGraphics1(ProfileField field, Graphics2D g2) {
@@ -302,31 +281,29 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 						shiftGround.intValue());
 			}
 
-			if (model.getSettings().showGreenLine && currentFile.algoScan != null) {
+			/*if (model.getSettings().showGreenLine && currentFile.algoScan != null) {
 
 				graphicsContext.setColor(Color.GREEN);
 				graphicsContext.setStroke(AMP_STROKE);
 
 				drawScanProfile(field, graphicsContext,
 						currentFile.getOffset().getStartTrace(), currentFile.algoScan);
-			}
-
+			}*/
 		}
 	}
 
-	public double getRealContrast() {
-		double contr = Math.pow(1.08, 140 - contrast);
-		return contr;
+	private double getRealContrast() {
+        return Math.pow(1.08, 140 - contrast);
 	}
 
 	private void drawAmplitudeMapLevels(ProfileField field, Graphics2D g2) {
 		g2.setColor(Color.MAGENTA);
 		g2.setStroke(dashed);
 
-		int y = (int) field.traceSampleToScreen(new TraceSample(0, model.getSettings().getLayer())).getY();
+		int y = (int) field.traceSampleToScreen(new TraceSample(0, field.getProfileSettings().getLayer())).getY();
 		g2.drawLine((int) -width / 2, y, (int) width / 2, y);
 
-		int bottomSelectedSmp = model.getSettings().getLayer() + model.getSettings().hpage;
+		int bottomSelectedSmp = field.getProfileSettings().getLayer() + field.getProfileSettings().hpage;
 		int y2 = (int) field.traceSampleToScreen(new TraceSample(
 				0, bottomSelectedSmp)).getY();
 		
@@ -349,34 +326,32 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 	}
 
-	private void clearBitmap(BufferedImage bi, Graphics2D g2, ProfileField field) {
+	private void drawAxis(Graphics2D g2, ProfileField field) {
 
 		Rectangle mainRectRect = field.getMainRect();
 		Rectangle topRuleRect = field.getTopRuleRect();
 		Rectangle leftRuleRect = field.getLeftRuleRect();
 
-		g2.setPaint(Color.DARK_GRAY);
-		g2.fillRect(mainRectRect.x, mainRectRect.y, 
-				mainRectRect.width, mainRectRect.height);
-
-		g2.setPaint(new Color(45, 60, 100));
-		g2.fillRect(topRuleRect.x, topRuleRect.y, 
-				topRuleRect.width, topRuleRect.height);
-		g2.setPaint(Color.white);
+		g2.setPaint(Color.lightGray);
+		g2.setStroke(new BasicStroke(0.8f));
 		g2.drawLine(topRuleRect.x, 
-				topRuleRect.y + topRuleRect.height, 
+				topRuleRect.y + topRuleRect.height + 1,
 				topRuleRect.x + topRuleRect.width,
-				topRuleRect.y + topRuleRect.height);
+				topRuleRect.y + topRuleRect.height + 1);
 
-		g2.setPaint(new Color(45, 60, 100));
-		g2.fillRect(leftRuleRect.x, leftRuleRect.y, 
-				leftRuleRect.width, leftRuleRect.height);
-		g2.setPaint(Color.white);
-		g2.drawLine(leftRuleRect.x + leftRuleRect.width, 
+		g2.setPaint(Color.lightGray);
+		g2.setStroke(new BasicStroke(0.8f));
+		g2.drawLine(topRuleRect.x,
+				topRuleRect.y + topRuleRect.height + 1,
+				topRuleRect.x,
+				mainRectRect.height);
+
+		g2.setPaint(Color.lightGray);
+		g2.setStroke(new BasicStroke(0.8f));
+		g2.drawLine(leftRuleRect.x + 1,
 				leftRuleRect.y, 
-				leftRuleRect.x + leftRuleRect.width,
-				leftRuleRect.y + leftRuleRect.height);
-
+				leftRuleRect.x + 1,
+				mainRectRect.height);
 	}
 
 	private void drawHorizontalProfile(ProfileField field, Graphics2D g2, 
@@ -403,7 +378,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 	}
 
-	private void drawScanProfile(ProfileField field, Graphics2D g2, 
+	/* private void drawScanProfile(ProfileField field, Graphics2D g2,
 			int startTraceIndex, ScanProfile pf) {
 
 		Point2D p1 = field.traceSampleToScreenCenter(new TraceSample(
@@ -429,7 +404,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 			}
 
 		}
-	}
+	}*/
 
 	private void drawFileNames(int height, ProfileField field, Graphics2D g2) {
 
@@ -454,17 +429,17 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 					fl.getTraces().get(lastTraceIndex).getIndexInSet(), 0));
 
 			if (currentFile == fl) {
-				g2.setColor(Color.YELLOW);
+				g2.setColor(new Color(0, 120, 215));
 				g2.setFont(fontB);
 
 				selectedX1 = (int) p.getX();
 				selectedX2 = (int) p2.getX();
 			} else {
-				g2.setColor(Color.WHITE);
+				g2.setColor(Color.darkGray);
 				g2.setFont(fontP);
 			}
 			/// separator
-			if (p.getX() > -getField().getMainRect().width / 2) {
+			if (p.getX() > (double) -getField().getMainRect().width / 2) {
 				g2.drawLine((int) p.getX(), 0, (int) p.getX(), height);
 			}
 
@@ -482,7 +457,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 
 		if (currentFile != null) {
-			g2.setColor(Color.YELLOW);
+			g2.setColor(new Color(0, 120, 215));
 			g2.setStroke(LEVEL_STROKE);
 			if (selectedX1 >= leftMargin) {
 				g2.drawLine(selectedX1, 0, selectedX1, height);
@@ -528,7 +503,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 
 	@Override
 	public Node getRootNode() {
-		return vbox;//topPane;
+		return vbox;
 	}
 
 	@Override
@@ -542,12 +517,11 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		return List.of(contrastNode);
 	}
 
-	private MutableInt shiftGround = new MutableInt(0);
+	private final MutableInt shiftGround = new MutableInt(0);
 
-	private Node printHoughSlider;
+	//private Node printHoughSlider;
 	
-	public List<Node> getRightSearch() {
-
+	//public List<Node> getRightSearch() {
 		
 		//Slider s;
 		/*List<Node> lst = Arrays.asList(hyperbolaSlider.produce(), 
@@ -599,11 +573,11 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		
 		
 		return lst;*/
-		return List.of();
-	}
+	//	return List.of();
+	//}
 
 	private void initImageView() {
-		imageView.setOnScroll(event -> {
+		canvas.setOnScroll(event -> {
 			int ch = (event.getDeltaY() > 0 ? 1 : -1);
 
 			double ex = event.getSceneX();
@@ -614,13 +588,13 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 			event.consume(); // don't scroll the page
 		});
 
-		imageView.setOnMousePressed(mousePressHandler);
-		imageView.setOnMouseReleased(mouseReleaseHandler);
-		imageView.setOnMouseMoved(mouseMoveHandler);
-		imageView.setOnMouseClicked(mouseClickHandler);
-		imageView.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
-		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
-		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);
+		canvas.setOnMousePressed(mousePressHandler);
+		canvas.setOnMouseReleased(mouseReleaseHandler);
+		canvas.setOnMouseMoved(mouseMoveHandler);
+		canvas.setOnMouseClicked(mouseClickHandler);
+		canvas.addEventFilter(MouseEvent.DRAG_DETECTED, dragDetectedHandler);
+		canvas.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
+		canvas.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, dragReleaseHandler);
 	}
 
 	private void zoom(int ch, double ex, double ey, boolean justHorizont) {
@@ -660,10 +634,8 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 			new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent mouseEvent) {
-
-			imageView.startFullDrag();
-
-			imageView.setCursor(Cursor.CLOSED_HAND);
+			canvas.startFullDrag();
+			canvas.setCursor(Cursor.CLOSED_HAND);
 		}
 	};
 
@@ -679,7 +651,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 				selectedMouseHandler = null;
 			}
 
-			imageView.setCursor(Cursor.DEFAULT);
+			canvas.setCursor(Cursor.DEFAULT);
 
 			event.consume();
 		}
@@ -713,9 +685,9 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		return getLocalCoords(event.getSceneX(), event.getSceneY());
 	}
 
-	protected Point2D getLocalCoords(double x, double y) {
+	private Point2D getLocalCoords(double x, double y) {
 		Point2D sceneCoords = new Point2D(x, y);
-		Point2D imgCoord = imageView.sceneToLocal(sceneCoords);
+		Point2D imgCoord = canvas.sceneToLocal(sceneCoords);
 		Point2D p = new Point2D(imgCoord.getX() - getField().getMainRect().x
 				- getField().getMainRect().width / 2,
 				imgCoord.getY());
@@ -749,7 +721,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 	};
 
-	protected EventHandler<MouseEvent> mousePressHandler = 
+	private EventHandler<MouseEvent> mousePressHandler =
 			new EventHandler<MouseEvent>() {
 		@Override
 		public void handle(MouseEvent event) {
@@ -763,20 +735,17 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 				selectedMouseHandler = null;
 			}
 
-			imageView.setCursor(Cursor.CLOSED_HAND);
+			canvas.setCursor(Cursor.CLOSED_HAND);
 		}
 	};
 
-	protected EventHandler<MouseEvent> mouseReleaseHandler = 
+	private EventHandler<MouseEvent> mouseReleaseHandler =
 			new EventHandler<>() {
 		@Override
 		public void handle(MouseEvent event) {
-
 			Point2D p = getLocalCoords(event);
-
 			if (selectedMouseHandler != null) {
 				selectedMouseHandler.mouseReleaseHandle(p, getField());
-
 				selectedMouseHandler = null;
 			}
 		}
@@ -784,32 +753,20 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 
 	private void repaintEvent() {
 		if (!model.isLoading() && model.getGprTracesCount() > 0) {
-			controller.render();
+			//controller.render();
+			Platform.runLater(() -> {
+				repaint();
+			});
 		}
 	}
 
-	protected void repaint() {
-
-		img = draw((int) width, (int) height);
-		if (img != null) {
-			image = SwingFXUtils.toFXImage(img, null);
-		} else {
-			image = null;
-		}
-		updateWindow();
-	}
-
-	protected void updateWindow() {
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				imageView.setImage(image);
-			}
-		});
+	private void repaint() {
+		draw((int) width, (int) height);
 	}
 
 	@EventListener(classes = WhatChanged.class)
 	private void somethingChanged(WhatChanged changed) {
+		//TODO: filter events
 		repaintEvent();
 		updateScroll();
 	}
@@ -840,20 +797,17 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		profileScroll.recalc();
 	}
 
-	private RecalculationController controller = 
+	private final RecalculationController controller =
 			new RecalculationController(new Consumer<Void>() {
 
 		@Override
 		public void accept(Void level) {
-
-			repaint();
-
+			//repaint();
 		}
-
 	});
 
-	public ImageView getImageView() {
-		return imageView;
+	public void setCursor(Cursor cursor) {
+		canvas.setCursor(cursor);
 	}
 
 	public class ContrastSlider extends BaseSlider {
@@ -877,26 +831,6 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		}
 	}
 
-	public class AspectSlider extends BaseSlider {
-
-		public AspectSlider(Settings settings, ChangeListener<Number> listenerExt) {
-			super(settings, listenerExt);
-			name = "Aspect";
-			units = "";
-			tickUnits = 10;
-		}
-
-		public void updateUI() {
-			slider.setMax(30);
-			slider.setMin(-30);
-			slider.setValue(getField().getAspect());
-		}
-
-		public int updateModel() {
-			getField().setAspect((int) slider.getValue());
-			return (int) getField().getAspect();
-		}
-	}
 	public void setSize(double width, double height) {
 		this.width = width;
 		this.height = height;
@@ -906,7 +840,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		repaintEvent();
 	}
 
-	BaseObject getMouseHandler() {
+	/*BaseObject getMouseHandler() {
 		if (auxModeBtn.isSelected()) {
 			return auxEditHandler;
 		} else {
@@ -916,7 +850,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 
 	void setScrollHandler(BaseObject scrollHandler) {
 		this.scrollHandler = scrollHandler;
-	}
+	}*/
 
 	protected ProfileField getField() {
 		return model.getProfileField();
@@ -928,12 +862,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		return r3;
 	}
 
-	public Node getPrintHoughSlider() {
-		return printHoughSlider;
-	}
-
 	public ProfileScroll getProfileScroll() {
 		return profileScroll;
 	}
-	
 }

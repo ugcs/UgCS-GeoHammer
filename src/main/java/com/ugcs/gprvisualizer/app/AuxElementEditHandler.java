@@ -262,7 +262,7 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
 			
-			profileView.getImageView().setCursor(Cursor.DEFAULT);
+			profileView.setCursor(Cursor.DEFAULT);
 			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		}
@@ -278,11 +278,11 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 			return true;
 		} else {
 			if (aboveControl(localPoint, profField)) {
-				profileView.getImageView().setCursor(Cursor.MOVE);
+				profileView.setCursor(Cursor.MOVE);
 			} else if (aboveElement(localPoint, profField)) {
-				profileView.getImageView().setCursor(Cursor.HAND);
+				profileView.setCursor(Cursor.HAND);
 			} else {
-				profileView.getImageView().setCursor(Cursor.DEFAULT);
+				profileView.setCursor(Cursor.DEFAULT);
 			}			
 		}
 		return false;

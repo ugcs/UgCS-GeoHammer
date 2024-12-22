@@ -540,8 +540,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		
 		vBox.setStyle(BORDER_STYLING);
 				
-		vBox.getChildren().addAll(
-			List.of(new Label("Elevation source: " + getSourceName(positionFile))));
+		vBox.getChildren().add(new Label("Elevation source: " + getSourceName(positionFile)));
 
 		vBox.getChildren().addAll(levelFilter.getToolNodes2());
 
@@ -572,98 +571,6 @@ public class OptionPane extends VBox implements InitializingBean {
 		});
 		
 		return btn;
-	}
-	
-	private void prepareTab2(Tab tab2) {
-		
-		showGreenLineBtn.setTooltip(new Tooltip("Show/hide anomaly probability chart"));
-		showGreenLineBtn.setSelected(model.getSettings().showGreenLine);
-		showGreenLineBtn.setOnAction(e -> {
-			model.getSettings().showGreenLine = showGreenLineBtn.isSelected();
-			//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
-		});
-		
-		
-		VBox t2 = new VBox(10);		
-        t2.getChildren().addAll(profileView.getRightSearch());
-        
-		ToggleButton shEdge;
-		t2.getChildren().addAll(
-				//new HBox(
-						
-				//	commandRegistry.createAsinqTaskButton(
-				//		expHoughScan, 
-				//		e -> radarMap.selectAlgMode()						
-				//	)
-
-				//	,
-				//	commandRegistry.createAsinqTaskButton(
-				//		houghScan,
-				//		e -> radarMap.selectAlgMode()
-				//	)
-				//),
-
-				//new HBox(
-				//		commandRegistry.createAsinqTaskButton(
-				//		new AlgorithmicScanFull(),
-				//		e -> radarMap.selectAlgMode()
-				//	),
-				//	commandRegistry.createAsinqTaskButton(
-				//			new PluginRunner(model),
-				//			e -> {}
-				//	)
-				//),
-				
-				//commandRegistry.createAsinqTaskButton(
-				//		new AlgorithmicScan()),				
-				
-				new HBox(
-					prepareToggleButton("Hyperbola detection mode", 
-						"hypLive.png", 
-						model.getSettings().getHyperliveview(),
-						e -> {
-							//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
-							
-							profileView.getPrintHoughSlider().requestFocus();
-						}),
-					showGreenLineBtn),
-				
-				
-				
-				//new HBox(
-				//		commandRegistry.createButton(
-				//				new EdgeFinder()),
-				//		commandRegistry.createButton(
-				//				new EdgeSubtractGround())
-				//		),
-				new HBox(
-						shEdge = 
-							uiUtils.prepareToggleButton("show edge", null, 
-								model.getSettings().showEdge, 
-								WhatChanged.Change.justdraw),
-						
-							uiUtils.prepareToggleButton("show good", null, 
-								model.getSettings().showGood, 
-								WhatChanged.Change.justdraw)
-						),
-				commandRegistry.createButton(new TraceStacking()), 
-				commandRegistry.createButton(new LevelScanHP(), 
-						e -> {
-							//eventPublisher.publishEvent(new WhatChanged(Change.justdraw));
-							//levelCalculated = true; 
-							//updateButtons(); 
-						})
-
-				
-			);
-		
-		
-
-//		KeyCombination kc = new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN);
-//		Mnemonic mn = new Mnemonic(shEdge, kc); // you can also use kp
-//		AppContext.scene.addMnemonic(mn);
-		
-        tab2.setContent(t2);
 	}
 
 	@EventListener
