@@ -68,6 +68,8 @@ import javafx.scene.chart.XYChart.Series;
 
 public class SensorLineChart extends ScrollableData implements FileDataContainer {
 
+    private static final double ZOOM_STEP = 1.38;
+
     private static final String FILTERED_SERIES_SUFFIX = "_filtered";
 
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
@@ -659,13 +661,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     public void zoomIn() {
-        double scale = 1.0 / 1.25;
+        double scale = 1.0 / ZOOM_STEP;
         zoom(scale, scale, null);
         Platform.runLater(this::updateChartData);
     }
 
     public void zoomOut() {
-        double scale = 1.25;
+        double scale = ZOOM_STEP;
         zoom(scale, scale, null);
         Platform.runLater(this::updateChartData);
     }

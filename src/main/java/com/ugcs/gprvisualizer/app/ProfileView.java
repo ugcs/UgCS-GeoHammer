@@ -11,11 +11,14 @@ import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -68,6 +71,7 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 					10.0f, dash1, 0.0f);
 
 	private final Model model;
+	private SgyFile selectedFile;
 	private final AuxElementEditHandler auxEditHandler;
 	private final Navigator navigator;
 	private final Saver saver;
@@ -125,7 +129,12 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		contrastSlider = new ContrastSlider(model.getProfileField().getProfileSettings(),
 				sliderListener);
 	}
-	
+
+	@EventListener
+	public void handleFileSelectedEvent(FileSelectedEvent event) {
+		this.selectedFile = event.getFile();
+	}
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
@@ -151,12 +160,26 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		prepareToolbar();
 		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
-		zoomInBtn.setOnAction(e -> {
+		zoomInBtn.setOnAction(this::zoomIn);
+		zoomOutBtn.setOnAction(this::zoomOut);
+	}
+
+	private void zoomIn(ActionEvent event) {
+		if (selectedFile instanceof CsvFile csvFile) {
+			Optional<SensorLineChart> chart = model.getChart(csvFile);
+			chart.ifPresent(SensorLineChart::zoomIn);
+		} else {
 			zoom(1, width / 2, height / 2, false);
-		});
-		zoomOutBtn.setOnAction(e -> {
+		}
+	}
+
+	private void zoomOut(ActionEvent event) {
+		if (selectedFile instanceof CsvFile csvFile) {
+			Optional<SensorLineChart> chart = model.getChart(csvFile);
+			chart.ifPresent(SensorLineChart::zoomOut);
+		} else {
 			zoom(-1, width / 2, height / 2, false);
-		});
+		}
 	}
 
 	private void prepareToolbar() {
