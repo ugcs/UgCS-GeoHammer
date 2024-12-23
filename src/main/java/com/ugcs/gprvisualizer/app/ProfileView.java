@@ -149,8 +149,8 @@ public class ProfileView implements InitializingBean, FileDataContainer {
 		vbox.getChildren().addAll(canvas);
 
 		prepareToolbar();
-		zoomInBtn.setTooltip(new Tooltip("Zoom in flight profile"));
-		zoomOutBtn.setTooltip(new Tooltip("Zoom out flight profile"));
+		zoomInBtn.setTooltip(new Tooltip("Zoom in"));
+		zoomOutBtn.setTooltip(new Tooltip("Zoom out"));
 		zoomInBtn.setOnAction(e -> {
 			zoom(1, width / 2, height / 2, false);
 		});
