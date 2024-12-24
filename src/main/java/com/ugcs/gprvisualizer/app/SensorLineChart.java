@@ -508,6 +508,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         selectionRect.setManaged(false);
         selectionRect.setFill(null);
         selectionRect.setStroke(Color.BLUE);
+        selectionRect.setMouseTransparent(true);
 
         root = new VBox(top, stackPane, selectionRect);
         root.setFillWidth(true);
