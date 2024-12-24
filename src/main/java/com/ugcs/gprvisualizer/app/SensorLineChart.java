@@ -456,7 +456,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                                         sublist.add(file.getTraces().get(geoData.getTraceNumber()));
                                         GeoData gd = new GeoData(geoData);
                                         if (geoData.getLine().data().intValue() > currentYValue) {
-                                            gd.setLine(gd.getLine().data().intValue() - 1);
+                                            gd.setLineIndex(gd.getLine().data().intValue() - 1);
                                         }
                                         file.getAuxElements().stream().filter(FoundPlace.class::isInstance)
                                                 .map(o -> ((FoundPlace) o))

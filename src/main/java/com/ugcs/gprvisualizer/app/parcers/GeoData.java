@@ -63,8 +63,22 @@ public class GeoData extends GeoCoordinates {
         return new LatLon(getLatitude(), getLongitude()).equals(trace.getLatLon());
     }
 
-    public void setLine(int lineNumber) {
+    public void setLineIndex(int lineNumber) {
         setSensorValue(Semantic.LINE.name, lineNumber);
+    }
+
+    public int getLineIndex() {
+        return getLineIndex(0);
+    }
+
+    public int getLineIndex(int defaultIndex) {
+        SensorValue line = getSensorValue(Semantic.LINE);
+        if (line == null)
+            return defaultIndex;
+        Number data = line.data();
+        if (data == null)
+            return defaultIndex;
+        return data.intValue();
     }
 
     public SensorValue getLine() {
