@@ -663,13 +663,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     public void zoomIn() {
         double scale = 1.0 / ZOOM_STEP;
-        zoom(scale, scale, null);
+        zoom(scale, 1.0, null);
         Platform.runLater(this::updateChartData);
     }
 
     public void zoomOut() {
         double scale = ZOOM_STEP;
-        zoom(scale, scale, null);
+        zoom(scale, 1.0, null);
         Platform.runLater(this::updateChartData);
     }
 
