@@ -69,6 +69,8 @@ import javafx.scene.chart.XYChart.Series;
 
 public class SensorLineChart extends ScrollableData implements FileDataContainer {
 
+    private static final double ZOOM_STEP = 1.38;
+
     private static final String FILTERED_SERIES_SUFFIX = "_filtered";
 
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
@@ -87,9 +89,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     //private int scale;
     private CsvFile file;
     //private Node rootNode;
-
-    // data filters: allow to skip duplicate points in chart on add
-    private Map<List<Number>, Set<Number>> dataFilters = new HashMap<>();
 
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -233,10 +232,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return file.getTraces().size();
     }
 
-    public record PlotData(String semantic, String units, Color color, List<Number> data, boolean rendered) {
+    public record PlotData(String semantic, String units, Color color, List<Number> data,
+                           Set<Number> renderedIndices, boolean rendered) {
         
         public PlotData(String semantic, String units, Color color, List<Number> data) {
-            this(semantic, units, color, data, false);
+            this(semantic, units, color, data, new HashSet<>(), false);
         }
 
         public PlotData withData(List<Number> data) {
@@ -248,11 +248,17 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
          * @return PlotData with rendered flag set to true
          */
         public PlotData render() {
-            return new PlotData(semantic, units, color, data, true);
+            return new PlotData(semantic, units, color, data, renderedIndices, true);
         }
 
         public String getPlotStyle() {
             return "-fx-stroke: " + getColorString(color) + ";" + "-fx-stroke-width: 0.6px;";
+        }
+
+        public void setRendered(List<Data<Number, Number>> values) {
+            if (values == null)
+                return;
+            values.forEach(v -> renderedIndices.add(v.getXValue()));
         }
     }
 
@@ -333,7 +339,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
             // Add data to chart
             if (!data.isEmpty()) {
-                addSeriesDataFiltered(series, data, 0, data.size());
+                addSeriesDataFiltered(series, plotData, 0, data.size());
             }
 
             SeriesData item = new SeriesData(series, plotData.color());
@@ -455,7 +461,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                                         sublist.add(file.getTraces().get(geoData.getTraceNumber()));
                                         GeoData gd = new GeoData(geoData);
                                         if (geoData.getLine().data().intValue() > currentYValue) {
-                                            gd.setLine(gd.getLine().data().intValue() - 1);
+                                            gd.setLineIndex(gd.getLine().data().intValue() - 1);
                                         }
                                         file.getAuxElements().stream().filter(FoundPlace.class::isInstance)
                                                 .map(o -> ((FoundPlace) o))
@@ -507,6 +513,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         selectionRect.setManaged(false);
         selectionRect.setFill(null);
         selectionRect.setStroke(Color.BLUE);
+        selectionRect.setMouseTransparent(true);
 
         root = new VBox(top, stackPane, selectionRect);
         root.setFillWidth(true);
@@ -640,13 +647,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     private void addSeriesDataFiltered(XYChart.Series<Number, Number> series,
-                                       List<Number> data, int lowerIndex, int upperIndex) {
-        Set<Number> dataFilter = dataFilters.computeIfAbsent(data, k -> new HashSet<>());
-        List<Data<Number, Number>> subsample = getSubsampleInRange(data, lowerIndex, upperIndex, dataFilter);
+                                       PlotData plotData, int lowerIndex, int upperIndex) {
+        List<Data<Number, Number>> subsample = getSubsampleInRange(
+                plotData.data, lowerIndex, upperIndex, plotData.renderedIndices);
         series.getData().addAll(subsample);
-        subsample.forEach(v -> {
-            dataFilter.add(v.getXValue());
-        });
+        plotData.setRendered(subsample);
     }
 
     /**
@@ -660,14 +665,14 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     public void zoomIn() {
-        double scale = 1.0 / 1.25;
-        zoom(scale, scale, null);
+        double scale = 1.0 / ZOOM_STEP;
+        zoom(scale, 1.0, null);
         Platform.runLater(this::updateChartData);
     }
 
     public void zoomOut() {
-        double scale = 1.25;
-        zoom(scale, scale, null);
+        double scale = ZOOM_STEP;
+        zoom(scale, 1.0, null);
         Platform.runLater(this::updateChartData);
     }
 
@@ -1030,12 +1035,15 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 if (series.getName().contains(FILTERED_SERIES_SUFFIX)) {
                     if (filteredData == null || !filteredData.rendered) {
                         series.getData().clear();
+                        if (filteredData != null) {
+                            filteredData.renderedIndices.clear();
+                        }
                         if (filteredData == null) {
                             series.getData().add(new Data<Number,Number>(0, 0));
                         }
                     } 
                     if (filteredData != null) {
-                        addSeriesDataFiltered(series, filteredData.data, lowerIndex, upperIndex);
+                        addSeriesDataFiltered(series, filteredData, lowerIndex, upperIndex);
                         if (!filteredData.rendered) {
                             filteredData = filteredData.render();
                         }
@@ -1046,7 +1054,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     if (filteredData != null) {
                             node.setStyle(node.getStyle() + "-fx-stroke-dash-array: 1 5 1 5;");
                     }
-                    addSeriesDataFiltered(series, plotData.data, lowerIndex, upperIndex);
+                    addSeriesDataFiltered(series, plotData, lowerIndex, upperIndex);
                 }
             });
         }
@@ -1059,6 +1067,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     series.getData().clear();
                     //System.out.println("complete clear: " + System.currentTimeMillis());
                 });
+                plotData.renderedIndices.clear();
             }
         }
 

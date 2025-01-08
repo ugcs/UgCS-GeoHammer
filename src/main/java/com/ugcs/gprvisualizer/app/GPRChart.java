@@ -189,7 +189,6 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
     void zoom(int ch, boolean justHorizont) {
         var ex = width / 2;
         var ey = height / 2;
-
         zoom(ch, ex, ey, justHorizont);
     }
 

@@ -317,67 +317,81 @@ public class TraceCutter implements Layer, InitializingBean {
 	}
 	
 	private List<SgyFile> splitFile(SgyFile file, MapField field, List<Point2D> border) {
-		
+		if(file instanceof CsvFile) {
+			return splitCsvFile((CsvFile)file, field, border);
+		} else {
+			return splitGprFile(file, field, border);
+		}
+	}
+
+	private List<SgyFile> splitCsvFile(CsvFile csvFile, MapField field, List<Point2D> border) {
+		List<Trace> sublist = new ArrayList<>();
+
+		for(Trace trace: csvFile.getTraces()) {
+			boolean inside = isTraceInsideSelection(field, border, trace);
+			if (inside) {
+				sublist.add(trace);
+			}
+		}
+
+		// all filtered values
+		List<GeoData> geoDataList = new ArrayList<>();
+		// filtered values of the current line
+		List<GeoData> geoDataLineList = new ArrayList<>();
+		// line index of the value in a source file
+		int lineIndex = 0;
+		// line index in a split file
+		int splitLineIndex = 0;
+
+		for(GeoData geoData : csvFile.getGeoData()) {
+			boolean inside = isGeoDataInsideSelection(field, border, geoData);
+			int dataLineIndex = geoData.getLineIndex();
+			if (!inside || dataLineIndex != lineIndex) {
+				if (!geoDataLineList.isEmpty()) {
+					if (isGoodForFile(geoDataLineList)) { // filter too small lines
+						for(GeoData gd: geoDataLineList) {
+							gd.setLineIndex(splitLineIndex);
+						}
+						splitLineIndex++;
+						geoDataList.addAll(geoDataLineList);
+					}
+					geoDataLineList = new ArrayList<>();
+				}
+				lineIndex = dataLineIndex;
+			}
+			if (inside) {
+				geoDataLineList.add(new GeoData(geoData));
+			}
+		}
+
+		// for last
+		if (!geoDataLineList.isEmpty()) {
+			if (isGoodForFile(geoDataLineList)) { // filter too small lines
+				for(GeoData gd: geoDataLineList) {
+					gd.setLineIndex(splitLineIndex);
+				}
+				geoDataList.addAll(geoDataLineList);
+			}
+		}
+
+		CsvFile subfile = csvFile.copy();
+		subfile.setUnsaved(true);
+
+		subfile.setAuxElements(csvFile.getAuxElements().stream()
+				.filter(aux -> isInsideSelection(field, border, ((FoundPlace) aux).getLatLon()))
+				.collect(Collectors.toList()));
+		subfile.setTraces(sublist);
+		subfile.getGeoData().addAll(geoDataList);
+		subfile.updateInternalIndexes();
+
+		return List.of(subfile);
+	}
+
+	private List<SgyFile> splitGprFile(SgyFile file, MapField field, List<Point2D> border) {
 		List<SgyFile> splitList = new ArrayList<>();
 		List<Trace> sublist = new ArrayList<>();
-		
+
 		int part = 1;
-
-		if(file instanceof CsvFile) {
-			CsvFile csvFile = (CsvFile) file;
-			for(Trace trace: file.getTraces()) {
-				boolean inside = isTraceInsideSelection(field, border, trace);
-				if (inside) {
-					sublist.add(trace);
-				} 
-			}
-			
-			List<GeoData> geoDataList = new ArrayList<>();
-			List<GeoData> geoDataLineList = new ArrayList<>();
-			int lineNumber = 0;
-
-			for(GeoData geoData: csvFile.getGeoData()) {
-				boolean inside = isGeoDataInsideSelection(field, border, geoData);
-				if (inside) {
-						geoDataLineList.add(new GeoData(geoData));
-				} else {
-					if (!geoDataLineList.isEmpty()) {
-						if (isGoodForFile(geoDataLineList)) { // filter too small lines
-							for(GeoData gd: geoDataLineList) {
-								gd.setLine(lineNumber);
-							}
-							lineNumber++;
-							geoDataList.addAll(geoDataLineList);
-						}
-						geoDataLineList = new ArrayList<>();
-					}
-				}	
-			}
-
-			// for last
-			if (!geoDataLineList.isEmpty()) {
-				if (isGoodForFile(geoDataLineList)) { //filter too small lines
-					for(GeoData gd: geoDataLineList) {
-						gd.setLine(lineNumber);
-					}
-					lineNumber++;
-					geoDataList.addAll(geoDataLineList);
-				}
-			}
-			
-			CsvFile subfile = csvFile.copy();
-			subfile.setUnsaved(true);
-			
-			subfile.setAuxElements(csvFile.getAuxElements().stream()
-					.filter(aux -> isInsideSelection(field, border, ((FoundPlace) aux).getLatLon()))
-					.collect(Collectors.toList()));
-			subfile.setTraces(sublist);
-			subfile.getGeoData().addAll(geoDataList);
-			subfile.updateInternalIndexes();
-			
-			return List.of(subfile);
-		} 
-		
 		for (Trace trace : file.getTraces()) {
 			boolean inside = isTraceInsideSelection(field, border, trace);
 			if (inside) {
@@ -395,15 +409,15 @@ public class TraceCutter implements Layer, InitializingBean {
 		}
 
 		//for last
-		if (isGoodForFile(sublist)) {					
+		if (isGoodForFile(sublist)) {
 			SgyFile subfile = generateSgyFileFrom(file, sublist, part++);
 			splitList.add(subfile);
 		}
-		
+
 		if (splitList.size() == 1) {
 			splitList.get(0).setFile(file.getFile());
 		}
-		
+
 		return splitList;
 	}
 

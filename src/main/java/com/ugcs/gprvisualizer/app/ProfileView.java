@@ -2,12 +2,15 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import javafx.event.ActionEvent;
 import javafx.scene.layout.Pane;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.event.EventListener;
@@ -50,19 +53,36 @@ public class ProfileView implements InitializingBean {
         this.navigator = navigator;
 		this.saver = saver;
 	}
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		prepareToolbar();
 		zoomInBtn.setTooltip(new Tooltip("Zoom in"));
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out"));
-		zoomInBtn.setOnAction(e -> {
-			//FIXME: after merge
-			//model.getProfileField().zoom(1, false);
-		});
-		zoomOutBtn.setOnAction(e -> {
-			//model.getProfileField().zoom(-1, false);
-		});
+		zoomInBtn.setOnAction(this::zoomIn);
+		zoomOutBtn.setOnAction(this::zoomOut);
+	}
+
+	private void zoomIn(ActionEvent event) {
+		if (currentFile instanceof CsvFile csvFile) {
+			Optional<SensorLineChart> chart = model.getChart(csvFile);
+			chart.ifPresent(SensorLineChart::zoomIn);
+		} else {
+			if (currentFile != null) {
+				model.getProfileField(currentFile).zoom(1, false); //zoom(1, width / 2, height / 2, false);
+			}
+		}
+	}
+
+	private void zoomOut(ActionEvent event) {
+		if (currentFile instanceof CsvFile csvFile) {
+			Optional<SensorLineChart> chart = model.getChart(csvFile);
+			chart.ifPresent(SensorLineChart::zoomOut);
+		} else {
+			if (currentFile != null) {
+				model.getProfileField(currentFile).zoom(-1, false); //zoom(-1, width / 2, height / 2, false);
+			}
+		}
 	}
 
 	private void prepareToolbar() {
@@ -175,25 +195,28 @@ public class ProfileView implements InitializingBean {
 	private void fileSelected(FileSelectedEvent event) {
 		if (event.getFile() != null && !event.getFile().equals(currentFile)) {
 			currentFile = event.getFile();
+			if (currentFile instanceof CsvFile csvFile) {
 
-			if (center.getChildren().get(1) instanceof ProfileScroll) {
-				center.getChildren().remove(1);
-			}
-
-			var gprChart = model.getProfileField(currentFile);
-
-			var profileScroll = gprChart.getProfileScroll();
-			profileScroll.setVisible(true);
-			center.getChildren().add(1, profileScroll);
-
-			ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
-				if (Math.abs(newValue.intValue() - oldValue.intValue()) > 1) {
-					gprChart.setSize((int) (center.getWidth() - 21), (int) (Math.max(400, ((VBox) gprChart.getRootNode()).getHeight()) - 4));
+			} else {
+				if (center.getChildren().get(1) instanceof ProfileScroll) {
+					center.getChildren().remove(1);
 				}
-			};
-			center.widthProperty().addListener(sp2SizeListener);
-			//((VBox) gprChart.getRootNode()).widthProperty().addListener(sp2SizeListener);
-			((VBox) gprChart.getRootNode()).heightProperty().addListener(sp2SizeListener);
+
+				var gprChart = model.getProfileField(currentFile);
+
+				var profileScroll = gprChart.getProfileScroll();
+				profileScroll.setVisible(true);
+				center.getChildren().add(1, profileScroll);
+
+				ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
+					if (Math.abs(newValue.intValue() - oldValue.intValue()) > 1) {
+						gprChart.setSize((int) (center.getWidth() - 21), (int) (Math.max(400, ((VBox) gprChart.getRootNode()).getHeight()) - 4));
+					}
+				};
+				center.widthProperty().addListener(sp2SizeListener);
+				//((VBox) gprChart.getRootNode()).widthProperty().addListener(sp2SizeListener);
+				((VBox) gprChart.getRootNode()).heightProperty().addListener(sp2SizeListener);
+			}
 		}
 	}
 
