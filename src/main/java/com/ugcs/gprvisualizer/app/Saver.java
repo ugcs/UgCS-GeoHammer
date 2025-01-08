@@ -64,13 +64,11 @@ public class Saver implements ToolProducer, InitializingBean {
 		
 		listener.progressMsg("load now");			
 		try {
-			loader.load(newfiles, listener);			
+			loader.loadWithNotify(newfiles, listener);
 		} catch (Exception e) {
 			MessageBoxHelper.showError("error reopening files", "");
 		}
-	    	
-		eventPublisher.publishEvent(new FileOpenedEvent(this));
-	    	
+
 	    status.showProgressText("saved " 
 	    		+ model.getFileManager().getFilesCount() + " files");
 	};
@@ -83,31 +81,28 @@ public class Saver implements ToolProducer, InitializingBean {
 		
 		listener.progressMsg("load now");			
 		try {
-			loader.load(List.of(newFile), listener);			
+			loader.loadWithNotify(List.of(newFile), listener);
 		} catch (Exception e) {
 			MessageBoxHelper.showError("error reopening files", "");
 		}
 	    	
-		eventPublisher.publishEvent(new FileOpenedEvent(this));
+
 	    	
 	    status.showProgressText("saved " 
 	    		+ model.getFileManager().getFilesCount() + " files");
 	};
 
 	private ProgressTask saveAsTask = listener -> {
-
 		listener.progressMsg("save now");
 		List<File> newfiles = saveAs(saveToFolder);
 		
 		listener.progressMsg("load now");
 		try {
-			loader.load(newfiles, listener);
-		} catch (Exception e) {			
+			loader.loadWithNotify(newfiles, listener);
+		} catch (Exception e) {
 			e.printStackTrace();
 			MessageBoxHelper.showError("error reopening files", "");
 		}
-				
-		eventPublisher.publishEvent(new FileOpenedEvent(this));
 		
 		status.showProgressText("saved " 
 				+ model.getFileManager().getFilesCount() + " files");

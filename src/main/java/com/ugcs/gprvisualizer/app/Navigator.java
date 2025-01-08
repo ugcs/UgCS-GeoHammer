@@ -3,7 +3,9 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -15,20 +17,14 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-
 @Component
 public class Navigator implements ToolProducer {
 
-
-	private final ApplicationEventPublisher eventPublisher;
-
 	private final Model model;
-	
-	public Navigator(Model model, ApplicationEventPublisher eventPublisher) {
+	private SgyFile currentFile;
+
+	public Navigator(Model model) {
 		this.model = model;
-		this.eventPublisher = eventPublisher;
 	}
 
 	@Override
@@ -62,7 +58,7 @@ public class Navigator implements ToolProducer {
 	
 
 	public void fitNext() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField().getMiddleTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField(currentFile).getMiddleTrace());
 		
 		index = Math.min(model.getFileManager().getGprFiles().size() - 1, index + 1);
 		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
@@ -71,7 +67,7 @@ public class Navigator implements ToolProducer {
 	}
 
 	public void fitBack() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField().getMiddleTrace());
+		int index = model.getSgyFileIndexByTrace(model.getProfileField(currentFile).getMiddleTrace());
 		
 		index = Math.max(0, index - 1);
 		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
@@ -80,7 +76,7 @@ public class Navigator implements ToolProducer {
 	}
 
 	public void fitCurrent() {
-		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField().getMiddleTrace());
+		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField(currentFile).getMiddleTrace());
 		model.chartsZoomOut();
 		fitFile(sgyFile);
 	}
@@ -90,7 +86,7 @@ public class Navigator implements ToolProducer {
 			return;
 		}
 		
-		model.getProfileField().setMiddleTrace(
+		model.getProfileField(sgyFile).setMiddleTrace(
 				(sgyFile.getOffset().getStartTrace() 
 				+ sgyFile.getOffset().getFinishTrace()) 
 				/ 2);
@@ -98,9 +94,14 @@ public class Navigator implements ToolProducer {
 		int maxSamples = sgyFile.getOffset().getMaxSamples();
 		int tracesCount = sgyFile.getTraces().size(); 
 		
-		model.getProfileField().fit(maxSamples, tracesCount);
+		model.getProfileField(sgyFile).fit(maxSamples, tracesCount);
 		
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+	}
+
+	@EventListener
+	public void onFileSelected(FileSelectedEvent event) {
+		currentFile =  event.getFile();
 	}
 
 }

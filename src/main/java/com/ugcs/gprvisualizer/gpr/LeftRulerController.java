@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,16 +30,14 @@ public class LeftRulerController {
 		String getUnit();
 	}
 	
-	
-	private Model model;
-	private Converter[] list = {
-			new SamplConverter(),
-			new NanosecConverter()
-	};
+
+	private final Converter[] list;
 	private int index = 0;
 	
-	public LeftRulerController(Model model) {
-		this.model = model;
+	public LeftRulerController(SgyFile sgyFile) {
+		list = new Converter[] {
+                new SamplConverter(), new NanosecConverter(sgyFile)
+        };
 	}
 	
 	public Converter getConverter() {
@@ -50,7 +49,7 @@ public class LeftRulerController {
 	}
 	
 	
-	class SamplConverter implements Converter {
+	static class SamplConverter implements Converter {
 
 		@Override
 		public Pair<Integer, Integer> convert(int s, int f) {
@@ -66,13 +65,19 @@ public class LeftRulerController {
 			return "smpl";
 		}		
 	}
-	
-	class NanosecConverter implements Converter {
+
+	static class NanosecConverter implements Converter {
+
+		private final SgyFile sgyFile;
+
+		public NanosecConverter(SgyFile sgyFile) {
+			this.sgyFile = sgyFile;
+		}
 
 		@Override
 		public Pair<Integer, Integer> convert(int s, int f) {
 			
-			SgyFile fl = model.getFileManager().getGprFiles().get(0);
+			SgyFile fl = sgyFile;//model.getFileManager().getGprFiles().get(0);
 			
 			
 			return Pair.of(
@@ -81,7 +86,7 @@ public class LeftRulerController {
 		}
 		
 		public int back(int unt) {
-			SgyFile fl = model.getFileManager().getGprFiles().get(0);
+			SgyFile fl = sgyFile; //model.getFileManager().getGprFiles().get(0);
 			return unt * 1000 / fl.getSampleInterval();
 		}
 		
@@ -92,44 +97,43 @@ public class LeftRulerController {
 		}		
 	}
 	
-	
-	public BaseObjectImpl tb = new BaseObjectImpl() {
+	public BaseObject getTB() {
+		return tb;
+	}
+
+	private final BaseObject tb = new BaseObjectImpl() {
 
 		@Override
-		public void drawOnCut(Graphics2D g2, ProfileField profField) {
-			//setClip(g2, profField.getInfoRect());
-			g2.setClip(null);
+		public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
+			if (scrollableData instanceof GPRChart gprChart) {
+				//setClip(g2, profField.getInfoRect());
+				g2.setClip(null);
+				Rectangle r = getRect(gprChart.getField());
 
-			Rectangle r = getRect(profField);
+				g2.setStroke(STROKE);
+				g2.setColor(Color.lightGray);
+				g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);
 
-			g2.setStroke(STROKE);
-			g2.setColor(Color.lightGray);
-			g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);			
-			
-			g2.setColor(Color.darkGray);
-			String text = getConverter().getUnit();
-			int width = g2.getFontMetrics().stringWidth(text);
-			g2.drawString(text, r.x + r.width - width - 4, r.y + r.height - 5);
+				g2.setColor(Color.darkGray);
+				String text = getConverter().getUnit();
+				int width = g2.getFontMetrics().stringWidth(text);
+				g2.drawString(text, r.x + r.width - width - 4, r.y + r.height - 5);
+			}
 		}
 
 		//@Override
-		private Rectangle getRect(ScrollableData profField) {
-			if (profField instanceof ProfileField) {
-				Rectangle  r = ((ProfileField) profField).getInfoRect();
-				return new Rectangle(((ProfileField) profField).getVisibleStart() + r.x + 5, r.y + r.height - 25,
+		private Rectangle getRect(ProfileField profField) {
+				Rectangle  r = profField.getInfoRect();
+				return new Rectangle(profField.getVisibleStart() + r.x + 5, r.y + r.height - 25,
 						r.width - 10, 20);
-			} else {
-				return null;
-			}
 		}
 
 		@Override
-		public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
-			if (getRect(profField).contains(localPoint.getX(), localPoint.getY())) {
+		public boolean mousePressHandle(Point2D localPoint, ScrollableData scrollableData) {
+			if (scrollableData instanceof GPRChart gprChart && (getRect(gprChart.getField()).contains(localPoint.getX(), localPoint.getY()))) {
 				nextConverter();
 				return true;
 			}
-			
 			return false;
 		}
 

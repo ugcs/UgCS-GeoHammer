@@ -8,15 +8,15 @@ import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 
 public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseHandler {
-	private ProfileField field;
-	private ProfileField dragField;
+	private final GPRChart field;
+	private GPRChart dragField;
 	private Point2D dragPoint;
-	private ProfileView cleverView;
+	private final GPRChart cleverView;
 	private TraceSample oldCenter;
 	
-	public CleverViewScrollHandler(ProfileView cleverView) {
+	public CleverViewScrollHandler(GPRChart cleverView) {
 		this.cleverView = cleverView;
-		field = cleverView.getField();
+		field = cleverView;
 	}	
 
 	@Override
@@ -27,7 +27,7 @@ public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseH
 		oldCenter = dragField.screenToTraceSample(dragPoint);
 
 		//TODO:
-		//cleverView.repaintEvent();
+		cleverView.repaintEvent();
 		
     	return true;
 	}

@@ -7,21 +7,19 @@ import java.awt.Rectangle;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.ugcs.gprvisualizer.gpr.LeftRulerController.Converter;
-import com.ugcs.gprvisualizer.gpr.Model;
 
 public class VerticalRulerDrawer {
 	
-	private final Model model;
+	private final GPRChart field;
 	
-	VerticalRulerDrawer(Model model) {
-		this.model = model;
+	VerticalRulerDrawer(GPRChart field) {
+		this.field = field;
 	}
 	
-	public void draw(Graphics2D g2, ProfileField field) {
+	public void draw(Graphics2D g2) {
 
-		Rectangle rect = field.getLeftRuleRect(); 
+		Rectangle rect = field.getField().getLeftRuleRect();
 		int firstSample;		
 		int lastSample; 
 		
@@ -29,7 +27,7 @@ public class VerticalRulerDrawer {
 		lastSample = 
 				Math.min(
 					field.getLastVisibleSample(rect.height),
-					field.getMaxHeightInSamples());
+					field.getField().getMaxHeightInSamples());
 		
 		Converter converter = getConverter();
 		Pair<Integer, Integer> p = converter.convert(firstSample, lastSample);
@@ -66,6 +64,6 @@ public class VerticalRulerDrawer {
 	}
 
 	private Converter getConverter() {
-		return model.getLeftRulerController().getConverter();
+		return field.getLeftRulerController().getConverter();
 	}
 }

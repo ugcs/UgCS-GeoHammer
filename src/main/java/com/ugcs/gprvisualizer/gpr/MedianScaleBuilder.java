@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class MedianScaleBuilder implements ArrayBuilder {
@@ -21,14 +22,14 @@ public class MedianScaleBuilder implements ArrayBuilder {
 	}
 	
 	@Override
-	public double[][] build() {
+	public double[][] build(SgyFile file) {
 		
-		List<Trace> traces = model.getGprTraces();
 		if (scale != null) {
 			return scale;
 		}
 
-		var maxHeightInSamples = model.getProfileField().getMaxHeightInSamples();
+		List<Trace> traces = file.getTraces();
+		var maxHeightInSamples = model.getProfileField(file).getField().getMaxHeightInSamples();
 
 		double[][] underconstruction = new double[2][maxHeightInSamples];
 		
@@ -66,7 +67,7 @@ public class MedianScaleBuilder implements ArrayBuilder {
 		return scale;
 	}
 
-	private int nrm(int i, int max) {
-		return Math.max(0, Math.min(max - 1, i));
-	}
+	//private int nrm(int i, int max) {
+	//	return Math.max(0, Math.min(max - 1, i));
+	//}
 }

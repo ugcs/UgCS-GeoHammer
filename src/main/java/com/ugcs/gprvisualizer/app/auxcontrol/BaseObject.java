@@ -8,7 +8,6 @@ import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 //import com.ugcs.gprvisualizer.app.MouseHandler;
 
@@ -18,7 +17,7 @@ public interface BaseObject {//extends MouseHandler {
 
 	}
 	
-	default void drawOnCut(Graphics2D g2, ProfileField profField) {
+	default void drawOnCut(Graphics2D g2, ScrollableData profField) {
 
 	}
 	

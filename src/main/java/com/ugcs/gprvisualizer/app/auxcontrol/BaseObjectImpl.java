@@ -1,11 +1,15 @@
 package com.ugcs.gprvisualizer.app.auxcontrol;
 
+import com.ugcs.gprvisualizer.gpr.Model;
+
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 public abstract class BaseObjectImpl implements BaseObject {
 
-	private boolean selected = false;
+    protected Model model;
+
+    private boolean selected = false;
 
 	public void setSelected(boolean selected) {
 		this.selected = selected;

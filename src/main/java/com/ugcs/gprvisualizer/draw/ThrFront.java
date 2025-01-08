@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 
 public class ThrFront {
-
 	
 	private BufferedImage img;
 	

@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.GPRChart;
+import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 import org.json.simple.JSONObject;
 
@@ -73,33 +75,35 @@ public class ClickPlace extends BaseObjectImpl { //, MouseHandler {
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		
+	public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
 		if (file instanceof CsvFile) {
 			return;
 		}
 
-		setClip(g2, profField.getClipTopMainRect());
-		
-		Rectangle rect = getRect(profField);
-		
-		g2.setColor(flagColor);
-		g2.translate(rect.x, rect.y);
-		g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
-		
-		g2.setStroke(VERTICAL_STROKE);
-		g2.setColor(Color.blue);
-		g2.setXORMode(Color.gray);
-		g2.drawLine(R_HOR, Model.TOP_MARGIN, R_HOR, profField.sampleToScreen(
-				profField.getLastVisibleSample(
-						profField.getLeftRuleRect().height)));
-		g2.setPaintMode();
-		g2.translate(-rect.x, -rect.y);
+		if (scrollableData instanceof GPRChart gprChart) {
+			var profField = gprChart.getField();
+			setClip(g2, profField.getClipTopMainRect());
+
+			Rectangle rect = getRect(gprChart);
+
+			g2.setColor(flagColor);
+			g2.translate(rect.x, rect.y);
+			g2.drawImage(ResourceImageHolder.IMG_GPS, 0, 0, null);
+
+			g2.setStroke(VERTICAL_STROKE);
+			g2.setColor(Color.blue);
+			g2.setXORMode(Color.gray);
+			g2.drawLine(R_HOR, Model.TOP_MARGIN, R_HOR, gprChart.sampleToScreen(
+					gprChart.getLastVisibleSample(
+							profField.getLeftRuleRect().height)));
+			g2.setPaintMode();
+			g2.translate(-rect.x, -rect.y);
+		}
 	}
 	
-	private Rectangle getRect(ProfileField profField) {
+	private Rectangle getRect(GPRChart gprChart) {
 		
-		int x = profField.traceToScreen(trace.getIndexInSet());
+		int x = gprChart.traceToScreen(trace.getIndexInSet());
 				
 		Rectangle rect = new Rectangle(
 				x - R_HOR, Model.TOP_MARGIN - R_VER * 2, 

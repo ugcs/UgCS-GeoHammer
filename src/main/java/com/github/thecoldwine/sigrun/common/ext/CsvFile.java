@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class CsvFile extends SgyFile {
                     getGeoData().add((GeoData) coord);
                 }
                 if (((GeoData) coord).isMarked()) {
-                    getAuxElements().add(new FoundPlace(tr, getOffset()));
+                    getAuxElements().add(new FoundPlace(tr, getOffset(), AppContext.model));
                 }
             }            
         }

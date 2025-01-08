@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
@@ -58,27 +59,31 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		-fx-border-width: 1;
 		-fx-border-style: solid;
 		""";
-	
-	@Autowired
-	private ApplicationEventPublisher eventPublisher;
 
-	@Autowired
-	private Model model;
-	
-	@Autowired
-	private CommandRegistry commandRegistry;
-	
+	private final CommandRegistry commandRegistry;
+
+	private final Model model;
+
+	private final MapView mapView;
+
+	public RadarMap(CommandRegistry commandRegistry, Model model, MapView mapView) {
+		this.commandRegistry = commandRegistry;
+		this.model = model;
+		this.mapView = mapView;
+	}
+
 	private BaseSlider gainTopSlider;
 	private BaseSlider gainBottomSlider;
 	private BaseSlider thresholdSlider;
 	private BaseSlider radiusSlider;
 	private BaseCheckBox autoGainCheckbox;
-	
+
 	private ArrayBuilder scaleArrayBuilder;
 	private ArrayBuilder autoArrayBuilder;
+
+	private final Settings radarMapSettings = new Settings();
 	
-	@Autowired
-	private Dimension wndSize;
+
 	
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		
@@ -95,8 +100,8 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 			}*/
 
 			if (showMapButtonAmp.isSelected()) {
-                model.getSettings().radarMapMode = RadarMapMode.AMPLITUDE;
-                model.getSettings().getHyperliveview().setFalse();
+                radarMapSettings.radarMapMode = RadarMapMode.AMPLITUDE;
+                radarMapSettings.getHyperliveview().setFalse();
 			}
 			
 			if (isActive()) {
@@ -140,19 +145,17 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		@Override
 		public void changed(ObservableValue<? extends Number> observable, 
 				Number oldValue, Number newValue) {
-			
 			q.add();
-			
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.adjusting));
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.adjusting));
 		}
 	};
 	
 	public boolean isActive() {
-		return model.getSettings().isRadarMapVisible;
+		return radarMapSettings.isRadarMapVisible;
 	}
 
 	public void setActive(boolean active) {
-		model.getSettings().isRadarMapVisible = active;
+		radarMapSettings.isRadarMapVisible = active;
 	}
 	
 	private ChangeListener<Boolean> autoGainListener = new ChangeListener<Boolean>() {
@@ -168,16 +171,10 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		}
 	};
 	
-	
-	public RadarMap() {
-		super();
-	}
-	
 	ThrQueue q;
 	
-	
 	public void initQ() {
-		q = new ThrQueue(model) {
+		q = new ThrQueue(model, mapView) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				
 				createHiRes(field, backImg);
@@ -188,17 +185,15 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 			}			
 			
 		};
-		
-		q.setWindowSize(wndSize);
-	}		
+	}
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {		
 		
 		autoArrayBuilder = new MedianScaleBuilder(model);
-		scaleArrayBuilder = new ScaleArrayBuilder(model.getSettings());
-		Settings settings = model.getSettings();
-		
+		scaleArrayBuilder = new ScaleArrayBuilder(radarMapSettings);
+
+		Settings settings = radarMapSettings;
 		gainTopSlider = new GainTopSlider(settings, sliderListener);
 		gainBottomSlider = new GainBottomSlider(settings, sliderListener);
 		thresholdSlider = new ThresholdSlider(settings, sliderListener);
@@ -261,18 +256,15 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		DblArray da = new DblArray(img.getWidth(), img.getHeight());
 
 		int[] palette;
-		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
+		if (radarMapSettings.radarMapMode == RadarMapMode.AMPLITUDE) {
 			// fill file.amplScan
-			commandRegistry.runForGprFiles(new RadarMapScan(getArrayBuilder()));
-			
+			commandRegistry.runForGprFiles(new RadarMapScan(getArrayBuilder(), model));
 			palette = DblArray.paletteAmp;
 		} else {
 			palette = DblArray.paletteAlg;
 		}
 
 		drawCircles(field, da);
-		
-		
 		da.toImg(img, palette);
 	}
 
@@ -290,7 +282,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 
 	public ScanProfile getFileScanProfile(SgyFile file) {
 		ScanProfile profile;
-		if (model.getSettings().radarMapMode == RadarMapMode.AMPLITUDE) {
+		if (radarMapSettings.radarMapMode == RadarMapMode.AMPLITUDE) {
 			profile = file.amplScan;
 		} else {
 			profile = file.algoScan;
@@ -301,7 +293,7 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	public void drawFileCircles(MapField field, DblArray da, SgyFile file, 
 			ScanProfile profile, List<Trace> traces) {
 		
-		int radius = model.getSettings().radius;
+		int radius = radarMapSettings.radius;
 		int centerX = da.getWidth() / 2;
 		int centerY = da.getHeight() / 2;
 		
@@ -326,23 +318,19 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 		}
 	}
 	
-	public List<Node> getControlNodes() {
+	public List<Node> getControlNodes(SgyFile dataFile) {
 		VBox vertBox = new VBox();
 
 		vertBox.setStyle(BORDER_STYLING);
 				
 		vertBox.getChildren().addAll(
 			List.of(
-				//depthSlider.produce(),
-				//depthWindowSlider.produce(),
 				autoGainCheckbox.produce(),
 				gainTopSlider.produce(),
 				gainBottomSlider.produce(),
 				thresholdSlider.produce(),
 				radiusSlider.produce()
 			));
-
-		//vertBox.setDisable(isActive());	
 
 		return List.of(vertBox);
 	}
@@ -359,16 +347,11 @@ public class RadarMap extends BaseLayer implements InitializingBean {
 	}
 
 	private ArrayBuilder getArrayBuilder() {
-		if (model.getSettings().autogain) {
+		if (radarMapSettings.autogain) {
 			return autoArrayBuilder;
 		} else {
 			return scaleArrayBuilder;
 		}
-
-	}
-
-	public void setModel(Model model) {
-		this.model = model;
 	}
 
 }

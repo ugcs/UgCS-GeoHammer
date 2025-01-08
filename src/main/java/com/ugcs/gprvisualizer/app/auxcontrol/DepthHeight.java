@@ -4,17 +4,18 @@ import java.awt.Shape;
 
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 
 public class DepthHeight extends DepthStart {
 	
-	public DepthHeight(Shape shape, ProfileField profField) {
-		super(shape, profField);
+	public DepthHeight(Shape shape) { //, GPRChart profField) {
+		super(shape); //, profField);
 	}
 
 	@Override
-	public void controlToSettings(TraceSample ts) {
+	public void controlToSettings(TraceSample ts, ProfileField profField) {
 		int max = profField.getMaxHeightInSamples();
 		
 		profField.getProfileSettings().hpage =
@@ -23,10 +24,14 @@ public class DepthHeight extends DepthStart {
 	}
 
 	@Override
-	public Point2D getCenter(ScrollableData profField) {
-		Point2D scr = profField.traceSampleToScreen(new TraceSample(
-				0, this.profField.getProfileSettings().getLayer() + this.profField.getProfileSettings().hpage));
-		return profField instanceof ProfileField ?
-				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
+	public Point2D getCenter(ScrollableData scrollable) {
+		if (scrollable instanceof GPRChart gprChart) {
+			var profField = gprChart.getField();
+			Point2D scr = gprChart.traceSampleToScreen(new TraceSample(
+					0, profField.getProfileSettings().getLayer() + profField.getProfileSettings().hpage));
+			return new Point2D(gprChart.getField().getVisibleStart(), scr.getY());
+		} else {
+			return scrollable.traceSampleToScreen(new TraceSample(0, 0));
+		}
 	}
 }

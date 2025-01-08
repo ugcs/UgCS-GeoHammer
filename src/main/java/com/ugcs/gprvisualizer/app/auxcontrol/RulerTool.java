@@ -9,11 +9,9 @@ import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
-import org.json.simple.JSONObject;
 
-import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
@@ -22,7 +20,7 @@ import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 //import com.ugcs.gprvisualizer.app.MouseHandler;
 import com.ugcs.gprvisualizer.math.NumberUtils;
 
-public class RulerTool extends BaseObjectImpl { //implements BaseObject {
+public class RulerTool extends BaseObjectImpl {
 	
 	private static final Font fontB = new Font("Verdana", Font.BOLD, 11);
 	private static final double MARGIN = 1.0;
@@ -31,30 +29,6 @@ public class RulerTool extends BaseObjectImpl { //implements BaseObject {
 	private final DragAnchor anch2;
 	private final VerticalCutPart offset;
 	private final SgyFile file;
-	
-	
-	public static RulerTool createRulerTool(ProfileField field, SgyFile file) {
-		int fvt = field.getFirstVisibleTrace();
-		int fileStart = file.getOffset().getStartTrace();
-		int startTrace = Math.max(0, fvt - fileStart);
-		
-		int lvt = field.getLastVisibleTrace();
-		
-		int finishTrace = Math.min(file.size() - 1, 
-				lvt - file.getOffset().getStartTrace());
-		int wd = finishTrace - startTrace;
-		
-		int smpStart = field.getStartSample();
-		int smpFinish = Math.min(file.getMaxSamples(), 
-				field.getLastVisibleSample(field.getMainRect().height));
-		int ht = smpFinish - smpStart; 
-		
-		RulerTool fp = new RulerTool(file, 
-				startTrace + wd / 3, startTrace + wd * 2 / 3, 
-				smpStart + ht / 3, smpStart + ht * 2 / 3);
-		return fp;
-	}
-	
 	
 	class RulerAnchor extends DragAnchor {
 		
@@ -110,7 +84,7 @@ public class RulerTool extends BaseObjectImpl { //implements BaseObject {
 	}
 	
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
+	public void drawOnCut(Graphics2D g2, ScrollableData profField) {
 		Point2D lt = profField.traceSampleToScreen(new TraceSample(
 				offset.localToGlobal(anch1.getTrace()), anch1.getSample()));
 		Point2D rb = profField.traceSampleToScreen(new TraceSample(

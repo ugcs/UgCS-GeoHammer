@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.draw.BaseLayer;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.GridLayer;
@@ -73,8 +74,8 @@ public class MapView implements InitializingBean {
 	@Autowired
 	private GpsTrack gpsTrackMap;
 	
-	@Autowired
-	private Dimension wndSize;
+	//@Autowired
+	private Dimension wndSize = new Dimension();
 
 	@Autowired
 	private GridLayer gridLayer;
@@ -209,7 +210,7 @@ public class MapView implements InitializingBean {
 						chart.get().setSelectedTrace(trace.getIndexInFile());
 					} 
 				} else {
-					model.getProfileField().setMiddleTrace(trace.getIndexInSet());
+					model.getProfileField(trace.getFile()).setMiddleTrace(trace.getIndexInSet());
 				}				
 				model.createClickPlace(trace.getFile(), trace);
 			}
@@ -244,8 +245,8 @@ public class MapView implements InitializingBean {
 		return sp1;
 	}
 
-	public List<Node> getRight() {
-		return radarMap.getControlNodes();
+	public List<Node> getRight(SgyFile dataFile) {
+		return radarMap.getControlNodes(dataFile);
 	}
 		
 	public List<Node> getToolNodes() {
@@ -435,5 +436,8 @@ public class MapView implements InitializingBean {
 				imgCoord.getY() - imageView.getBoundsInLocal().getHeight() / 2);
 		return p;
 	}
-	
+
+	public Dimension getWndSize() {
+		return wndSize;
+	}
 }

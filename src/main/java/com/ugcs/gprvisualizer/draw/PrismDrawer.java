@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import com.ugcs.gprvisualizer.math.HorizontalProfile;
@@ -47,7 +48,7 @@ public class PrismDrawer {
 	
 	public void draw(//int width, int height, 
 			int bytesInRow, 
-			ProfileField field,
+			GPRChart field,
 			Graphics2D g2,
 			int[] buffer,			
 			double threshold) {
@@ -56,16 +57,16 @@ public class PrismDrawer {
 			return;
 		}
 		
-		Rectangle rect = field.getMainRect();
+		Rectangle rect = field.getField().getMainRect();
 
-		Settings profileSettings = field.getProfileSettings();
+		Settings profileSettings = field.getField().getProfileSettings();
 		boolean showInlineHyperbolas = profileSettings.showGood.booleanValue();
 		boolean showEdge = profileSettings.showEdge.booleanValue();
 		boolean shiftGround = profileSettings.levelPreview.booleanValue();
 		
 		HorizontalProfile gp = model.getFileManager().getGprFiles().get(0).getGroundProfile();
 		
-		List<Trace> traces = field.getGprTraces();
+		List<Trace> traces = field.getField().getGprTraces();
 		
 		tanh.setThreshold((float) threshold);
 		

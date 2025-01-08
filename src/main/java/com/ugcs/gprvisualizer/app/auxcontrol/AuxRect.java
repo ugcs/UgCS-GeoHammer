@@ -9,15 +9,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.AreaType;
-import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
@@ -444,21 +442,23 @@ public class AuxRect extends BaseObjectImpl {
 	}
 	
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		
-		setClip(g2, profField.getClipMainRect());
-		
-		Rectangle rect = getRect(profField); 
-	
-		if (img != null) {
-			g2.drawImage(img, rect.x, rect.y, rect.width, rect.height, null);
+	public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			var profField = gprChart.getField();
+			setClip(g2, profField.getClipMainRect());
+
+			Rectangle rect = getRect(scrollableData);
+
+			if (img != null) {
+				g2.drawImage(img, rect.x, rect.y, rect.width, rect.height, null);
+			}
+
+			g2.setColor(Color.RED);
+			g2.drawRect(rect.x, rect.y, rect.width, rect.height);
+
+			g2.setColor(Color.WHITE);
+			g2.drawString(getType().getName(), rect.x, rect.y - 5);
 		}
-		
-		g2.setColor(Color.RED);
-		g2.drawRect(rect.x, rect.y, rect.width, rect.height);
-		
-		g2.setColor(Color.WHITE);
-		g2.drawString(getType().getName(), rect.x, rect.y - 5);
 	}
 
 	@Override

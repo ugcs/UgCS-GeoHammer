@@ -102,7 +102,7 @@ public class ProfileScroll extends Canvas {
 			centerPos = Math.min(Math.max(centerPos, 0), getWidth());
 			
 			//finish = barStart;
-			double tracesFull = model.getGprTracesCount();
+			double tracesFull = scrollable.getTracesCount();
 			
 			double trCenter = centerPos * tracesFull / getWidth();
 			
@@ -183,7 +183,7 @@ public class ProfileScroll extends Canvas {
 	    	
 	    	selected = null;
 	    	
-			javafx.geometry.Point2D imgCoord = getLocal(mouseEvent);        	
+			var imgCoord = getLocal(mouseEvent);
 	    	
 	    	for (MouseSInput msi : bars) {
 	    		Rectangle r = msi.getRect();
@@ -230,12 +230,9 @@ public class ProfileScroll extends Canvas {
 		@Override
         public void handle(MouseEvent event) {
 			if (selected != null) {
-			
-				javafx.geometry.Point2D imgCoord = getLocal(event);
-			
+				var imgCoord = getLocal(event);
 				selected.move(imgCoord);
 			}
-        	
         }
 	};
 	
@@ -256,7 +253,7 @@ public class ProfileScroll extends Canvas {
 	
 	void recalc() {
 		
-		if (!model.isActive() || model.getGprTracesCount() == 0) {
+		if (!model.isActive() || scrollable.getTracesCount() == 0) {
 		//	GraphicsContext gc = this.getGraphicsContext2D();
 		//	gc.clearRect(0, 0, getWidth(), getHeight());
 		//	return;
@@ -268,8 +265,10 @@ public class ProfileScroll extends Canvas {
 		double tracesFull = 0;
 		double center;
 		double tracesVisible;
-		if (model.getGprTracesCount() != 0) {
-			tracesFull = model.getGprTracesCount();
+
+		//TODO: fix scroll
+		if (scrollable.getTracesCount() != 0) {
+			tracesFull = scrollable.getTracesCount();
 			center = scrollable.getMiddleTrace();
 			tracesVisible = scrollable.getVisibleNumberOfTrace();
 		} else {
@@ -333,7 +332,7 @@ public class ProfileScroll extends Canvas {
 		double hsc = getWidth() / visibletracesCount;
 		double aspect = hsc / scrollable.getVScale();
 		
-		double trCenter = scrCenter / (double) getWidth() * (double) model.getGprTracesCount();
+		double trCenter = scrCenter / (double) getWidth() * (double) scrollable.getTracesCount();
 		scrollable.setMiddleTrace((int) trCenter);
 		scrollable.setRealAspect(aspect);
 	}

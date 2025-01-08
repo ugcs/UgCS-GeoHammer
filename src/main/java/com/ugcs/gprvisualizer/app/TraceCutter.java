@@ -219,6 +219,7 @@ public class TraceCutter implements Layer, InitializingBean {
 		
 		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
+			model.getProfileField(file).clear();
 		}
 		setUndoFiles(model.getFileManager().getGprFiles());
 
@@ -235,7 +236,6 @@ public class TraceCutter implements Layer, InitializingBean {
 		
 		model.init();
 		model.initField();
-		model.getProfileField().clear();
 	}
 
 	private void undo() {
@@ -247,6 +247,7 @@ public class TraceCutter implements Layer, InitializingBean {
 			
 			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
+				model.getProfileField(sf).clear();
 			}
 
 			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
@@ -255,7 +256,6 @@ public class TraceCutter implements Layer, InitializingBean {
 			
 			model.init();
 			model.initField();
-			model.getProfileField().clear();
 		}
 		
 	}
