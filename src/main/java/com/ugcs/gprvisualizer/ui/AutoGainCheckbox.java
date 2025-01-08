@@ -9,7 +9,6 @@ public class AutoGainCheckbox extends BaseCheckBox {
 	
 	public AutoGainCheckbox(Settings settings, ChangeListener<Boolean> listenerExt) {
 		super(listenerExt, "Autogain");
-		
 		this.settings = settings;
 	}
 
@@ -21,5 +20,4 @@ public class AutoGainCheckbox extends BaseCheckBox {
 		settings.autogain = checkBox.isSelected();
 		return settings.autogain;
 	}
-	
 }

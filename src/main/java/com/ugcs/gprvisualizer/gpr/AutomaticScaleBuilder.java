@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class AutomaticScaleBuilder implements ArrayBuilder {
@@ -20,9 +21,9 @@ public class AutomaticScaleBuilder implements ArrayBuilder {
 	}
 	
 	@Override
-	public double[][] build() {
+	public double[][] build(SgyFile file) {
 		
-		for (Trace trace: model.getGprTraces()) {
+		for (Trace trace: file.getTraces()) {
 			analyze(trace.getNormValues());			
 		}
 		
@@ -36,10 +37,6 @@ public class AutomaticScaleBuilder implements ArrayBuilder {
 		return scale;
 	}
 
-	private int nrm(int i, int max) {
-		return Math.max(0, Math.min(max - 1, i));
-	}
-	
 	public void analyze(float[] values) {
 		if (maxvalues.length < values.length) {
 			float[] tmp = new float[values.length];

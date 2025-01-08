@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
 
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 
@@ -22,12 +23,10 @@ public class DepthStart extends BaseObjectImpl {
 	int offsetY;
 		
 	Shape shape;
-	ProfileField profField;
+	//ProfileField profField;
 	
-	public DepthStart(Shape shape, ProfileField profField) {
+	public DepthStart(Shape shape) {
 		this.shape = shape;
-		this.profField = profField;
-
 		horM = shape.getBounds().width;
 		verM = shape.getBounds().height;
 		offsetX = shape.getBounds().x;
@@ -49,40 +48,41 @@ public class DepthStart extends BaseObjectImpl {
 
 
 	@Override
-	public boolean mouseMoveHandle(Point2D point, ScrollableData profField) {
-		TraceSample ts = profField.screenToTraceSample(point);
-		controlToSettings(ts);
-
+	public boolean mouseMoveHandle(Point2D point, ScrollableData scrollable) {
+		TraceSample ts = scrollable.screenToTraceSample(point);
+		if (scrollable instanceof GPRChart gprChart) {
+			controlToSettings(ts, gprChart.getField());
+		}
 		AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.adjusting));
-
 		return true;
 	}
 
-	public void controlToSettings(TraceSample ts) {
+	protected void controlToSettings(TraceSample ts, ProfileField profField) {
 		int max = profField.getMaxHeightInSamples();
 		profField.getProfileSettings().setLayer(Math.min(max - profField.getProfileSettings().hpage,
 			Math.max(0, ts.getSample())));
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		
-		setClip(g2, profField.getClipLeftMainRect());
-		
-		Point2D p = getCenter(profField);
+	public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			setClip(g2, gprChart.getField().getClipLeftMainRect());
 
-		g2.setColor(Color.BLUE);
-		
-		g2.translate(p.getX(), p.getY());
-		g2.fill(shape);
-		
-		if (isSelected()) {
-			g2.setColor(Color.green);
-			g2.setStroke(FoundPlace.SELECTED_STROKE);
-			g2.draw(shape);
+			Point2D p = getCenter(gprChart);
+
+			g2.setColor(Color.BLUE);
+
+			g2.translate(p.getX(), p.getY());
+			g2.fill(shape);
+
+			if (isSelected()) {
+				g2.setColor(Color.green);
+				g2.setStroke(FoundPlace.SELECTED_STROKE);
+				g2.draw(shape);
+			}
+
+			g2.translate(-p.getX(), -p.getY());
 		}
-		
-		g2.translate(-p.getX(), -p.getY());
 	}
 
 	@Override
@@ -98,10 +98,14 @@ public class DepthStart extends BaseObjectImpl {
 		return rect;
 	}
 
-	public Point2D getCenter(ScrollableData profField) {
-		Point2D scr = profField.traceSampleToScreen(new TraceSample(
-				0, this.profField.getProfileSettings().getLayer()));
-		return profField instanceof ProfileField ?
-				new Point2D(((ProfileField) profField).getVisibleStart(), scr.getY()) : scr;
+	public Point2D getCenter(ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			var profField = gprChart.getField();
+			Point2D scr = scrollableData.traceSampleToScreen(new TraceSample(
+					0, profField.getProfileSettings().getLayer()));
+			return new Point2D(profField.getVisibleStart(), scr.getY());
+		} else {
+			return scrollableData.traceSampleToScreen(new TraceSample(0, 0));
+		}
 	}
 }

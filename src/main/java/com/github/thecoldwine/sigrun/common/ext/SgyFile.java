@@ -7,6 +7,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.commands.DistCalculator;
@@ -69,13 +70,10 @@ public abstract class SgyFile {
 	
 	
 	public void markToAux() {
-		for (int i = 0; i < traces.size(); i++) {
-			Trace trace = traces.get(i);
-
+		for (Trace trace: getTraces()) {
 			if (trace.isMarked()) {
 				this.getAuxElements().add(
-						//new FoundPlace(trace.getIndexInFile(), offset));
-						new FoundPlace(trace, offset));
+						new FoundPlace(trace, offset, AppContext.model));
 			}
 		}
 	}
@@ -106,9 +104,6 @@ public abstract class SgyFile {
 		new DistancesSmoother().execute(this, null);
 		
 	}
-
-	
-
 
 	protected void write(BlockFile blockFile, FileChannel writechan, Block block) 
 			throws IOException {
@@ -143,8 +138,6 @@ public abstract class SgyFile {
 	public VerticalCutPart getOffset() {
 		return offset;
 	}
-
-
 
 	public boolean isUnsaved() {
 		return unsaved;
@@ -213,7 +206,7 @@ public abstract class SgyFile {
 		return r;
 	}
 
-	public int getGood(int tr, int s) {
+	/*public int getGood(int tr, int s) {
 		
 		return getTraces().get(tr).good[s];
 	}	
@@ -226,7 +219,7 @@ public abstract class SgyFile {
 	public float getVal(int tr, int s) {
 		
 		return getTraces().get(tr).getNormValues()[s];
-	}
+	}*/
 
 	public boolean isSpreadCoordinatesNecessary() {
 		return spreadCoordinatesNecessary;
@@ -241,7 +234,7 @@ public abstract class SgyFile {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((file == null) ? 0 : file.hashCode());
-		result = prime * result + (unsaved ? 1231 : 1237);
+		//result = prime * result + (unsaved ? 1231 : 1237);
 		return result;
 	}
 
@@ -259,8 +252,8 @@ public abstract class SgyFile {
 				return false;
 		} else if (!file.equals(other.file))
 			return false;
-		if (unsaved != other.unsaved)
-			return false;
+		//if (unsaved != other.unsaved)
+		//	return false;
 		return true;
 	}
 

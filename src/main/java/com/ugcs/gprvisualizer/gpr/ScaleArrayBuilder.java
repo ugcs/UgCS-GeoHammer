@@ -1,22 +1,22 @@
 package com.ugcs.gprvisualizer.gpr;
 
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
+
 public class ScaleArrayBuilder implements ArrayBuilder {
 
-	private Settings settings;
+	private final Settings settings;
 
 	private double[][] scaleArray = null;
 	
 	public ScaleArrayBuilder(Settings settings) {
 		this.settings = settings;
-		
-		
 	}
 	
 	/* (non-Javadoc)
 	 * @see com.ugcs.gprvisualizer.gpr.ArrayBuilder#build()
 	 */
 	@Override
-	public double[][] build() {
+	public double[][] build(SgyFile file) {
 		
 		if (scaleArray != null) {
 			return scaleArray;
@@ -38,9 +38,6 @@ public class ScaleArrayBuilder implements ArrayBuilder {
 	@Override
 	public void clear() {
 		scaleArray = null;
-		
 	}
-	
-	
-	
+
 }

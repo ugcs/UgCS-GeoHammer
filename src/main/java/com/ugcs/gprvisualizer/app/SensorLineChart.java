@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
@@ -473,11 +474,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
                                 model.getFileManager().removeFile(file);
                                 model.getFileManager().addFile(subfile);
-                                model.updateChart((CsvFile) subfile);
+                                model.updateChart(subfile);
 
                                 model.init();
                                 model.initField();
-                                model.getProfileField().clear();
+                                //model.getProfileField().clear();
                                 eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceCut));
                             });
 
@@ -712,7 +713,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 model.getFileManager().removeFile(file);
                 model.removeChart(file);
                 model.initField();
-                eventPublisher.publishEvent(new FileOpenedEvent(this));
+                eventPublisher.publishEvent(new FileClosedEvent(this, List.of(file.getFile()), file));
             }
         }
     }

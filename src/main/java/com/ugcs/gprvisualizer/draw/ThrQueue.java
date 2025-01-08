@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.gpr.Model;
 import javafx.geometry.Point2D;
 
@@ -26,7 +27,7 @@ public abstract class ThrQueue {
 		
 	BufferedImage backImg;
 
-	private Dimension windowSize;
+	private final Dimension windowSize;
 	
 	ThrFront actual;
 	
@@ -34,8 +35,9 @@ public abstract class ThrQueue {
 		return actual;
 	}
 	
-	public ThrQueue(Model model) {
+	public ThrQueue(Model model, MapView mapView) {
 		this.model = model;
+		this.windowSize = mapView.getWndSize();
 	}
 	
 	void add() {
@@ -129,9 +131,7 @@ public abstract class ThrQueue {
 	}
 	
 	public void clear() {
-		
 		actual = null;
-		
 	}
 	
 	public void drawImgOnChangedField(Graphics2D g2, MapField currentField, ThrFront front) {
@@ -139,7 +139,7 @@ public abstract class ThrQueue {
 			return;
 		}
 		
-		Point2D offst = currentField.latLonToScreen(front.getField().getSceneCenter());
+		Point2D offst = front.getField().getSceneCenter() != null ? currentField.latLonToScreen(front.getField().getSceneCenter()) : new Point2D(0, 0);
 		
 		double scale = Math.pow(2, currentField.getZoom() - front.getField().getZoom());
 		BufferedImage tmpImg = front.getImg();
@@ -151,7 +151,4 @@ public abstract class ThrQueue {
 			null);
 	}
 	
-	public void setWindowSize(Dimension windowSize) {
-		this.windowSize = windowSize;
-	}
 }

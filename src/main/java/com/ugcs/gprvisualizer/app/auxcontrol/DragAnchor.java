@@ -7,23 +7,23 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.ProfileField;
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.json.simple.JSONObject;
 
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 //import com.ugcs.gprvisualizer.app.MouseHandler;
 
-public class DragAnchor extends BaseObjectImpl 
-	implements BaseObject {//, MouseHandler {
+public class DragAnchor extends BaseObjectImpl {
+	//implements BaseObject {//, MouseHandler {
 
 	private MutableInt trace = new MutableInt();
-	
 	private MutableInt sample = new MutableInt();
+
 	private AlignRect alignRect;
 	private VerticalCutPart offset;
 	
@@ -59,18 +59,21 @@ public class DragAnchor extends BaseObjectImpl
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		if (!isVisible()) {
-			return;
-		}
+	public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			if (!isVisible()) {
+				return;
+			}
 
-		g2.setClip(profField.getClipMainRect().x,
-				profField.getClipMainRect().y, 
-				profField.getClipMainRect().width, 
-				profField.getClipMainRect().height);
-		
-		Rectangle rect = getRect(profField);
-		realDraw(g2, rect);		
+			ProfileField profField = gprChart.getField();
+			g2.setClip(profField.getClipMainRect().x,
+					profField.getClipMainRect().y,
+					profField.getClipMainRect().width,
+					profField.getClipMainRect().height);
+
+			Rectangle rect = getRect(gprChart);
+			realDraw(g2, rect);
+		}
 	}
 
 	protected void realDraw(Graphics2D g2, Rectangle rect) {

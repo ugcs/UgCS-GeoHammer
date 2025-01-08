@@ -7,14 +7,8 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 
 public class BackgroundRemovalFilter {
 	
-
-	
-	
 	public void removeConstantNoise(List<Trace> lst) {
-
-		
 		float[] avg = prepareNoiseProfile(lst, lst.get(1).getNormValues().length);
-
 		subtractProfile(lst, avg);
 	}
 
@@ -43,7 +37,4 @@ public class BackgroundRemovalFilter {
 		return avg;
 	}
 
-	
-
-	
 }

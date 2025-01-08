@@ -25,7 +25,6 @@ import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceCutInitializer;
-import com.ugcs.gprvisualizer.app.auxcontrol.AuxElement;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
@@ -220,6 +219,7 @@ public class TraceCutter implements Layer, InitializingBean {
 		
 		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
+			model.getProfileField(file).clear();
 		}
 		setUndoFiles(model.getFileManager().getGprFiles());
 
@@ -236,7 +236,6 @@ public class TraceCutter implements Layer, InitializingBean {
 		
 		model.init();
 		model.initField();
-		model.getProfileField().clear();
 	}
 
 	private void undo() {
@@ -248,6 +247,7 @@ public class TraceCutter implements Layer, InitializingBean {
 			
 			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
+				model.getProfileField(sf).clear();
 			}
 
 			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
@@ -256,7 +256,6 @@ public class TraceCutter implements Layer, InitializingBean {
 			
 			model.init();
 			model.initField();
-			model.getProfileField().clear();
 		}
 		
 	}

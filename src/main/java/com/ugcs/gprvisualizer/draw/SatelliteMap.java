@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
@@ -33,14 +34,15 @@ import javafx.scene.layout.HBox;
 @Component
 public class SatelliteMap extends BaseLayer implements InitializingBean {
 
-	@Autowired
-	private ApplicationEventPublisher eventPublisher;
+	private final Model model;
+	private final Status status;
+	private final MapView mapView;
 
-	@Autowired
-	protected Model model; 
-	
-	@Autowired
-	private Status status;
+	public SatelliteMap(Model model, Status status, MapView mapView) {
+		this.model = model;
+		this.status = status;
+		this.mapView = mapView;
+	}
 	
 	private LatLon click;
 
@@ -48,7 +50,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		recalcQueue = new ThrQueue(model) {
+		recalcQueue = new ThrQueue(model, mapView) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				if (field.getMapProvider() != null) {
 					this.backImg = field.getMapProvider().loadimg(field);
@@ -63,6 +65,35 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 				
 			}
 		};
+
+		optionsMenuBtn.getItems().addAll(menuItem1, menuItem2, menuItem3);
+		ToggleGroup toggleGroup = new ToggleGroup();
+		menuItem1.setToggleGroup(toggleGroup);
+		menuItem2.setToggleGroup(toggleGroup);
+		menuItem3.setToggleGroup(toggleGroup);
+
+		menuItem1.setSelected(true);
+
+		menuItem1.setOnAction(e -> {
+			model.getMapField().setMapProvider(new GoogleMapProvider());
+			setActive(model.getMapField().getMapProvider() != null);
+			recalcQueue.clear();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
+		});
+
+		menuItem2.setOnAction(e -> {
+			model.getMapField().setMapProvider(new HereMapProvider());
+			setActive(model.getMapField().getMapProvider() != null);
+			recalcQueue.clear();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
+		});
+
+		menuItem3.setOnAction(e -> {
+			model.getMapField().setMapProvider(null);
+			setActive(model.getMapField().getMapProvider() != null);
+			recalcQueue.clear();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
+		});
 	}	
 	
 //	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
@@ -84,38 +115,9 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	RadioMenuItem menuItem2 = new RadioMenuItem("here.com");
 	RadioMenuItem menuItem3 = new RadioMenuItem("turn off");
 	
-	private final MenuButton optionsMenuBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.MAP, new MenuButton());	
+	private final MenuButton optionsMenuBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.MAP, new MenuButton());
 
 	{
-		optionsMenuBtn.getItems().addAll(menuItem1, menuItem2, menuItem3);
-		ToggleGroup toggleGroup = new ToggleGroup();
-		menuItem1.setToggleGroup(toggleGroup);
-		menuItem2.setToggleGroup(toggleGroup);
-		menuItem3.setToggleGroup(toggleGroup);
-		
-		menuItem1.setSelected(true);		
-		
-		menuItem1.setOnAction(e -> {
-			model.getMapField().setMapProvider(new GoogleMapProvider());
-			setActive(model.getMapField().getMapProvider() != null);
-			recalcQueue.clear();
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
-		});
-
-		menuItem2.setOnAction(e -> {
-			model.getMapField().setMapProvider(new HereMapProvider());
-			setActive(model.getMapField().getMapProvider() != null);
-			recalcQueue.clear();
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
-		});
-
-		menuItem3.setOnAction(e -> {
-			model.getMapField().setMapProvider(null);
-			setActive(model.getMapField().getMapProvider() != null);
-			recalcQueue.clear();
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
-		});
-		
 		///optionsMenuBtn.setStyle("padding-left: 2px; padding-right: 2px");
 		
 	}
@@ -196,7 +198,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		dragField = null;
 		click = null;
 		
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 		
 		return true;
 	}

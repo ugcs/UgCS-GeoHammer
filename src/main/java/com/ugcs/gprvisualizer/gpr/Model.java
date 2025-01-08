@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
@@ -49,14 +50,11 @@ public class Model implements InitializingBean {
 
 	private boolean loading = false; 
 	
-	private MapField field = new MapField();
-	private ProfileField profField = new ProfileField(this);
+	private final MapField field = new MapField();
 
 	private final FileManager fileManager;
 
-	private final Settings settings = new Settings();
-
-	private final LeftRulerController leftRulerController = new LeftRulerController(this);
+	//private final Settings settings = new Settings();
 	
 	private final Set<FileChangeType> changes = new HashSet<>();
 	
@@ -64,7 +62,7 @@ public class Model implements InitializingBean {
 
 	private List<BaseObject> controls = null;
 	
-	private Rectangle2D.Double bounds;
+	//private Rectangle2D.Double bounds;
 
 	private boolean kmlToFlagAvailable = false;
 
@@ -74,9 +72,12 @@ public class Model implements InitializingBean {
 
 	private final VBox chartsContainer = new VBox(); // Charts container
 
-	Map<CsvFile, SensorLineChart> csvFiles = new HashMap<>();
+	private final Map<CsvFile, SensorLineChart> csvFiles = new HashMap<>();
+
+	private final Map<SgyFile, GPRChart> gprCharts = new HashMap<>();
 
 	private final ApplicationEventPublisher eventPublisher;
+
 
 	public Model(FileManager fileManager, PrefSettings prefSettings, AuxElementEditHandler auxEditHandler, ApplicationEventPublisher eventPublisher) {
 		this.prefSettings = prefSettings;
@@ -85,17 +86,17 @@ public class Model implements InitializingBean {
 		this.eventPublisher = eventPublisher;
 	}
 	
-	public Settings getSettings() {
-		return settings;
-	}
+	//public Settings getSettings() {
+		//return gprChart.getField().getProfileSettings();
+	//}
 		
-	public void setBounds(Rectangle2D.Double bounds) {
+	/*public void setBounds(Rectangle2D.Double bounds) {
 		this.bounds = bounds;		
 	}
 	
 	public Rectangle2D.Double getBounds() {
 		return bounds;
-	}
+	}*/
 
 	public MapField getMapField() {
 		return field;
@@ -110,7 +111,11 @@ public class Model implements InitializingBean {
 	}
 
 	public List<BaseObject> getAuxElements() {
-		return auxElements;
+		List<BaseObject> combinedElements = new ArrayList<>(auxElements);
+		combinedElements.addAll(gprCharts.values().stream()
+				.flatMap(gprChart -> gprChart.getAuxElements().stream())
+				.toList());
+		return List.copyOf(combinedElements);
 	}
 
 	public List<BaseObject> getControls() {
@@ -122,30 +127,17 @@ public class Model implements InitializingBean {
 	}
 	
 	public void updateAuxElements() {
-		auxElements.clear();
-		for (SgyFile sf : getFileManager().getGprFiles()) {
-			auxElements.addAll(sf.getAuxElements());
-			
-			Trace lastTrace = sf.getTraces().get(sf.getTraces().size() - 1);
-			
-			// add remove button
-			RemoveFileButton rfb = new RemoveFileButton(
-					lastTrace.getIndexInFile(), sf.getOffset(), sf);
-			
-			auxElements.add(rfb);
-			
-		}
+		gprCharts.values().forEach(
+				GPRChart::updateAuxElements
+		);
 
-        getFileManager().getCsvFiles().forEach(sf -> {
+		auxElements.clear();
+		getFileManager().getCsvFiles().forEach(sf -> {
             auxElements.addAll(sf.getAuxElements());
             sf.getAuxElements().forEach(element -> {
                 getChart((CsvFile) sf).get().addFlag((FoundPlace) element);
             });
         });
-		
-		auxElements.add(new DepthStart(ShapeHolder.topSelection, getProfileField()));
-		auxElements.add(new DepthHeight(ShapeHolder.botSelection, getProfileField()));
-		auxElements.add(getLeftRulerController().tb);
 	}
 	
 	public SgyFile getSgyFileByTrace(int i) {
@@ -174,8 +166,12 @@ public class Model implements InitializingBean {
 		return chartsContainer;
 	}
 
-	public ProfileField getProfileField() {
-		return profField;
+	public GPRChart getProfileField(SgyFile sgyFile) {
+		if (!gprCharts.containsKey(sgyFile)) {
+			System.out.println(sgyFile + " not found in gprCharts");
+		}
+		return gprCharts.computeIfAbsent(sgyFile, f -> new GPRChart(this, auxEditHandler, f));
+		//return gprChart;
 	}
 
 	public boolean isLoading() {
@@ -188,11 +184,12 @@ public class Model implements InitializingBean {
 	
 	public void updateSgyFileOffsets() {
 		int startTraceNum = 0;
-		for (SgyFile sgyFile : this.getFileManager().getGprFiles()) {			
+		//TODO: update only in aggregate SgyFile
+		for (SgyFile sgyFile : this.getFileManager().getGprFiles()) {
 			sgyFile.getOffset().setStartTrace(startTraceNum);
-			startTraceNum += sgyFile.getTraces().size();
-			sgyFile.getOffset().setFinishTrace(startTraceNum);
-			sgyFile.getOffset().setMaxSamples(getProfileField().getMaxHeightInSamples());
+			var endTraceNum = sgyFile.getTraces().size();
+			sgyFile.getOffset().setFinishTrace(endTraceNum);
+			sgyFile.getOffset().setMaxSamples(getProfileField(sgyFile).getField().getMaxHeightInSamples());
 		}
 	}
 
@@ -228,15 +225,13 @@ public class Model implements InitializingBean {
 			
 		} else {
 			//Sout.p("GPS coordinates not found");
-			this.getMapField().setPathCenter(null);
-			this.getMapField().setSceneCenter(null);
+			//this.getMapField().setPathCenter(null);
+			//this.getMapField().setSceneCenter(null);
 		}
 	}
 
 	public void init() {
-		
-		this.profField.updateMaxHeightInSamples();
-		
+
 		this.updateSgyFileOffsets();
 		
 		//
@@ -249,10 +244,6 @@ public class Model implements InitializingBean {
 
 	public boolean isActive() {
 		return getFileManager().isActive();
-	}
-
-	public LeftRulerController getLeftRulerController() {
-		return leftRulerController;
 	}
 
 	public boolean stopUnsaved() {
@@ -371,10 +362,15 @@ public class Model implements InitializingBean {
 			chart.close(false);
 		});
 		csvFiles.clear();
+		gprCharts.clear();
 	}
 
-	public void removeChart(CsvFile csvFile) {
-		csvFiles.remove(csvFile);
+	public void removeChart(SgyFile sgyFile) {
+		if (sgyFile instanceof CsvFile csvFile) {
+			csvFiles.remove(csvFile);
+		} else {
+			gprCharts.remove(sgyFile);
+		}
     }
 
 	Map<String, Color> semanticColors = new HashMap<>();
@@ -439,19 +435,11 @@ public class Model implements InitializingBean {
 	}*/
 
 	public List<Trace> getGprTraces() {
-		return profField.getGprTraces();
+		return getFileManager().getGprTraces();
 	}
 
 	public List<Trace> getCsvTraces() {
 		return getFileManager().getCsvTraces();
-	}
-
-	public int getCsvTracesCount() {
-		return getCsvTraces().size();
-	}
-
-	public int getGprTracesCount() {
-		return getGprTraces().size();
 	}
 
 	public List<Trace> getTraces() {

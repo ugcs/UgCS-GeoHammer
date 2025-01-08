@@ -39,10 +39,8 @@ import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.commands.CommandRegistry;
-import com.ugcs.gprvisualizer.app.commands.LevelScanHP;
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.PrefSettings;
-import com.ugcs.gprvisualizer.math.TraceStacking;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -58,7 +56,7 @@ public class OptionPane extends VBox implements InitializingBean {
 	
 	private static final int RIGHT_BOX_WIDTH = 350;
 
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	@Autowired
 	private MapView mapView;
@@ -532,12 +530,13 @@ public class OptionPane extends VBox implements InitializingBean {
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
 		VBox t1 = new VBox();
+
 		//contrast
-		t1.getChildren().addAll(profileView.getRight());
+		t1.getChildren().addAll(profileView.getRight(file));
 		// buttons
 		t1.getChildren().addAll(levelFilter.getToolNodes());
 		// map
-		t1.getChildren().addAll(mapView.getRight());
+		t1.getChildren().addAll(mapView.getRight(file));
 
 		t1.getChildren().addAll(getPositionCsvButtons(file.getGroundProfileSource()));
         tab1.setContent(t1);

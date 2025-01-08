@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.draw;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.Map;
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
+import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.app.OptionPane;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
@@ -24,7 +24,6 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.index.kdtree.KdNode;
 import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -33,16 +32,21 @@ import com.ugcs.gprvisualizer.math.CoordinatesMath;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 
 @Component
 public class GridLayer extends BaseLayer implements InitializingBean {
 
-	@Autowired
-	private Model model;
-	
-	@Autowired
-	private Dimension wndSize;
+	private final Model model;
+
+	private final MapView mapView;
+
+	private final OptionPane optionPane;
+
+	public GridLayer(Model model, MapView mapView, OptionPane optionPane) {
+		this.model = model;
+		this.mapView = mapView;
+		this.optionPane = optionPane;
+	}
 
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
 		@Override
@@ -52,9 +56,6 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 			getRepaintListener().repaint();				
 		}
 	};
-
-	@Autowired
-	private OptionPane optionPane;
 
 	private ThrQueue q;
 
@@ -69,7 +70,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		setActive(optionPane.getGridding().isSelected());
 
-		q = new ThrQueue(model) {
+		q = new ThrQueue(model, mapView) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				optionPane.griddingProgress(true);
 
@@ -83,8 +84,6 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				getRepaintListener().repaint();
 			}
 		};
-
-		q.setWindowSize(wndSize);
 
 		optionPane.getGridding().addEventHandler(ActionEvent.ACTION, showMapListener);
 	}

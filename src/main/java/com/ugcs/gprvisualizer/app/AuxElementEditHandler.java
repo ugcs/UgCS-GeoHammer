@@ -36,32 +36,22 @@ import javafx.scene.layout.VBox;
 public class AuxElementEditHandler extends BaseObjectImpl implements InitializingBean {
 
 	@Autowired
-	private ApplicationEventPublisher eventPublisher;
-
-	@Autowired
 	private Model model;
-	
-	@Autowired
-	private ProfileView profileView;
-	
-	private ProfileField field;	
+
 	private BaseObject selected;
 	private BaseObject mouseInput;
 
 	private final Button addFoundBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ADD_MARK, new Button());
-
 	private final Button delBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE, new Button());
-
 	private final Button clearBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE_ALL, new Button());
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		field = profileView.getField();		
-		initButtons();		
+		initButtons();
 	}
 
 	//@Override
-	public boolean mousePressHandle(Point2D localPoint, ProfileField profField) {
+	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		
 		boolean processed = false;
 		if (model.getControls() != null) {
@@ -88,8 +78,7 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 		}
 		
 		if (processed) {
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
-			//profileView.repaintEvent();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		}
 
 		return processed;
@@ -99,13 +88,8 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 		return Arrays.asList(addFoundBtn, 
 				delBtn, clearBtn);
 	}
-
-	public Node getRight() {
-		return new VBox();
-	}
 	
 	protected void initButtons() {
-		//addSurfaceBtn.setTooltip(new Tooltip("Create surface rectangle with mask"));
 		addFoundBtn.setTooltip(new Tooltip("Create mark"));
 		delBtn.setTooltip(new Tooltip("Delete selected element"));
 		clearBtn.setTooltip(new Tooltip("Delete all additional elements"));
@@ -150,48 +134,41 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 			}
 			
 			model.updateAuxElements();
-			//profileView.repaintEvent();
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		});
 		
-		addFoundBtn.setOnAction(e -> {				
-			
-			int trace;
-			SgyFile sf;
+		addFoundBtn.setOnAction(e -> {
+			int trace = 0;
+			SgyFile sf = null;
 			if (model.getControls() != null 
 					&& !model.getControls().isEmpty()) {
-					//&& model.getControls().get(0).getGlobalTrace() >= 0) {
-						
+
 					var tr = ((ClickPlace) model.getControls().get(0)).getTrace();
 					sf = tr.getFile();
 					trace = sf instanceof CsvFile ? tr.getIndexInFile():tr.getIndexInSet();
 				
-			} else {
-				trace = field.getMiddleTrace();
-				sf = model.getSgyFileByTrace(trace);
 			}
-			//SgyFile sf = model.getSgyFileByTrace(trace);
-			
+			// TODO: add flag to the middle trace
+			//else {
+			//	trace = model.getProfileField().getMiddleTrace();
+			//	sf = model.getSgyFileByTrace(trace);
+			//}
+
 			if (sf == null) {
 				return;
 			}
 				
 			FoundPlace rect = new FoundPlace(
-					sf.getTraces().get(sf.getOffset().globalToLocal(trace)), sf.getOffset());
+					sf.getTraces().get(sf.getOffset().globalToLocal(trace)), sf.getOffset(), model);
 			
 			sf.getAuxElements().add(rect);
 			sf.setUnsaved(true);
 
 			selectControl(rect);
 			model.updateAuxElements();
-
-			updateViews();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		});
 		
-	}
-	
-	protected void updateViews() {
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private void clearAuxElements() {
@@ -211,15 +188,12 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 		setSelected(null);
 		model.setControls(null);
 
-		
-		model.updateAuxElements();		
-		//profileView.repaintEvent();
-		
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.updateAuxElements();
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private boolean processPress(List<BaseObject> controls2, 
-			Point2D localPoint, ProfileField profField) {
+			Point2D localPoint, ScrollableData profField) {
 		
 		for (BaseObject o : controls2) {
 			if (o.isPointInside(localPoint, profField)) {
@@ -235,7 +209,7 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 	}
 
 	private boolean processPress1(List<BaseObject> controls2, 
-			Point2D localPoint, ProfileField profField) {
+			Point2D localPoint, ScrollableData profField) {
 		for (BaseObject o : controls2) {
 			if (o.mousePressHandle(localPoint, profField)) {
 				selectControl(o);
@@ -257,13 +231,12 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 
 	@Override
 	public boolean mouseReleaseHandle(Point2D localPoint, ScrollableData profField) {
-
 		if (mouseInput != null) {			
 			mouseInput.mouseReleaseHandle(localPoint, profField);
 			mouseInput = null;
-			
-			profileView.setCursor(Cursor.DEFAULT);
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+
+			profField.setCursor(Cursor.DEFAULT);
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		}
 		return false;
@@ -274,15 +247,15 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 
 		if (mouseInput != null) {			
 			mouseInput.mouseMoveHandle(localPoint, profField);
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			return true;
 		} else {
 			if (aboveControl(localPoint, profField)) {
-				profileView.setCursor(Cursor.MOVE);
+				profField.setCursor(Cursor.MOVE);
 			} else if (aboveElement(localPoint, profField)) {
-				profileView.setCursor(Cursor.HAND);
+				profField.setCursor(Cursor.HAND);
 			} else {
-				profileView.setCursor(Cursor.DEFAULT);
+				profField.setCursor(Cursor.DEFAULT);
 			}			
 		}
 		return false;
@@ -314,10 +287,6 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 		
 		return false;
 	}
-
-	/*private BaseObject getSelected() {
-		return selected;
-	}*/
 
 	private void setSelected(BaseObject selected) {
 		if (this.selected != null) {

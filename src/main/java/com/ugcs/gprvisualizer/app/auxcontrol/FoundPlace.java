@@ -7,11 +7,11 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 
 import com.github.thecoldwine.sigrun.common.ext.*;
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ScrollableData;
 import com.ugcs.gprvisualizer.app.SensorLineChart;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
-import org.json.simple.JSONObject;
 
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
@@ -50,9 +50,10 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 		return new FoundPlace(traceNum, sgyFile.getOffset());
 	}*/
 	
-	public FoundPlace(Trace trace, VerticalCutPart offset) {
+	public FoundPlace(Trace trace, VerticalCutPart offset, Model model) {
 		this.offset = offset;
 		this.traceInFile = trace;
+		this.model = model;
 	}
 
 	@Override
@@ -60,14 +61,14 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 		Rectangle r = getRect(field);
 		if (r.contains(point.getX(), point.getY())) {
 			ScrollableData scrollable;
-			if (traceInFile.getFile() instanceof CsvFile) {
-				scrollable = AppContext.model.getChart((CsvFile) traceInFile.getFile()).get();
+			if (traceInFile.getFile() instanceof CsvFile csvFile) {
+				scrollable = model.getChart(csvFile).get();
 			} else {
-				scrollable = AppContext.model.getProfileField();
+				scrollable = model.getProfileField(traceInFile.getFile());
 			}
 			scrollable.setMiddleTrace(offset.localToGlobal(traceInFile.getIndexInFile()));
 
-			AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 
 			coordinatesToStatus();
 			return true;
@@ -85,8 +86,8 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 	@Override
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		if (profField instanceof SensorLineChart || isPointInside(localPoint, profField)) {
-			AppContext.model.getMapField().setSceneCenter(getLatLon());
-			AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
+			model.getMapField().setSceneCenter(getLatLon());
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 			coordinatesToStatus();
 			return true;
 		}
@@ -101,7 +102,7 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 		traceInFile = traceInFile.getFile()
 				.getTraces().get(Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace())));
 
-		AppContext.model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		
 		coordinatesToStatus();
 		
@@ -127,39 +128,42 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 	}
 
 	@Override
-	public void drawOnCut(Graphics2D g2, ProfileField profField) {
-		
-		g2.setClip(profField.getClipTopMainRect().x,
-				profField.getClipTopMainRect().y,
-				profField.getClipTopMainRect().width,
-				profField.getClipTopMainRect().height);
-		
-		Rectangle rect = getRect(profField);
-		
-		g2.setColor(flagColor);
-		
-		g2.translate(rect.x, rect.y + rect.height);
-		g2.fill(ShapeHolder.flag);
-		
-		if (isSelected()) {
-			g2.setColor(Color.green);
-			g2.setStroke(SELECTED_STROKE);
-			g2.draw(ShapeHolder.flag);
-			
-			g2.setStroke(VERTICAL_STROKE);
-			g2.setColor(Color.blue);
-			g2.setXORMode(Color.gray);
-			g2.drawLine(0, 0, 0, 
-					profField.sampleToScreen(
-							offset.getMaxSamples()) - Model.TOP_MARGIN);
-			g2.setPaintMode();
+	public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			var profField = gprChart.getField();
+
+			g2.setClip(profField.getClipTopMainRect().x,
+					profField.getClipTopMainRect().y,
+					profField.getClipTopMainRect().width,
+					profField.getClipTopMainRect().height);
+
+			Rectangle rect = getRect(gprChart);
+
+			g2.setColor(flagColor);
+
+			g2.translate(rect.x, rect.y + rect.height);
+			g2.fill(ShapeHolder.flag);
+
+			if (isSelected()) {
+				g2.setColor(Color.green);
+				g2.setStroke(SELECTED_STROKE);
+				g2.draw(ShapeHolder.flag);
+
+				g2.setStroke(VERTICAL_STROKE);
+				g2.setColor(Color.blue);
+				g2.setXORMode(Color.gray);
+				g2.drawLine(0, 0, 0,
+						gprChart.sampleToScreen(
+								offset.getMaxSamples()) - Model.TOP_MARGIN);
+				g2.setPaintMode();
+			}
+
+			g2.translate(-rect.x, -(rect.y + rect.height));
 		}
-		
-		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 	
-	private Rectangle getRect(ScrollableData profField) {
-		int x = profField.traceToScreen(offset.localToGlobal(traceInFile.getIndexInFile()));
+	private Rectangle getRect(ScrollableData scrollableData) {
+		int x = scrollableData.traceToScreen(offset.localToGlobal(traceInFile.getIndexInFile()));
 		Rectangle rect = new Rectangle(x, 
 				Model.TOP_MARGIN - R_VER_M * 2,
 				R_HOR_M * 2,
@@ -190,8 +194,9 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 	@Override
 	public BaseObject copy(int traceoffset, VerticalCutPart verticalCutPart) {
 		FoundPlace result = new FoundPlace(
-				traceInFile.getFile().getTraces().get(traceInFile.getIndexInFile() - traceoffset), verticalCutPart);
-		
+				traceInFile.getFile().getTraces().get(traceInFile.getIndexInFile() - traceoffset),
+				verticalCutPart,
+				model);
 		return result;
 	}
 

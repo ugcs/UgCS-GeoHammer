@@ -7,6 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.ugcs.gprvisualizer.app.ScrollableData;
 import javafx.geometry.Point2D;
 
 public class AuxElement {
@@ -20,7 +21,7 @@ public class AuxElement {
 		this.sampleStart = sampleStart;
 	}
 	
-	public void drawOnCut(Graphics2D g2, ProfileField field) {
+	public void drawOnCut(Graphics2D g2, ScrollableData field) {
 		
 		TraceSample ts = new TraceSample(traceStart.getIndexInSet(), 
 				sampleStart != null ? sampleStart : 0);

@@ -45,7 +45,7 @@ public class FileManager {
 	}
 
 	public boolean isActive() {
-		return files != null && !files.isEmpty();
+		return files != null && files.size() > 0;
 	}
 
 	public void processList(List<File> fileList, ProgressListener listener) throws Exception {

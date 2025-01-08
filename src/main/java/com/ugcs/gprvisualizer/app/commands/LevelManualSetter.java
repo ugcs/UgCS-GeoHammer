@@ -1,7 +1,6 @@
 package com.ugcs.gprvisualizer.app.commands;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -9,8 +8,12 @@ import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 public class LevelManualSetter implements Command {
 
-	private Model model = AppContext.model;
-	
+	private final Model model;
+
+	public LevelManualSetter(Model model) {
+		this.model = model;
+	}
+
 	@Override
 	public String getButtonText() {		
 		return "Set ground level";
@@ -26,7 +29,7 @@ public class LevelManualSetter implements Command {
 		
 		HorizontalProfile levelProfile = new HorizontalProfile(file.size());
 		
-		int level = model.getProfileField().getProfileSettings().getLayer();
+		int level = model.getProfileField(file).getField().getProfileSettings().getLayer();
 		
 		for (int i = 0; i < file.size(); i++) {
 			levelProfile.deep[i] = level;

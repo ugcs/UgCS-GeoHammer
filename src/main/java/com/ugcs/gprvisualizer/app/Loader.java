@@ -1,13 +1,9 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.app.kml.KmlReader;
-import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
-import com.ugcs.gprvisualizer.app.parcers.csv.CSVParsersFactory;
-import com.ugcs.gprvisualizer.app.parcers.csv.CsvParser;
 
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
@@ -17,14 +13,10 @@ import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.ConstPointsFile;
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
-import com.github.thecoldwine.sigrun.common.ext.GprFile;
-import com.github.thecoldwine.sigrun.common.ext.PositionFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
-import com.github.thecoldwine.sigrun.common.ext.StretchArray;
 
 import com.ugcs.gprvisualizer.app.intf.Status;
 import com.ugcs.gprvisualizer.gpr.Model;
-import com.ugcs.gprvisualizer.math.HorizontalProfile;
 
 import javafx.event.EventHandler;
 import javafx.scene.input.DragEvent;
@@ -88,6 +80,7 @@ public class Loader {
 			if (isCsvFile(files)) {
 				model.setLoading(true);
 				openCSVFiles(files);
+				model.publishEvent(new FileOpenedEvent(this, files));
 				model.setLoading(false);
 				return;
 			}
@@ -96,7 +89,6 @@ public class Loader {
 			//if (model.stopUnsaved()) {
         	//	return;
         	//}
-
         	
         	ProgressTask loadTask = new ProgressTask() {
 				@Override
@@ -118,9 +110,6 @@ public class Loader {
 
 						model.updateAuxElements();
 						model.initField();
-						model.getProfileField().clear();
-
-						eventPublisher.publishEvent(new FileOpenedEvent(this));
 					}
 				}
         	};
@@ -176,7 +165,6 @@ public class Loader {
 		}
 		
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.updateButtons));
-		eventPublisher.publishEvent(new FileOpenedEvent(this));
 	}
 
 	private void openKmlFile(List<File> files) {
@@ -207,27 +195,19 @@ public class Loader {
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
-
-
 	public void loadWithNotify(final List<File> files, ProgressListener listener)
 			throws Exception {
-		
 		load(files, listener);
-		
-		model.getProfileField().clear();
-		
-		eventPublisher.publishEvent(new FileOpenedEvent(this));
+		eventPublisher.publishEvent(new FileOpenedEvent(this, files));
 	}
-
     
 	public void load(final List<File> files, ProgressListener listener) 
 			throws Exception {
 		
 		int filesCountBefore = model.getFileManager().getFilesCount();
-
 		try {
 			model.setLoading(true);
-			load2(files, listener);
+			loadInt(files, listener);
 		} finally {
 			model.setLoading(false);
 		}
@@ -243,7 +223,7 @@ public class Loader {
 		}
 	}        		
     
-	public void load2(List<File> files, ProgressListener listener) throws Exception {
+	private void loadInt(List<File> files, ProgressListener listener) throws Exception {
 		/// clear
 		//model.getAuxElements().clear();
 		//model.getChanges().clear();

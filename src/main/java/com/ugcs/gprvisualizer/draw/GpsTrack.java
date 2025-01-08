@@ -13,11 +13,11 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -33,11 +33,11 @@ import javafx.scene.control.Tooltip;
 public class GpsTrack extends BaseLayer implements InitializingBean {
 
 	private final Model model;
-	private final Dimension wndSize;
+	private final MapView mapView;
 
-	public GpsTrack(Model model, Dimension wndSize) {
+	public GpsTrack(Model model, MapView mapView) {
 		this.model = model;
-		this.wndSize = wndSize;
+		this.mapView = mapView;
 	}
 
 	private EventHandler<ActionEvent> showMapListener = new EventHandler<ActionEvent>() {
@@ -61,7 +61,7 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		q = new ThrQueue(model) {
+		q = new ThrQueue(model, mapView) {
 			protected void draw(BufferedImage backImg, MapField field) {
 				Graphics2D g2 = (Graphics2D) backImg.getGraphics();
 				g2.translate(backImg.getWidth() / 2, backImg.getHeight() / 2);
@@ -73,8 +73,6 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 			}			
 			
 		};
-		
-		q.setWindowSize(wndSize);
 	}
 		
 	@Override

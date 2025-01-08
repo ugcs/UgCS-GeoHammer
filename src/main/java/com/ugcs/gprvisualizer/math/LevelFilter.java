@@ -9,6 +9,7 @@ import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.Settings;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -74,6 +75,8 @@ public class LevelFilter implements ToolProducer {
 	//private boolean levelCalculated = true;
 
 	private List<SgyFile> undoFiles;
+
+	Settings levelSettings = new Settings();
 	
 
 //	public void smoothLevel() {
@@ -150,7 +153,7 @@ public class LevelFilter implements ToolProducer {
 			});
 
 		levelPreview = uiUtils.prepareToggleButton("Level preview", null, 
-				model.getSettings().levelPreview,
+				levelSettings.levelPreview,
 				WhatChanged.Change.justdraw);
 
 		if (buttonRemoveLevel == null) {	
@@ -178,7 +181,7 @@ public class LevelFilter implements ToolProducer {
 
 			//model.getSettings().levelPreviewShift
 
-			slider = uiUtils.createSlider(model.getSettings().levelPreviewShift, WhatChanged.Change.justdraw, -50, 50, """
+			slider = uiUtils.createSlider(levelSettings.levelPreviewShift, WhatChanged.Change.justdraw, -50, 50, """
 			Elevation lag, 
 			traces""", 	new ChangeListener<Number>() {
 				@Override
@@ -203,7 +206,7 @@ public class LevelFilter implements ToolProducer {
 						//levelCalculated = true; 
 						updateButtons(); 
 					}),
-			commandRegistry.createButton(new LevelManualSetter(), 
+			commandRegistry.createButton(new LevelManualSetter(model),
 					e -> {
 						//levelCalculated = true; 
 						updateButtons(); 

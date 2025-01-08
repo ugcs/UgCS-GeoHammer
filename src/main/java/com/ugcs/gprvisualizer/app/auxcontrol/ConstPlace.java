@@ -19,7 +19,7 @@ import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.gpr.Model;
 
-public class ConstPlace extends BaseObjectImpl implements BaseObject {
+public class ConstPlace extends BaseObjectImpl {
 
 	private final LatLon latLon;
 	private final int traceInFile;
@@ -70,7 +70,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject {
 		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
-	public Rectangle getRect(ProfileField profField) {
+	/*public Rectangle getRect(ProfileField profField) {
 
 		if (offset == null) {
 			return null;//new Rectangle(0,0,1,1);
@@ -79,7 +79,7 @@ public class ConstPlace extends BaseObjectImpl implements BaseObject {
 				
 		Rectangle rect = new Rectangle(x - R_HOR, R_VER, R_HOR * 2, R_VER * 2);
 		return rect;
-	}
+	}*/
 	
 	public Rectangle getRect(MapField mapField) {
 		
