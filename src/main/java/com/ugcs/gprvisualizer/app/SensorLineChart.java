@@ -13,7 +13,6 @@ import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
-import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.Nodes;
@@ -89,6 +88,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     //private int scale;
     private CsvFile file;
     //private Node rootNode;
+
+    private SortedMap<Integer, Range> lineRanges;
 
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -213,6 +214,34 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return plotDataList;
     }
 
+    private SortedMap<Integer, Range> getLineRanges(List<GeoData> values) {
+        // line index -> [first index, last index]
+        TreeMap<Integer, Range> ranges = new TreeMap<>();
+        if (values == null)
+            return ranges;
+
+        int lineIndex = 0;
+        int lineStart = 0;
+        for (int i = 0; i < values.size(); i++) {
+            GeoData value = values.get(i);
+            if (value == null)
+                continue;
+
+            int valueLineIndex = value.getLineIndex();
+            if (valueLineIndex != lineIndex) {
+                if (i > lineStart) {
+                    ranges.put(lineIndex, new Range(lineStart, i - 1));
+                }
+                lineIndex = valueLineIndex;
+                lineStart = i;
+            }
+        }
+        if (values.size() > lineStart) {
+            ranges.put(lineIndex, new Range(lineStart, values.size() - 1));
+        }
+        return ranges;
+    }
+
     private Color getColor(String semantic) {
         return model.getColorBySemantic(semantic);
     }
@@ -286,7 +315,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     public VBox createChartWithMultipleYAxes(CsvFile file, List<PlotData> plotDataList) {
 
-        this.file = file;        
+        this.file = file;
+        this.lineRanges = getLineRanges(file.getGeoData());
 
         // Using StackPane to overlay charts
         StackPane stackPane = new StackPane();
@@ -622,7 +652,10 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             throw new IllegalArgumentException("Invalid range specified.");
         }
 
-        if (data.stream().allMatch(Objects::isNull)) {
+        if (data.stream()
+                .skip(lowerIndex)
+                .limit(upperIndex - lowerIndex)
+                .allMatch(Objects::isNull)) {
             return new ArrayList<>();
         }
 
@@ -650,7 +683,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                                        PlotData plotData, int lowerIndex, int upperIndex) {
         List<Data<Number, Number>> subsample = getSubsampleInRange(
                 plotData.data, lowerIndex, upperIndex, plotData.renderedIndices);
-        series.getData().addAll(subsample);
+
+        boolean allNulls = subsample.stream().allMatch(v -> Objects.isNull(v.getYValue()));
+        if (subsample.isEmpty() || allNulls) {
+            series.getData().add(new Data<>(0, 0));
+        } else {
+            series.getData().addAll(subsample);
+        }
         plotData.setRendered(subsample);
     }
 
@@ -1224,24 +1263,35 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     public void gnssTimeLag(String seriesName, int shift) {
         charts.forEach(chart -> {
-            if ((seriesName.equals(chart.plotData.semantic)) && !GeoData.Semantic.LINE.getName().equals(chart.plotData.semantic)) {
+            String semantic = chart.plotData.semantic;
+            if ((seriesName.equals(semantic))
+                    && !GeoData.Semantic.LINE.getName().equals(semantic)) {
 
-                var shiftedList = new ArrayList<Number>();
-                var nulls = new ArrayList<Number>(Collections.nCopies(Math.abs(shift), null));
-                if (shift > 0) {
-                    shiftedList.addAll(chart.plotData.data.subList(shift, chart.plotData.data.size()));
-                    shiftedList.addAll(nulls);
-                } else {
-                    shiftedList.addAll(nulls);
-                    shiftedList.addAll(chart.plotData.data.subList(0, chart.plotData.data.size() + shift));
+                List<Number> data = chart.plotData.data;
+                Number[] filtered = new Number[data.size()];
+                assert filtered.length == file.getTraces().size();
+                // range iteration is sorted by the line index
+                for (Range range : lineRanges.values()) {
+                    int from = range.getMin().intValue();
+                    int to = range.getMax().intValue();
+                    // shift > 0 -> move left
+                    if (shift > 0) {
+                        from += shift;
+                    } else {
+                        // shift is negative
+                        to += shift;
+                    }
+                    for (int i = from; i <= to; i++) {
+                        int j = i - shift;
+                        if (j >= 0 && j < filtered.length) {
+                            filtered[j] = data.get(i);
+                        }
+                    }
                 }
 
-                chart.filteredData = chart.plotData.withData(shiftedList);
-
-                assert shiftedList.size() == file.getTraces().size();
-
+                chart.filteredData = chart.plotData.withData(Arrays.asList(filtered));
                 for (int i = 0; i < file.getGeoData().size(); i++) {
-                    file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, shiftedList.get(i));
+                    file.getGeoData().get(i).setSensorValue(semantic, filtered[i]);
                 }
             }
         });
