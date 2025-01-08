@@ -230,9 +230,12 @@ public class OptionPane extends VBox implements InitializingBean {
 		griddingRangeSlider.setMin(min);
 		griddingRangeSlider.setMax(max);
 
-		griddingRangeSlider.setMajorTickUnit((max - min) / 100);
-		griddingRangeSlider.setMinorTickCount((int)(max - min) / 1000);
-		griddingRangeSlider.setBlockIncrement((int)(max - min) / 1000 * 2);
+		double width = max - min;
+		if (width > 0.0) {
+			griddingRangeSlider.setMajorTickUnit(width / 100);
+			griddingRangeSlider.setMinorTickCount((int)(width / 1000));
+			griddingRangeSlider.setBlockIncrement(width / 2000);
+		}
 
 		griddingRangeSlider.setLowValue(min);
 		griddingRangeSlider.setHighValue(max);
