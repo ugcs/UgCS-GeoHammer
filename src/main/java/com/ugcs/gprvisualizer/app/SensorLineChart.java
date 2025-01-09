@@ -15,6 +15,7 @@ import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.utils.Check;
 import com.ugcs.gprvisualizer.utils.Nodes;
 import com.ugcs.gprvisualizer.utils.Range;
 import javafx.application.Platform;
@@ -957,6 +958,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         private PlotData plotData;
         private PlotData filteredData;
 
+        private FilterOptions filterOptions = new FilterOptions();
+
         //private final List<Data<Number, Number>> subsampleInFullRange;
         
         public LineChartWithMarkers(Axis<Number> xAxis, Axis<Number> yAxis, ZoomRect outZoomRect, PlotData plotData) {
@@ -1233,6 +1236,34 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 markerBox.toFront();
             }
         }
+
+        public FilterOptions getFilterOptions() {
+            return filterOptions;
+        }
+
+        public void setFilterOptions(FilterOptions filterOptions) {
+            Check.notNull(filterOptions);
+            this.filterOptions = filterOptions;
+        }
+    }
+
+    private record FilterOptions(int lowPassOrder, int timeLagShift) {
+
+        public FilterOptions() {
+            this(0, 0);
+        }
+
+        public FilterOptions withLowPassOrder(int lowPassOrder) {
+            return new FilterOptions(lowPassOrder, this.timeLagShift);
+        }
+
+        public FilterOptions withTimeLagShift(int timeLagShift) {
+            return new FilterOptions(this.lowPassOrder, timeLagShift);
+        }
+
+        public boolean hasAny() {
+            return lowPassOrder != 0 || timeLagShift != 0;
+        }
     }
 
     // Create flag marker
@@ -1261,53 +1292,150 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return flagMarker;
     }
 
-    public void gnssTimeLag(String seriesName, int shift) {
-        charts.forEach(chart -> {
-            String semantic = chart.plotData.semantic;
-            if ((seriesName.equals(semantic))
-                    && !GeoData.Semantic.LINE.getName().equals(semantic)) {
-                try {
-                    gnssTimeLag(chart, shift);
-                } catch (Exception e) {
-                    log.error("Error", e);
-                }
-            }
-        });
+    public void gnssTimeLag(String seriesName, int timeLagShift) {
+        LineChartWithMarkers chart = getDataChart(seriesName);
+        if (chart == null) {
+            return;
+        }
+
+        chart.setFilterOptions(chart.getFilterOptions().withTimeLagShift(timeLagShift));
+        applyFilters(chart);
+
         Platform.runLater(() -> {
             updateChartData();
         });
     }
 
-    private void gnssTimeLag(LineChartWithMarkers chart, int shift) {
-        List<Number> data = chart.plotData.data;
-        Number[] filtered = new Number[data.size()];
-        assert filtered.length == file.getTraces().size();
-        // range iteration is sorted by the line index
+    public void lowPassFilter(String seriesName, int lowPassOrder) {
+        LineChartWithMarkers chart = getDataChart(seriesName);
+        if (chart == null) {
+            return;
+        }
+
+        chart.setFilterOptions(chart.getFilterOptions().withLowPassOrder(lowPassOrder));
+        applyFilters(chart);
+
+        Platform.runLater(() -> {
+            updateChartData();
+        });
+    }
+
+    private void applyFilters(LineChartWithMarkers chart) {
+        Check.notNull(chart);
+        FilterOptions filterOptions = chart.getFilterOptions();
+
+        if (!filterOptions.hasAny()) {
+            // undo all
+            chart.filteredData = null;
+            for (int i = 0; i < file.getGeoData().size(); i++) {
+                file.getGeoData().get(i).undoSensorValue(chart.plotData.semantic);
+            }
+            return;
+        }
+
+        // shared by all lines
+        double lowPassSamplingRate = filterOptions.lowPassOrder() != 0
+                ? getLowPassSamplingRate()
+                : 0.0;
+
+        List<Number> values = chart.plotData.data;
+        List<Number> filtered = new ArrayList<>(values.size());
         for (Range range : lineRanges.values()) {
             int from = range.getMin().intValue();
             int to = range.getMax().intValue();
-            // shift > 0 -> move left
-            if (shift > 0) {
-                from += shift;
-            } else {
-                // shift is negative
-                to += shift;
-            }
-            for (int i = from; i <= to; i++) {
-                int j = i - shift;
-                if (j >= 0 && j < filtered.length) {
-                    filtered[j] = data.get(i);
+
+            List<Number> rangeValues = values.subList(from, to + 1);
+            // low-pass
+            try {
+                if (filterOptions.lowPassOrder() != 0) {
+                    rangeValues = lowPass(rangeValues,
+                            filterOptions.lowPassOrder(),
+                            lowPassSamplingRate);
                 }
+            } catch (Exception e) {
+                log.error("Low-pass filter error", e);
             }
+            // time lag
+            try {
+                if (filterOptions.timeLagShift() != 0) {
+                    rangeValues = gnssTimeLag(rangeValues,
+                            filterOptions.timeLagShift());
+                }
+            } catch (Exception e) {
+                log.error("Time lag filter error", e);
+            }
+            // put all back
+            filtered.addAll(rangeValues);
         }
 
-        chart.filteredData = chart.plotData.withData(Arrays.asList(filtered));
+        assert filtered.size() == file.getTraces().size();
+        chart.filteredData = chart.plotData.withData(filtered);
         for (int i = 0; i < file.getGeoData().size(); i++) {
-            file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, filtered[i]);
+            file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, filtered.get(i));
         }
     }
 
-    public void lowPassFilter(String seriesName, int filterOrder) {
+    private List<Number> gnssTimeLag(List<Number> values, int shift) {
+        if (values == null || values.isEmpty()) {
+            return values;
+        }
+
+        Number[] filtered = new Number[values.size()];
+
+        int l = 0;
+        int r = values.size() - 1;
+
+        // shift > 0 -> move left
+        if (shift > 0) {
+            l += shift;
+        } else {
+            // shift is negative
+            r += shift;
+        }
+        for (int i = l; i <= r; i++) {
+            int j = i - shift;
+            if (j >= 0 && j < filtered.length) {
+                filtered[j] = values.get(i);
+            }
+        }
+        return Arrays.asList(filtered);
+    }
+
+    private List<Number> lowPass(List<Number> values, int order, double samplingRate) {
+        if (values == null || values.isEmpty()) {
+            return values;
+        }
+
+        // data size should be >= 2 * filterOrder + 1
+        // min filter order = (size - 1) / 2
+        order = Math.min(order, (values.size() - 1) / 2);
+        int shift = order / 2;
+        double cutoffFrequency = samplingRate / order;
+        FIRFilter filter = new FIRFilter(order, cutoffFrequency, samplingRate);
+
+        var filtered = filter.filterList(values).subList(shift, values.size() + shift);
+        assert filtered.size() == values.size();
+
+        double rmsOriginal = calculateRMS(values.stream()
+                .filter(Objects::nonNull)
+                .mapToDouble(Number::doubleValue)
+                .toArray());
+        double rmsFiltered = calculateRMS(filtered.stream()
+                .filter(Objects::nonNull)
+                .mapToDouble(Number::doubleValue)
+                .toArray());
+
+        double scale = rmsOriginal / rmsFiltered;
+        for (int i = 0; i < filtered.size(); i++) {
+            Number value = filtered.get(i);
+            if (value != null) {
+                filtered.set(i, scale * value.doubleValue());
+            }
+        }
+        return filtered;
+    }
+
+    private double getLowPassSamplingRate() {
         int seriesLimit = 2000;
         if (!lineRanges.isEmpty()) {
             Range firstRange = lineRanges.firstEntry().getValue();
@@ -1315,73 +1443,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             seriesLimit = Math.max(seriesLimit, 2);
         }
         List<Long> timestamps = file.getGeoData().stream()
-			.limit(seriesLimit)
-			.map(GeoCoordinates::getDateTime)
-			.map(dt -> dt.toInstant(ZoneOffset.UTC).toEpochMilli())
-			.collect(Collectors.toList());
+                .limit(seriesLimit)
+                .map(GeoCoordinates::getDateTime)
+                .map(dt -> dt.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .collect(Collectors.toList());
 
-		double samplingRate = FIRFilter.calculateSamplingRate(timestamps);
-
-        charts.forEach(chart -> {
-                String semantic = chart.plotData.semantic;
-                if ((seriesName.equals(semantic))
-                        && !GeoData.Semantic.LINE.getName().equals(semantic)) {
-                    try {
-                        lowPassFilter(chart, filterOrder, samplingRate);
-                    } catch (Exception e) {
-                        log.error("Error", e);
-                    }
-                }
-        });
-        Platform.runLater(() -> {
-            updateChartData();
-        });
-    }
-
-    private void lowPassFilter(LineChartWithMarkers chart, int filterOrder, double samplingRate) {
-        List<Number> data = chart.plotData.data;
-        Number[] filtered = new Number[data.size()];
-        assert filtered.length == file.getTraces().size();
-
-        for (Range range : lineRanges.values()) {
-            int from = range.getMin().intValue();
-            int to = range.getMax().intValue();
-
-            List<Number> rangeData = data.subList(from, to + 1);
-
-            // data size should be >= 2 * filterOrder + 1
-            // min filter order = (size - 1) / 2
-            filterOrder = Math.min(filterOrder, (to - from) / 2);
-            int shift = filterOrder / 2;
-            double cutoffFrequency = samplingRate / filterOrder;
-            FIRFilter filter = new FIRFilter(filterOrder, cutoffFrequency, samplingRate);
-
-            var filteredRangeData = filter.filterList(rangeData)
-                    .subList(shift, rangeData.size() + shift);
-            assert filteredRangeData.size() == rangeData.size();
-
-            double rmsOriginal = calculateRMS(rangeData.stream()
-                    .filter(Objects::nonNull)
-                    .mapToDouble(Number::doubleValue)
-                    .toArray());
-            double rmsFiltered = calculateRMS(filteredRangeData.stream()
-                    .filter(Objects::nonNull)
-                    .mapToDouble(Number::doubleValue)
-                    .toArray());
-
-            double scale = rmsOriginal / rmsFiltered;
-            for (int i = 0; i < filteredRangeData.size(); i++) {
-                Number filteredValue = filteredRangeData.get(i);
-                if (filteredValue != null) {
-                    filtered[i + from] = scale * filteredValue.doubleValue();
-                }
-            }
-        }
-
-        chart.filteredData = chart.plotData.withData(Arrays.asList(filtered));
-        for (int i = 0; i < file.getGeoData().size(); i++) {
-            file.getGeoData().get(i).setSensorValue(chart.plotData.semantic, filtered[i]);
-        }
+        return FIRFilter.calculateSamplingRate(timestamps);
     }
 
     private static double calculateRMS(double[] signal) {
@@ -1396,22 +1463,18 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return charts.stream().collect(Collectors.toMap(c -> c.plotData.semantic, c -> c));
     }
 
-    public void undoFilter(String seriesName) {
-        //var selectedSeriesName = comboBox.getValue().series.getName();
-        if (GeoData.Semantic.LINE.getName().equals(seriesName)) {
-            return;
+    private LineChartWithMarkers getDataChart(String seriesName) {
+        // search chart by series name (excluding line markers)
+        if (seriesName == null) {
+            return null;
         }
-
-        log.debug("Undo filter for series: {}", seriesName);
-
-        var chart = getCharts().get(seriesName);
-
-        chart.filteredData = null;
-        for (int i = 0; i < file.getGeoData().size(); i++) {
-            file.getGeoData().get(i).undoSensorValue(seriesName);
+        if (seriesName.equals(GeoData.Semantic.LINE.getName())) {
+            return null;
         }
-
-        updateChartData();
+        return charts.stream()
+                .filter(c -> seriesName.equals(c.plotData.semantic))
+                .findFirst()
+                .orElse(null);
     }
 
     public boolean isSameTemplate(CsvFile selectedFile) {

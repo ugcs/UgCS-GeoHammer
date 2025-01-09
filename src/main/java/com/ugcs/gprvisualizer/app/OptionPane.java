@@ -168,7 +168,8 @@ public class OptionPane extends VBox implements InitializingBean {
 					return value >= 0 && value < 10000;
 				},
 				i -> applyLowPassFilter(Integer.parseInt(i)),
-				i -> applyLowPassFilterToAll(Integer.parseInt(i))
+				i -> applyLowPassFilterToAll(Integer.parseInt(i)),
+				i -> applyLowPassFilter(0)
 		);
 
 		StackPane timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)",
@@ -177,7 +178,8 @@ public class OptionPane extends VBox implements InitializingBean {
 					return Math.abs(value) < 10000;
 				},
 				i -> applyGnssTimeLag(Integer.parseInt(i)),
-				i -> applyGnssTimeLagToAll(Integer.parseInt(i))
+				i -> applyGnssTimeLagToAll(Integer.parseInt(i)),
+				i -> applyGnssTimeLag(0)
 		);
 
 		griddingProgressIndicator = new ProgressIndicator();
@@ -377,7 +379,8 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	private @NotNull StackPane createFilterOptions(Filter filter, String promptText, Predicate<String> valueConstraint,
-												   Consumer<String> applyAction, Consumer<String> applyAllAction) {
+												   Consumer<String> applyAction, Consumer<String> applyAllAction,
+												   Consumer<String> undoAction) {
 		VBox filterOptions = new VBox(5);
 		filterOptions.setPadding(new Insets(10, 0, 10, 0));
 
@@ -408,8 +411,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		undoButton.setDisable(true);
 
 		undoButton.setOnAction(e -> {
-			var chart = model.getChart((CsvFile) selectedFile);
-			chart.ifPresent(c -> c.undoFilter(c.getSelectedSeriesName()));
+			undoAction.accept(filterInput.getText());
 			undoButton.setDisable(true);
 			applyAllButton.setDisable(true);
 		});
