@@ -165,7 +165,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		StackPane lowPassOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)",
 				i -> {
 					int value = Integer.parseInt(i);
-					return value != 0 && value < 10000;
+					return value >= 0 && value < 10000;
 				},
 				i -> applyLowPassFilter(Integer.parseInt(i)),
 				i -> applyLowPassFilterToAll(Integer.parseInt(i))
@@ -174,7 +174,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		StackPane timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)",
 				i -> {
 					int value = Integer.parseInt(i);
-					return value < 10000;
+					return Math.abs(value) < 10000;
 				},
 				i -> applyGnssTimeLag(Integer.parseInt(i)),
 				i -> applyGnssTimeLagToAll(Integer.parseInt(i))
