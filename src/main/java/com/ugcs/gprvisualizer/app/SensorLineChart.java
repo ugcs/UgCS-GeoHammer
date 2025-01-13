@@ -719,7 +719,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
     }
 
-    public void zoomToFit() {
+    public void zoomToCurrentLine() {
         int lineIndex = getViewLineIndex();
         zoomToLine(lineIndex);
         Platform.runLater(this::updateChartData);
@@ -736,6 +736,16 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         int lineIndex = getViewLineIndex();
         int lastLineIndex = !lineRanges.isEmpty() ? lineRanges.lastKey() : 0;
         zoomToLine(Math.min(lineIndex + 1, lastLineIndex));
+        Platform.runLater(this::updateChartData);
+    }
+
+    /**
+     * Zoom to full range
+     */
+    public void zoomToFit() {
+        for (LineChartWithMarkers chart : charts) {
+            chart.resetZoomRect();
+        }
         Platform.runLater(this::updateChartData);
     }
 
