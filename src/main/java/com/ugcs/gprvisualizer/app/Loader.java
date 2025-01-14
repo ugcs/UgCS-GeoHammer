@@ -138,8 +138,9 @@ public class Loader {
 			//SgyFile sgyFile = model.getFileManager().getFiles().size() > 0 ? 
 			//	model.getFileManager().getFiles().get(0) : new GprFile();
 			for (File file: files) {
-					CsvFile csvFile = new CsvFile(model.getFileManager().getFileTemplates());
-					csvFile.open(file);
+				CsvFile csvFile = new CsvFile(model.getFileManager().getFileTemplates());
+				csvFile.open(file);
+				csvFile.setUnsaved(false);
 				
 				if (model.getChart(csvFile).isEmpty()) {
 

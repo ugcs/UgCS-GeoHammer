@@ -736,10 +736,25 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
     }
 
+    private boolean confirmUnsavedChanges() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Warning");
+        alert.setHeaderText("Current file is not saved. Continue?");
+        alert.getButtonTypes().setAll(
+                ButtonType.CANCEL,
+                ButtonType.OK);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get().equals(ButtonType.OK);
+    }
+
     /**
      * Close chart
      */
-    public void close() {
+    private void close() {
+        if (file.isUnsaved() && !confirmUnsavedChanges()) {
+            return;
+        }
         close(true);
     }
 
