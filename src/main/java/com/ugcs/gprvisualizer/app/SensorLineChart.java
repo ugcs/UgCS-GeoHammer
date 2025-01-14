@@ -537,7 +537,9 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 .forEach(this::putFoundPlace);
 
         Button close = new Button("X");
-        HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
+        String fileName = (file.isUnsaved() ? "*" : "")
+                + file.getFile().getName();
+        HBox top = new HBox(close, new Label(fileName), comboBox);
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
 

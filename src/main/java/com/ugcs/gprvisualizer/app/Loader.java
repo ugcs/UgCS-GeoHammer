@@ -140,8 +140,7 @@ public class Loader {
 			for (File file: files) {
 				CsvFile csvFile = new CsvFile(model.getFileManager().getFileTemplates());
 				csvFile.open(file);
-				csvFile.setUnsaved(false);
-				
+
 				if (model.getChart(csvFile).isEmpty()) {
 
 					model.getFileManager().addFile(csvFile);	
