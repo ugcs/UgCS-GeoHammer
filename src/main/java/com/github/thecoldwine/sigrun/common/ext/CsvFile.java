@@ -87,6 +87,8 @@ public class CsvFile extends SgyFile {
                 }
             }            
         }
+
+        setUnsaved(false);
     }
 
     @Override

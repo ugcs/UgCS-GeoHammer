@@ -35,6 +35,8 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -478,6 +480,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                             ImageView imageView = ResourceImageHolder.getImageView("closeFile.png");
                             Tooltip.install(imageView, tooltip);
 
+                            imageView.setPickOnBounds(true);
                             imageView.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
                                 imageView.setCursor(Cursor.HAND);
                             });
@@ -522,7 +525,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                             imageView.setTranslateX(1);
                             imageView.setTranslateY(1);
 
-                            Pane pane = new StackPane(imageView);
+                            Pane pane = new Pane(imageView);
                             lastLineChart.addVerticalValueMarker(verticalMarker, line, null, pane, false);
                         }
                     }
@@ -533,10 +536,27 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         file.getAuxElements().stream().map(o -> ((FoundPlace) o))
                 .forEach(this::putFoundPlace);
 
-        Button close = new Button("X");
-        HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
+        ImageView close = ResourceImageHolder.getImageView("close.png");
+        close.setPickOnBounds(true);
+        close.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+            close.setCursor(Cursor.HAND);
+        });
+        close.setOnMouseClicked(event -> {
+            close();
+        });
+
+        String fileName = (file.isUnsaved() ? "*" : "") + file.getFile().getName();
+        Label fileNameLabel = new Label(fileName);
+        fileNameLabel.setFont(Font.font("Verdana", FontWeight.BOLD, 8));
+        fileNameLabel.setTextFill(Color.rgb(60, 60, 60));
+
+        Region space = new Region();
+        HBox.setHgrow(space, Priority.ALWAYS);
+
+        HBox top = new HBox(close, fileNameLabel, space, comboBox);
+        top.setPadding(new Insets(0, 0, 0, 16));
         top.setSpacing(10);
-        top.setAlignment(Pos.CENTER_RIGHT);
+        top.setAlignment(Pos.CENTER_LEFT);
 
         selectionRect.setManaged(false);
         selectionRect.setFill(null);
@@ -548,10 +568,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
         root.setPadding(new Insets(10));
-
-        close.setOnMouseClicked(event -> {
-            close();
-        });
 
         root.setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
         root.setOnMouseClicked(event -> {
@@ -778,10 +794,25 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
     }
 
+    private boolean confirmUnsavedChanges() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Warning");
+        alert.setHeaderText("Current file is not saved. Continue?");
+        alert.getButtonTypes().setAll(
+                ButtonType.CANCEL,
+                ButtonType.OK);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get().equals(ButtonType.OK);
+    }
+
     /**
      * Close chart
      */
-    public void close() {
+    private void close() {
+        if (file.isUnsaved() && !confirmUnsavedChanges()) {
+            return;
+        }
         close(true);
     }
 
@@ -1333,7 +1364,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         flag.setStroke(Color.BLACK);
         flag.setStrokeWidth(0.8);
 
-        Pane flagMarker = new StackPane();
+        Pane flagMarker = new Pane();
         flagMarker.getChildren().addAll(flagPole, flag);
 
         flag.setTranslateX(0);
