@@ -691,6 +691,51 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         plotData.setRendered(subsample);
     }
 
+    private int getViewLineIndex() {
+        String seriesName = getSelectedSeriesName();
+        LineChartWithMarkers selectedChart = getCharts().get(seriesName);
+        if (selectedChart != null) {
+            NumberAxis xAxis = (NumberAxis) selectedChart.getXAxis();
+            int xCenter = (int) (0.5 * (xAxis.getLowerBound() + xAxis.getUpperBound()));
+            for (Map.Entry<Integer, Range> entry : lineRanges.entrySet()) {
+                Range range = entry.getValue();
+                if (xCenter >= range.getMin().intValue() && xCenter <= range.getMax().intValue()) {
+                    return entry.getKey();
+                }
+            }
+        }
+        // default: first range key or null
+        return !lineRanges.isEmpty() ? lineRanges.firstKey() : 0;
+    }
+
+    private void zoomToLine(int lineIndex) {
+        Range range = lineRanges.get(lineIndex);
+        for (LineChartWithMarkers chart : charts) {
+            ZoomRect zoomRect = chart.createZoomRectForXRange(range);
+            chart.setZoomRect(zoomRect);
+        }
+    }
+
+    public void zoomToCurrentLine() {
+        int lineIndex = getViewLineIndex();
+        zoomToLine(lineIndex);
+        Platform.runLater(this::updateChartData);
+    }
+
+    public void zoomToPreviousLine() {
+        int lineIndex = getViewLineIndex();
+        int firstLineIndex = !lineRanges.isEmpty() ? lineRanges.firstKey() : 0;
+        zoomToLine(Math.max(lineIndex - 1, firstLineIndex));
+        Platform.runLater(this::updateChartData);
+    }
+
+    public void zoomToNextLine() {
+        int lineIndex = getViewLineIndex();
+        int lastLineIndex = !lineRanges.isEmpty() ? lineRanges.lastKey() : 0;
+        zoomToLine(Math.min(lineIndex + 1, lastLineIndex));
+        Platform.runLater(this::updateChartData);
+    }
+
     /**
      * Zoom to full range
      */
@@ -996,6 +1041,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             Number yMin = yAxis.getValueForDisplay(plotEnd.getY());
 
             return new ZoomRect(xMin, xMax, yMin, yMax);
+        }
+
+        public ZoomRect createZoomRectForXRange(Range range) {
+            if (range == null) {
+                return outZoomRect;
+            }
+            return new ZoomRect(range.getMin(), range.getMax(), outZoomRect.yMin, outZoomRect.yMax);
         }
 
         public ZoomRect scaleZoomRect(ZoomRect zoomRect, double xScale, double yScale, Point2D scaleCenter) {
