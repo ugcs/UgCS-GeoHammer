@@ -522,11 +522,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                             imageView.setTranslateX(1);
                             imageView.setTranslateY(1);
 
-                            Pane pane = new Pane();
-                            pane.getChildren().add(imageView);
-
-                            //lastLineChart.addVerticalValueMarkerWithButton(verticalMarker, line, imageView);
-                            lastLineChart.addVerticalValueMarker(verticalMarker, line, null, pane);
+                            Pane pane = new StackPane(imageView);
+                            lastLineChart.addVerticalValueMarker(verticalMarker, line, null, pane, false);
                         }
                     }
                 }
@@ -607,7 +604,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         });
 
         foundPlaces.put(fp, verticalMarker);
-        lastLineChart.addVerticalValueMarker(verticalMarker, line, null, flagMarker);
+        lastLineChart.addVerticalValueMarker(verticalMarker, line, null, flagMarker, false);
     }
 
     @Override
@@ -692,6 +689,51 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             series.getData().addAll(subsample);
         }
         plotData.setRendered(subsample);
+    }
+
+    private int getViewLineIndex() {
+        String seriesName = getSelectedSeriesName();
+        LineChartWithMarkers selectedChart = getCharts().get(seriesName);
+        if (selectedChart != null) {
+            NumberAxis xAxis = (NumberAxis) selectedChart.getXAxis();
+            int xCenter = (int) (0.5 * (xAxis.getLowerBound() + xAxis.getUpperBound()));
+            for (Map.Entry<Integer, Range> entry : lineRanges.entrySet()) {
+                Range range = entry.getValue();
+                if (xCenter >= range.getMin().intValue() && xCenter <= range.getMax().intValue()) {
+                    return entry.getKey();
+                }
+            }
+        }
+        // default: first range key or null
+        return !lineRanges.isEmpty() ? lineRanges.firstKey() : 0;
+    }
+
+    private void zoomToLine(int lineIndex) {
+        Range range = lineRanges.get(lineIndex);
+        for (LineChartWithMarkers chart : charts) {
+            ZoomRect zoomRect = chart.createZoomRectForXRange(range);
+            chart.setZoomRect(zoomRect);
+        }
+    }
+
+    public void zoomToCurrentLine() {
+        int lineIndex = getViewLineIndex();
+        zoomToLine(lineIndex);
+        Platform.runLater(this::updateChartData);
+    }
+
+    public void zoomToPreviousLine() {
+        int lineIndex = getViewLineIndex();
+        int firstLineIndex = !lineRanges.isEmpty() ? lineRanges.firstKey() : 0;
+        zoomToLine(Math.max(lineIndex - 1, firstLineIndex));
+        Platform.runLater(this::updateChartData);
+    }
+
+    public void zoomToNextLine() {
+        int lineIndex = getViewLineIndex();
+        int lastLineIndex = !lineRanges.isEmpty() ? lineRanges.lastKey() : 0;
+        zoomToLine(Math.min(lineIndex + 1, lastLineIndex));
+        Platform.runLater(this::updateChartData);
     }
 
     /**
@@ -1001,6 +1043,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             return new ZoomRect(xMin, xMax, yMin, yMax);
         }
 
+        public ZoomRect createZoomRectForXRange(Range range) {
+            if (range == null) {
+                return outZoomRect;
+            }
+            return new ZoomRect(range.getMin(), range.getMax(), outZoomRect.yMin, outZoomRect.yMax);
+        }
+
         public ZoomRect scaleZoomRect(ZoomRect zoomRect, double xScale, double yScale, Point2D scaleCenter) {
             if (zoomRect == null)
                 return null;
@@ -1148,7 +1197,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             ImageView imageView = ResourceImageHolder.getImageView("gps32.png");
             imageView.setTranslateY(17);
 
-            addVerticalValueMarker(marker, line, imageView, null);
+            addVerticalValueMarker(marker, line, imageView, null, true);
         }
 
         /**
@@ -1158,17 +1207,18 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
          * @param line      the line to be used for the marker
          * @param imageView the image to be displayed at the marker
          */
-        public void addVerticalValueMarker(Data<Number, Number> marker, Line line, ImageView imageView, Pane flag) {
+        public void addVerticalValueMarker(Data<Number, Number> marker, Line line, ImageView imageView, Pane flag, boolean mouseTransparent) {
             Objects.requireNonNull(marker, "the marker must not be null");
             if (verticalMarkers.contains(marker)) return;
 
             VBox markerBox = new VBox();
             markerBox.setAlignment(Pos.TOP_CENTER);
+            markerBox.setMouseTransparent(mouseTransparent);
             
             // Создаем контейнер для изображений/флагов
             VBox imageContainer = new VBox();
             imageContainer.setAlignment(Pos.TOP_CENTER);
-            
+
             if (imageView != null) {
                 imageContainer.getChildren().add(imageView);
             }
@@ -1179,7 +1229,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             
             // Добавляем контейнер с изображениями
             markerBox.getChildren().add(imageContainer);
-            
+
             // Добавляем линию
             markerBox.getChildren().add(line);
 
@@ -1283,7 +1333,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         flag.setStroke(Color.BLACK);
         flag.setStrokeWidth(0.8);
 
-        Pane flagMarker = new Pane();
+        Pane flagMarker = new StackPane();
         flagMarker.getChildren().addAll(flagPole, flag);
 
         flag.setTranslateX(0);
