@@ -251,7 +251,7 @@ public class Model implements InitializingBean {
     		
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.setTitle("Warning");
-			alert.setContentText("Current files are not saved. Continue?");
+			alert.setHeaderText("Current files are not saved. Continue?");
 			 
 			Optional<ButtonType> result = alert.showAndWait();
 			 

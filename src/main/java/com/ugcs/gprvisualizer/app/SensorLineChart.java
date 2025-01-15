@@ -534,7 +534,9 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 .forEach(this::putFoundPlace);
 
         Button close = new Button("X");
-        HBox top = new HBox(close, new Label(file.getFile().getName()), comboBox);
+        String fileName = (file.isUnsaved() ? "*" : "")
+                + file.getFile().getName();
+        HBox top = new HBox(close, new Label(fileName), comboBox);
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_RIGHT);
 
@@ -778,10 +780,25 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
     }
 
+    private boolean confirmUnsavedChanges() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Warning");
+        alert.setHeaderText("Current file is not saved. Continue?");
+        alert.getButtonTypes().setAll(
+                ButtonType.CANCEL,
+                ButtonType.OK);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get().equals(ButtonType.OK);
+    }
+
     /**
      * Close chart
      */
-    public void close() {
+    private void close() {
+        if (file.isUnsaved() && !confirmUnsavedChanges()) {
+            return;
+        }
         close(true);
     }
 
