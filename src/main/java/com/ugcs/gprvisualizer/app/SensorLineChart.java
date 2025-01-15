@@ -522,7 +522,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                             imageView.setTranslateX(1);
                             imageView.setTranslateY(1);
 
-                            Pane pane = new StackPane(imageView);
+                            Pane pane = new Pane(imageView);
                             lastLineChart.addVerticalValueMarker(verticalMarker, line, null, pane, false);
                         }
                     }
@@ -1333,7 +1333,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         flag.setStroke(Color.BLACK);
         flag.setStrokeWidth(0.8);
 
-        Pane flagMarker = new StackPane();
+        Pane flagMarker = new Pane();
         flagMarker.getChildren().addAll(flagPole, flag);
 
         flag.setTranslateX(0);
