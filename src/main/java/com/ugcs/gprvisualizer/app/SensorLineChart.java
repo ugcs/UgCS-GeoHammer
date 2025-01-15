@@ -758,7 +758,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 model.getFileManager().removeFile(file);
                 model.removeChart(file);
                 model.initField();
-                eventPublisher.publishEvent(new FileClosedEvent(this, List.of(file.getFile()), file));
+                eventPublisher.publishEvent(new FileClosedEvent(this, file));
             }
         }
     }

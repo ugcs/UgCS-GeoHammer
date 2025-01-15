@@ -148,17 +148,28 @@ public class ProfileView implements InitializingBean {
 	@EventListener
 	private void fileClosed(FileClosedEvent event) {
 		SgyFile closedFile = event.getSgyFile();
+
 		var gprPane = model.getProfileField(closedFile);
 		var vbox = (VBox) gprPane.getRootNode();
 
-		//TODO: fix visible
-		//gprPane.getProfileScroll().setVisible(model.isActive() && gprPane.getTracesCount() > 0);
-		//vbox.setVisible(model.isActive() && gprPane.getTracesCount() > 0);
+		gprPane.getField().removeSgyFile(closedFile);
+		model.getFileManager().removeFile(closedFile);
 
-		gprPane.getProfileScroll().setVisible(false);
-		model.getChartsContainer().getChildren().remove(vbox);
+		if (gprPane.getField().getGprTraces().isEmpty()) {
+			gprPane.getProfileScroll().setVisible(false);
+			model.getChartsContainer().getChildren().remove(vbox);
+			currentFile = null;
+		} else {
+			if (currentFile.equals(closedFile)) {
+				//TODO: maybe need to fix
+				model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
+			}
+		}
 
 		model.removeChart(closedFile);
+		model.updateAuxElements();
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
 	}
 
 	@EventListener
@@ -169,7 +180,7 @@ public class ProfileView implements InitializingBean {
 			System.out.println("ProfileView.fileOpened " + file.getAbsolutePath());
 			model.getFileManager().getGprFiles().stream().filter(f -> f.getFile().equals(file)).findFirst().ifPresent(f -> {
 				System.out.println("Loaded traces: " + f.getTraces().size());
-				var gprPane = model.getProfileField(f);
+				var gprPane = model.getProfileFieldByPattern(f);
 				var vbox = (VBox) gprPane.getRootNode();
 
 				//TODO:

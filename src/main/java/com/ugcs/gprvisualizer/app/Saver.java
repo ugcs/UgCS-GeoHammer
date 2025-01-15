@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import org.springframework.beans.factory.InitializingBean;
@@ -57,7 +58,7 @@ public class Saver implements ToolProducer, InitializingBean {
 
 	private File saveToFile;
 	
-	private ProgressTask saveTask = listener -> {
+	private final ProgressTask saveTask = listener -> {
 
 		listener.progressMsg("save now");
 		List<File> newfiles = saveTheSame();		
@@ -73,7 +74,7 @@ public class Saver implements ToolProducer, InitializingBean {
 	    		+ model.getFileManager().getFilesCount() + " files");
 	};
 
-	private ProgressTask saveToFileTask = listener -> {
+	private final ProgressTask saveToFileTask = listener -> {
 
 		listener.progressMsg("save now");
 		File newFile = saveTo(model.getFileManager().getCsvFiles().stream().map(f -> (CsvFile)f)
@@ -164,6 +165,7 @@ public class Saver implements ToolProducer, InitializingBean {
 		List<File> newfiles = new ArrayList<>();
 		
 		for (SgyFile file : model.getFileManager().getGprFiles()) {
+			model.publishEvent(new FileClosedEvent(this, file));
 			newfiles.add(save(file));
 		}
 
@@ -176,11 +178,11 @@ public class Saver implements ToolProducer, InitializingBean {
 	
 	private List<File> saveAs(File folder) {
 		List<File> newfiles = new ArrayList<>();
-		
-		for (SgyFile file : model.getFileManager().getGprFiles()) {
+		for (SgyFile file : model.getProfileField(selectedFile).getField().getSgyFiles()) {
 			newfiles.add(save(file, folder));
+			model.publishEvent(new FileClosedEvent(this, file));
+			model.getFileManager().removeFile(file);
 		}
-		
 		return newfiles;
 	}
 
@@ -190,13 +192,9 @@ public class Saver implements ToolProducer, InitializingBean {
 		
 		try {
 			File oldFile = sgyFile.getFile();
-			
 			newFile = new File(folder, oldFile.getName());
-			
-			sgyFile.setFile(newFile);
-			
+
 			sgyFile.save(newFile);
-			
 			sgyFile.saveAux(newFile);
 			
 			new MarkupFile().save(sgyFile, newFile);

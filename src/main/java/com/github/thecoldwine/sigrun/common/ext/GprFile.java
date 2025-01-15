@@ -140,6 +140,7 @@ public class GprFile extends SgyFile {
 	}
 
 	public SgyFile copy() {
+		//TODO: not a full copy, the result can't be saved
 		GprFile file2 = new GprFile();
 		
 		file2.setFile(this.getFile());

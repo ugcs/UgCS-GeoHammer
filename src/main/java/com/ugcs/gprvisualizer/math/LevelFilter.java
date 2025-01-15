@@ -8,6 +8,7 @@ import com.ugcs.gprvisualizer.app.commands.CancelKmlToFlag;
 import com.ugcs.gprvisualizer.app.commands.KmlToFlag;
 
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.gpr.Settings;
 import javafx.scene.layout.HBox;
@@ -48,9 +49,6 @@ import javafx.scene.control.ToggleButton;
 public class LevelFilter implements ToolProducer {
 
 	@Autowired
-	private ApplicationEventPublisher eventPublisher;
-
-	@Autowired
 	private Model model;	
 	
 	@Autowired
@@ -77,7 +75,14 @@ public class LevelFilter implements ToolProducer {
 	private List<SgyFile> undoFiles;
 
 	Settings levelSettings = new Settings();
-	
+
+	private SgyFile selectedFile;
+
+	@EventListener
+	private void selectFile(FileSelectedEvent event) {
+		this.selectedFile = event.getFile();
+		clearForNewFile(selectedFile);
+	}
 
 //	public void smoothLevel() {
 //		for(SgyFile sf : model.getFileManager().getFiles()) {
@@ -115,7 +120,7 @@ public class LevelFilter implements ToolProducer {
 
 		buttonSpreadCoord = commandRegistry.createButton(new SpreadCoordinates(), 
 			e -> {
-				updateButtons();
+				updateButtons(selectedFile);
 				//buttonSpreadCoord.setVisible(false);
 			});
 			
@@ -139,7 +144,7 @@ public class LevelFilter implements ToolProducer {
 	}
 
 	
-	public List<Node> getToolNodes2() {		
+	public List<Node> getToolNodes2() {
 		//buttonLevelGround.setGraphic(ResourceImageHolder.getImageView("levelGrnd.png"));
 
 		
@@ -162,14 +167,14 @@ public class LevelFilter implements ToolProducer {
 				List<SgyFile> files = model.getFileManager().getGprFiles();
 				files.addAll(model.getFileManager().getCsvFiles());
 				model.getFileManager().updateFiles(files);
-				updateButtons(); 
+				updateButtons(selectedFile);
 			});
 		}
 		
 		if (buttonLevelGround == null) {
 			buttonLevelGround = commandRegistry.createButton(new LevelGround(this), e -> {				
 				//levelCalculated = false;
-				updateButtons();
+				updateButtons(selectedFile);
 			});		
 		}		
 		
@@ -189,9 +194,9 @@ public class LevelFilter implements ToolProducer {
 					ObservableValue<? extends Number> observable, 
 					Number oldValue,
 					Number newValue) {
-					SgyFile file = model.getFileManager().getGprFiles().get(0);
+					SgyFile file = model.getProfileField(selectedFile).getField().getSgyFiles().getFirst();
 					file.getGroundProfile().shift(newValue.intValue());
-					eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
+					model.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
 				}
 		});
 		}
@@ -204,12 +209,12 @@ public class LevelFilter implements ToolProducer {
 			commandRegistry.createButton(new LevelScanner(), "scanLevel.png", 
 					e -> {
 						//levelCalculated = true; 
-						updateButtons(); 
+						updateButtons(selectedFile);
 					}),
 			commandRegistry.createButton(new LevelManualSetter(model),
 					e -> {
 						//levelCalculated = true; 
-						updateButtons(); 
+						updateButtons(selectedFile);
 					}),
 			
 				buttonRemoveLevel, buttonLevelGround, levelPreview, slider, buttonKmlToFlag, buttonCancelKmlToFlag
@@ -238,7 +243,7 @@ public class LevelFilter implements ToolProducer {
 
 		VBox vbox = new VBox();
 
-		updateButtons();
+		updateButtons(selectedFile);
 
 		//vbox.setDisable(!model.isActive());
 		vbox.getChildren().addAll(result);
@@ -246,7 +251,7 @@ public class LevelFilter implements ToolProducer {
 		return List.of(vbox);
 	}
 
-	private void updateButtons() {
+	private void updateButtons(SgyFile file) {
 
 		if (buttonSpreadCoord != null) {
 			buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
@@ -254,16 +259,16 @@ public class LevelFilter implements ToolProducer {
 		}
 
 		if (buttonLevelGround != null) {
-			buttonLevelGround.setDisable(!isGroundProfileExists());
+			buttonLevelGround.setDisable(!isGroundProfileExists(file));
 		}
 		if (buttonRemoveLevel != null) {
 			buttonRemoveLevel.setDisable(!isUndoFilesExists());
 		}
 		if (levelPreview != null) {
-			levelPreview.setDisable(!isGroundProfileExists());
+			levelPreview.setDisable(!isGroundProfileExists(file));
 		}
 		if (slider != null) {
-			slider.setDisable(!isGroundProfileExists());
+			slider.setDisable(!isGroundProfileExists(file));
 		}
 	}
 	
@@ -271,22 +276,21 @@ public class LevelFilter implements ToolProducer {
 		return undoFiles != null && !undoFiles.isEmpty();
 	}
 
-	protected boolean isGroundProfileExists() {
-		return !model.getFileManager().getGprFiles().isEmpty() &&
-				model.getFileManager().getGprFiles().get(0).getGroundProfile() != null;
+	protected boolean isGroundProfileExists(SgyFile file) {
+		return model.getProfileField(file) != null &&
+				model.getProfileField(file).getField().getSgyFiles().get(0).getGroundProfile() != null;
 	}
 	
-	public void clearForNewFile() {
-		
+	private void clearForNewFile(SgyFile file) {
 		//levelCalculated = true; 
-		updateButtons(); 
+		updateButtons(file);
 	}
 	
 	@EventListener
 	private void somethingChanged(WhatChanged changed) {
 		if (changed.isUpdateButtons() || changed.isTraceCut()) {
 			
-			clearForNewFile();
+			clearForNewFile(selectedFile);
 			
 			if (buttonSpreadCoord != null) {
 				buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
@@ -307,8 +311,6 @@ public class LevelFilter implements ToolProducer {
 
 	@EventListener
 	private void fileOpened(FileOpenedEvent event) {
-		clearForNewFile();
-
 		if (buttonSpreadCoord != null) {
 			buttonSpreadCoord.setDisable(!model.isSpreadCoordinatesNecessary());
 			//buttonSpreadCoord.setManaged(model.isSpreadCoordinatesNecessary());

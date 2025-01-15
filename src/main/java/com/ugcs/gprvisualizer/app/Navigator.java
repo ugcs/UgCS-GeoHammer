@@ -53,32 +53,27 @@ public class Navigator implements ToolProducer {
 		});
 		
 		return Arrays.asList(backBtn, fitBtn, nextBtn);
-
 	}
 	
 
 	public void fitNext() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField(currentFile).getMiddleTrace());
-		
-		index = Math.min(model.getFileManager().getGprFiles().size() - 1, index + 1);
-		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
-				
-		fitFile(sgyFile);
+		var chart = model.getProfileField(currentFile);
+		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+		fitFile(chart.getField().getNextSgyFile(selectedFile));
 	}
 
 	public void fitBack() {
-		int index = model.getSgyFileIndexByTrace(model.getProfileField(currentFile).getMiddleTrace());
-		
-		index = Math.max(0, index - 1);
-		SgyFile sgyFile = model.getFileManager().getGprFiles().get(index);  
-				
-		fitFile(sgyFile);
+		var chart = model.getProfileField(currentFile);
+		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+		fitFile(chart.getField().getPrevSgyFile(selectedFile));
 	}
 
 	public void fitCurrent() {
-		SgyFile sgyFile = model.getSgyFileByTrace(model.getProfileField(currentFile).getMiddleTrace());
-		model.chartsZoomOut();
-		fitFile(sgyFile);
+		System.out.println(currentFile);
+		var chart = model.getProfileField(currentFile);
+		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+		//model.chartsZoomOut();
+		fitFile(selectedFile);
 	}
 
 	private void fitFile(SgyFile sgyFile) {
