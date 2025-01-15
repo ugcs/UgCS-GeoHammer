@@ -7,6 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.CloseAllFilesButton;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
@@ -404,6 +405,9 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
             auxElements.add(new DepthStart(ShapeHolder.topSelection));
             auxElements.add(new DepthHeight(ShapeHolder.botSelection));
             auxElements.add(leftRulerController.getTB());
+            if (profileField.getSgyFiles().size() > 1) {
+                auxElements.add(new CloseAllFilesButton(model));
+            }
         }
 
     private final LeftRulerController leftRulerController;

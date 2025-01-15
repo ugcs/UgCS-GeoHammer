@@ -173,6 +173,7 @@ public class ProfileView implements InitializingBean {
 			gprPane.getProfileScroll().setVisible(false);
 			model.getChartsContainer().getChildren().remove(vbox);
 			currentFile = null;
+			model.publishEvent(new FileSelectedEvent(this, currentFile));
 		} else {
 			if (currentFile.equals(closedFile)) {
 				//TODO: maybe need to fix

@@ -590,7 +590,12 @@ public class OptionPane extends VBox implements InitializingBean {
 	@EventListener
     private void handleFileSelectedEvent(FileSelectedEvent event) {
         selectedFile = event.getFile();
-		if (selectedFile == null) {return;}
+
+		if (selectedFile == null) {
+			clear();
+			return;
+		}
+
         if (selectedFile instanceof CsvFile) {
             showTab(csvTab);
             setGriddingMinMax();

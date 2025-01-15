@@ -2,6 +2,7 @@ package com.ugcs.gprvisualizer.app.commands;
 
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
+import com.ugcs.gprvisualizer.app.GPRChart;
 import com.ugcs.gprvisualizer.app.ProgressListener;
 import com.ugcs.gprvisualizer.gpr.ArrayBuilder;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -24,19 +25,20 @@ public class RadarMapScan implements Command {
 			file.amplScan = new ScanProfile(file.size());
 		}
 
-		var field = model.getProfileField(file).getField();
-		int start = Math.clamp(field.getProfileSettings().getLayer(),
-				0, field.getMaxHeightInSamples());
+		if (model.getProfileField(file) instanceof GPRChart gprChart) {
+			var field = gprChart.getField();
+			int start = Math.clamp(field.getProfileSettings().getLayer(),
+					0, field.getMaxHeightInSamples());
 
-		int finish = Math.clamp(field.getProfileSettings().getLayer() + field.getProfileSettings().hpage,
-				0, field.getMaxHeightInSamples());
-		
-		for (int i = 0; i < file.size(); i++) {
-			Trace trace = file.getTraces().get(i);
-			double alpha = calcAlpha(trace.getNormValues(), trace.edge, start, finish, field.getProfileSettings(), scaleBuilder.build(file));
-			file.amplScan.intensity[i] = alpha;
-		}		
-		
+			int finish = Math.clamp(field.getProfileSettings().getLayer() + field.getProfileSettings().hpage,
+					0, field.getMaxHeightInSamples());
+
+			for (int i = 0; i < file.size(); i++) {
+				Trace trace = file.getTraces().get(i);
+				double alpha = calcAlpha(trace.getNormValues(), trace.edge, start, finish, field.getProfileSettings(), scaleBuilder.build(file));
+				file.amplScan.intensity[i] = alpha;
+			}
+		}
 	}
 
 	private double calcAlpha(float[] values, byte[] edge, int start, int finish, Settings profileSettings, double[][] scaleArray) {

@@ -37,34 +37,20 @@ public class RemoveFileButton extends BaseObjectImpl {
 
 	@Override
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
-		
-		if (isPointInside(localPoint, profField)) {			
-			 
+		if (isPointInside(localPoint, profField)) {
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.setTitle("Close file");
 			alert.setContentText(
 					(sgyFile.isUnsaved() ? "File is not saved!\n" : "") 
 					+ "Confirm to close file");
-			
 			 
 			Optional<ButtonType> result = alert.showAndWait();
 			 
-			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {		
-				
-				//int index = AppContext.model.getFileManager()
-				//		.getFiles().indexOf(sgyFile);
-				model.getFileManager().removeFile(sgyFile); //.getFiles().remove(index);
-				
-				model.init();
-				model.initField();
-				//model.getProfileField(sgyFile).clear();
-
+			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {
 				model.publishEvent(new FileClosedEvent(this, sgyFile));
 			}
-			
 			return true;
 		}
-		
 		return false;
 	}
 
@@ -110,15 +96,6 @@ public class RemoveFileButton extends BaseObjectImpl {
 			return null;
 		}
 	}
-	
-	//public Rectangle getRect(MapField mapField) {
-	//	return null;
-	//}
-
-	/*private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces()
-				.get(offset.localToGlobal(traceInFile));
-	}*/
 
 	@Override
 	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
