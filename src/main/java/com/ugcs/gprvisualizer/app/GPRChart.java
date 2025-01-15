@@ -673,7 +673,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         }
     }
 
-    private void fitFull() {
+    public void fitFull() {
         setMiddleTrace(getField().getGprTracesCount() / 2);
         fit(getField().getMaxHeightInSamples() * 2, getField().getGprTracesCount());
     }

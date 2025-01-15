@@ -43,6 +43,7 @@ public class ProfileView implements InitializingBean {
 	
 	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
 	private final Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
+	private final Button fitBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.FIT, new Button());
 
 	private SgyFile currentFile;
 
@@ -61,6 +62,19 @@ public class ProfileView implements InitializingBean {
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out"));
 		zoomInBtn.setOnAction(this::zoomIn);
 		zoomOutBtn.setOnAction(this::zoomOut);
+
+		fitBtn.setTooltip(new Tooltip("Fit current chart to window"));
+		fitBtn.setOnAction(this::fitCurrentFile);
+	}
+
+	private void fitCurrentFile(ActionEvent actionEvent) {
+		if (currentFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(SensorLineChart::zoomToFit);
+		} else {
+			var chart = model.getProfileField(currentFile);
+			chart.fitFull();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		}
 	}
 
 	private void zoomIn(ActionEvent event) {
@@ -99,6 +113,7 @@ public class ProfileView implements InitializingBean {
 
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
+		toolBar.getItems().add(fitBtn);
 		toolBar.getItems().add(getSpacer());
 	}
 
@@ -137,9 +152,8 @@ public class ProfileView implements InitializingBean {
 
 	@EventListener
 	private void somethingChanged(WhatChanged changed) {
-		if (changed.isJustdraw() && currentFile != null) {
-			var gprChart = model.getProfileField(currentFile);
-			//TODO: filter events
+		if (changed.isJustdraw() && currentFile != null
+				&& model.getProfileField(currentFile) instanceof GPRChart gprChart) {
 			gprChart.updateScroll();
 			gprChart.repaintEvent();
 		}

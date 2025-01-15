@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import org.springframework.context.event.EventListener;
@@ -36,9 +37,9 @@ public class Navigator implements ToolProducer {
 		Button nextBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ARROW_RIGHT, new Button());
 		//new Button("", ResourceImageHolder.getImageView("arrow_right_20.png"));
 		
-		backBtn.setTooltip(new Tooltip("Fit previous file to window"));
-		fitBtn.setTooltip(new Tooltip("Fit current file to window"));
-		nextBtn.setTooltip(new Tooltip("Fit next file to window"));
+		backBtn.setTooltip(new Tooltip("Fit previous line to window"));
+		fitBtn.setTooltip(new Tooltip("Fit current line to window"));
+		nextBtn.setTooltip(new Tooltip("Fit next line to window"));
 		
 		fitBtn.setOnAction(e -> {
 			fitCurrent();
@@ -57,23 +58,39 @@ public class Navigator implements ToolProducer {
 	
 
 	public void fitNext() {
-		var chart = model.getProfileField(currentFile);
-		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
-		fitFile(chart.getField().getNextSgyFile(selectedFile));
+		if (currentFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(sensorLineChart -> {
+				sensorLineChart.zoomToNextLine();
+			});
+		} else {
+			var chart = model.getProfileField(currentFile);
+			var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+			fitFile(chart.getField().getNextSgyFile(selectedFile));
+		}
 	}
 
 	public void fitBack() {
-		var chart = model.getProfileField(currentFile);
-		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
-		fitFile(chart.getField().getPrevSgyFile(selectedFile));
+		if (currentFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(sensorLineChart -> {
+				sensorLineChart.zoomToPreviousLine();
+			});
+		} else {
+			var chart = model.getProfileField(currentFile);
+			var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+			fitFile(chart.getField().getPrevSgyFile(selectedFile));
+		}
 	}
 
 	public void fitCurrent() {
-		System.out.println(currentFile);
-		var chart = model.getProfileField(currentFile);
-		var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
-		//model.chartsZoomOut();
-		fitFile(selectedFile);
+		if (currentFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(sensorLineChart -> {
+				sensorLineChart.zoomToCurrentLine();
+			});
+		} else {
+			var chart = model.getProfileField(currentFile);
+			var selectedFile = chart.getField().getSgyFileByTrace(chart.getMiddleTrace());
+			fitFile(selectedFile);
+		}
 	}
 
 	private void fitFile(SgyFile sgyFile) {
