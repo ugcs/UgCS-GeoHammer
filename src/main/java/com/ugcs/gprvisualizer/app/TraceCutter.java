@@ -217,7 +217,6 @@ public class TraceCutter implements Layer, InitializingBean {
 		List<Point2D> border = getScreenPoligon(fld);
 		
 		List<SgyFile> slicedSgyFiles = new ArrayList<>();
-		//model.publishEvent(new FileClosedEvent(this, model.getFileManager().getGprFiles().stream().map(SgyFile::getFile).collect(Collectors.toList()), model.getFileManager().getGprFiles()));
 
 		undoFiles.clear();
 		undoFiles.addAll(model.getFileManager().getGprFiles());

@@ -610,10 +610,10 @@ public class OptionPane extends VBox implements InitializingBean {
     }
 
     //@EventListener(condition = "#event.isFileopened()")
-	@EventListener
-    private void fileOpened(FileOpenedEvent event) {
-            clear();
-    }
+	//@EventListener
+    //private void fileOpened(FileOpenedEvent event) {
+    //        clear();
+    //}
 
 	private void setSavedFilterInputValue(Filter filter) {
 		var savedValue = prefSettings.getSetting(filter.name(), ((CsvFile) selectedFile).getParser().getTemplate().getName());

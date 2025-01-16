@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
 import com.ugcs.gprvisualizer.event.BaseEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import javafx.scene.layout.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
@@ -275,7 +276,7 @@ public class Model implements InitializingBean {
 		currentChart.get().close(false);
 		csvFiles.remove(csvFile);
 
-		createSensorLineChart(csvFile);
+		selectAndScrollToChart(createSensorLineChart(csvFile));
 	}
 
 	private SensorLineChart createSensorLineChart(CsvFile csvFile) {
@@ -332,6 +333,12 @@ public class Model implements InitializingBean {
 	public void removeChart(SgyFile sgyFile) {
 		if (sgyFile instanceof CsvFile csvFile) {
 			csvFiles.remove(csvFile);
+			if (!csvFiles.isEmpty()) {
+				selectAndScrollToChart(csvFiles.values().stream().toList().getFirst());
+			} else {
+				publishEvent(new FileSelectedEvent(this, (SgyFile) null));
+			}
+
 		} else {
 			gprCharts.remove(sgyFile);
 		}

@@ -163,21 +163,22 @@ public class ProfileView implements InitializingBean {
 	private void fileClosed(FileClosedEvent event) {
 		SgyFile closedFile = event.getSgyFile();
 
-		var gprPane = model.getProfileField(closedFile);
-		var vbox = (VBox) gprPane.getRootNode();
+		if (model.getProfileField(closedFile) instanceof GPRChart gprPane) {
+			var vbox = (VBox) gprPane.getRootNode();
 
-		gprPane.getField().removeSgyFile(closedFile);
-		model.getFileManager().removeFile(closedFile);
+			gprPane.getField().removeSgyFile(closedFile);
+			model.getFileManager().removeFile(closedFile);
 
-		if (gprPane.getField().getGprTraces().isEmpty()) {
-			gprPane.getProfileScroll().setVisible(false);
-			model.getChartsContainer().getChildren().remove(vbox);
-			currentFile = null;
-			model.publishEvent(new FileSelectedEvent(this, currentFile));
-		} else {
-			if (currentFile.equals(closedFile)) {
-				//TODO: maybe need to fix
-				model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
+			if (gprPane.getField().getGprTraces().isEmpty()) {
+				gprPane.getProfileScroll().setVisible(false);
+				model.getChartsContainer().getChildren().remove(vbox);
+				currentFile = null;
+				model.publishEvent(new FileSelectedEvent(this, currentFile));
+			} else {
+				if (currentFile.equals(closedFile)) {
+					//TODO: maybe need to fix
+					model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
+				}
 			}
 		}
 
