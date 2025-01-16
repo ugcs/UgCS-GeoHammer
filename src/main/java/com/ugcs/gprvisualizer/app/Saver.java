@@ -180,6 +180,10 @@ public class Saver implements ToolProducer, InitializingBean {
 
 		for (SgyFile file : model.getFileManager().getCsvFiles()) {
 			newfiles.add(save(file));
+			if (file instanceof CsvFile csvFile) {
+				model.getChart(csvFile).ifPresent(chart
+						-> chart.close(true));
+			}
 		}
 		
 		return newfiles;
