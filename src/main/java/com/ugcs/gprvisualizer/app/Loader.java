@@ -231,8 +231,6 @@ public class Loader {
 		listener.progressMsg("load");
 
 		if (isCsvFile(files)) {
-			model.closeAllCharts();
-			model.getFileManager().clear();
 			openCSVFiles(files);
 		} else {
 			model.getFileManager().processList(files, listener);

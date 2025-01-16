@@ -77,9 +77,20 @@ public class Saver implements ToolProducer, InitializingBean {
 	private final ProgressTask saveToFileTask = listener -> {
 
 		listener.progressMsg("save now");
-		File newFile = saveTo(model.getFileManager().getCsvFiles().stream().map(f -> (CsvFile)f)
-				.filter(f -> f.equals(selectedFile)).findAny().get(), saveToFile);
-		
+
+		CsvFile csvFile = model.getFileManager().getCsvFiles().stream()
+				.map(f -> (CsvFile) f)
+				.filter(f -> f.equals(selectedFile))
+				.findAny()
+				.orElse(null);
+		if (csvFile == null) {
+			return;
+		}
+
+		File newFile = saveTo(csvFile, saveToFile);
+		model.getChart(csvFile).ifPresent(chart
+				-> chart.close(true));
+
 		listener.progressMsg("load now");			
 		try {
 			loader.loadWithNotify(List.of(newFile), listener);
@@ -87,9 +98,7 @@ public class Saver implements ToolProducer, InitializingBean {
 			MessageBoxHelper.showError("error reopening files", "");
 		}
 	    	
-
-	    	
-	    status.showProgressText("saved " 
+	    status.showProgressText("saved "
 	    		+ model.getFileManager().getFilesCount() + " files");
 	};
 
