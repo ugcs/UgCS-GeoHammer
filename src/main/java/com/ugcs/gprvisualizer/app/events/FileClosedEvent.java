@@ -9,12 +9,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 
-public class FileClosedEvent extends FileOpenedEvent {
+public class FileClosedEvent extends BaseEvent {
 
     private final SgyFile sgyFile;
 
-    public FileClosedEvent(Object source, List<@NotNull File> files, SgyFile sgyFile) {
-        super(source, files, true);
+    public FileClosedEvent(Object source, SgyFile sgyFile) {
+        super(source);
         this.sgyFile = sgyFile;
     }
 

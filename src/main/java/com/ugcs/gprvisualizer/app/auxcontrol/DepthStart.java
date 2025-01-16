@@ -98,7 +98,7 @@ public class DepthStart extends BaseObjectImpl {
 		return rect;
 	}
 
-	public Point2D getCenter(ScrollableData scrollableData) {
+	protected Point2D getCenter(ScrollableData scrollableData) {
 		if (scrollableData instanceof GPRChart gprChart) {
 			var profField = gprChart.getField();
 			Point2D scr = scrollableData.traceSampleToScreen(new TraceSample(

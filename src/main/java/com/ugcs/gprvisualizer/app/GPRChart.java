@@ -7,6 +7,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.CloseAllFilesButton;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
 import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
@@ -31,6 +32,7 @@ import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.NotNull;
 import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
@@ -56,8 +58,6 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                     BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER,
                     10.0f, dash1, 0.0f);
 
-    private final SgyFile sgyFile;
-
     private BaseObject selectedMouseHandler;
     private final BaseObject scrollHandler;
 
@@ -82,20 +82,19 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
     private final ChangeListener<Number> sliderListener
             = (observable, oldValue, newValue) -> {
-                if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
+                //if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
                     repaintEvent();
-                }
+                //}
             };
 
     private final ProfileField profileField;
-    private java.util.List<BaseObject> auxElements = new ArrayList<>();
+    private final List<BaseObject> auxElements = new ArrayList<>();
 
-    public GPRChart(Model model, AuxElementEditHandler auxEditHandler, SgyFile sgyFile) {
+    public GPRChart(Model model, AuxElementEditHandler auxEditHandler, List<SgyFile> sgyFiles) {
         this.model = model;
         this.auxEditHandler = auxEditHandler;
-        this.sgyFile = sgyFile;
-        this.profileField = new ProfileField(sgyFile);
-        this.leftRulerController = new LeftRulerController(sgyFile);
+        this.profileField = new ProfileField(sgyFiles);
+        this.leftRulerController = new LeftRulerController(profileField);
 
         vbox.getChildren().addAll(canvas);
         vbox.setOnMouseClicked(event -> {
@@ -122,6 +121,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         });
 
         scrollHandler = new CleverViewScrollHandler(this);
+        updateAuxElements();
     }
 
     public ProfileScroll getProfileScroll() {
@@ -143,6 +143,11 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
     public List<BaseObject> getAuxElements() {
         return auxElements;
+    }
+
+    public void addSgyFile(@NotNull SgyFile f) {
+        profileField.addSgyFile(f);
+        updateAuxElements();
     }
 
     private class ContrastSlider extends BaseSlider {
@@ -245,7 +250,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
     @Override
     public void selectFile() {
-        model.publishEvent(new FileSelectedEvent(this, sgyFile));
+        model.publishEvent(new FileSelectedEvent(this, profileField.getSgyFileByTrace(getMiddleTrace())));
     }
 
     private void draw(int width, int height) {
@@ -265,8 +270,6 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         for (int i = 0; i < buffer.length; i++) {
             buffer[i] = BACK_GROUD_COLOR.getRGB();
         }
-
-        System.out.println("this:" + this + ", draw: " + width + "x" + height + ", file: " + sgyFile.getFile().getName());
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -322,17 +325,9 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         int startTrace = getFirstVisibleTrace();
         int finishTrace = getLastVisibleTrace();
 
-        //TODO: select file
-        //int f1 = model.getFileManager().getGprFiles().indexOf(
-        //        model.getSgyFileByTrace(startTrace));
+        List<SgyFile> visibleFiles = profileField.getFilesInRange(startTrace, finishTrace);
 
-        //int f2 = model.getFileManager().getGprFiles().indexOf(
-        //        model.getSgyFileByTrace(finishTrace));
-
-        //for (int i = f1; i <= f2; i++) {
-        //    SgyFile currentFile = model.getFileManager().getGprFiles().get(i);
-
-        var currentFile = sgyFile;
+        for (SgyFile currentFile : visibleFiles) {
 
             if (currentFile.profiles != null) {
                 // pf
@@ -352,7 +347,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                         currentFile.getOffset().getStartTrace(), currentFile.getGroundProfile(),
                         shiftGround.intValue());
             }
-        //}
+        }
     }
 
     private double getRealContrast() {
@@ -395,23 +390,24 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
         public void updateAuxElements() {
             auxElements.clear();
-            //for (SgyFile sf : getFileManager().getGprFiles()) {
-            var sf = sgyFile;
+            for (SgyFile sf : profileField.getSgyFiles()) {
                 auxElements.addAll(sf.getAuxElements());
 
                 Trace lastTrace = sf.getTraces().get(sf.getTraces().size() - 1);
 
                 // add remove button
-                RemoveFileButton rfb = new RemoveFileButton(
-                        lastTrace.getIndexInFile(), sf.getOffset(), sf, model);
-
+                RemoveFileButton rfb = new RemoveFileButton(1,
+                        //lastTrace.getIndexInFile(),
+                        sf.getOffset(), sf, model);
                 auxElements.add(rfb);
 
-                auxElements.add(new DepthStart(ShapeHolder.topSelection));
-                auxElements.add(new DepthHeight(ShapeHolder.botSelection));
-            //}
-
+            }
+            auxElements.add(new DepthStart(ShapeHolder.topSelection));
+            auxElements.add(new DepthHeight(ShapeHolder.botSelection));
             auxElements.add(leftRulerController.getTB());
+            if (profileField.getSgyFiles().size() > 1) {
+                auxElements.add(new CloseAllFilesButton(model));
+            }
         }
 
     private final LeftRulerController leftRulerController;
@@ -476,8 +472,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
     private void drawFileNames(int height, Graphics2D g2) {
 
-        //SgyFile currentFile = model.getSgyFileByTrace(getMiddleTrace());
-        var currentFile = sgyFile;
+        SgyFile currentFile = profileField.getSgyFileByTrace(getMiddleTrace());
 
         int selectedX1 = 0;
         int selectedX2 = 0;
@@ -487,8 +482,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         int leftMargin = -getField().getMainRect().width / 2;
 
         g2.setStroke(AMP_STROKE);
-        //for (SgyFile fl : model.getFileManager().getGprFiles()) {
-        var fl = sgyFile;
+        for (SgyFile fl : profileField.getSgyFiles()) {
 
             p = traceSampleToScreen(new TraceSample(
                     fl.getTraces().get(0).getIndexInSet(), 0));
@@ -515,11 +509,11 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
             p = new Point2D(Math.max(p.getX(), leftMargin), p.getY());
 
             int iconImageWidth = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
-            g2.setClip((int) p.getX(), 0, (int) (p2.getX() - p.getX() - iconImageWidth), 20);
+            g2.setClip((int) p.getX(), 0, (int) (p2.getX() - p.getX()), 20);
             String fileName = (fl.isUnsaved() ? "*" : "") + fl.getFile().getName();
-            g2.drawString(fileName, (int) p.getX() + 7, 11);
+            g2.drawString(fileName, (int) p.getX() + 4 + iconImageWidth, 11);
             g2.setClip(null);
-        //}
+        }
 
         if (p2 != null) {
             g2.drawLine((int) p2.getX(), 0, (int) p2.getX(), height);
@@ -683,7 +677,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         }
     }
 
-    private void fitFull() {
+    public void fitFull() {
         setMiddleTrace(getField().getGprTracesCount() / 2);
         fit(getField().getMaxHeightInSamples() * 2, getField().getGprTracesCount());
     }

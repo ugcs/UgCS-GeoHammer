@@ -24,7 +24,7 @@ public class DepthHeight extends DepthStart {
 	}
 
 	@Override
-	public Point2D getCenter(ScrollableData scrollable) {
+	protected Point2D getCenter(ScrollableData scrollable) {
 		if (scrollable instanceof GPRChart gprChart) {
 			var profField = gprChart.getField();
 			Point2D scr = gprChart.traceSampleToScreen(new TraceSample(

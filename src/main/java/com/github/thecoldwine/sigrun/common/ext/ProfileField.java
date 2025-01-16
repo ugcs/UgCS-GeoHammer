@@ -2,15 +2,17 @@ package com.github.thecoldwine.sigrun.common.ext;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ugcs.gprvisualizer.gpr.Model;
 import com.ugcs.gprvisualizer.gpr.Settings;
+import org.jetbrains.annotations.NotNull;
 
 public class ProfileField {
 
 	//private final Model model;
-	private final SgyFile sgyFile;
+	private final List<SgyFile> sgyFiles = new ArrayList<>();
 
 	// screen coordinates
 	private Dimension viewDimension = new Dimension();
@@ -64,7 +66,7 @@ public class ProfileField {
 	public List<Trace> getGprTraces() {
 		if (gprTraces.isEmpty()) {
 			int traceIndex = 0;
-			for (SgyFile file : List.of(sgyFile)) {
+			for (SgyFile file : sgyFiles) {
 				if (file instanceof CsvFile) {
 					continue;
 				}
@@ -81,9 +83,10 @@ public class ProfileField {
 		return getGprTraces().size();
 	}
 
-	public ProfileField(SgyFile sgyFile) {
-		this.sgyFile  = sgyFile;
+	public ProfileField(List<SgyFile> sgyFiles) {
+		this.sgyFiles.addAll(sgyFiles);
 		updateMaxHeightInSamples();
+		updateSgyFilesOffsets();
 	}
 
 	public int getVisibleStart() {
@@ -161,5 +164,81 @@ public class ProfileField {
 
 	public int getTopMargin() {
 		return mainRectRect.y;
+	}
+
+	public List<SgyFile> getSgyFiles() {
+		return List.copyOf(sgyFiles);
+	}
+
+	public SgyFile getSgyFileByTrace(int i) {
+		for (SgyFile fl : getSgyFiles()) {
+			Trace lastTrace = fl.getTraces().get(fl.getTraces().size() - 1);
+			if (i <= lastTrace.getIndexInSet()) {
+				return fl;
+			}
+		}
+		return null;
+	}
+
+	public int getSgyFileIndexByTrace(int i) {
+		for (int index = 0;
+			 index < getSgyFiles().size(); index++) {
+			SgyFile fl =  getSgyFiles().get(index);
+
+			if (i <= fl.getTraces().get(fl.getTraces().size() - 1).getIndexInSet()) {
+				return index;
+			}
+		}
+		return 0;
+	}
+
+	public void addSgyFile(@NotNull SgyFile f) {
+		sgyFiles.add(f);
+		sgyFiles.sort((f1, f2) -> {
+			return f1.getFile().getName().compareToIgnoreCase(f2.getFile().getName());
+		});
+		gprTraces.clear();
+		updateMaxHeightInSamples();
+		updateSgyFilesOffsets();
+	}
+
+	public void removeSgyFile(SgyFile closedFile) {
+		sgyFiles.remove(closedFile);
+		gprTraces.clear();
+		updateMaxHeightInSamples();
+		updateSgyFilesOffsets();
+	}
+
+	private void updateSgyFilesOffsets() {
+		int startTraceNum = 0;
+		for (SgyFile sgyFile : getSgyFiles()) {
+			sgyFile.getOffset().setStartTrace(startTraceNum);
+			startTraceNum += sgyFile.getTraces().size();
+			sgyFile.getOffset().setFinishTrace(startTraceNum);
+			sgyFile.getOffset().setMaxSamples(getMaxHeightInSamples());
+		}
+	}
+
+	public List<SgyFile> getFilesInRange(int startTrace, int finishTrace) {
+		int f1 = getSgyFiles().indexOf(getSgyFileByTrace(startTrace));
+		int f2 = getSgyFiles().indexOf(getSgyFileByTrace(finishTrace));
+
+		List<SgyFile> result = new ArrayList<>();
+		for (int i = f1; i <= f2; i++) {
+			result.add(getSgyFiles().get(i));
+		}
+		return result;
+	}
+
+	public SgyFile getNextSgyFile(SgyFile selectedFile) {
+		var index = sgyFiles.indexOf(selectedFile);
+		index = Math.min(sgyFiles.size() - 1, index + 1);
+		return sgyFiles.get(index);
+	}
+
+	public SgyFile getPrevSgyFile(SgyFile selectedFile) {
+		var index = sgyFiles.indexOf(selectedFile);
+		index = Math.max(0, index - 1);
+		return sgyFiles.get(index);
 	}
 }

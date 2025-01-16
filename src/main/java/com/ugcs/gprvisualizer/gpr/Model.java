@@ -11,12 +11,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
 import com.ugcs.gprvisualizer.event.BaseEvent;
+import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import javafx.scene.layout.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -139,28 +143,6 @@ public class Model implements InitializingBean {
             });
         });
 	}
-	
-	public SgyFile getSgyFileByTrace(int i) {
-		for (SgyFile fl : getFileManager().getGprFiles()) {
-			Trace lastTrace = fl.getTraces().get(fl.getTraces().size() - 1);
-			if (i <= lastTrace.getIndexInSet()) {
-				return fl;
-			}		
-		}
-		return null;
-	}
-
-	public int getSgyFileIndexByTrace(int i) {
-		for (int index = 0;
-				index < getFileManager().getGprFiles().size(); index++) {
-			SgyFile fl =  getFileManager().getGprFiles().get(index);
-			
-			if (i <= fl.getTraces().get(fl.getTraces().size() - 1).getIndexInSet()) {
-				return index;
-			}		
-		}
-		return 0;
-	}
 
 	public VBox getChartsContainer() {
 		return chartsContainer;
@@ -170,7 +152,7 @@ public class Model implements InitializingBean {
 		if (!gprCharts.containsKey(sgyFile)) {
 			System.out.println(sgyFile + " not found in gprCharts");
 		}
-		return gprCharts.computeIfAbsent(sgyFile, f -> new GPRChart(this, auxEditHandler, f));
+		return gprCharts.get(sgyFile); //computeIfAbsent(sgyFile, f -> new GPRChart(this, auxEditHandler, f));
 		//return gprChart;
 	}
 
@@ -180,17 +162,6 @@ public class Model implements InitializingBean {
 
 	public void setLoading(boolean loading) {
 		this.loading = loading;
-	}
-	
-	public void updateSgyFileOffsets() {
-		int startTraceNum = 0;
-		//TODO: update only in aggregate SgyFile
-		for (SgyFile sgyFile : this.getFileManager().getGprFiles()) {
-			sgyFile.getOffset().setStartTrace(startTraceNum);
-			var endTraceNum = sgyFile.getTraces().size();
-			sgyFile.getOffset().setFinishTrace(endTraceNum);
-			sgyFile.getOffset().setMaxSamples(getProfileField(sgyFile).getField().getMaxHeightInSamples());
-		}
 	}
 
 	public void initField() {
@@ -231,14 +202,8 @@ public class Model implements InitializingBean {
 	}
 
 	public void init() {
-
-		this.updateSgyFileOffsets();
-		
 		//
-		
-		
 		//
-		
 		this.updateAuxElements();
 	}
 
@@ -311,7 +276,7 @@ public class Model implements InitializingBean {
 		currentChart.get().close(false);
 		csvFiles.remove(csvFile);
 
-		createSensorLineChart(csvFile);
+		selectAndScrollToChart(createSensorLineChart(csvFile));
 	}
 
 	private SensorLineChart createSensorLineChart(CsvFile csvFile) {
@@ -368,6 +333,12 @@ public class Model implements InitializingBean {
 	public void removeChart(SgyFile sgyFile) {
 		if (sgyFile instanceof CsvFile csvFile) {
 			csvFiles.remove(csvFile);
+			if (!csvFiles.isEmpty()) {
+				selectAndScrollToChart(csvFiles.values().stream().toList().getFirst());
+			} else {
+				publishEvent(new FileSelectedEvent(this, (SgyFile) null));
+			}
+
 		} else {
 			gprCharts.remove(sgyFile);
 		}
@@ -517,5 +488,41 @@ public class Model implements InitializingBean {
 
 	public void publishEvent(BaseEvent event) {
 		eventPublisher.publishEvent(event);
+	}
+
+	public GPRChart getProfileFieldByPattern(@NotNull SgyFile f) {
+		if (gprCharts.containsKey(f)) {
+			return gprCharts.get(f);
+		}
+
+		//compare files by pattern
+
+
+		var key = gprCharts.keySet().stream().filter(sgyFile -> sgyFile.getFile().getName()
+				.contains(extractBaseGprFileName(f.getFile().getName()))).findAny().orElseGet(() -> f);
+		var chart = gprCharts.get(key);
+		if (chart != null) {
+			chart.addSgyFile(f);
+		} else {
+			chart = new GPRChart(this, auxEditHandler, List.of(f));
+		}
+		gprCharts.put(f, chart);
+		return chart;
+	}
+
+	private String extractBaseGprFileName(String fileName) {
+		String gprFileNamePattern =  prefSettings.getSetting("general", "gpr_file_name_pattern");
+		if (gprFileNamePattern == null) {
+			gprFileNamePattern = "^(\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-gpr_)\\d{3}\\.sgy$";
+		}
+
+		Pattern regex = Pattern.compile(gprFileNamePattern);
+		Matcher matcher = regex.matcher(fileName);
+
+		if (matcher.find()) {
+			return matcher.group(1);
+		} else {
+			return fileName;
+		}
 	}
 }

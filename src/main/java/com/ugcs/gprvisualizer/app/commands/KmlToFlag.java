@@ -24,10 +24,11 @@ public class KmlToFlag implements Command {
             .filter(a -> a instanceof ConstPlace)
             .map(a -> (ConstPlace) a)
             .forEach(c -> {
+
                 int traceIndex = TraceUtils.findNearestTraceIndex(
                     model.getGprTraces(), c.getLatLon());
-
-                SgyFile sf = model.getSgyFileByTrace(traceIndex);
+                //TODO: fix to get all files
+                SgyFile sf = null; //model.getSgyFileByTrace(traceIndex);
 
                 FoundPlace rect = new FoundPlace(sf.getTraces().get(
                     sf.getOffset().globalToLocal(traceIndex)), sf.getOffset(), AppContext.model);

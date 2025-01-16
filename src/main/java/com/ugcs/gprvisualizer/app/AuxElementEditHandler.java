@@ -65,8 +65,8 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 			}
 		}
 		
-		if (!processed) {
-			processed = processPress1(model.getAuxElements(),
+		if (!processed && profField instanceof GPRChart gprChart) {
+			processed = processPress1(gprChart.getAuxElements(),
 					localPoint, profField);
 		}
 		

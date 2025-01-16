@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
@@ -58,7 +59,7 @@ public class TraceCutter implements Layer, InitializingBean {
 	private Button buttonSet = ResourceImageHolder.setButtonImage(ResourceImageHolder.CROP, new Button());
 	private Button buttonUndo = ResourceImageHolder.setButtonImage(ResourceImageHolder.UNDO, new Button());
 
-	private List<SgyFile> undoFiles;
+	private final List<SgyFile> undoFiles = new ArrayList<>();
 	
 	{
 		buttonCutMode.setTooltip(new Tooltip("Select Area"));
@@ -216,23 +217,34 @@ public class TraceCutter implements Layer, InitializingBean {
 		List<Point2D> border = getScreenPoligon(fld);
 		
 		List<SgyFile> slicedSgyFiles = new ArrayList<>();
-		
+
+		undoFiles.clear();
+		undoFiles.addAll(model.getFileManager().getGprFiles());
+
 		for (SgyFile file : model.getFileManager().getGprFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 			model.getProfileField(file).clear();
+			model.publishEvent(new FileClosedEvent(this, file));
 		}
-		setUndoFiles(model.getFileManager().getGprFiles());
 
 		for (SgyFile file : model.getFileManager().getCsvFiles()) {
 			slicedSgyFiles.addAll(splitFile(file, fld, border));
 		}
-		getUndoFiles().addAll(model.getFileManager().getCsvFiles());
+		undoFiles.addAll(model.getFileManager().getCsvFiles());
 
 		model.getFileManager().updateFiles(slicedSgyFiles);
 
 		for (SgyFile sf : model.getFileManager().getCsvFiles()) {
 			model.updateChart((CsvFile) sf);
 		}
+
+
+
+		for (SgyFile sf : model.getFileManager().getGprFiles()) {
+			sf.updateInternalIndexes();
+			//model.getProfileFieldByPattern(sf);//.clear();
+		}
+		model.publishEvent(new FileOpenedEvent(this, model.getFileManager().getGprFiles().stream().map(SgyFile::getFile).collect(Collectors.toList())));
 		
 		model.init();
 		model.initField();
@@ -241,23 +253,30 @@ public class TraceCutter implements Layer, InitializingBean {
 	private void undo() {
 		model.setControls(null);
 
-		if (getUndoFiles() != null) {
-			model.getFileManager().updateFiles(getUndoFiles());
-			setUndoFiles(null);
+		if (!undoFiles.isEmpty()) {
+
+			for (SgyFile file : model.getFileManager().getGprFiles()) {
+				model.getProfileField(file).clear();
+				model.publishEvent(new FileClosedEvent(this, file));
+			}
+
+			model.getFileManager().updateFiles(undoFiles);
+			undoFiles.clear();
 			
 			for (SgyFile sf : model.getFileManager().getGprFiles()) {
 				sf.updateInternalIndexes();
-				model.getProfileField(sf).clear();
+				//model.getProfileField(sf).clear();
 			}
 
 			for (SgyFile sf : model.getFileManager().getCsvFiles()) {
 				model.updateChart((CsvFile) sf);
 			}
-			
+
+			model.publishEvent(new FileOpenedEvent(this, model.getFileManager().getGprFiles().stream().map(SgyFile::getFile).collect(Collectors.toList())));
+
 			model.init();
 			model.initField();
 		}
-		
 	}
 	
 	private boolean isTraceInsideSelection(MapField fld, List<Point2D> border, Trace trace) {
@@ -469,8 +488,9 @@ public class TraceCutter implements Layer, InitializingBean {
 
 	@EventListener
     public void onFileOpened(FileOpenedEvent event) {
+		//TODO: maybe we need other event for this
         clear();
-        setUndoFiles(null);
+        //undoFiles.clear();
         initButtons();
     }
 
@@ -510,7 +530,7 @@ public class TraceCutter implements Layer, InitializingBean {
 	public void initButtons() {
 		buttonCutMode.setSelected(false);
 		buttonSet.setDisable(true);
-		buttonUndo.setDisable(getUndoFiles() == null);
+		buttonUndo.setDisable(undoFiles.isEmpty());
 	}
 	
 	private void updateCutMode() {
@@ -530,13 +550,5 @@ public class TraceCutter implements Layer, InitializingBean {
 
 	public void setListener(RepaintListener listener) {
 		this.listener = listener;
-	}	
-	
-	public List<SgyFile> getUndoFiles() {
-		return undoFiles;
-	}
-
-	public void setUndoFiles(List<SgyFile> undoFiles) {
-		this.undoFiles = undoFiles;
 	}
 }

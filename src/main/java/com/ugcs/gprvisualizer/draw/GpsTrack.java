@@ -116,8 +116,8 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 		Point2D prevPoint = null;
 		List<Trace> traces = sgyFile.getTraces();
 
-		for (int tr = 0; tr < traces.size(); tr++) {
-			Trace trace =  traces.get(tr);
+		//for (int tr = 0; tr < traces.size(); tr++) {
+		for(Trace trace : traces) {
 			
 			if (prevPoint == null) {
 				

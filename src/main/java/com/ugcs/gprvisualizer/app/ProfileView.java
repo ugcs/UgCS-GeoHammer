@@ -43,6 +43,7 @@ public class ProfileView implements InitializingBean {
 	
 	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
 	private final Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
+	private final Button fitBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.FIT, new Button());
 
 	private SgyFile currentFile;
 
@@ -61,6 +62,19 @@ public class ProfileView implements InitializingBean {
 		zoomOutBtn.setTooltip(new Tooltip("Zoom out"));
 		zoomInBtn.setOnAction(this::zoomIn);
 		zoomOutBtn.setOnAction(this::zoomOut);
+
+		fitBtn.setTooltip(new Tooltip("Fit current chart to window"));
+		fitBtn.setOnAction(this::fitCurrentFile);
+	}
+
+	private void fitCurrentFile(ActionEvent actionEvent) {
+		if (currentFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(SensorLineChart::zoomToFit);
+		} else {
+			var chart = model.getProfileField(currentFile);
+			chart.fitFull();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		}
 	}
 
 	private void zoomIn(ActionEvent event) {
@@ -99,6 +113,7 @@ public class ProfileView implements InitializingBean {
 
 		toolBar.getItems().add(zoomInBtn);
 		toolBar.getItems().add(zoomOutBtn);
+		toolBar.getItems().add(fitBtn);
 		toolBar.getItems().add(getSpacer());
 	}
 
@@ -137,9 +152,8 @@ public class ProfileView implements InitializingBean {
 
 	@EventListener
 	private void somethingChanged(WhatChanged changed) {
-		if (changed.isJustdraw() && currentFile != null) {
-			var gprChart = model.getProfileField(currentFile);
-			//TODO: filter events
+		if (changed.isJustdraw() && currentFile != null
+				&& model.getProfileField(currentFile) instanceof GPRChart gprChart) {
 			gprChart.updateScroll();
 			gprChart.repaintEvent();
 		}
@@ -148,17 +162,30 @@ public class ProfileView implements InitializingBean {
 	@EventListener
 	private void fileClosed(FileClosedEvent event) {
 		SgyFile closedFile = event.getSgyFile();
-		var gprPane = model.getProfileField(closedFile);
-		var vbox = (VBox) gprPane.getRootNode();
 
-		//TODO: fix visible
-		//gprPane.getProfileScroll().setVisible(model.isActive() && gprPane.getTracesCount() > 0);
-		//vbox.setVisible(model.isActive() && gprPane.getTracesCount() > 0);
+		if (model.getProfileField(closedFile) instanceof GPRChart gprPane) {
+			var vbox = (VBox) gprPane.getRootNode();
 
-		gprPane.getProfileScroll().setVisible(false);
-		model.getChartsContainer().getChildren().remove(vbox);
+			gprPane.getField().removeSgyFile(closedFile);
+			model.getFileManager().removeFile(closedFile);
+
+			if (gprPane.getField().getGprTraces().isEmpty()) {
+				gprPane.getProfileScroll().setVisible(false);
+				model.getChartsContainer().getChildren().remove(vbox);
+				currentFile = null;
+				model.publishEvent(new FileSelectedEvent(this, currentFile));
+			} else {
+				if (currentFile.equals(closedFile)) {
+					//TODO: maybe need to fix
+					model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
+				}
+			}
+		}
 
 		model.removeChart(closedFile);
+		model.updateAuxElements();
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
 	}
 
 	@EventListener
@@ -169,7 +196,7 @@ public class ProfileView implements InitializingBean {
 			System.out.println("ProfileView.fileOpened " + file.getAbsolutePath());
 			model.getFileManager().getGprFiles().stream().filter(f -> f.getFile().equals(file)).findFirst().ifPresent(f -> {
 				System.out.println("Loaded traces: " + f.getTraces().size());
-				var gprPane = model.getProfileField(f);
+				var gprPane = model.getProfileFieldByPattern(f);
 				var vbox = (VBox) gprPane.getRootNode();
 
 				//TODO:

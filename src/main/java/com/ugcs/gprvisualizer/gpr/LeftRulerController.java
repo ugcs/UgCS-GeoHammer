@@ -34,9 +34,9 @@ public class LeftRulerController {
 	private final Converter[] list;
 	private int index = 0;
 	
-	public LeftRulerController(SgyFile sgyFile) {
+	public LeftRulerController(ProfileField profileField) {
 		list = new Converter[] {
-                new SamplConverter(), new NanosecConverter(sgyFile)
+                new SamplConverter(), new NanosecConverter(profileField.getSgyFiles().getFirst())
         };
 	}
 	
@@ -86,10 +86,9 @@ public class LeftRulerController {
 		}
 		
 		public int back(int unt) {
-			SgyFile fl = sgyFile; //model.getFileManager().getGprFiles().get(0);
+			SgyFile fl = sgyFile;
 			return unt * 1000 / fl.getSampleInterval();
 		}
-		
 
 		@Override
 		public String getUnit() {

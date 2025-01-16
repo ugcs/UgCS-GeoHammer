@@ -24,9 +24,9 @@ public class RemoveFileButton extends BaseObjectImpl {
 	static int R_HOR = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
 	static int R_VER = ResourceImageHolder.IMG_CLOSE_FILE.getHeight(null);
 
-	private int traceInFile;
-	private VerticalCutPart offset;	
-	private SgyFile sgyFile;
+	private final int traceInFile;
+	private final VerticalCutPart offset;
+	private final SgyFile sgyFile;
 	
 	public RemoveFileButton(int trace, VerticalCutPart offset, SgyFile sgyFile, Model model) {
 		this.offset = offset;
@@ -37,34 +37,20 @@ public class RemoveFileButton extends BaseObjectImpl {
 
 	@Override
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
-		
-		if (isPointInside(localPoint, profField)) {			
-			 
+		if (isPointInside(localPoint, profField)) {
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.setTitle("Close file");
 			alert.setContentText(
 					(sgyFile.isUnsaved() ? "File is not saved!\n" : "") 
 					+ "Confirm to close file");
-			
 			 
 			Optional<ButtonType> result = alert.showAndWait();
 			 
-			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {		
-				
-				//int index = AppContext.model.getFileManager()
-				//		.getFiles().indexOf(sgyFile);
-				model.getFileManager().removeFile(sgyFile); //.getFiles().remove(index);
-				
-				model.init();
-				model.initField();
-				model.getProfileField(sgyFile).clear();
-
-				model.publishEvent(new FileClosedEvent(this, List.of(sgyFile.getFile()), sgyFile));
+			if ((result.isPresent()) && (result.get() == ButtonType.OK)) {
+				model.publishEvent(new FileClosedEvent(this, sgyFile));
 			}
-			
 			return true;
 		}
-		
 		return false;
 	}
 
@@ -88,31 +74,28 @@ public class RemoveFileButton extends BaseObjectImpl {
 
 			Rectangle rect = getRect(scrollableData);
 
-			g2.translate(rect.x, rect.y);
+			int leftMargin = - profField.getMainRect().width / 2;
 
-			g2.drawImage(ResourceImageHolder.IMG_CLOSE_FILE, 0, 0, null);
-
-			g2.translate(-rect.x, -rect.y);
+			if (Math.abs(rect.x - leftMargin) < profField.getMainRect().width) {
+				//var x = Math.max(rect.x, leftMargin);
+				g2.translate(rect.x, rect.y);
+				g2.drawImage(ResourceImageHolder.IMG_CLOSE_FILE, 0, 0, null);
+				g2.translate(-rect.x, -rect.y);
+			}
 		}
 	}
 	
-	private Rectangle getRect(ScrollableData profField) {
-		
-		int x = profField.traceToScreen(offset.localToGlobal(traceInFile));
-				
-		Rectangle rect = new Rectangle(x - R_HOR, 0, 
-			R_HOR, R_VER);
-		return rect;
+	private Rectangle getRect(ScrollableData scrollableData) {
+		if (scrollableData instanceof GPRChart gprChart) {
+			int x = gprChart.traceToScreen(offset.localToGlobal(traceInFile));
+			int leftMargin = - gprChart.getField().getMainRect().width / 2;
+			Rectangle rect = new Rectangle(Math.abs(x - leftMargin) < gprChart.getField().getMainRect().width ? Math.max(x, leftMargin) : x, 0,
+					R_HOR, R_VER);
+			return rect;
+		} else {
+			return null;
+		}
 	}
-	
-	//public Rectangle getRect(MapField mapField) {
-	//	return null;
-	//}
-
-	/*private Trace getTrace() {
-		return AppContext.model.getFileManager().getTraces()
-				.get(offset.localToGlobal(traceInFile));
-	}*/
 
 	@Override
 	public boolean isPointInside(Point2D localPoint, ScrollableData profField) {
