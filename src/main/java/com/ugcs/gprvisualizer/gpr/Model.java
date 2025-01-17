@@ -19,10 +19,12 @@ import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
 import com.ugcs.gprvisualizer.event.BaseEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.scene.layout.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
@@ -523,6 +525,15 @@ public class Model implements InitializingBean {
 			return matcher.group(1);
 		} else {
 			return fileName;
+		}
+	}
+
+	@EventListener
+	private void onChange(WhatChanged event) {
+		if (event.isJustdraw()) {
+			csvFiles.values().forEach(v ->
+					Platform.runLater(v::updateChartName)
+			);
 		}
 	}
 }
