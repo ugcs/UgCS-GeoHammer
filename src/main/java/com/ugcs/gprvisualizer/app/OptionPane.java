@@ -511,7 +511,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		chart.ifPresent(sc -> {
 			String seriesName = sc.getSelectedSeriesName();
 			model.getCharts().stream()
-					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.gnssTimeLag(seriesName, value));
 		});
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
@@ -528,7 +528,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		chart.ifPresent(sc -> {
 			String seriesName = sc.getSelectedSeriesName();
 			model.getCharts().stream()
-					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.lowPassFilter(seriesName, value));
 		});
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
