@@ -87,6 +87,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     private Set<LineChartWithMarkers> charts = new HashSet<>();
     private Rectangle selectionRect = new Rectangle();
     private final ProfileScroll profileScroll;
+    private Label chartName;
 
     //private int scale;
     private CsvFile file;
@@ -545,15 +546,15 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             close();
         });
 
-        String fileName = (file.isUnsaved() ? "*" : "") + file.getFile().getName();
-        Label fileNameLabel = new Label(fileName);
-        fileNameLabel.setFont(Font.font("Verdana", FontWeight.BOLD, 8));
-        fileNameLabel.setTextFill(Color.rgb(60, 60, 60));
+        chartName = new Label();
+        chartName.setFont(Font.font("Verdana", FontWeight.BOLD, 8));
+        chartName.setTextFill(Color.rgb(60, 60, 60));
+        updateChartName();
 
         Region space = new Region();
         HBox.setHgrow(space, Priority.ALWAYS);
 
-        HBox top = new HBox(close, fileNameLabel, space, comboBox);
+        HBox top = new HBox(close, chartName, space, comboBox);
         top.setPadding(new Insets(0, 0, 0, 16));
         top.setSpacing(10);
         top.setAlignment(Pos.CENTER_LEFT);
@@ -583,6 +584,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         profileScroll.widthProperty().bind(top.widthProperty());
 
         return root;
+    }
+
+    public void updateChartName() {
+        String fileName = (file.isUnsaved() ? "*" : "") + file.getFile().getName();
+        chartName.setText(fileName);
     }
 
     private Map<FoundPlace, Data<Number, Number>> foundPlaces = new HashMap<>();
