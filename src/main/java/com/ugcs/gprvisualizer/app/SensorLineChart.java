@@ -519,7 +519,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
                                 model.init();
                                 model.initField();
-                                //model.getProfileField().clear();
+
                                 eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.traceCut));
                             });
 
@@ -572,7 +572,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
         root.setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
         root.setOnMouseClicked(event -> {
-            if (model.selectAndScrollToChart(this)) {
+            if (model.selectChart(this)) {
                 //eventPublisher.publishEvent(new FileSelectedEvent(file));
             }
         });

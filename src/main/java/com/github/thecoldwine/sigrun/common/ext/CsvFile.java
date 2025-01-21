@@ -180,6 +180,10 @@ public class CsvFile extends SgyFile {
 		return geoData.computeIfAbsent(getFile(), k -> new ArrayList<>());
     }
 
+    public void setGeoData(List<GeoData> fileGeoData) {
+        geoData.compute(getFile(), (k, v) -> fileGeoData);
+    }
+
     private void setParser(CsvParser parser) {
 		this.parser = parser;
     }

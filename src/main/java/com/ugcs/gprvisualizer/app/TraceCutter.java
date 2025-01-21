@@ -400,7 +400,7 @@ public class TraceCutter implements Layer, InitializingBean {
 				.filter(aux -> isInsideSelection(field, border, ((FoundPlace) aux).getLatLon()))
 				.collect(Collectors.toList()));
 		subfile.setTraces(sublist);
-		subfile.getGeoData().addAll(geoDataList);
+		subfile.setGeoData(geoDataList);
 		subfile.updateInternalIndexes();
 
 		return List.of(subfile);
