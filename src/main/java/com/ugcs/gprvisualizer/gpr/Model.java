@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -281,10 +282,11 @@ public class Model implements InitializingBean {
 		});
 	}
 
-	public void remapChart(CsvFile csvFile, CsvFile newCsvFile) {
+	public void updateChartFile(CsvFile csvFile, File file) {
 		SensorLineChart chart = csvFiles.remove(csvFile);
+		csvFile.setFile(file);
 		if (chart != null) {
-			csvFiles.put(newCsvFile, chart);
+			csvFiles.put(csvFile, chart);
 		}
 	}
 
@@ -301,6 +303,7 @@ public class Model implements InitializingBean {
 		}
 
 		chart = new SensorLineChart(this, eventPublisher, prefSettings, auxEditHandler);
+		csvFiles.remove(csvFile);
 		csvFiles.put(csvFile, chart);
 
 		// create new chart contents

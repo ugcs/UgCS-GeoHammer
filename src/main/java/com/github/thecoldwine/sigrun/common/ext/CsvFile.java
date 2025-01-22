@@ -32,7 +32,7 @@ public class CsvFile extends SgyFile {
 
 	private static final Logger log = LoggerFactory.getLogger(CsvFile.class.getName());
 
-    private Map<File, List<GeoData>> geoData = new HashMap<>();
+    private List<GeoData> geoData = new ArrayList<>();
 
 	private CsvParser parser;
 
@@ -177,11 +177,11 @@ public class CsvFile extends SgyFile {
     }
 
     public List<GeoData> getGeoData() {
-		return geoData.computeIfAbsent(getFile(), k -> new ArrayList<>());
+        return geoData;
     }
 
-    public void setGeoData(List<GeoData> fileGeoData) {
-        geoData.compute(getFile(), (k, v) -> fileGeoData);
+    public void setGeoData(List<GeoData> geoData) {
+        this.geoData = geoData;
     }
 
     private void setParser(CsvParser parser) {
