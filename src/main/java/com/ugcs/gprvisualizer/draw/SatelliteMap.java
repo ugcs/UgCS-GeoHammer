@@ -8,6 +8,7 @@ import java.util.List;
 import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.PrefSettings;
 import javafx.geometry.Point2D;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.RadioMenuItem;
@@ -37,12 +38,14 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	private final Model model;
 	private final Status status;
 	private final MapView mapView;
+    private final PrefSettings prefSettings;
 
-	public SatelliteMap(Model model, Status status, MapView mapView) {
+    public SatelliteMap(Model model, Status status, MapView mapView, PrefSettings prefSettings) {
 		this.model = model;
 		this.status = status;
 		this.mapView = mapView;
-	}
+        this.prefSettings = prefSettings;
+    }
 	
 	private LatLon click;
 
@@ -82,7 +85,7 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		});
 
 		menuItem2.setOnAction(e -> {
-			model.getMapField().setMapProvider(new HereMapProvider());
+			model.getMapField().setMapProvider(new HereMapProvider(prefSettings.getSetting("maps", "here_api_key")));
 			setActive(model.getMapField().getMapProvider() != null);
 			recalcQueue.clear();
 			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
