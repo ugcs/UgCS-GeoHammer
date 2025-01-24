@@ -15,6 +15,13 @@ import com.github.thecoldwine.sigrun.common.ext.MapField;
 
 public class HereMapProvider implements MapProvider {
 
+	private static final String DEFAULT_API_KEY = "rE86EaZdU1Dz85CegYxNt0cNJXcFB-xFGUuvbn22Gds";
+	private final String apiKey;
+
+	HereMapProvider(String apiKey) {
+		this.apiKey = apiKey != null ? apiKey : DEFAULT_API_KEY;
+	}
+
 	public int getMaxZoom() {
 		return 20;
 	}
@@ -28,37 +35,27 @@ public class HereMapProvider implements MapProvider {
 		
 		BufferedImage img = null;
 		
-		
 		LatLon midlPoint = field.getSceneCenter();
 		int imgZoom = field.getZoom();
-		//map.setLocation(new Location(midlPoint.getLatDgr(), midlPoint.getLonDgr()), imgZoom); 
-		
-		 //DecimalFormat df = new DecimalFormat("#.000000");
+
 		DecimalFormat df = new DecimalFormat("#.0000000", DecimalFormatSymbols.getInstance(Locale.US));
-		
 		try {
-			String HERE_API_KEY = "X7tvrjXJcKIau2jnnNstT2vCk1l1g1TN3v-PcRx31h8";
-			String url = String.format("https://image.maps.ls.hereapi.com/mia/1.6/mapview?"
-					+ "apiKey=%s"
-					+ "&c=%s,%s"
-					+ "&t=3"
-					+ "&z=%d"
-					+ "&nodot&w=1200&h=1200", 
-					HERE_API_KEY, 
-					df.format(midlPoint.getLatDgr()), 
-					df.format(midlPoint.getLonDgr()), 
-					imgZoom);
-			
+			String url = String.format("https://image.maps.hereapi.com/mia/v3/base/mc/center:%s,%s;zoom=%d/1200x1200/png"
+							+ "?apiKey=%s"
+							+ "&style=explore.satellite.day",
+					df.format(midlPoint.getLatDgr()),
+					df.format(midlPoint.getLonDgr()),
+					imgZoom,
+					apiKey);
+
 			System.out.println(url);
-			
+
 			System.setProperty("java.net.useSystemProxies", "true");
 			img = ImageIO.read(new URI(url).toURL());
-			
+
 		} catch (IOException | URISyntaxException e) {
 			System.err.println(e.getMessage());
 		}
-		
 		return img;
 	}
-
 }
