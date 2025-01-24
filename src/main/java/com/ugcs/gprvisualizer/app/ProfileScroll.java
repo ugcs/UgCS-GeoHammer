@@ -140,6 +140,7 @@ public class ProfileScroll extends Canvas {
 			System.out.println("ProfileScroll.resize = " + width + " " + height);
 			setWidth(width);
 			setHeight(height);
+			recalc();
 		}
 	}
 
