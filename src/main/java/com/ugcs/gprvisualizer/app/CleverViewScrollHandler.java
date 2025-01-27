@@ -8,26 +8,26 @@ import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.geometry.Point2D;
 
 public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseHandler {
-	private final GPRChart field;
-	private GPRChart dragField;
+	//private final GPRChart field;
+	//private GPRChart dragField;
 	private Point2D dragPoint;
-	private final GPRChart cleverView;
+	//private final ScrollableData cleverView;
 	private TraceSample oldCenter;
 	
-	public CleverViewScrollHandler(GPRChart cleverView) {
-		this.cleverView = cleverView;
-		field = cleverView;
+	public CleverViewScrollHandler(ScrollableData cleverView) {
+		//this.cleverView = cleverView;
+		//field = cleverView;
 	}	
 
 	@Override
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
         	
-    	dragField = field;//new ProfileField(field);
+    	//dragField = field;//new ProfileField(field);
 		dragPoint = localPoint;    		
-		oldCenter = dragField.screenToTraceSample(dragPoint);
+		oldCenter = profField.screenToTraceSample(dragPoint);
 
 		//TODO:
-		cleverView.repaintEvent();
+		//cleverView.repaintEvent();
 		
     	return true;
 	}
@@ -47,21 +47,23 @@ public class CleverViewScrollHandler extends BaseObjectImpl {//implements MouseH
 		}
 		
 		try {
-    		TraceSample newCenter = dragField.screenToTraceSample(point);
+    		TraceSample newCenter = profField.screenToTraceSample(point);
     		
-    		int t = dragField.getMiddleTrace()
+    		int t = profField.getMiddleTrace()
     				+ oldCenter.getTrace() - newCenter.getTrace();
-    		field.setMiddleTrace(t);
-    		cleverView.getProfileScroll().recalc();
-    		
-    		field.setStartSample(dragField.getStartSample() 
-    				+ oldCenter.getSample() - newCenter.getSample());
 
-			AppContext.model.publishEvent(new WhatChanged(cleverView, WhatChanged.Change.justdraw));
+			profField.setMiddleTrace(t);
+			if (profField instanceof GPRChart gprChart) {
+				gprChart.getProfileScroll().recalc();
+				gprChart.setStartSample(profField.getStartSample()
+						+ oldCenter.getSample() - newCenter.getSample());
+			}
+
+			AppContext.model.publishEvent(new WhatChanged(profField, WhatChanged.Change.justdraw));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return true;
 	}	
 }

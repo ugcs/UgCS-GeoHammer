@@ -78,8 +78,6 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
     private final MutableInt shiftGround = new MutableInt(0);
 
-    private final ProfileScroll profileScroll;
-
     private final ChangeListener<Number> sliderListener
             = (observable, oldValue, newValue) -> {
                 //if (Math.abs(newValue.intValue() - oldValue.intValue()) > 3) {
@@ -91,6 +89,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
     private final List<BaseObject> auxElements = new ArrayList<>();
 
     public GPRChart(Model model, AuxElementEditHandler auxEditHandler, List<SgyFile> sgyFiles) {
+        super(model);
         this.model = model;
         this.auxEditHandler = auxEditHandler;
         this.profileField = new ProfileField(sgyFiles);
@@ -105,27 +104,22 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
         contrastSlider = new ContrastSlider(profileField.getProfileSettings(), sliderListener);
 
-        profileScroll = new ProfileScroll(model, GPRChart.this);
-        profileScroll.setChangeListener(new ChangeListener<Number>() {
+        getProfileScroll().setChangeListener(new ChangeListener<Number>() {
             //TODO: fix with change listener
             Number currentValue;
 
             public void changed(ObservableValue<? extends Number> ov,
                                 Number oldVal, Number newVal) {
-                if (currentValue == null) { currentValue = newVal;}
-                if (currentValue != null && newVal != null && Math.abs(newVal.intValue() - currentValue.intValue()) > 3) {
-                    currentValue = newVal;
+                //if (currentValue == null) { currentValue = newVal;}
+                //if (currentValue != null && newVal != null && Math.abs(newVal.intValue() - currentValue.intValue()) > 3) {
+                //    currentValue = newVal;
                     repaintEvent();
-                }
+                //}
             }
         });
 
         scrollHandler = new CleverViewScrollHandler(this);
         updateAuxElements();
-    }
-
-    public ProfileScroll getProfileScroll() {
-        return profileScroll;
     }
 
     public BaseSlider getContrastSlider() {
@@ -234,7 +228,7 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         if (!model.isActive() || getField().getGprTracesCount() == 0) {
             return;
         }
-        profileScroll.recalc();
+        getProfileScroll().recalc();
     }
 
     private void select() {
@@ -651,7 +645,6 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                 public void handle(MouseEvent event) {
 
                     Point2D p = getLocalCoords(event);
-
                     if (selectedMouseHandler != null) {
                         selectedMouseHandler.mouseMoveHandle(p, GPRChart.this);
                     } else {

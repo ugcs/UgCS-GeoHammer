@@ -60,15 +60,11 @@ public class Model implements InitializingBean {
 
 	private final FileManager fileManager;
 
-	//private final Settings settings = new Settings();
-	
 	private final Set<FileChangeType> changes = new HashSet<>();
 	
 	private final List<BaseObject> auxElements = new ArrayList<>();
 
 	private List<BaseObject> controls = null;
-	
-	//private Rectangle2D.Double bounds;
 
 	private boolean kmlToFlagAvailable = false;
 

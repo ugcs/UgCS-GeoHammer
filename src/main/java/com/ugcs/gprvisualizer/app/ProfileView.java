@@ -2,9 +2,11 @@ package com.ugcs.gprvisualizer.app;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
@@ -182,6 +184,12 @@ public class ProfileView implements InitializingBean {
 			}
 		}
 
+		if (closedFile instanceof CsvFile csvFile) {
+			if (csvFile.equals(currentFile)) {
+				currentFile = null;
+			}
+		}
+
 		model.removeChart(closedFile);
 		model.updateAuxElements();
 		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
@@ -218,22 +226,52 @@ public class ProfileView implements InitializingBean {
 		toolBar.setDisable(!model.isActive());
 	}
 
+	private void setProfileScroll(ProfileScroll profileScroll) {
+		int index = 1; // default insert index
+		List<Node> container = center.getChildren();
+		for (int i = 0; i < container.size(); i++) {
+			if (container.get(i) instanceof ProfileScroll active) {
+				if (Objects.equals(profileScroll, active)) {
+					// already active, nothing to change
+					active.setVisible(true);
+					return;
+				}
+				index = i;
+				container.remove(i);
+				break;
+			}
+		}
+		if (profileScroll != null) {
+			profileScroll.setVisible(true);
+			container.add(index, profileScroll);
+		}
+	}
+
+	private ProfileScroll getFileProfileScroll(SgyFile file) {
+		if (file instanceof GprFile gprFile) {
+			var gprChart = model.getProfileField(gprFile);
+			return gprChart != null
+					? gprChart.getProfileScroll()
+					: null;
+		}
+		if (file instanceof CsvFile csvFile) {
+			var csvChart = model.getChart(csvFile);
+			return csvChart.isPresent()
+					? csvChart.get().getProfileScroll()
+					: null;
+		}
+		return null;
+	}
+
 	@EventListener
 	private void fileSelected(FileSelectedEvent event) {
+		ProfileScroll profileScroll = getFileProfileScroll(event.getFile());
+		setProfileScroll(profileScroll);
+
 		if (event.getFile() != null && !event.getFile().equals(currentFile)) {
 			currentFile = event.getFile();
-			if (currentFile instanceof CsvFile csvFile) {
-
-			} else {
-				if (center.getChildren().get(1) instanceof ProfileScroll) {
-					center.getChildren().remove(1);
-				}
-
+			if (currentFile instanceof GprFile) {
 				var gprChart = model.getProfileField(currentFile);
-
-				var profileScroll = gprChart.getProfileScroll();
-				profileScroll.setVisible(true);
-				center.getChildren().add(1, profileScroll);
 
 				ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> {
 					if (Math.abs(newValue.intValue() - oldValue.intValue()) > 1) {

@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
+import com.ugcs.gprvisualizer.gpr.Model;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 
@@ -16,6 +17,12 @@ public abstract class ScrollableData {
 
     private int zoom = 1;
     public static final double ZOOM_A = 1.2;
+
+    private final ProfileScroll profileScroll;
+
+    public ScrollableData(Model model) {
+        this.profileScroll = new ProfileScroll(model, this);
+    }
 
     public int getZoom() {
         return zoom;
@@ -66,7 +73,12 @@ public abstract class ScrollableData {
         setZoom(1);
     }
 
+    public ProfileScroll getProfileScroll() {
+        return profileScroll;
+    }
+
     public void setCursor(Cursor aDefault) {
+        // for GPRChart
     }
 
     public TraceSample screenToTraceSample(Point2D point) {
