@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
@@ -231,30 +232,15 @@ public abstract class SgyFile {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((file == null) ? 0 : file.hashCode());
-		//result = prime * result + (unsaved ? 1231 : 1237);
-		return result;
+		return Objects.hashCode(file);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
+	public boolean equals(Object other) {
+		if (!(other instanceof SgyFile sgyFile)) {
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SgyFile other = (SgyFile) obj;
-		if (file == null) {
-			if (other.file != null)
-				return false;
-		} else if (!file.equals(other.file))
-			return false;
-		//if (unsaved != other.unsaved)
-		//	return false;
-		return true;
+		}
+        return Objects.equals(file, sgyFile.file);
 	}
 
     public void setGroundProfileSource(PositionFile positionFile) {

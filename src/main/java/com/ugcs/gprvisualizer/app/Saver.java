@@ -3,10 +3,13 @@ package com.ugcs.gprvisualizer.app;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -87,15 +90,22 @@ public class Saver implements ToolProducer, InitializingBean {
 			return;
 		}
 
-		File newFile = saveTo(csvFile, saveToFile);
-		model.getChart(csvFile).ifPresent(chart
-				-> chart.close(true));
+		// check that target option is not open
+		Optional<SgyFile> alreadyOpened = model.getFileManager().getCsvFiles().stream()
+				.filter(f -> Objects.equals(f.getFile(), saveToFile))
+				.findAny();
+		if (alreadyOpened.isPresent()) {
+			MessageBoxHelper.showError("File in use. Close target file first", "");
+			return;
+		}
 
-		listener.progressMsg("load now");			
-		try {
-			loader.loadWithNotify(List.of(newFile), listener);
-		} catch (Exception e) {
-			MessageBoxHelper.showError("error reopening files", "");
+		File newFile = saveTo(csvFile, saveToFile);
+		if (newFile != null) {
+			model.updateChartFile(csvFile, newFile);
+			csvFile.setUnsaved(false);
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		} else {
+			MessageBoxHelper.showError("Error saving file", "");
 		}
 	    	
 	    status.showProgressText("saved "
@@ -179,10 +189,10 @@ public class Saver implements ToolProducer, InitializingBean {
 		}
 
 		for (SgyFile file : model.getFileManager().getCsvFiles()) {
-			newfiles.add(save(file));
-			if (file instanceof CsvFile csvFile) {
-				model.getChart(csvFile).ifPresent(chart
-						-> chart.close(true));
+			File newFile = save(file);
+			if (newFile != null) {
+				file.setUnsaved(false);
+				model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 			}
 		}
 		

@@ -1,6 +1,7 @@
 package com.ugcs.gprvisualizer.gpr;
 
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -269,28 +270,59 @@ public class Model implements InitializingBean {
 		Optional<SensorLineChart> currentChart = getChart(csvFile);
 		if (currentChart.isEmpty()) {
 			return;
-		} 
-		
-		currentChart.get().close(false);
-		csvFiles.remove(csvFile);
+		}
 
-		selectAndScrollToChart(createSensorLineChart(csvFile));
+		var sensorLineChart = createSensorLineChart(csvFile);
+		Platform.runLater(() -> {
+			selectChart(sensorLineChart);
+		});
+	}
+
+	public void updateChartFile(CsvFile csvFile, File file) {
+		SensorLineChart chart = csvFiles.remove(csvFile);
+		csvFile.setFile(file);
+		if (chart != null) {
+			csvFiles.put(csvFile, chart);
+		}
 	}
 
 	private SensorLineChart createSensorLineChart(CsvFile csvFile) {
-		var sensorLineChart = new SensorLineChart(this, eventPublisher, prefSettings, auxEditHandler);
-		var plotData = sensorLineChart.generatePlotData(csvFile);
-		var sensorLineChartBox = sensorLineChart.createChartWithMultipleYAxes(csvFile, plotData);
-		chartsContainer.getChildren().add(sensorLineChartBox);
-		sensorLineChartBox.getChildren().forEach(node -> {
-			if (node instanceof StackPane) {
-				((StackPane) node).setPrefHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight()));
-				((StackPane) node).setMinHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight() / 2));
+        // if there is a chart for a given file then put new chart
+		// to the same position as it was before
+		int index = -1;
+		SensorLineChart chart = csvFiles.get(csvFile);
+		if (chart != null) {
+			Node chartBox = chart.getRootNode();
+			if (chartBox != null) {
+				index = chartsContainer.getChildren().indexOf(chartBox);
 			}
-		});
-		csvFiles.put(csvFile, sensorLineChart);
-		return sensorLineChart;
-	}
+		}
+
+		chart = new SensorLineChart(this, eventPublisher, prefSettings, auxEditHandler);
+		csvFiles.remove(csvFile);
+		csvFiles.put(csvFile, chart);
+
+		// create new chart contents
+        var plotData = chart.generatePlotData(csvFile);
+        var newChartBox = chart.createChartWithMultipleYAxes(csvFile, plotData);
+
+		// add to container keeping position
+		if (index != -1) {
+			chartsContainer.getChildren().set(index, newChartBox);
+		} else {
+			chartsContainer.getChildren().add(newChartBox);
+		}
+
+		// adjust height
+        newChartBox.getChildren().forEach(node -> {
+            if (node instanceof StackPane) {
+                ((StackPane) node).setPrefHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight()));
+                ((StackPane) node).setMinHeight(Math.max(CHART_MIN_HEIGHT, node.getScene().getHeight() / 2));
+            }
+        });
+
+		return chart;
+    }
 
 	private void saveColorSettings(Map<String, Color> semanticColors) {
 		String group = "colors";
@@ -426,30 +458,38 @@ public class Model implements InitializingBean {
 		return selectedDataNode;   
 	}
 
-	public boolean selectAndScrollToChart(FileDataContainer fileDataContainer) {
-		
+	public boolean selectChart(FileDataContainer fileDataContainer) {
 		Node node = fileDataContainer.getRootNode();
 
-        if (getSelectedData() != null) {
+		if (getSelectedData() != null) {
 			if (getSelectedData() == node) {
 				return false;
 			}
 			getChart(null); // clear selection
-            getSelectedData().setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
-        }
+			getSelectedData().setStyle("-fx-border-width: 2px; -fx-border-color: transparent;");
+		}
 
-        node.setStyle("-fx-border-width: 2px; -fx-border-color: lightblue;");
-        setSelectedData(node);
+		node.setStyle("-fx-border-width: 2px; -fx-border-color: lightblue;");
+		setSelectedData(node);
 
 		fileDataContainer.selectFile();
 
+		return true;
+	}
+
+	public void scrollToChart(FileDataContainer fileDataContainer) {
+		Node node = fileDataContainer.getRootNode();
 		ScrollPane scrollPane = findScrollPane(node);
 		if (scrollPane != null) {
 			//TODO: implement scroll to chart
-        	scrollToChart(scrollPane, node);
+			scrollToChart(scrollPane, node);
 		}
+	}
 
-		return true;
+	public boolean selectAndScrollToChart(FileDataContainer fileDataContainer) {
+		boolean selected = selectChart(fileDataContainer);
+		scrollToChart(fileDataContainer);
+		return selected;
     }
 
 	private ScrollPane findScrollPane(Node node) {
