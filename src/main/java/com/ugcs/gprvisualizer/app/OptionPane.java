@@ -390,19 +390,6 @@ public class OptionPane extends VBox implements InitializingBean {
 
 		Button applyButton = new Button("Apply");
 		applyButton.setDisable(true);
-		filterInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			try {
-				if (newValue == null) {
-					applyButton.setDisable(true);
-					return;
-				}
-				boolean isValid = !newValue.isEmpty()
-						&& (valueConstraint == null || valueConstraint.test(newValue));
-				applyButton.setDisable(!isValid);
-			} catch (NumberFormatException e) {
-				applyButton.setDisable(true);
-			}
-		});
 
 		Button applyAllButton = new Button("Apply to all");
 		applyAllButton.setDisable(true);
@@ -410,10 +397,23 @@ public class OptionPane extends VBox implements InitializingBean {
 		Button undoButton = new Button("Undo");
 		undoButton.setDisable(true);
 
+		filterInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			boolean disable = true;
+			try {
+				if (newValue != null) {
+					disable = newValue.isEmpty()
+							|| (valueConstraint != null && !valueConstraint.test(newValue));
+				}
+			} catch (NumberFormatException e) {
+				// keep disable = true
+			}
+			applyButton.setDisable(disable);
+			applyAllButton.setDisable(disable);
+		});
+
 		undoButton.setOnAction(e -> {
 			undoAction.accept(filterInput.getText());
 			undoButton.setDisable(true);
-			applyAllButton.setDisable(true);
 		});
 
 		ProgressIndicator progressIndicator = new ProgressIndicator();
@@ -457,6 +457,7 @@ public class OptionPane extends VBox implements InitializingBean {
 				filterInput.setDisable(false);
 				applyButton.setDisable(false);
 				undoButton.setDisable(false);
+				applyAllButton.setDisable(false);
 
 				progressIndicator.setVisible(false);
 				progressIndicator.setManaged(false);
@@ -510,7 +511,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		chart.ifPresent(sc -> {
 			String seriesName = sc.getSelectedSeriesName();
 			model.getCharts().stream()
-					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.gnssTimeLag(seriesName, value));
 		});
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
@@ -527,7 +528,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		chart.ifPresent(sc -> {
 			String seriesName = sc.getSelectedSeriesName();
 			model.getCharts().stream()
-					.filter(c -> c != sc && c.isSameTemplate((CsvFile) selectedFile))
+					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.lowPassFilter(seriesName, value));
 		});
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
