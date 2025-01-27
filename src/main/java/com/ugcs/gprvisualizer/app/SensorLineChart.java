@@ -81,12 +81,10 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     private final ApplicationEventPublisher eventPublisher;
     private final PrefSettings settings;
     private final AuxElementEditHandler auxEditHandler;
-
     private Map<SeriesData, BooleanProperty> itemBooleanMap = new HashMap<>();
     private LineChartWithMarkers lastLineChart = null;
     private Set<LineChartWithMarkers> charts = new HashSet<>();
     private Rectangle selectionRect = new Rectangle();
-    private final ProfileScroll profileScroll;
     private Label chartName;
 
     //private int scale;
@@ -105,15 +103,11 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     public SensorLineChart(Model model, ApplicationEventPublisher eventPublisher, PrefSettings settings, AuxElementEditHandler auxEditHandler) {
+        super(model);
         this.model = model;
         this.eventPublisher = eventPublisher;
         this.settings = settings;
         this.auxEditHandler = auxEditHandler;
-        this.profileScroll = new ProfileScroll(model, this);
-    }
-
-    public ProfileScroll getProfileScroll() {
-        return profileScroll;
     }
 
     public void addFlag(FoundPlace fp) {
@@ -131,7 +125,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         int selectedX = traceNumber; /// scale;
         NumberAxis xAxis = (NumberAxis) lastLineChart.getXAxis();
         var dataSize = lastLineChart.plotData.data().size();
-        
+
         if (selectedX < 0 || selectedX > dataSize) {
             log.error("Selected trace number: {} is out of range: {}", traceNumber, dataSize);
             return;
@@ -158,6 +152,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
         model.selectAndScrollToChart(this);
         putVerticalMarker(selectedX);
+        updateProfileScroll();
     }
 
     private EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
@@ -190,7 +185,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 	};
 
     public List<PlotData> generatePlotData(CsvFile csvFile) {
-    
+
         List<GeoData> geoData = csvFile.getGeoData();
 
         Map<String, List<SensorValue>> sensorValues = new LinkedHashMap<>();
@@ -205,7 +200,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 });
             });
         });
-        
+
         List<PlotData> plotDataList = new ArrayList<>();
         for (Map.Entry<String, List<SensorValue>> e: sensorValues.entrySet()) {
             var pd = e.getKey().split("--");
@@ -213,7 +208,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     .map(SensorValue::data)
                     .collect(Collectors.toList());
             PlotData plotData = new PlotData(pd[0], pd[1], getColor(pd[0]), data);
-            
+
             //calculateAverages(e.getValue().stream()
             //        .map(SensorValue::data)
             //        .collect(Collectors.toList()));
@@ -266,7 +261,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     public record PlotData(String semantic, String units, Color color, List<Number> data,
                            Set<Number> renderedIndices, boolean rendered) {
-        
+
         public PlotData(String semantic, String units, Color color, List<Number> data) {
             this(semantic, units, color, data, new HashSet<>(), false);
         }
@@ -580,7 +575,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
         //root.getChildren().add(0, profileScroll);
 
-        profileScroll.setChangeListener((observable, oldVal, newVal) -> {
+        getProfileScroll().setChangeListener((observable, oldVal, newVal) -> {
             zoomToProfileScroll();
             updateOnZoom(true);
         });
@@ -758,17 +753,17 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
         // hScale = scroll width / num visible traces
         // aspect ratio = hScale / vScale
-        double hScale = profileScroll.getWidth() / numTraces;
+        double hScale = getProfileScroll().getWidth() / numTraces;
         double aspectRatio = hScale / getVScale();
         setRealAspect(aspectRatio);
 
         // update scroll view
-        profileScroll.recalc();
+        getProfileScroll().recalc();
     }
 
     private void zoomToProfileScroll() {
         // num visible traces = scroll width / hscale
-        int numTraces = (int)(profileScroll.getWidth() / getHScale());
+        int numTraces = (int)(getProfileScroll().getWidth() / getHScale());
         int numTracesTotal = getTracesCount();
 
         int middle = getMiddleTrace();
@@ -900,8 +895,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     public void close(boolean removeFromModel) {
         if (root.getParent() instanceof VBox) {
             // hide profile scroll
-            if (profileScroll != null) {
-                profileScroll.setVisible(false);
+            if (getProfileScroll() != null) {
+                getProfileScroll().setVisible(false);
             }
             // remove charts
             VBox parent = (VBox) root.getParent();
@@ -1045,14 +1040,14 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     private int getFloorMin(List<Number> data, String semantic) {
-        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.01)).min().orElse(0);
+        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.0)).min().orElse(0);
         semanticMinValues.put(semantic, min);
         int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
         return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
     }
 
     private int getCeilMax(List<Number> data, String semantic) {
-        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().limit((int) (data.size() * 0.99)).max().orElse(0);
+        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().limit((int) (data.size() * 1)).max().orElse(0);
         semanticMaxValues.put(semantic, max);
         int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
         return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
@@ -1114,12 +1109,12 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         private FilterOptions filterOptions = new FilterOptions();
 
         //private final List<Data<Number, Number>> subsampleInFullRange;
-        
+
         public LineChartWithMarkers(Axis<Number> xAxis, Axis<Number> yAxis, ZoomRect outZoomRect, PlotData plotData) {
             super(xAxis, yAxis);
 
             this.outZoomRect = outZoomRect;
-            
+
             horizontalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.YValueProperty()});
             horizontalMarkers.addListener((InvalidationListener)observable -> layoutPlotChildren());
             verticalMarkers = FXCollections.observableArrayList(data -> new Observable[] {data.XValueProperty()});
@@ -1237,7 +1232,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         private void updateLineChartData() {
             int lowerIndex = Math.clamp(zoomRect.xMin.intValue(), 0, plotData.data().size() - 1);
             int upperIndex = Math.clamp(zoomRect.xMax.intValue(), lowerIndex, plotData.data().size());
-                        
+
             getData().forEach(series -> {
                 if (series.getName().contains(FILTERED_SERIES_SUFFIX)) {
                     if (filteredData == null || !filteredData.rendered) {
@@ -1330,7 +1325,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             VBox markerBox = new VBox();
             markerBox.setAlignment(Pos.TOP_CENTER);
             markerBox.setMouseTransparent(mouseTransparent);
-            
+
             // Создаем контейнер для изображений/флагов
             VBox imageContainer = new VBox();
             imageContainer.setAlignment(Pos.TOP_CENTER);
@@ -1342,7 +1337,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             if (flag != null) {
                 imageContainer.getChildren().add(flag);
             }
-            
+
             // Добавляем контейнер с изображениями
             markerBox.getChildren().add(imageContainer);
 
@@ -1385,18 +1380,18 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             for (Data<Number, Number> verticalMarker : verticalMarkers) {
                 VBox markerBox = (VBox) verticalMarker.getNode();
                 markerBox.setLayoutX(getXAxis().getDisplayPosition(verticalMarker.getXValue()));
-                
+
                 // Получаем контейнер с изображениями (первый элемент)
                 VBox imageContainer = (VBox) markerBox.getChildren().get(0);
                 double imageHeight = imageContainer.getChildren().stream()
                     .mapToDouble(node -> node.getBoundsInLocal().getHeight())
                     .sum();
-                    
+
                 // Получаем линию (второй элемент)
                 Line line = (Line) markerBox.getChildren().get(1);
                 line.setStartY(imageHeight);
                 line.setEndY(getBoundsInLocal().getHeight());
-                
+
                 markerBox.setLayoutY(0d);
                 markerBox.setMinHeight(getBoundsInLocal().getHeight());
                 markerBox.toFront();
