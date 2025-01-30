@@ -1522,7 +1522,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         applyFilters(chart);
 
         Platform.runLater(() -> {
-            updateChartData();
+            chart.updateLineChartData();
         });
     }
 
@@ -1536,7 +1536,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         applyFilters(chart);
 
         Platform.runLater(() -> {
-            updateChartData();
+            chart.updateLineChartData();
         });
     }
 
