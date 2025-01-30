@@ -14,6 +14,8 @@ import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.app.filter.MedianCorrectionFilter;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.yaml.Template;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.Check;
@@ -1683,6 +1685,16 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             return;
         }
 
+        String filteredSeriesName = chart.plotData.semantic + ANOMALY_SERIES_SUFFIX;
+        Template template = file.getParser().getTemplate();
+        boolean hasAnomalySemantic = template.getDataMapping().getDataValues().stream()
+                .anyMatch(v -> v != null && Objects.equals(v.getSemantic(), filteredSeriesName));
+        if (!hasAnomalySemantic) {
+            MessageBoxHelper.showError(
+                    "Cannot apply median correction to " + chart.plotData.semantic, "");
+            return;
+        }
+
         PlotData data = chart.filteredData != null && !chart.filteredData.data().isEmpty()
                 ? chart.filteredData
                 : chart.plotData;
@@ -1700,8 +1712,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             // put all back
             filtered.addAll(rangeValues);
         }
-
-        String filteredSeriesName = chart.plotData.semantic + ANOMALY_SERIES_SUFFIX;
 
         assert filtered.size() == file.getTraces().size();
         for (int i = 0; i < file.getGeoData().size(); i++) {
