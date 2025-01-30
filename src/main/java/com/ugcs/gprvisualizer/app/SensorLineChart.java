@@ -531,17 +531,16 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         yAxis.setSide(Side.RIGHT); // Y-axis on the right
         yAxis.setMinorTickVisible(false);
 
-        var min = getFloorMin(data, plotData.semantic);
-        var max = getCeilMax(data, plotData.semantic);
-
-        yAxis.setTickUnit((max - min) / 10);
+        Range valueRange = getValueRange(data, plotData.semantic);
+        yAxis.setTickUnit(valueRange.getWidth() / 10);
         yAxis.setPrefWidth(70);
         if (!primary) {
             yAxis.setOpacity(0);
         }
 
         // Creating chart
-        ZoomRect outZoomRect = new ZoomRect(0, Math.max(0, data.size() - 1), min, max);
+        ZoomRect outZoomRect = new ZoomRect(0, Math.max(0, data.size() - 1),
+                valueRange.getMin().doubleValue(), valueRange.getMax().doubleValue());
         LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, outZoomRect, plotData);
         lineChart.resetZoomRect();
 
@@ -1038,29 +1037,49 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return xAxis;
     }
 
-    private Map<String, Integer> semanticMinValues = new HashMap<>();
-    private Map<String, Integer> semanticMaxValues = new HashMap<>();
+    private Map<String, Double> semanticMinValues = new HashMap<>();
+    private Map<String, Double> semanticMaxValues = new HashMap<>();
 
-    public Integer getSemanticMinValue() {
-        return semanticMinValues.getOrDefault(getSelectedSeriesName(), 0);
+    public Double getSemanticMinValue() {
+        return semanticMinValues.getOrDefault(getSelectedSeriesName(), 0.0);
     }
 
-    public Integer getSemanticMaxValue() {
-        return semanticMaxValues.getOrDefault(getSelectedSeriesName(), 0);
+    public Double getSemanticMaxValue() {
+        return semanticMaxValues.getOrDefault(getSelectedSeriesName(), 0.0);
     }
 
-    private int getFloorMin(List<Number> data, String semantic) {
-        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.0)).min().orElse(0);
+    private double getScaleFactor(double value) {
+        int base = (int)Math.clamp(Math.floor(Math.log10(Math.abs(value))), 0, 3);
+        return Math.pow(10, base);
+    }
+
+    private Range getValueRange(List<Number> data, String semantic) {
+        List<Double> sorted = data.stream().filter(Objects::nonNull)
+                .mapToDouble(Number::doubleValue)
+                .sorted()
+                .boxed()
+                .toList();
+        int offset = (int)(0.01 * data.size());
+        double min = !sorted.isEmpty()
+                ? sorted.get(Math.min(offset, sorted.size() - 1))
+                : 0.0;
+        double max = !sorted.isEmpty()
+                ? sorted.get(Math.max(sorted.size() - 1 - offset, 0))
+                : 0.0;
+
         semanticMinValues.put(semantic, min);
-        int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
-        return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
-    }
-
-    private int getCeilMax(List<Number> data, String semantic) {
-        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().limit((int) (data.size() * 1)).max().orElse(0);
         semanticMaxValues.put(semantic, max);
-        int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
-        return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
+
+        // get scale factor and align min max to it
+        double f = Math.max(getScaleFactor(min), getScaleFactor(max));
+        double minAligned = f * Math.floor(min / f);
+        double maxAligned = f * Math.ceil(max / f);
+        if (Math.abs(maxAligned - minAligned) < 1e-6) {
+            minAligned -= f;
+            maxAligned += f;
+        }
+
+        return new Range(minAligned, maxAligned);
     }
 
     private BooleanProperty createBooleanProperty(SeriesData item) {
@@ -1110,7 +1129,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         //private final List<Data<Number, Number>> buttonMarkers;
         //private final List<Data<Number, Number>> flagMarkers;
 
-        private final ZoomRect outZoomRect;
+        private ZoomRect outZoomRect;
         private ZoomRect zoomRect;
 
         private PlotData plotData;
@@ -1134,6 +1153,27 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             //flagMarkers = new ArrayList<>();
 
             this.plotData = plotData;
+        }
+
+        public void rescaleY() {
+            Range oldYRange = new Range(outZoomRect.yMin, outZoomRect.yMax);
+            Range newYRange = getValueRange(plotData.data, plotData.semantic);
+
+            NumberAxis yAxis = (NumberAxis)getYAxis();
+            yAxis.setTickUnit(newYRange.getWidth() / 10);
+
+            outZoomRect = new ZoomRect(
+                    0, Math.max(0, plotData.data.size() - 1),
+                    newYRange.getMin(), newYRange.getMax());
+
+            if (zoomRect != null) {
+                double widthRate = newYRange.getWidth() / oldYRange.getWidth();
+                Number newYMin = newYRange.getMin().doubleValue()
+                        + widthRate * (zoomRect.yMin.doubleValue() - oldYRange.getMin().doubleValue());
+                Number newYMax = newYRange.getMin().doubleValue()
+                        + widthRate * (zoomRect.yMax.doubleValue() - oldYRange.getMin().doubleValue());
+                setZoomRect(new ZoomRect(zoomRect.xMin, zoomRect.xMax, newYMin, newYMax));
+            }
         }
 
         public ZoomRect createZoomRectForArea(Point2D start, Point2D end) {
@@ -1682,6 +1722,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             } else {
                 filteredChart.plotData = filteredChart.plotData.withData(filtered);
                 filteredChart.filteredData = null;
+                filteredChart.rescaleY();
                 filteredChart.updateLineChartData();
             }
             updateChartName();
