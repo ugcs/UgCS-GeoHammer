@@ -75,8 +75,6 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 		menuItem2.setToggleGroup(toggleGroup);
 		menuItem3.setToggleGroup(toggleGroup);
 
-		menuItem1.setSelected(true);
-
 		menuItem1.setOnAction(e -> {
 			model.getMapField().setMapProvider(new GoogleMapProvider());
 			setActive(model.getMapField().getMapProvider() != null);
@@ -90,6 +88,9 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 			recalcQueue.clear();
 			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
 		});
+
+		menuItem2.setSelected(true);
+		menuItem2.fire();
 
 		menuItem3.setOnAction(e -> {
 			model.getMapField().setMapProvider(null);
