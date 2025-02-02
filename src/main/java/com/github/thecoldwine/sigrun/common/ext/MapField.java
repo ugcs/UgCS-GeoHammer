@@ -16,7 +16,7 @@ public class MapField {
 	private LatLon sceneCenter;
 	private int zoom;
 	
-	private MapProvider mapProvider = new GoogleMapProvider();
+	private MapProvider mapProvider;
 
 	public MapField() {		
 	}
