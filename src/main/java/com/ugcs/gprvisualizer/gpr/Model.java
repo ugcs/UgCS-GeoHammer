@@ -82,13 +82,17 @@ public class Model implements InitializingBean {
 	private final ApplicationEventPublisher eventPublisher;
 
 
-	public Model(FileManager fileManager, PrefSettings prefSettings, AuxElementEditHandler auxEditHandler, ApplicationEventPublisher eventPublisher) {
+	public Model(FileManager fileManager, PrefSettings prefSettings, ApplicationEventPublisher eventPublisher) {
 		this.prefSettings = prefSettings;
 		this.fileManager = fileManager;
-		this.auxEditHandler = auxEditHandler;
+		this.auxEditHandler = new AuxElementEditHandler(this);
 		this.eventPublisher = eventPublisher;
 	}
-	
+
+	public AuxElementEditHandler getAuxEditHandler() {
+		return auxEditHandler;
+	}
+
 	//public Settings getSettings() {
 		//return gprChart.getField().getProfileSettings();
 	//}

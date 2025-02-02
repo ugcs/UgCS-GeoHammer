@@ -5,118 +5,40 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.io.IOException;
 import javax.imageio.ImageIO;
 
-import org.apache.commons.imaging.ImageFormats;
-import org.apache.commons.imaging.ImageWriteException;
-import org.apache.commons.imaging.Imaging;
-
-import org.apache.commons.imaging.formats.tiff.write.TiffImageWriterLossless;
-import org.apache.commons.imaging.ImagingConstants;
-import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
-import org.apache.commons.imaging.formats.tiff.constants.TiffConstants;
-import org.apache.commons.imaging.formats.tiff.constants.TiffDirectoryType;
-import org.apache.commons.imaging.formats.tiff.taginfos.TagInfoDoubles;
-import org.apache.commons.imaging.formats.tiff.taginfos.TagInfoShorts;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.gce.geotiff.GeoTiffWriter;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 
 public class GeoTiffImagingCreation {
 
 	public static void main(String[] args) throws Exception {
-		File f1 = new File("d:/tmp/tiff/created1.tif");
+		File f1 = new File("created1.tif");
+		System.out.println(f1.getAbsolutePath());
 		BufferedImage img = createSomeImage();
 		LatLon lt =  new LatLon(54, 			24.00); 
 		LatLon rb = new LatLon(54 - 0.02, 	24.02);
-		
-//		ImageIO.write(img, "TIFF", f1);		
-//		
-//		TiffOutputSet tiffExif = new TiffImagingCreation().prepareGeoExif(img, lt, rb);
-//		
-//		OutputStream os = new FileOutputStream(new File("d:/tmp/tiff/created2.tif"));
-//		
-//		new ExifRewriter().updateExifMetadataLossless(f1, os,
-//				tiffExif);
-		
-		
-		
-		new GeoTiffImagingCreation().save(f1, img, 
-				lt, rb);
-	}
-	
-	public void save(File f1,
-		BufferedImage img,
-		LatLon lt,
-		LatLon rb) throws Exception {
-		
-		
-		final Map<String, Object> params = new HashMap<>();
-        params.put(ImagingConstants.PARAM_KEY_COMPRESSION, TiffConstants.TIFF_COMPRESSION_UNCOMPRESSED);
-        
-        //params.put("BITS_PER_SAMPLE", 4);        
-        
-        
-		
-		TiffOutputSet tiffExif = prepareGeoExif(img, lt, rb);
-		
-        params.put("EXIF", tiffExif);		
-		
-		Imaging.writeImage(img, f1, ImageFormats.TIFF, params);
-		///////////////////
+
+		new GeoTiffImagingCreation().save(f1, img, lt, rb);
 	}
 
-	public TiffOutputSet prepareGeoExif(BufferedImage img, LatLon lt, LatLon rb)
-			throws ImageWriteException {
-		TiffOutputSet tiffExif = new TiffOutputSet();
-		TiffOutputDirectory dir = tiffExif.addRootDirectory();
-
-
-		dir.add(new TagInfoDoubles("ModelPixelScaleTag", 33550, 3, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT),
-				new double[] {
-						(rb.getLonDgr() - lt.getLonDgr()) / (double) img.getWidth(), 
-						(rb.getLatDgr() - lt.getLatDgr()) / (double) img.getHeight(), 
-						0.0}
-			);
-		
- 
-		dir.add(new TagInfoDoubles("ModelTiepointTag", 33922, 6,
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT),
-				new double[] {
-						0.0, 	0.0, 	0.0, 	lt.getLonDgr(), 	lt.getLatDgr(), 	0.0
-				}
-				
-						//440720.0, 100000.0, 0.0}
-			);
-
-		dir.add(new TagInfoShorts("GeoKeyDirectoryTag", 34735, 16, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT),
-				new short[] {
-					1,    1, 0, 3,
-					1024, 0, 1, 2,
-					1025, 0, 1, 1,
-					2048, 0, 1, 4326
-				}
-			);
-		return tiffExif;
-	}
-
-	public static BufferedImage createSomeImage() {
+	private static BufferedImage createSomeImage() {
 		BufferedImage img = new BufferedImage(1000, 800, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = (Graphics2D) img.getGraphics();
-		
+
 		g2.setColor(Color.GRAY);
-		
+
 		int mrg = img.getHeight() / 4;
-		
+
 		g2.fillRect(mrg, mrg, img.getWidth() - 2 * mrg, img.getHeight() - 2 * mrg);
-		
+
 		g2.setColor(Color.RED);
 		for (int x = 10; x < img.getWidth(); x += 20) {
 			g2.drawLine(x, 30, x, img.getHeight() - 30);
@@ -124,34 +46,48 @@ public class GeoTiffImagingCreation {
 		return img;
 	}
 
-	/*
-//		 256 (0x100: ImageWidth): 512 (1 Short)
-//		 257 (0x101: ImageLength): 512 (1 Short)
-//		 258 (0x102: BitsPerSample): 8 (1 Short)
-//		 259 (0x103: Compression): 1 (1 Short)
-		 
-		dir.add(new TagInfoShort("ImageWidth", 256, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT), 
-				(short) 1000 );
-		 
-		dir.add(new TagInfoShort("ImageLength", 257, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT), 
-				(short) 800 );
-
-		dir.add(new TagInfoShort("BitsPerSample", 258, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT), 
-				(short) 8 );
-
-		dir.add(new TagInfoShort("Compression", 259, 
-				TiffDirectoryType.TIFF_DIRECTORY_ROOT), 
-				(short) TiffConstants.TIFF_COMPRESSION_UNCOMPRESSED );
-
-//		 262 (0x106: PhotometricInterpretation): 1 (1 Short)
-//		 273 (0x111: PreviewImageStart): 8, 8200, 16392, 24584, 32776, 40968, 49160, 57352, 65544, 73736, 81928, 90120, 98312, 106504, 114696, 122888, 131080, 139272, 147464, 155656, 163848, 172040, 180232, 188424, 196616, 204808, 213000, 221192, 229384, 237576, 245768, 253960 (32 Long)
-//		 277 (0x115: SamplesPerPixel): 1 (1 Short)
-//		 278 (0x116: RowsPerStrip): 16 (1 Short)
-//		 279 (0x117: PreviewImageLength): 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192 (32 Long)
-//		 284 (0x11c: PlanarConfiguration): 1 (1 Short)		 
-
+	/**
+	 * Saves a BufferedImage as a GeoTIFF file with the specified geographic coordinates.
+	 *
+	 * @param outputFile The file to save the GeoTIFF to
+	 * @param image The image to save
+	 * @param topLeft The top-left coordinate (maximum latitude, minimum longitude)
+	 * @param bottomRight The bottom-right coordinate (minimum latitude, maximum longitude)
+	 * @throws Exception if an error occurs during file writing
 	 */
+	public void save(File outputFile,
+		BufferedImage image,
+		LatLon topLeft,
+		LatLon bottomRight) throws Exception {
+
+		String EPSG4326 = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]";
+		CoordinateReferenceSystem crs = CRS.parseWKT(EPSG4326);
+
+		// For EPSG:4326, GeoTools with parseWKT expects (longitude, latitude) order
+		// Create envelope with geographic coordinates (minY, maxY, minX, maxX)
+		ReferencedEnvelope envelope = new ReferencedEnvelope(
+			Math.min(topLeft.getLonDgr(), bottomRight.getLonDgr()),     // min longitude
+			Math.max(topLeft.getLonDgr(), bottomRight.getLonDgr()),     // max longitude
+			Math.min(topLeft.getLatDgr(), bottomRight.getLatDgr()),     // min latitude
+			Math.max(topLeft.getLatDgr(), bottomRight.getLatDgr()),     // max latitude
+			crs
+		);
+
+		// Create GeoTIFF coverage
+		GridCoverageFactory factory = new GridCoverageFactory();
+		GridCoverage2D coverage = factory.create(
+			"GeoTIFF",
+			image,
+			envelope
+		);
+
+		// Write GeoTIFF using GeoTools
+		GeoTiffWriter writer = new GeoTiffWriter(outputFile);
+		try {
+			writer.write(coverage, null);
+		} finally {
+			writer.dispose();
+			coverage.dispose(true);
+		}
+	}
 }
