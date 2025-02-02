@@ -32,11 +32,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 
-@Component
-public class AuxElementEditHandler extends BaseObjectImpl implements InitializingBean {
-
-	@Autowired
-	private Model model;
+public class AuxElementEditHandler extends BaseObjectImpl {
 
 	private BaseObject selected;
 	private BaseObject mouseInput;
@@ -45,8 +41,8 @@ public class AuxElementEditHandler extends BaseObjectImpl implements Initializin
 	private final Button delBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE, new Button());
 	private final Button clearBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.DELETE_ALL, new Button());
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
+	public AuxElementEditHandler(Model model) {
+		this.model = model;
 		initButtons();
 	}
 

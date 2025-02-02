@@ -35,7 +35,6 @@ import javafx.scene.layout.VBox;
 public class ProfileView implements InitializingBean {
 
 	private final Model model;
-	private final AuxElementEditHandler auxEditHandler;
 	private final Navigator navigator;
 	private final Saver saver;
 
@@ -49,10 +48,9 @@ public class ProfileView implements InitializingBean {
 
 	private SgyFile currentFile;
 
-	public ProfileView(Model model, AuxElementEditHandler auxEditHandler, Navigator navigator,
+	public ProfileView(Model model, Navigator navigator,
                        Saver saver) {
 		this.model = model;
-        this.auxEditHandler = auxEditHandler;
         this.navigator = navigator;
 		this.saver = saver;
 	}
@@ -107,7 +105,7 @@ public class ProfileView implements InitializingBean {
 		toolBar.getItems().addAll(saver.getToolNodes());
 		toolBar.getItems().add(getSpacer());
 		
-		toolBar.getItems().addAll(auxEditHandler.getRightPanelTools());
+		toolBar.getItems().addAll(model.getAuxEditHandler().getRightPanelTools());
 		toolBar.getItems().add(getSpacer());
 
 		toolBar.getItems().addAll(navigator.getToolNodes());

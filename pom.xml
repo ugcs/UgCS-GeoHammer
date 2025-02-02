@@ -34,17 +34,27 @@
 		<checkstyle.plugin.version>3.1.1</checkstyle.plugin.version>
 		<sevntu.checkstyle.plugin.version>1.37.1</sevntu.checkstyle.plugin.version>
 
-		<gt.version>22.2</gt.version>
+		<gt.version>32.2</gt.version>
 
 		<maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
 		<build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
 		<launch4j-maven-plugin.version>2.4.1</launch4j-maven-plugin.version>
 		<exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>
 		<javafx.version>21.0.4</javafx.version>
-		
+
 		<build.timestamp>${maven.build.timestamp}</build.timestamp>
 		<maven.build.timestamp.format>MMddHHmmss</maven.build.timestamp.format>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>osgeo</id>
+			<name>OSGeo Release Repository</name>
+			<url>https://repo.osgeo.org/repository/release/</url>
+			<snapshots><enabled>false</enabled></snapshots>
+			<releases><enabled>true</enabled></releases>
+		</repository>
+	</repositories>
 
 
 
@@ -120,7 +130,7 @@
 								<argument>--module-path</argument>
 								<argument>${project.build.directory}/*.jar</argument>
 								<argument>--add-modules</argument>
-								<argument>javafx.controls,javafx.swing,jdk.crypto.cryptoki,java.logging</argument>
+								<argument>javafx.controls,javafx.swing,jdk.crypto.cryptoki,java.logging,java.sql,java.naming</argument>
 								<argument>--output</argument>
 								<argument>${project.build.directory}/jre21</argument>
 								<argument>--no-header-files</argument>
@@ -216,6 +226,11 @@
 			<version>2.1.4</version>
 		</dependency>
 		<!-- Core JavaFX modules -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
     	<dependency>
         	<groupId>org.openjfx</groupId>
        		<artifactId>javafx-controls</artifactId>
@@ -271,6 +286,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.github.jai-imageio</groupId>
+			<artifactId>jai-imageio-core</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.13</version>
@@ -322,24 +343,11 @@
         	<artifactId>spring-aspects</artifactId>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-imaging -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-imaging</artifactId>
-			<version>1.0-alpha1</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/uk.m0nom/javaapiforkml -->
 		<dependency>
 			<groupId>uk.m0nom</groupId>
 			<artifactId>javaapiforkml</artifactId>
 			<version>3.0.8</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.miglayout</groupId>
-			<artifactId>miglayout-javafx</artifactId>
-			<version>5.0</version>
 		</dependency>
 
 		<dependency>
@@ -351,6 +359,24 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
+		</dependency>
+
+		<!-- GeoTools dependencies -->
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-geotiff</artifactId>
+			<version>${gt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-epsg-hsql</artifactId>
+			<scope>test</scope>
+			<version>${gt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-coverage</artifactId>
+			<version>${gt.version}</version>
 		</dependency>
 
         <!-- Add JUnit 5 dependencies -->
