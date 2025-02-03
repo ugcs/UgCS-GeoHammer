@@ -152,11 +152,9 @@ public class CsvParser extends Parser {
 
                     coordinates.add(new GeoData(marked, lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
-            } catch (IndexOutOfBoundsException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                throw new CSVParsingException(new File(logPath), "Could not parse: " + e.getMessage());
-            } catch (IOException e) {
-                e.printStackTrace();
+                throw new CSVParsingException(new File(logPath), e.getMessage() + ", used template: " + template.getName());
             }
 
             // timestamps could be in wrong order in the file
@@ -355,7 +353,7 @@ public class CsvParser extends Parser {
 
             if (template.getDataMapping().getLatitude().getIndex() == -1 
                 || template.getDataMapping().getLongitude().getIndex() == -1) {
-                throw new ColumnsMatchingException("Column names are not matched");
+                throw new ColumnsMatchingException("Column names for latitude and longitude are not matched");
             }
         }
     }

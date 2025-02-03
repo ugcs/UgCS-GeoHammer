@@ -11,10 +11,12 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.ugcs.gprvisualizer.app.parcers.exceptions.CSVParsingException;
 import org.springframework.util.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.reader.StreamReader;
@@ -192,6 +194,9 @@ public abstract class Parser implements IGeoCoordinateParser {
             var time = parseTime(template.getDataMapping().getTime(),
                     data[(int) template.getDataMapping().getTime().getIndex()]);
             //var totalMS = calculateTotalMS(time);
+            if (date == null || time == null) {
+                throw new CSVParsingException(null, "can't parse date/time, problem data: " + Arrays.toString(data));
+            }
             var dateTime = LocalDateTime.of(date, time); //date.plusNanos(totalMS);
             return dateTime;
         }
