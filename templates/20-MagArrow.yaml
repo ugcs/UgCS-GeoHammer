@@ -43,3 +43,6 @@
       - header: "Line"
         semantic: "Line"
         units: ""
+      - header: "Mag_anomaly"
+        semantic: "Mag_anomaly"
+        units: "nT"

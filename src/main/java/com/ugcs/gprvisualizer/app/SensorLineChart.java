@@ -12,7 +12,10 @@ import com.github.thecoldwine.sigrun.common.ext.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
+import com.ugcs.gprvisualizer.app.filter.MedianCorrectionFilter;
 import com.ugcs.gprvisualizer.app.parcers.GeoCoordinates;
+import com.ugcs.gprvisualizer.app.yaml.Template;
+import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.Check;
@@ -26,7 +29,6 @@ import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.ImageView;
@@ -74,6 +76,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     private static final double ZOOM_STEP = 1.38;
 
     private static final String FILTERED_SERIES_SUFFIX = "_filtered";
+    private static final String ANOMALY_SERIES_SUFFIX = "_anomaly";
 
     private static final Logger log = LoggerFactory.getLogger(SensorLineChart.class);
 
@@ -310,6 +313,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     }
 
     ComboBox<SeriesData> comboBox;
+    ObservableList<SeriesData> seriesList;
 
     public VBox createChartWithMultipleYAxes(CsvFile file, List<PlotData> plotDataList) {
 
@@ -317,82 +321,13 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         this.lineRanges = getLineRanges(file.getGeoData());
 
         // Using StackPane to overlay charts
-        StackPane stackPane = new StackPane();
+        this.chartsContainer = new StackPane();
 
-        ObservableList<SeriesData> seriesList = FXCollections.observableArrayList();
+        this.seriesList = FXCollections.observableArrayList();
 
         for (int i = 0; i < plotDataList.size(); i++) {
-
             var plotData = plotDataList.get(i);
-
-            // X-axis, common for all charts
-            NumberAxis xAxis = getXAxis(plotData.data().size() / 10);
-
-            // Y-axis
-            NumberAxis yAxis = new NumberAxis();
-            yAxis.setLabel(plotData.units());
-            yAxis.setSide(Side.RIGHT); // Y-axis on the right
-            yAxis.setMinorTickVisible(false);
-            var data = plotData.data();
-
-            var min = getFloorMin(data, plotData.semantic);
-            var max = getCeilMax(data, plotData.semantic);
-
-            yAxis.setTickUnit((max - min) / 10);
-            yAxis.setPrefWidth(70);
-            if (i > 0) {
-                yAxis.setOpacity(0);
-            }
-
-            // Creating chart
-            ZoomRect outZoomRect = new ZoomRect(0, Math.max(0, plotData.data().size() - 1), min, max);
-            LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, outZoomRect, plotData);
-            lineChart.resetZoomRect();
-
-            lineChart.setLegendVisible(false); // Hide legend
-            lineChart.setCreateSymbols(false); // Disable symbols
-            if (i > 0) {
-                lineChart.setVerticalGridLinesVisible(false);
-                lineChart.setHorizontalGridLinesVisible(false);
-                lineChart.setHorizontalZeroLineVisible(false);
-                lineChart.setVerticalZeroLineVisible(false);
-                lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
-            }
-
-            Series<Number, Number> series = new Series<>();
-            series.setName(plotData.semantic());
-
-            Series<Number, Number> filtered = new Series<>();
-            filtered.setName(plotData.semantic() + FILTERED_SERIES_SUFFIX);
-
-            // Add data to chart
-            if (!data.isEmpty()) {
-                addSeriesDataFiltered(series, plotData, 0, data.size());
-            }
-
-            SeriesData item = new SeriesData(series, plotData.color());
-            seriesList.add(item);
-
-            itemBooleanMap.put(item, createBooleanProperty(item));
-
-            if (!item.series.getData().isEmpty()) {
-                charts.add(lineChart);                
-                lastLineChart = lineChart;
-                // Set random color for series
-                lineChart.getData().add(item.series());
-                setStyleForSeries(item.series(), plotData.getPlotStyle());
-
-                lineChart.getData().add(filtered);
-                setStyleForSeries(filtered, plotData.getPlotStyle());
-
-                lineChart.getData().forEach(s -> {
-                    if (s.getNode() != null) {
-                        s.getNode().setVisible(itemBooleanMap.get(item).get());
-                    }
-                });
-                // Add chart to container
-                stackPane.getChildren().add(lineChart);
-            }
+            lastLineChart = createLineChart(plotData, i == 0);
         }
 
         // ComboBox with checkboxes
@@ -446,6 +381,8 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         });
 
         if (lastLineChart != null) {
+            lastLineChart.setMouseTransparent(false);
+
             setSelectionHandlers(lastLineChart);
             setScrollHandlers(lastLineChart);
 
@@ -558,7 +495,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         selectionRect.setStroke(Color.BLUE);
         selectionRect.setMouseTransparent(true);
 
-        root = new VBox(top, stackPane, selectionRect);
+        root = new VBox(top, chartsContainer, selectionRect);
         root.setFillWidth(true);
         root.setSpacing(10);
         root.setAlignment(Pos.CENTER_RIGHT);
@@ -582,6 +519,79 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         updateProfileScroll();
 
         return root;
+    }
+
+    private LineChartWithMarkers createLineChart(PlotData plotData, boolean primary) {
+        var data = plotData.data();
+
+        // X-axis, common for all charts
+        NumberAxis xAxis = getXAxis(data.size() / 10);
+
+        // Y-axis
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel(plotData.units());
+        yAxis.setSide(Side.RIGHT); // Y-axis on the right
+        yAxis.setMinorTickVisible(false);
+
+        Range valueRange = getValueRange(data, plotData.semantic);
+        yAxis.setTickUnit(valueRange.getWidth() / 10);
+        yAxis.setPrefWidth(70);
+        if (!primary) {
+            yAxis.setOpacity(0);
+        }
+
+        // Creating chart
+        ZoomRect outZoomRect = new ZoomRect(0, Math.max(0, data.size() - 1),
+                valueRange.getMin().doubleValue(), valueRange.getMax().doubleValue());
+        LineChartWithMarkers lineChart = new LineChartWithMarkers(xAxis, yAxis, outZoomRect, plotData);
+        lineChart.resetZoomRect();
+
+        lineChart.setLegendVisible(false); // Hide legend
+        lineChart.setCreateSymbols(false); // Disable symbols
+        if (!primary) {
+            lineChart.setVerticalGridLinesVisible(false);
+            lineChart.setHorizontalGridLinesVisible(false);
+            lineChart.setHorizontalZeroLineVisible(false);
+            lineChart.setVerticalZeroLineVisible(false);
+            lineChart.lookup(".chart-plot-background").setStyle("-fx-background-color: transparent;");
+        }
+
+        Series<Number, Number> series = new Series<>();
+        series.setName(plotData.semantic());
+
+        Series<Number, Number> filtered = new Series<>();
+        filtered.setName(plotData.semantic() + FILTERED_SERIES_SUFFIX);
+
+        // Add data to chart
+        if (!data.isEmpty()) {
+            addSeriesDataFiltered(series, plotData, 0, data.size());
+        }
+
+        SeriesData item = new SeriesData(series, plotData.color());
+        seriesList.add(item);
+
+        itemBooleanMap.put(item, createBooleanProperty(item));
+
+        if (!item.series.getData().isEmpty()) {
+            charts.add(lineChart);
+            // Set random color for series
+            lineChart.getData().add(item.series());
+            setStyleForSeries(item.series(), plotData.getPlotStyle());
+
+            lineChart.getData().add(filtered);
+            setStyleForSeries(filtered, plotData.getPlotStyle());
+
+            lineChart.getData().forEach(s -> {
+                if (s.getNode() != null) {
+                    s.getNode().setVisible(itemBooleanMap.get(item).get());
+                }
+            });
+            // Add chart to container
+            chartsContainer.getChildren().add(lineChart);
+        }
+
+        lineChart.setMouseTransparent(true);
+        return lineChart;
     }
 
     public void updateChartName() {
@@ -991,6 +1001,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
 
     private Data<Number, Number> currentVerticalMarker = null;
     private VBox root;
+    private StackPane chartsContainer;
 
     /** 
      * Remove vertical marker 
@@ -1028,29 +1039,49 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return xAxis;
     }
 
-    private Map<String, Integer> semanticMinValues = new HashMap<>();
-    private Map<String, Integer> semanticMaxValues = new HashMap<>();
+    private Map<String, Double> semanticMinValues = new HashMap<>();
+    private Map<String, Double> semanticMaxValues = new HashMap<>();
 
-    public Integer getSemanticMinValue() {
-        return semanticMinValues.getOrDefault(getSelectedSeriesName(), 0);
+    public Double getSemanticMinValue() {
+        return semanticMinValues.getOrDefault(getSelectedSeriesName(), 0.0);
     }
 
-    public Integer getSemanticMaxValue() {
-        return semanticMaxValues.getOrDefault(getSelectedSeriesName(), 0);
+    public Double getSemanticMaxValue() {
+        return semanticMaxValues.getOrDefault(getSelectedSeriesName(), 0.0);
     }
 
-    private int getFloorMin(List<Number> data, String semantic) {
-        int min = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().skip((int) (data.size() * 0.0)).min().orElse(0);
+    private double getScaleFactor(double value) {
+        int base = (int)Math.clamp(Math.floor(Math.log10(Math.abs(value))), 0, 3);
+        return Math.pow(10, base);
+    }
+
+    private Range getValueRange(List<Number> data, String semantic) {
+        List<Double> sorted = data.stream().filter(Objects::nonNull)
+                .mapToDouble(Number::doubleValue)
+                .sorted()
+                .boxed()
+                .toList();
+        int offset = (int)(0.01 * data.size());
+        double min = !sorted.isEmpty()
+                ? sorted.get(Math.min(offset, sorted.size() - 1))
+                : 0.0;
+        double max = !sorted.isEmpty()
+                ? sorted.get(Math.max(sorted.size() - 1 - offset, 0))
+                : 0.0;
+
         semanticMinValues.put(semantic, min);
-        int baseMin = (int) Math.pow(10, (int) Math.clamp(Math.log10(Math.abs(min)), 0, 3));
-        return baseMin == 1 ? (min >= 0 ? 0 : -10) : Math.floorDiv(min, baseMin) * baseMin;
-    }
-
-    private int getCeilMax(List<Number> data, String semantic) {
-        int max = data.stream().filter(Objects::nonNull).mapToInt(n -> n.intValue()).sorted().limit((int) (data.size() * 1)).max().orElse(0);
         semanticMaxValues.put(semantic, max);
-        int baseMax = (int) Math.pow(10, (int) Math.clamp(Math.log10(max), 0, 3));
-        return baseMax == 1 ? 10 : Math.ceilDiv(max, baseMax) * baseMax;
+
+        // get scale factor and align min max to it
+        double f = Math.max(getScaleFactor(min), getScaleFactor(max));
+        double minAligned = f * Math.floor(min / f);
+        double maxAligned = f * Math.ceil(max / f);
+        if (Math.abs(maxAligned - minAligned) < 1e-6) {
+            minAligned -= f;
+            maxAligned += f;
+        }
+
+        return new Range(minAligned, maxAligned);
     }
 
     private BooleanProperty createBooleanProperty(SeriesData item) {
@@ -1100,7 +1131,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         //private final List<Data<Number, Number>> buttonMarkers;
         //private final List<Data<Number, Number>> flagMarkers;
 
-        private final ZoomRect outZoomRect;
+        private ZoomRect outZoomRect;
         private ZoomRect zoomRect;
 
         private PlotData plotData;
@@ -1124,6 +1155,27 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             //flagMarkers = new ArrayList<>();
 
             this.plotData = plotData;
+        }
+
+        public void rescaleY() {
+            Range oldYRange = new Range(outZoomRect.yMin, outZoomRect.yMax);
+            Range newYRange = getValueRange(plotData.data, plotData.semantic);
+
+            NumberAxis yAxis = (NumberAxis)getYAxis();
+            yAxis.setTickUnit(newYRange.getWidth() / 10);
+
+            outZoomRect = new ZoomRect(
+                    0, Math.max(0, plotData.data.size() - 1),
+                    newYRange.getMin(), newYRange.getMax());
+
+            if (zoomRect != null) {
+                double widthRate = newYRange.getWidth() / oldYRange.getWidth();
+                Number newYMin = newYRange.getMin().doubleValue()
+                        + widthRate * (zoomRect.yMin.doubleValue() - oldYRange.getMin().doubleValue());
+                Number newYMax = newYRange.getMin().doubleValue()
+                        + widthRate * (zoomRect.yMax.doubleValue() - oldYRange.getMin().doubleValue());
+                setZoomRect(new ZoomRect(zoomRect.xMin, zoomRect.xMax, newYMin, newYMax));
+            }
         }
 
         public ZoomRect createZoomRectForArea(Point2D start, Point2D end) {
@@ -1256,7 +1308,14 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                     if (filteredData != null) {
                             node.setStyle(node.getStyle() + "-fx-stroke-dash-array: 1 5 1 5;");
                     }
+                    if (!plotData.rendered) {
+                        series.getData().clear();
+                        plotData.renderedIndices.clear();
+                    }
                     addSeriesDataFiltered(series, plotData, lowerIndex, upperIndex);
+                    if (!plotData.rendered) {
+                        plotData = plotData.render();
+                    }
                 }
             });
         }
@@ -1463,7 +1522,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         applyFilters(chart);
 
         Platform.runLater(() -> {
-            updateChartData();
+            chart.updateLineChartData();
         });
     }
 
@@ -1477,7 +1536,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         applyFilters(chart);
 
         Platform.runLater(() -> {
-            updateChartData();
+            chart.updateLineChartData();
         });
     }
 
@@ -1618,6 +1677,66 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             sum += v * v;
         }
         return Math.sqrt(sum / signal.length);
+    }
+
+    public void medianCorrection(String seriesName, int window) {
+        LineChartWithMarkers chart = getDataChart(seriesName);
+        if (chart == null) {
+            return;
+        }
+
+        String filteredSeriesName = chart.plotData.semantic + ANOMALY_SERIES_SUFFIX;
+        Template template = file.getParser().getTemplate();
+        boolean hasAnomalySemantic = template.getDataMapping().getDataValues().stream()
+                .anyMatch(v -> v != null && Objects.equals(v.getSemantic(), filteredSeriesName));
+        if (!hasAnomalySemantic) {
+            MessageBoxHelper.showError(
+                    "Cannot apply median correction to " + chart.plotData.semantic, "");
+            return;
+        }
+
+        PlotData data = chart.filteredData != null && !chart.filteredData.data().isEmpty()
+                ? chart.filteredData
+                : chart.plotData;
+
+        List<Number> values = data.data;
+        List<Number> filtered = new ArrayList<>(values.size());
+        for (Range range : lineRanges.values()) {
+            int from = range.getMin().intValue();
+            int to = range.getMax().intValue();
+
+            List<Number> rangeValues = values.subList(from, to + 1);
+            MedianCorrectionFilter medianCorrection = new MedianCorrectionFilter(window);
+            rangeValues = medianCorrection.apply(rangeValues);
+
+            // put all back
+            filtered.addAll(rangeValues);
+        }
+
+        assert filtered.size() == file.getTraces().size();
+        for (int i = 0; i < file.getGeoData().size(); i++) {
+            file.getGeoData().get(i).setSensorValue(filteredSeriesName, filtered.get(i));
+        }
+        file.setUnsaved(true);
+
+        Platform.runLater(() -> {
+            LineChartWithMarkers filteredChart = getCharts().get(filteredSeriesName);
+            if (filteredChart == null) {
+                PlotData filteredData = new PlotData(
+                        filteredSeriesName,
+                        chart.plotData.units,
+                        chart.plotData.color,
+                        filtered
+                );
+                createLineChart(filteredData, false);
+            } else {
+                filteredChart.plotData = filteredChart.plotData.withData(filtered);
+                filteredChart.filteredData = null;
+                filteredChart.rescaleY();
+                filteredChart.updateLineChartData();
+            }
+            updateChartName();
+        });
     }
 
     private Map<String, LineChartWithMarkers> getCharts() {

@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
@@ -23,7 +22,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.controlsfx.control.RangeSlider;
@@ -148,39 +146,56 @@ public class OptionPane extends VBox implements InitializingBean {
 	private void prepareCsvTab(Tab tab) {
 		ToggleButton lowPassFilterButton = new ToggleButton("Low-pass filter");
 		ToggleButton timeLagButton = new ToggleButton("GNSS time-lag");
-		Button button3 = new Button("Heading error compensation");
+		ToggleButton medianCorrection = new ToggleButton("Running median filter");
 		Button button5 = new Button("Quality control");
 
 		lowPassFilterButton.setMaxWidth(Double.MAX_VALUE);
 		gridding.setMaxWidth(Double.MAX_VALUE);
 
 		timeLagButton.setMaxWidth(Double.MAX_VALUE);
-		button3.setMaxWidth(Double.MAX_VALUE);
+		medianCorrection.setMaxWidth(Double.MAX_VALUE);
 		button5.setMaxWidth(Double.MAX_VALUE);
 
 		VBox t3 = new VBox();
 		t3.setPadding(new Insets(10,5,5,5));
 		t3.setSpacing(5);
 
-		StackPane lowPassOptions = createFilterOptions(Filter.lowpass,"Enter cutoff wavelength (fiducials)",
-				i -> {
-					int value = Integer.parseInt(i);
-					return value >= 0 && value < 10000;
-				},
-				i -> applyLowPassFilter(Integer.parseInt(i)),
-				i -> applyLowPassFilterToAll(Integer.parseInt(i)),
-				i -> applyLowPassFilter(0)
-		);
+		FilterActions lowPassActions = new FilterActions();
+		lowPassActions.constraint = i -> {
+			int value = Integer.parseInt(i);
+			return value >= 0 && value < 10000;
+		};
+		lowPassActions.apply = i -> applyLowPassFilter(Integer.parseInt(i));
+		lowPassActions.applyAll = i -> applyLowPassFilterToAll(Integer.parseInt(i));
+		lowPassActions.undo = i -> applyLowPassFilter(0);
+		StackPane lowPassOptions = createFilterOptions(
+				Filter.lowpass,
+				"Enter cutoff wavelength (fiducials)",
+				lowPassActions);
 
-		StackPane timeLagOptions = createFilterOptions(Filter.timelag,"Enter time-lag (fiducials)",
-				i -> {
-					int value = Integer.parseInt(i);
-					return Math.abs(value) < 10000;
-				},
-				i -> applyGnssTimeLag(Integer.parseInt(i)),
-				i -> applyGnssTimeLagToAll(Integer.parseInt(i)),
-				i -> applyGnssTimeLag(0)
-		);
+		FilterActions timeLagActions = new FilterActions();
+		timeLagActions.constraint = i -> {
+			int value = Integer.parseInt(i);
+			return Math.abs(value) < 10000;
+		};
+		timeLagActions.apply = i -> applyGnssTimeLag(Integer.parseInt(i));
+		timeLagActions.applyAll = i -> applyGnssTimeLagToAll(Integer.parseInt(i));
+		timeLagActions.undo = i -> applyGnssTimeLag(0);
+		StackPane timeLagOptions = createFilterOptions(
+				Filter.timelag,
+				"Enter time-lag (fiducials)",
+				timeLagActions);
+
+		FilterActions medianCorrectionActions = new FilterActions();
+		medianCorrectionActions.constraint = i -> {
+			int value = Integer.parseInt(i);
+			return value > 0;
+		};
+		medianCorrectionActions.apply = i -> applyMedianCorrection(Integer.parseInt(i));
+		StackPane medianCorrectionOptions = createFilterOptions(
+				Filter.median_correction,
+				"Enter window size",
+				medianCorrectionActions);
 
 		griddingProgressIndicator = new ProgressIndicator();
 		griddingProgressIndicator.setVisible(false);
@@ -191,18 +206,15 @@ public class OptionPane extends VBox implements InitializingBean {
 		t3.getChildren().addAll(List.of(lowPassFilterButton, lowPassOptions,
 				gridding, griddingPane,
 				timeLagButton, timeLagOptions,
-				button5,
-				button3));
+				medianCorrection, medianCorrectionOptions,
+				button5));
 		t3.setPrefHeight(500);
 
 		lowPassFilterButton.setOnAction(getChangeVisibleAction(lowPassOptions));
 		gridding.setOnAction(getChangeVisibleAction(griddingPane));
 		timeLagButton.setOnAction(getChangeVisibleAction(timeLagOptions));
+		medianCorrection.setOnAction(getChangeVisibleAction(medianCorrectionOptions));
 
-		button3.setOnAction(e -> {
-			showHeadingErrorCompensation();
-		});
-		
 		button5.setOnAction(e -> {
 			showQualityControl();
 		});
@@ -246,7 +258,7 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	private enum Filter {
-		lowpass, timelag, gridding_cellsize, gridding_blankingdistance
+		lowpass, timelag, gridding_cellsize, gridding_blankingdistance, median_correction
 	}
 
 	private VBox createGriddingOptions(ProgressIndicator progressIndicator) {
@@ -378,91 +390,118 @@ public class OptionPane extends VBox implements InitializingBean {
 		griddingProgressIndicator.setManaged(inProgress);
 	}
 
-	private @NotNull StackPane createFilterOptions(Filter filter, String promptText, Predicate<String> valueConstraint,
-												   Consumer<String> applyAction, Consumer<String> applyAllAction,
-												   Consumer<String> undoAction) {
+	static class FilterActions {
+		Predicate<String> constraint = v -> true;
+		Consumer<String> apply;
+		Consumer<String> applyAll;
+		Consumer<String> undo;
+
+		boolean hasApply() {
+			return apply != null;
+		}
+
+		boolean hasApplyAll() {
+			return applyAll != null;
+		}
+
+		boolean hasUndo() {
+			return undo != null;
+		}
+	}
+
+	private @NotNull StackPane createFilterOptions(Filter filter, String prompt, FilterActions actions) {
 		VBox filterOptions = new VBox(5);
 		filterOptions.setPadding(new Insets(10, 0, 10, 0));
 
+		ProgressIndicator progressIndicator = new ProgressIndicator();
+
 		TextField filterInput = new TextField();
+		filterInput.setPromptText(prompt);
 		filterInputs.put(filter.name(), filterInput);
-		filterInput.setPromptText(promptText);
 
 		Button applyButton = new Button("Apply");
+		applyButton.setVisible(actions.hasApply());
 		applyButton.setDisable(true);
 
 		Button applyAllButton = new Button("Apply to all");
+		applyAllButton.setVisible(actions.hasApplyAll());
 		applyAllButton.setDisable(true);
 
 		Button undoButton = new Button("Undo");
+		undoButton.setVisible(actions.hasUndo());
 		undoButton.setDisable(true);
+
+		Runnable disableAndShowIndicator = () -> {
+			progressIndicator.setVisible(true);
+			progressIndicator.setManaged(true);
+
+			filterInput.setDisable(true);
+			applyButton.setDisable(true);
+			undoButton.setDisable(true);
+			applyAllButton.setDisable(true);
+		};
+
+		Runnable enableAndHideIndicator = () -> {
+			filterInput.setDisable(false);
+			applyButton.setDisable(false);
+			undoButton.setDisable(false);
+			applyAllButton.setDisable(false);
+
+			progressIndicator.setVisible(false);
+			progressIndicator.setManaged(false);
+		};
+
+		if (actions.hasApply()) {
+			applyButton.setOnAction(e -> {
+				disableAndShowIndicator.run();
+				executor.submit(() -> {
+					prefSettings.saveSetting(filter.name(), Map.of(
+							((CsvFile) selectedFile).getParser().getTemplate().getName(),
+							filterInput.getText()));
+					try {
+						actions.apply.accept(filterInput.getText());
+					} finally {
+						enableAndHideIndicator.run();
+					}
+				});
+			});
+		}
+
+		if (actions.hasApplyAll()) {
+			applyAllButton.setOnAction(e -> {
+				disableAndShowIndicator.run();
+				executor.submit(() -> {
+					prefSettings.saveSetting(filter.name(), Map.of(
+							((CsvFile) selectedFile).getParser().getTemplate().getName(),
+							filterInput.getText()));
+					try {
+						actions.applyAll.accept(filterInput.getText());
+					} finally {
+						enableAndHideIndicator.run();
+					}
+				});
+			});
+		}
+
+		if (actions.hasUndo()) {
+			undoButton.setOnAction(e -> {
+				actions.undo.accept(filterInput.getText());
+				undoButton.setDisable(true);
+			});
+		}
 
 		filterInput.textProperty().addListener((observable, oldValue, newValue) -> {
 			boolean disable = true;
 			try {
 				if (newValue != null) {
 					disable = newValue.isEmpty()
-							|| (valueConstraint != null && !valueConstraint.test(newValue));
+							|| (actions.constraint != null && !actions.constraint.test(newValue));
 				}
 			} catch (NumberFormatException e) {
 				// keep disable = true
 			}
 			applyButton.setDisable(disable);
 			applyAllButton.setDisable(disable);
-		});
-
-		undoButton.setOnAction(e -> {
-			undoAction.accept(filterInput.getText());
-			undoButton.setDisable(true);
-		});
-
-		ProgressIndicator progressIndicator = new ProgressIndicator();
-
-		applyButton.setOnAction(e -> {
-			progressIndicator.setVisible(true);
-			progressIndicator.setManaged(true);
-
-			filterInput.setDisable(true);
-			applyButton.setDisable(true);
-			undoButton.setDisable(true);
-			applyAllButton.setDisable(true);
-
-			executor.submit(() -> {
-				prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
-				applyAction.accept(filterInput.getText());
-
-				filterInput.setDisable(false);
-				applyButton.setDisable(false);
-				undoButton.setDisable(false);
-				applyAllButton.setDisable(false);
-
-				progressIndicator.setVisible(false);
-				progressIndicator.setManaged(false);
-			});
-		});
-
-		applyAllButton.setOnAction(e -> {
-			progressIndicator.setVisible(true);
-			progressIndicator.setManaged(true);
-
-			filterInput.setDisable(true);
-			applyButton.setDisable(true);
-			undoButton.setDisable(true);
-			applyAllButton.setDisable(true);
-
-			executor.submit(() -> {
-				prefSettings.saveSetting(filter.name(), Map.of(((CsvFile) selectedFile).getParser().getTemplate().getName(), filterInput.getText()));
-				applyAllAction.accept(filterInput.getText());
-
-				filterInput.setDisable(false);
-				applyButton.setDisable(false);
-				undoButton.setDisable(false);
-				applyAllButton.setDisable(false);
-
-				progressIndicator.setVisible(false);
-				progressIndicator.setManaged(false);
-
-			});
 		});
 
 		HBox filterButtons = new HBox(5);
@@ -493,10 +532,6 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	private void showQualityControl() {
-		getNoImplementedDialog();
-	}
-
-	private void showHeadingErrorCompensation() {
 		getNoImplementedDialog();
 	}
 
@@ -531,6 +566,12 @@ public class OptionPane extends VBox implements InitializingBean {
 					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.lowPassFilter(seriesName, value));
 		});
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
+	}
+
+	private void applyMedianCorrection(int value) {
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(c -> c.medianCorrection(c.getSelectedSeriesName(), value));
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
