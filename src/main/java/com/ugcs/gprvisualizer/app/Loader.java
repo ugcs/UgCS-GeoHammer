@@ -16,6 +16,8 @@ import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 
 import com.ugcs.gprvisualizer.app.intf.Status;
+import com.ugcs.gprvisualizer.app.parcers.exceptions.CSVParsingException;
+
 import com.ugcs.gprvisualizer.gpr.Model;
 
 import javafx.event.EventHandler;
@@ -158,10 +160,16 @@ public class Loader {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			MessageBoxHelper.showError(
-					"Can`t open file", e.getMessage() != null ? e.getMessage() :
-					"Probably file has incorrect format");
+			if (e instanceof CSVParsingException cpe) {
+				cpe.printStackTrace();
+				MessageBoxHelper.showError(
+						"Can`t open file " + cpe.getFile().getName(), "File has incorrect format: " + cpe.getMessage());
+			} else {
+				e.printStackTrace();
+				MessageBoxHelper.showError(
+						"Can`t open file", e.getMessage() != null ? e.getMessage() :
+								"Probably file has incorrect format");
+			}
 		}
 		
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.updateButtons));

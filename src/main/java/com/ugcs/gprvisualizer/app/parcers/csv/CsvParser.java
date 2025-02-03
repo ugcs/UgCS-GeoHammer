@@ -18,7 +18,10 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.ugcs.gprvisualizer.app.parcers.*;
+import com.ugcs.gprvisualizer.app.parcers.exceptions.CSVParsingException;
 import com.ugcs.gprvisualizer.app.yaml.data.SensorData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import com.ugcs.gprvisualizer.app.parcers.exceptions.ColumnsMatchingException;
@@ -35,7 +38,9 @@ import java.util.Locale;
 
 public class CsvParser extends Parser {
 
-        public CsvParser(Template template) {
+    private static final Logger log = LoggerFactory.getLogger(CsvParser.class);
+
+    public CsvParser(Template template) {
             super(template);
         }
 
@@ -85,19 +90,30 @@ public class CsvParser extends Parser {
                     lineNumber++;
 
                     if (line.startsWith(template.getFileFormat().getCommentPrefix()) || !StringUtils.hasText(line)) {
+                        log.warn("Row #" + line + " was commented or empty: " + line);
                         continue;
                     }
 
                     var data = line.split(template.getFileFormat().getSeparator());
                     if (data.length < 2) {
+                        log.warn("Row #" + lineNumber + " is not correct: " + line);
                         continue;
                     }
 
+                    if (data.length <= template.getDataMapping().getLatitude().getIndex()) {
+                        log.warn("Row #" + lineNumber + " is not correct: " + line);
+                        continue;
+                    }
                     var lat = parseDouble(template.getDataMapping().getLatitude(), data[template.getDataMapping().getLatitude().getIndex()]);
 
+                    if (data.length <= template.getDataMapping().getLongitude().getIndex()) {
+                        log.warn("Row #" + lineNumber + " is not correct: " + line);
+                        continue;
+                    }
                     var lon = parseDouble(template.getDataMapping().getLongitude(), data[template.getDataMapping().getLongitude().getIndex()]);
 
                     if (lat == null || lon == null) {
+                        log.warn("Row #" + lineNumber + " is not correct, lat or lon was not parsed: " + line);
                         continue;
                     } 
 
@@ -136,6 +152,9 @@ public class CsvParser extends Parser {
 
                     coordinates.add(new GeoData(marked, lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));
                 }
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                throw new CSVParsingException(new File(logPath), "Could not parse: " + e.getMessage());
             } catch (IOException e) {
                 e.printStackTrace();
             }
