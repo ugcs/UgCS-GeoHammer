@@ -353,7 +353,7 @@ public class CsvParser extends Parser {
 
             if (template.getDataMapping().getLatitude().getIndex() == -1 
                 || template.getDataMapping().getLongitude().getIndex() == -1) {
-                throw new ColumnsMatchingException("Column names are not matched");
+                throw new ColumnsMatchingException("Column names for latitude and longitude are not matched");
             }
         }
     }
