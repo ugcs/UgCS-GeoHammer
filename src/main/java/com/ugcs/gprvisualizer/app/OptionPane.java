@@ -146,7 +146,7 @@ public class OptionPane extends VBox implements InitializingBean {
 	private void prepareCsvTab(Tab tab) {
 		ToggleButton lowPassFilterButton = new ToggleButton("Low-pass filter");
 		ToggleButton timeLagButton = new ToggleButton("GNSS time-lag");
-		ToggleButton medianCorrection = new ToggleButton("Median correction");
+		ToggleButton medianCorrection = new ToggleButton("Running median filter");
 		Button button5 = new Button("Quality control");
 
 		lowPassFilterButton.setMaxWidth(Double.MAX_VALUE);
