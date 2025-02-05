@@ -15,6 +15,7 @@ import com.ugcs.gprvisualizer.draw.BaseLayer;
 import com.ugcs.gprvisualizer.draw.GpsTrack;
 import com.ugcs.gprvisualizer.draw.GridLayer;
 import com.ugcs.gprvisualizer.draw.Layer;
+import com.ugcs.gprvisualizer.draw.QualityLayer;
 import com.ugcs.gprvisualizer.draw.RadarMap;
 import com.ugcs.gprvisualizer.draw.RepaintListener;
 import com.ugcs.gprvisualizer.draw.SatelliteMap;
@@ -81,12 +82,19 @@ public class MapView implements InitializingBean {
 	private GridLayer gridLayer;
 
 	@Autowired
+	private QualityLayer qualityLayer;
+
+	@Autowired
 	private List<BaseLayer> baseLayers;
 
 	private List<Layer> layers = new ArrayList<>();
 
 	public List<Layer> getLayers() {
 		return layers;
+	}
+
+	public QualityLayer getQualityLayer() {
+		return qualityLayer;
 	}
 
 	protected ImageView imageView = new ImageView();
@@ -108,10 +116,13 @@ public class MapView implements InitializingBean {
 		gpsTrackMap.setRepaintListener(listener);
 
 		gridLayer.setRepaintListener(listener);
-		
+
+		qualityLayer.setRepaintListener(listener);
+
 		getLayers().add(satelliteMap);
 		getLayers().add(radarMap);
 		getLayers().add(gridLayer);
+		getLayers().add(qualityLayer);
 		getLayers().add(gpsTrackMap);
 		getLayers().add(new FoundTracesLayer(model));
 
