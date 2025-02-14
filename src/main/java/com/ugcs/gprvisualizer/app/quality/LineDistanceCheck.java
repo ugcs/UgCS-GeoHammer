@@ -14,8 +14,7 @@ import java.util.TreeMap;
 public class LineDistanceCheck implements QualityCheck {
 
     private static final double MIN_WIDTH = 0.15;
-    private static final double MIN_LENGTH = 0.15;
-    private static final double DISTANCE_THRESHOLD = MIN_LENGTH / 2;
+    private static final double DISTANCE_THRESHOLD = MIN_WIDTH / 2;
 
     private final double max;
     private final double tolerance;
@@ -144,8 +143,9 @@ public class LineDistanceCheck implements QualityCheck {
                 fromProjection.getGeodeticMidpoint(),
                 toProjection.getGeodeticMidpoint());
 
-        if (segment.getLength() < MIN_LENGTH) {
-            segment = segment.expand(MIN_LENGTH, referenceLine.getDirection());
+        double minLength = 2 * width;
+        if (segment.getLength() < minLength) {
+            segment = segment.expand(minLength, referenceLine.getDirection());
         }
 
         return new StripeQualityIssue(

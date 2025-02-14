@@ -15,8 +15,7 @@ import java.util.Map;
 public class AltitudeCheck implements QualityCheck {
 
     private static final double MIN_WIDTH = 0.15;
-    private static final double MIN_LENGTH = 0.15;
-    private static final double DISTANCE_THRESHOLD = MIN_LENGTH / 2;
+    private static final double DISTANCE_THRESHOLD = MIN_WIDTH / 2;
 
     private final double max;
     private final double tolerance;
@@ -104,8 +103,9 @@ public class AltitudeCheck implements QualityCheck {
     private QualityIssue createStripeIssue(LatLon from, LatLon to, Point2D defaultDirection) {
         Segment segment = new Segment(from, to);
 
-        if (segment.getLength() < MIN_LENGTH) {
-            segment = segment.expand(MIN_LENGTH, defaultDirection);
+        double minLength = width;
+        if (segment.getLength() < minLength) {
+            segment = segment.expand(minLength, defaultDirection);
         }
 
         return new StripeQualityIssue(
