@@ -3,6 +3,7 @@ package com.ugcs.gprvisualizer.app.quality;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SphericalMercator;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.math.DouglasPeucker;
 import com.ugcs.gprvisualizer.utils.Range;
 import javafx.geometry.Point2D;
@@ -45,8 +46,11 @@ public class AltitudeCheck implements QualityCheck {
             List<LatLon> issuePoints = new ArrayList<>();
             for (int i = lineRange.getMin().intValue(); i <= lineRange.getMax().intValue(); i++) {
                 GeoData value = values.get(i);
-                Double altitude = value.getAltitude();
-                if (altitude == null || altitude.isNaN()) {
+                SensorValue sensorValue = value.getSensorValue(GeoData.Semantic.ALTITUDE_AGL);
+                Double altitudeAgl = sensorValue.data() != null
+                        ? sensorValue.data().doubleValue()
+                        : null;
+                if (altitudeAgl == null || altitudeAgl.isNaN()) {
                     continue;
                 }
 
@@ -56,7 +60,7 @@ public class AltitudeCheck implements QualityCheck {
                     continue;
                 }
 
-                if (altitude > max + tolerance) {
+                if (altitudeAgl > max + tolerance) {
                     issuePoints.add(latlon);
                 } else {
                     if (!issuePoints.isEmpty()) {
