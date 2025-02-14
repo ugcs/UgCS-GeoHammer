@@ -87,6 +87,6 @@ public class GoogleCoordUtils {
 
 		double earthCircumference = 2 * Math.PI * EARTH_R;
 		return Math.cos(Math.toRadians(latlon.getLatDgr())) * earthCircumference
-				/ (TILE_SIZE * scale);
+				/ ((long)TILE_SIZE * scale);
 	}
 }
