@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -607,21 +608,25 @@ public class OptionPane extends VBox implements InitializingBean {
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
+	private List<QualityCheck> createQualityChecks(QualityControlParams params) {
+		return Arrays.asList(
+				new LineDistanceCheck(
+						params.maxLineDistance,
+						params.lineDistanceTolerance,
+						0.5 * params.maxLineDistance
+				),
+				new AltitudeCheck(
+						params.maxAltitude,
+						params.altitudeTolerance,
+						0.35 * params.maxLineDistance
+				)
+		);
+	}
+
 	private void applyQualityControl(QualityControlParams params) {
 		if (selectedFile instanceof CsvFile csvFile) {
 			QualityControl qualityControl = new QualityControl();
-			List<QualityCheck> checks = Arrays.asList(
-					new LineDistanceCheck(
-							params.maxLineDistance,
-							params.lineDistanceTolerance,
-							0.5 * params.maxLineDistance
-					),
-					new AltitudeCheck(
-							params.maxAltitude,
-							params.altitudeTolerance,
-							0.25 * params.maxLineDistance
-					)
-			);
+			List<QualityCheck> checks = createQualityChecks(params);
 			List<QualityIssue> issues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
 			mapView.getQualityLayer().setIssues(issues);
 			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
@@ -629,6 +634,17 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	private void applyQualityControlToAll(QualityControlParams params) {
+		QualityControl qualityControl = new QualityControl();
+		List<QualityCheck> checks = createQualityChecks(params);
+		List<QualityIssue> issues = new ArrayList<>();
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
+			if (file instanceof CsvFile csvFile) {
+				List<QualityIssue> fileIssues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
+				issues.addAll(fileIssues);
+			}
+		}
+		mapView.getQualityLayer().setIssues(issues);
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
