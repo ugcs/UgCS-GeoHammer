@@ -75,7 +75,7 @@ public abstract class Parser implements IGeoCoordinateParser {
         skippedLines = new StringBuilder();
         if (template.getSkipLinesTo() != null) {
             while ((line = reader.readLine()) != null) {
-                skippedLines.append(line + "\n");
+                skippedLines.append(line + System.lineSeparator());
                 var regex = Pattern.compile(template.getSkipLinesTo().getMatchRegex());
                 if (regex.asMatchPredicate().test(line)) {
                     break;
@@ -84,7 +84,7 @@ public abstract class Parser implements IGeoCoordinateParser {
 
             if (template.getSkipLinesTo().isSkipMatchedLine()) {
                 line = reader.readLine();
-                skippedLines.append(line + "\n");
+                skippedLines.append(line + System.lineSeparator());
                 return line;
             }
 

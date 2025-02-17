@@ -5,6 +5,8 @@ import javafx.geometry.Point2D;
 
 public class GoogleCoordUtils {
 
+	public static final double EARTH_R = 6378137.0;
+
 	public static final int TILE_SIZE = 256;
 
 	private GoogleCoordUtils() {
@@ -79,6 +81,12 @@ public class GoogleCoordUtils {
 		
 		return new LatLon(latDgr, lonDgr);
 	}
-	
-	
+
+	public static double getPixelSize(LatLon latlon, int zoom) {
+		int scale = 1 << zoom;
+
+		double earthCircumference = 2 * Math.PI * EARTH_R;
+		return Math.cos(Math.toRadians(latlon.getLatDgr())) * earthCircumference
+				/ ((long)TILE_SIZE * scale);
+	}
 }
