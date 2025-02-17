@@ -1,5 +1,7 @@
 package com.ugcs.gprvisualizer.app;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,11 +10,18 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.ugcs.gprvisualizer.app.quality.AltitudeCheck;
+import com.ugcs.gprvisualizer.app.quality.LineDistanceCheck;
+import com.ugcs.gprvisualizer.app.quality.QualityCheck;
+import com.ugcs.gprvisualizer.app.quality.QualityControl;
+import com.ugcs.gprvisualizer.app.quality.QualityIssue;
+import com.ugcs.gprvisualizer.draw.QualityLayer;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.math.LevelFilter;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -22,6 +31,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.controlsfx.control.RangeSlider;
@@ -51,7 +61,11 @@ import javafx.scene.layout.VBox;
 
 @Component
 public class OptionPane extends VBox implements InitializingBean {
-	
+
+	private static final double DEFAULT_SPACING = 5;
+
+	private static final Insets DEFAULT_OPTIONS_INSETS = new Insets(10, 0, 10, 0);
+
 	private static final int RIGHT_BOX_WIDTH = 350;
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -147,14 +161,13 @@ public class OptionPane extends VBox implements InitializingBean {
 		ToggleButton lowPassFilterButton = new ToggleButton("Low-pass filter");
 		ToggleButton timeLagButton = new ToggleButton("GNSS time-lag");
 		ToggleButton medianCorrection = new ToggleButton("Running median filter");
-		Button button5 = new Button("Quality control");
+		ToggleButton qualityControl = new ToggleButton("Quality control");
 
 		lowPassFilterButton.setMaxWidth(Double.MAX_VALUE);
 		gridding.setMaxWidth(Double.MAX_VALUE);
-
 		timeLagButton.setMaxWidth(Double.MAX_VALUE);
 		medianCorrection.setMaxWidth(Double.MAX_VALUE);
-		button5.setMaxWidth(Double.MAX_VALUE);
+		qualityControl.setMaxWidth(Double.MAX_VALUE);
 
 		VBox t3 = new VBox();
 		t3.setPadding(new Insets(10,5,5,5));
@@ -203,21 +216,24 @@ public class OptionPane extends VBox implements InitializingBean {
 		VBox griddingOptions = createGriddingOptions(griddingProgressIndicator);
 		StackPane griddingPane = new StackPane(griddingOptions, griddingProgressIndicator);
 
+		qualityControl.addEventHandler(ActionEvent.ACTION, event ->
+				toggleQualityLayer(qualityControl.isSelected()));
+		QualityControlView qualityControlView = new QualityControlView(
+				this::applyQualityControl,
+				this::applyQualityControlToAll);
+
 		t3.getChildren().addAll(List.of(lowPassFilterButton, lowPassOptions,
 				gridding, griddingPane,
 				timeLagButton, timeLagOptions,
 				medianCorrection, medianCorrectionOptions,
-				button5));
+				qualityControl, qualityControlView.getRoot()));
 		t3.setPrefHeight(500);
 
 		lowPassFilterButton.setOnAction(getChangeVisibleAction(lowPassOptions));
 		gridding.setOnAction(getChangeVisibleAction(griddingPane));
 		timeLagButton.setOnAction(getChangeVisibleAction(timeLagOptions));
 		medianCorrection.setOnAction(getChangeVisibleAction(medianCorrectionOptions));
-
-		button5.setOnAction(e -> {
-			showQualityControl();
-		});
+		qualityControl.setOnAction(getChangeVisibleAction(qualityControlView.getRoot()));
 
 		tab.setContent(t3);
 	}
@@ -258,7 +274,15 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	private enum Filter {
-		lowpass, timelag, gridding_cellsize, gridding_blankingdistance, median_correction
+		lowpass,
+		timelag,
+		gridding_cellsize,
+		gridding_blankingdistance,
+		median_correction,
+		quality_max_line_distance,
+		quality_line_distance_tolerance,
+		quality_max_altitude,
+		quality_altitude_tolerance
 	}
 
 	private VBox createGriddingOptions(ProgressIndicator progressIndicator) {
@@ -575,6 +599,54 @@ public class OptionPane extends VBox implements InitializingBean {
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
+	private void toggleQualityLayer(boolean active) {
+		QualityLayer qualityLayer = mapView.getQualityLayer();
+		if (qualityLayer.isActive() == active) {
+			return;
+		}
+		qualityLayer.setActive(active);
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+	}
+
+	private List<QualityCheck> createQualityChecks(QualityControlParams params) {
+		return Arrays.asList(
+				new LineDistanceCheck(
+						params.maxLineDistance,
+						params.lineDistanceTolerance,
+						0.5 * params.maxLineDistance
+				),
+				new AltitudeCheck(
+						params.maxAltitude,
+						params.altitudeTolerance,
+						0.35 * params.maxLineDistance
+				)
+		);
+	}
+
+	private void applyQualityControl(QualityControlParams params) {
+		if (selectedFile instanceof CsvFile csvFile) {
+			QualityControl qualityControl = new QualityControl();
+			List<QualityCheck> checks = createQualityChecks(params);
+			List<QualityIssue> issues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
+			mapView.getQualityLayer().setIssues(issues);
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		}
+	}
+
+	private void applyQualityControlToAll(QualityControlParams params) {
+		QualityControl qualityControl = new QualityControl();
+		List<QualityCheck> checks = createQualityChecks(params);
+		List<QualityIssue> issues = new ArrayList<>();
+		for (SgyFile file : model.getFileManager().getCsvFiles()) {
+			if (file instanceof CsvFile csvFile) {
+				List<QualityIssue> fileIssues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
+				issues.addAll(fileIssues);
+			}
+		}
+		mapView.getQualityLayer().setIssues(issues);
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+	}
+
 	private Tab prepareGprTab(Tab tab1, SgyFile file) {
 		VBox t1 = new VBox();
 
@@ -680,5 +752,200 @@ public class OptionPane extends VBox implements InitializingBean {
 
 	public void handleGriddingParamsSetted(double cellSize, double blankingDistance) {
 		eventPublisher.publishEvent(new GriddingParamsSetted(this, cellSize, blankingDistance));
+	}
+
+	// quality control
+
+	record QualityControlParams (
+			Double maxLineDistance,
+			Double lineDistanceTolerance,
+			Double maxAltitude,
+			Double altitudeTolerance
+	) {}
+
+	private class QualityControlView {
+
+		public static double DEFAULT_MAX_LINE_DISTANCE = 1.0;
+		public static double DEFAULT_LINE_DISTANCE_TOLERANCE = 0.2;
+		public static double DEFAULT_MAX_ALTITUDE = 1.0;
+		public static double DEFAULT_ALTITUDE_TOLERANCE = 0.2;
+
+		private final StackPane root = new StackPane();
+		private final ProgressIndicator progressIndicator = new ProgressIndicator();
+
+		// input fields
+
+		private final TextField maxLineDistance = new TextField(
+				String.valueOf(DEFAULT_MAX_LINE_DISTANCE));
+		private final TextField lineDistanceTolerance = new TextField(
+				String.valueOf(DEFAULT_LINE_DISTANCE_TOLERANCE));
+		private final TextField maxAltitude = new TextField(
+				String.valueOf(DEFAULT_MAX_ALTITUDE));
+		private final TextField altitudeTolerance = new TextField(
+				String.valueOf(DEFAULT_ALTITUDE_TOLERANCE));
+
+		// action buttons
+
+		private final Button applyButton = new Button("Apply");
+		private final Button applyToAllButton = new Button("Apply to all");
+
+		public QualityControlView(
+				Consumer<QualityControlParams> apply,
+				Consumer<QualityControlParams> applyToAll) {
+			progressIndicator.setVisible(false);
+			progressIndicator.setManaged(false);
+
+			// params
+			Label lineDistanceLabel = new Label("Distance between lines");
+
+			maxLineDistance.setPromptText("Distance between lines (m)");
+			maxLineDistance.textProperty().addListener(this::inputChanged);
+			filterInputs.put(Filter.quality_max_line_distance.name(), maxLineDistance);
+
+			lineDistanceTolerance.setPromptText("Distance tolerance (m)");
+			lineDistanceTolerance.textProperty().addListener(this::inputChanged);
+			filterInputs.put(Filter.quality_line_distance_tolerance.name(), lineDistanceTolerance);
+
+			Label altitudeLabel = new Label("Altitude AGL");
+
+			maxAltitude.setPromptText("Altitude AGL (m)");
+			maxAltitude.textProperty().addListener(this::inputChanged);
+			filterInputs.put(Filter.quality_max_altitude.name(), maxAltitude);
+
+			altitudeTolerance.setPromptText("Altitude tolerance (m)");
+			altitudeTolerance.textProperty().addListener(this::inputChanged);
+			filterInputs.put(Filter.quality_altitude_tolerance.name(), altitudeTolerance);
+
+			VBox filterInput = new VBox(DEFAULT_SPACING,
+					lineDistanceLabel,
+					maxLineDistance,
+					lineDistanceTolerance,
+					altitudeLabel,
+					maxAltitude,
+					altitudeTolerance);
+
+			// actions
+			applyButton.setOnAction(event -> submitAction(apply));
+			applyToAllButton.setOnAction(event -> submitAction(applyToAll));
+			updateActionButtons();
+
+			Region spacer = new Region();
+			HBox.setHgrow(spacer, Priority.ALWAYS);
+			HBox filterButtons = new HBox(DEFAULT_SPACING,
+					applyButton,
+					spacer,
+					applyToAllButton);
+
+			VBox filterOptions = new VBox(DEFAULT_SPACING, filterInput, filterButtons);
+			filterOptions.setPadding(DEFAULT_OPTIONS_INSETS);
+			filterOptions.setVisible(false);
+			filterOptions.setManaged(false);
+
+			root.getChildren().setAll(filterOptions, progressIndicator);
+		}
+
+		public StackPane getRoot() {
+			return root;
+		}
+
+		public QualityControlParams getParams() {
+			return new QualityControlParams(
+					getTextAsDouble(maxLineDistance),
+					getTextAsDouble(lineDistanceTolerance),
+					getTextAsDouble(maxAltitude),
+					getTextAsDouble(altitudeTolerance)
+			);
+		}
+
+		private Double getTextAsDouble(TextField field) {
+			if (field == null) {
+				return null;
+			}
+			String text = field.getText();
+			if (text == null || text.isEmpty()) {
+				return null;
+			}
+			try {
+				return Double.parseDouble(text);
+			} catch (NumberFormatException e) {
+				return null;
+			}
+		}
+
+		private void inputChanged(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+			updateActionButtons();
+		}
+
+		private void submitAction(Consumer<QualityControlParams> action) {
+			if (action == null) {
+				return;
+			}
+			QualityControlParams params = getParams();
+			disableAndShowIndicator();
+			executor.submit(() -> {
+				try {
+					saveSettings();
+					action.accept(params);
+				} finally {
+					Platform.runLater(this::enableAndHideIndicator);
+				}
+			});
+		}
+
+		private void updateActionButtons() {
+			QualityControlParams params = getParams();
+			boolean canApply = params.maxLineDistance != null
+					&& params.lineDistanceTolerance != null
+					&& params.maxAltitude != null
+					&& params.altitudeTolerance != null;
+
+			applyButton.setDisable(!canApply);
+			applyToAllButton.setDisable(!canApply);
+		}
+
+		private void disableAndShowIndicator() {
+			progressIndicator.setVisible(true);
+			progressIndicator.setManaged(true);
+
+			applyButton.setDisable(true);
+			applyToAllButton.setDisable(true);
+
+			maxLineDistance.setDisable(true);
+			lineDistanceTolerance.setDisable(true);
+			maxAltitude.setDisable(true);
+			altitudeTolerance.setDisable(true);
+		}
+
+		private void enableAndHideIndicator() {
+			maxLineDistance.setDisable(false);
+			lineDistanceTolerance.setDisable(false);
+			maxAltitude.setDisable(false);
+			altitudeTolerance.setDisable(false);
+
+			applyButton.setDisable(false);
+			applyToAllButton.setDisable(false);
+
+			progressIndicator.setVisible(false);
+			progressIndicator.setManaged(false);
+		}
+
+		private void saveSettings() {
+			if (selectedFile instanceof CsvFile csvFile) {
+				String templateName = csvFile.getParser().getTemplate().getName();
+
+				prefSettings.saveSetting(
+						Filter.quality_max_line_distance.name(),
+						Map.of(templateName, maxLineDistance.getText()));
+				prefSettings.saveSetting(
+						Filter.quality_line_distance_tolerance.name(),
+						Map.of(templateName, lineDistanceTolerance.getText()));
+				prefSettings.saveSetting(
+						Filter.quality_max_altitude.name(),
+						Map.of(templateName, maxAltitude.getText()));
+				prefSettings.saveSetting(
+						Filter.quality_altitude_tolerance.name(),
+						Map.of(templateName, altitudeTolerance.getText()));
+			}
+		}
 	}
 }
