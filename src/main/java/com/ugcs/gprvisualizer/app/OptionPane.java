@@ -205,6 +205,7 @@ public class OptionPane extends VBox implements InitializingBean {
 			return value > 0;
 		};
 		medianCorrectionActions.apply = i -> applyMedianCorrection(Integer.parseInt(i));
+		medianCorrectionActions.applyAll = i -> applyMedianCorrectionToAll(Integer.parseInt(i));
 		StackPane medianCorrectionOptions = createFilterOptions(
 				Filter.median_correction,
 				"Enter window size",
@@ -598,6 +599,17 @@ public class OptionPane extends VBox implements InitializingBean {
 		chart.ifPresent(c -> c.medianCorrection(c.getSelectedSeriesName(), value));
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
+
+	private void applyMedianCorrectionToAll(int value) {
+		var chart = model.getChart((CsvFile) selectedFile);
+		chart.ifPresent(sc -> {
+			String seriesName = sc.getSelectedSeriesName();
+			model.getCharts().stream()
+					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
+					.forEach(c -> c.medianCorrection(seriesName, value));
+		});
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
+	}	
 
 	private void toggleQualityLayer(boolean active) {
 		QualityLayer qualityLayer = mapView.getQualityLayer();
