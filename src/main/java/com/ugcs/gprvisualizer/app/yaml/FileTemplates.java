@@ -124,60 +124,51 @@ public class FileTemplates implements InitializingBean {
 
     @Async
     public void watchTemplates() {
-        
         if (templatesPath == null) {
             return;
         }
 
-
         try {
-                    // Create a WatchService
-                    WatchService watchService = FileSystems.getDefault().newWatchService();
- 
-                    // Register the directory for specific events
-                    templatesPath.register(watchService,
-                            StandardWatchEventKinds.ENTRY_CREATE,
-                            StandardWatchEventKinds.ENTRY_DELETE,
-                            StandardWatchEventKinds.ENTRY_MODIFY);
-         
-                    //System.out.println("Watching directory: " + directoryPath);
-         
-                    // Infinite loop to continuously watch for events
-                    while (true) {
-                        //System.out.println("watch started");
-                        WatchKey key = watchService.take();
-         
-                        for (WatchEvent<?> event : key.pollEvents()) 
-                        {
-                            // Handle the specific event
-                            if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) 
-                            {
-                                System.out.println("File created: " + event.context());
-                            } 
-                            else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) 
-                            {
-                                System.out.println("File deleted: " + event.context());
-                            } 
-                            else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) 
-                            {
-                                if (event.context() instanceof Path && ((Path) event.context()).endsWith(".yaml")) {
-                                    System.out.println("File modified: " + event.context());
-                                    //System.out.println(((Path) event.context()).toAbsolutePath());
-                                } else {
-                                    continue;
-                                }
-                            }
-                            templates.clear();
-                            loadTemplates(yaml, templatesPath, templates);
+            // Create a WatchService
+            WatchService watchService = FileSystems.getDefault().newWatchService();
+
+            // Register the directory for specific events
+            templatesPath.register(watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_DELETE,
+                    StandardWatchEventKinds.ENTRY_MODIFY);
+
+            //System.out.println("Watching directory: " + directoryPath);
+
+            // Infinite loop to continuously watch for events
+            while (true) {
+                //System.out.println("watch started");
+                WatchKey key = watchService.take();
+
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    // Handle the specific event
+                    if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+                        System.out.println("File created: " + event.context());
+                    } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                        System.out.println("File deleted: " + event.context());
+                    } else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                        if (event.context() instanceof Path templatePath && templatePath.toString().endsWith(".yaml")) {
+                            logger.info("Template file modified: " + templatePath);
+                        } else {
+                            continue;
                         }
-         
-                        // To receive further events, reset the key
-                        key.reset();
                     }
-        
-                } catch (IOException | InterruptedException e) {
-                    logger.error("Error reading template: " + e.getMessage());
+                    templates.clear();
+                    loadTemplates(yaml, templatesPath, templates);
                 }
+
+                // To receive further events, reset the key
+                key.reset();
+            }
+
+        } catch (IOException | InterruptedException e) {
+            logger.error("Error reading template: " + e.getMessage());
+        }
     }
 
     public List<Template> getTemplates() {
