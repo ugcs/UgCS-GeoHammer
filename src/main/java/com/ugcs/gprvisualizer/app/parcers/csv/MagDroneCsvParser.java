@@ -52,7 +52,7 @@ public class MagDroneCsvParser extends CsvParser {
                 if (line == null) {
                     line = reader.readLine();
                     findIndexesByHeaders(line);
-                    skippedLines.append(line + "\n");
+                    skippedLines.append(line + System.lineSeparator());
                 } else
                     findIndexesByHeaders(line);
             }
@@ -63,7 +63,7 @@ public class MagDroneCsvParser extends CsvParser {
             LocalDateTime firstDateTime = null;
             long timestampOfTheFirstDatetime = 0;
 
-            int lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length + 1;
+            int lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split(System.lineSeparator()).length + 1;
 
             while ((line = reader.readLine()) != null) {
                 

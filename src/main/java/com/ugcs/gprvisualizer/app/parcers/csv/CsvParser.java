@@ -75,13 +75,13 @@ public class CsvParser extends Parser {
 
                     findIndexesByHeaders(line);
                     setIndexByHeaderForSensorData(line, markSensorData);
-                    skippedLines.append(line + "\n");
+                    skippedLines.append(line + System.lineSeparator());
                 }
 
                 //format = new CultureInfo("en-US", false);
                 //format.NumberFormat.NumberDecimalSeparator = template.getFileFormat().getDecimalSeparator();
 
-                var lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split("\n").length;
+                var lineNumber = skippedLines.isEmpty() ? 0 : skippedLines.toString().split(System.lineSeparator()).length;
 
                 var traceCount = 0;
 
@@ -250,7 +250,7 @@ public class CsvParser extends Parser {
             if (template.getSkipLinesTo() != null) {
                 line = skipLines(oldFileReader);
                 correctedFile.write(skippedLines.toString().trim());
-                correctedFile.write("\n");
+                correctedFile.write(System.lineSeparator());
             }
 
             if (template.getFileFormat().isHasHeader()) {
