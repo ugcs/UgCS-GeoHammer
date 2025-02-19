@@ -46,7 +46,7 @@ public class AltitudeCheck implements QualityCheck {
             for (int i = lineRange.getMin().intValue(); i <= lineRange.getMax().intValue(); i++) {
                 GeoData value = values.get(i);
                 SensorValue sensorValue = value.getSensorValue(GeoData.Semantic.ALTITUDE_AGL);
-                Double altitudeAgl = sensorValue.data() != null
+                Double altitudeAgl = sensorValue != null && sensorValue.data() != null
                         ? sensorValue.data().doubleValue()
                         : null;
                 if (altitudeAgl == null || altitudeAgl.isNaN()) {
