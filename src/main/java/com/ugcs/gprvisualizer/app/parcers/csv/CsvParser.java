@@ -147,7 +147,7 @@ public class CsvParser extends Parser {
 
                     boolean marked = false;
                     if (markSensorData.getIndex() != null && markSensorData.getIndex() != -1 && markSensorData.getIndex() < data.length) {
-                        marked = Integer.parseInt(data[markSensorData.getIndex()]) == 1;
+                        marked = parseInt(markSensorData, data[markSensorData.getIndex()]) instanceof Integer i && i == 1;
                     }
 
                     coordinates.add(new GeoData(marked, lineNumber, sensorValues, new GeoCoordinates(date, lat, lon, alt, traceNumber)));

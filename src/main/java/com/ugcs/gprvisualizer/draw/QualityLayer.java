@@ -28,7 +28,7 @@ public class QualityLayer extends BaseLayer {
 
     @EventListener
     private void onFileSelected(FileSelectedEvent event) {
-        if (event.getFile() == null) {
+        if (event.getFile() == null && issues != null && !issues.isEmpty()) {
             issues.clear();
         }
     }
