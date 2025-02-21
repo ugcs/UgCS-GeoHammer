@@ -121,6 +121,16 @@ public class CsvFile extends SgyFile {
                 }});
                 log.debug("Source file skippedLines: {}", skippedLines);
 
+                for(var semantic: semanticToSensorData.keySet()
+                        .stream()
+                        .filter(s -> s.contains("_anomaly")).toList()) {
+                    if (!skippedLines.contains(semanticToSensorData.get(semantic).getHeader())) {
+                        // add "*_anomaly" to the end of the header if not exists
+                        skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + semanticToSensorData.get(semantic).getHeader() + System.lineSeparator());
+                        getParser().setIndexByHeaderForSensorData(skippedLines, semanticToSensorData.get(semantic));
+                    }
+                };
+
                 if (!skippedLines.contains(nextWPColumn.getHeader())) {
                     // add "Next WP" to the end of the header if not exists
                     skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + nextWPColumn.getHeader() + System.lineSeparator());
@@ -128,7 +138,7 @@ public class CsvFile extends SgyFile {
                 }
 
                 if (!skippedLines.contains(markColumn.getHeader())) {
-                    // add "Next WP" to the end of the header if not exists
+                    // add "Mark" to the end of the header if not exists
                     skippedLines = skippedLines.replaceAll(System.lineSeparator() + "$", "," + markColumn.getHeader() + System.lineSeparator());
                 }
                 getParser().setIndexByHeaderForSensorData(skippedLines, markColumn);
@@ -169,9 +179,10 @@ public class CsvFile extends SgyFile {
         String[] parts = input.split(",", -1); // -1 for save empty string 
         if (position >= 0 && position < parts.length) {
             parts[position] = newValue;
-        } else if (position == parts.length) {
-            parts = Arrays.copyOf(parts, parts.length + 1);
+        } else if (position >= parts.length) {
+            parts = Arrays.copyOf(parts, position + 1);
             parts[parts.length - 1] = newValue;
+            parts = Arrays.stream(parts).map(p -> p == null ? "" : p).toList().toArray(parts);
         }
         return String.join(",", parts);
     }
