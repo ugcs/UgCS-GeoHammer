@@ -36,6 +36,8 @@ import javafx.scene.layout.StackPane;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.controlsfx.control.RangeSlider;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -67,6 +69,8 @@ public class OptionPane extends VBox implements InitializingBean {
 	private static final Insets DEFAULT_OPTIONS_INSETS = new Insets(10, 0, 10, 0);
 
 	private static final int RIGHT_BOX_WIDTH = 350;
+
+	private static final Logger log = LoggerFactory.getLogger(OptionPane.class);
 
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -477,7 +481,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		};
 
 		if (actions.hasApply()) {
-			applyButton.setOnAction(e -> {
+			applyButton.setOnAction(event -> {
 				disableAndShowIndicator.run();
 				executor.submit(() -> {
 					prefSettings.saveSetting(filter.name(), Map.of(
@@ -485,15 +489,17 @@ public class OptionPane extends VBox implements InitializingBean {
 							filterInput.getText()));
 					try {
 						actions.apply.accept(filterInput.getText());
+					} catch (Exception e) {
+						log.error("Error", e);
 					} finally {
-						enableAndHideIndicator.run();
+						Platform.runLater(enableAndHideIndicator);
 					}
 				});
 			});
 		}
 
 		if (actions.hasApplyAll()) {
-			applyAllButton.setOnAction(e -> {
+			applyAllButton.setOnAction(event -> {
 				disableAndShowIndicator.run();
 				executor.submit(() -> {
 					prefSettings.saveSetting(filter.name(), Map.of(
@@ -501,8 +507,10 @@ public class OptionPane extends VBox implements InitializingBean {
 							filterInput.getText()));
 					try {
 						actions.applyAll.accept(filterInput.getText());
+					} catch (Exception e) {
+						log.error("Error", e);
 					} finally {
-						enableAndHideIndicator.run();
+						Platform.runLater(enableAndHideIndicator);
 					}
 				});
 			});
@@ -898,6 +906,8 @@ public class OptionPane extends VBox implements InitializingBean {
 				try {
 					saveSettings();
 					action.accept(params);
+				} catch (Exception e) {
+					log.error("Error", e);
 				} finally {
 					Platform.runLater(this::enableAndHideIndicator);
 				}
