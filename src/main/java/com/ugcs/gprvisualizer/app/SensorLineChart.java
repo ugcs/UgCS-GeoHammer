@@ -113,16 +113,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         this.auxEditHandler = auxEditHandler;
     }
 
-    public void addFlag(FoundPlace fp) {
-        if (!foundPlaces.containsKey(fp)) {
-            putFoundPlace(fp);
-            removeVerticalMarker();
-            if (fp.isSelected()) {
-                selectFlag(fp);
-            }
-        }
-    }
-
     public void setSelectedTrace(int traceNumber) {
 
         int selectedX = traceNumber; /// scale;
@@ -153,7 +143,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 chart.updateLineChartData();
             }
         }
-        model.selectAndScrollToChart(this);
         putVerticalMarker(selectedX);
         updateProfileScroll();
     }
@@ -162,24 +151,16 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         @Override
         public void handle(MouseEvent event) {
         	if (event.getClickCount() == 2) {
-                log.debug("Double click,  x: " + event.getX() + " y: " + event.getY() + " source: " + event.getSource());
-
-                model.chartsClearSelection();
-
-                if (event.getSource() instanceof LineChart) {
-                    Axis<Number> xAxis = ((LineChart) event.getSource()).getXAxis();
+                if (event.getSource() instanceof LineChart lineChart) {
+                    Axis<Number> xAxis = lineChart.getXAxis();
                     Point2D point = xAxis.screenToLocal(event.getScreenX(), event.getScreenY());
                     Number xValue = xAxis.getValueForDisplay(point.getX());
-                    System.out.println("xValue: " + xValue.intValue());
-
-                    putVerticalMarker(xValue.intValue());
 
                     int traceIndex = xValue.intValue();
                     if (traceIndex >= 0 && traceIndex < file.getTraces().size()) {//model.getCsvTracesCount()) {
-                        GeoData geoData = file.getGeoData().get(traceIndex);
-                        model.getMapField().setSceneCenter(new LatLon(geoData.getLatitude(), geoData.getLongitude()));
-                        model.createClickPlace(file, file.getTraces().get(traceIndex));
-                        eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
+                        Trace trace = file.getTraces().get(traceIndex);
+                        model.selectTrace(trace);
+                        model.focusMapOnTrace(trace);
                     }
                 }
                 event.consume();
@@ -444,6 +425,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                                 subfile.setAuxElements(auxElements);
                                 subfile.updateInternalIndexes();
 
+                                model.clearSelectedTrace(file);
                                 model.getFileManager().removeFile(file);
                                 model.getFileManager().addFile(subfile);
                                 model.updateChart(subfile);
@@ -624,6 +606,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         });
 
         flagMarker.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            model.selectChart(this);
             selectFlag(fp);
             fp.mousePressHandle(new Point2D(event.getScreenX(), event.getScreenY()), this);
             event.consume();
@@ -659,7 +642,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return zoomRect.xMax.intValue() - zoomRect.xMin.intValue() + 1;
     }
 
-    private void selectFlag(FoundPlace fp) {
+    public void selectFlag(FoundPlace fp) {
         foundPlaces.keySet().forEach(f -> {
             var markerBox = (Pane) foundPlaces.get(f).getNode();
             Line l = (Line) markerBox.getChildren().get(1);
@@ -671,14 +654,17 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             f.setSelected(false);
         });
 
-        var markerBox = (Pane) foundPlaces.get(fp).getNode();
-        Line l = (Line) markerBox.getChildren().get(1);
-        l.setStrokeType(StrokeType.OUTSIDE);
-        var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
-        fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
-                ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
-        );
-        fp.setSelected(true);
+        // null -> clear selection
+        if (fp != null) {
+            var markerBox = (Pane) foundPlaces.get(fp).getNode();
+            Line l = (Line) markerBox.getChildren().get(1);
+            l.setStrokeType(StrokeType.OUTSIDE);
+            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
+            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
+                    ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
+            );
+            fp.setSelected(true);
+        }
     }
 
     private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex,
@@ -1767,16 +1753,33 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 : null;
     }
 
+    public List<FoundPlace> getFlags() {
+        return new ArrayList<>(foundPlaces.keySet());
+    }
+
+    public void addFlag(FoundPlace fp) {
+        if (!foundPlaces.containsKey(fp)) {
+            putFoundPlace(fp);
+            removeVerticalMarker();
+            if (fp.isSelected()) {
+                selectFlag(fp);
+            }
+        }
+    }
+
     public void clearFlags() {
-        for (FoundPlace fp: foundPlaces.keySet()) {
-            removeFlag(fp);
+        if (lastLineChart != null) {
+            for (Data<Number, Number> marker : foundPlaces.values()) {
+                lastLineChart.removeVerticalValueMarker(marker);
+            }
         }
         foundPlaces.clear();
     }
 
     public void removeFlag(FoundPlace fp) {
-        if (lastLineChart != null) {
-            lastLineChart.removeVerticalValueMarker(foundPlaces.get(fp));
+        Data<Number, Number> marker = foundPlaces.remove(fp);
+        if (marker != null && lastLineChart != null) {
+            lastLineChart.removeVerticalValueMarker(marker);
         }
     }
 }

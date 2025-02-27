@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app;
 
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
@@ -7,6 +8,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.github.thecoldwine.sigrun.common.ext.TraceSample;
 import com.github.thecoldwine.sigrun.common.ext.VerticalCutPart;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
+import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.CloseAllFilesButton;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
@@ -40,6 +42,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class GPRChart extends ScrollableData implements FileDataContainer {
 
@@ -374,9 +377,14 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                 bo.drawOnCut(g2, this);
             }
         }
-        if (model.getControls() != null) {
-            for (BaseObject bo : model.getControls()) {
-                bo.drawOnCut(g2, this);
+
+        for (ClickPlace clickPlace : model.getSelectedTraces()) {
+            Trace trace = clickPlace.getTrace();
+            if (trace.getFile() instanceof GprFile gprFile) {
+                GPRChart traceChart = model.getProfileField(gprFile);
+                if (Objects.equals(this, traceChart)) {
+                    clickPlace.drawOnCut(g2, this);
+                }
             }
         }
     }
@@ -564,19 +572,10 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                 Point2D p = getLocalCoords(event);
 
                 int traceIndex = screenToTraceSample(p).getTrace();
-
                 if (traceIndex >= 0 && traceIndex < getField().getGprTracesCount()) {
-
-                    Trace trace = getField().getGprTraces()
-                            .get(traceIndex);
-
-                    // select in MapView
-                    model.getMapField().setSceneCenter(
-                            trace.getLatLon());
-
-                    model.createClickPlace(trace.getFile(), trace);
-
-                    model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
+                    Trace trace = getField().getGprTraces().get(traceIndex);
+                    model.selectTrace(trace);
+                    model.focusMapOnTrace(trace);
                 }
             }
         }
@@ -757,5 +756,10 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
         return new Point2D(
                 traceToScreen(ts.getTrace()) + (int) (getHScale() / 2),
                 sampleToScreen(ts.getSample()) + (int) (getVScale() / 2));
+    }
+
+    public void update() {
+        updateScroll();
+        repaint();
     }
 }

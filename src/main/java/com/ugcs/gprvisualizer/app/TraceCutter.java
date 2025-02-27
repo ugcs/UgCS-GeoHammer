@@ -209,9 +209,8 @@ public class TraceCutter implements Layer, InitializingBean {
 	}
 
 	private void apply() {
-		
-		model.setControls(null);
-		
+		model.clearSelectedTraces();
+
 		MapField fld = new MapField(field);
 		fld.setZoom(28);
 		List<Point2D> border = getScreenPoligon(fld);
@@ -251,7 +250,7 @@ public class TraceCutter implements Layer, InitializingBean {
 	}
 
 	private void undo() {
-		model.setControls(null);
+		model.clearSelectedTraces();
 
 		if (!undoFiles.isEmpty()) {
 

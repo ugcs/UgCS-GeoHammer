@@ -23,12 +23,17 @@ public class TraceUtils {
     }    
 
     public static Trace findNearestTrace(List<Trace> traces, LatLon ll) {
+        if (traces == null || traces.isEmpty()) {
+            return null;
+        }
+        if (ll == null) {
+            return null;
+        }
 
-        Trace result = traces.get(0);
+        Trace result = traces.getFirst();
         double mindst = ll.getDistance(result.getLatLon());
 
-        for (int i = 0; i < traces.size(); i++) {
-            Trace current = traces.get(i);
+        for (Trace current : traces) {
             double dst = ll.getDistance(current.getLatLon());
             if (dst < mindst) {
                 result = current;
@@ -37,5 +42,14 @@ public class TraceUtils {
         }
         
         return result;
+    }
+
+    public static Trace findNearestTrace(List<Trace> traces, LatLon ll, double maxDistance) {
+        Trace nearestTrace = findNearestTrace(traces, ll);
+        if (nearestTrace == null) {
+            return null;
+        }
+        double distance = nearestTrace.getLatLon().getDistance(ll);
+        return distance <= maxDistance ? nearestTrace : null;
     }
 }
