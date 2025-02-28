@@ -413,10 +413,12 @@ public class OptionPane extends VBox implements InitializingBean {
 	}
 
 	public void griddingProgress(boolean inProgress) {
-		showGriddingButton.setDisable(inProgress);
-		showGriddingAllButton.setDisable(inProgress);
-		griddingProgressIndicator.setVisible(inProgress);
-		griddingProgressIndicator.setManaged(inProgress);
+		Platform.runLater(() -> {
+			showGriddingButton.setDisable(inProgress);
+			showGriddingAllButton.setDisable(inProgress);
+			griddingProgressIndicator.setVisible(inProgress);
+			griddingProgressIndicator.setManaged(inProgress);
+		});
 	}
 
 	static class FilterActions {
