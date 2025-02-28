@@ -27,6 +27,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
@@ -139,7 +140,7 @@ public class OptionPane extends VBox implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 
-		this.setPadding(new Insets(3, 3, 3, 3));
+		this.setPadding(Insets.EMPTY);
 		this.setPrefWidth(RIGHT_BOX_WIDTH);
 		this.setMinWidth(0);
 		this.setMaxWidth(RIGHT_BOX_WIDTH);
@@ -174,7 +175,7 @@ public class OptionPane extends VBox implements InitializingBean {
 		qualityControl.setMaxWidth(Double.MAX_VALUE);
 
 		VBox t3 = new VBox();
-		t3.setPadding(new Insets(10,5,5,5));
+		t3.setPadding(new Insets(10,8,10,8));
 		t3.setSpacing(5);
 
 		FilterActions lowPassActions = new FilterActions();
@@ -232,7 +233,6 @@ public class OptionPane extends VBox implements InitializingBean {
 				timeLagButton, timeLagOptions,
 				medianCorrection, medianCorrectionOptions,
 				qualityControl, qualityControlView.getRoot()));
-		t3.setPrefHeight(500);
 
 		lowPassFilterButton.setOnAction(getChangeVisibleAction(lowPassOptions));
 		gridding.setOnAction(getChangeVisibleAction(griddingPane));
@@ -240,7 +240,16 @@ public class OptionPane extends VBox implements InitializingBean {
 		medianCorrection.setOnAction(getChangeVisibleAction(medianCorrectionOptions));
 		qualityControl.setOnAction(getChangeVisibleAction(qualityControlView.getRoot()));
 
-		tab.setContent(t3);
+		ScrollPane scrollPane = new ScrollPane(t3);
+		scrollPane.setFitToWidth(true);
+		scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+		// set reasonably large amount to fit tab height;
+		// this seems the only way to force pane to fill container
+		// in height
+		scrollPane.setPrefHeight(10_000);
+
+		tab.setContent(scrollPane);
 	}
 
 	private static @NotNull EventHandler<ActionEvent> getChangeVisibleAction(StackPane filterOptionsStackPane) {
