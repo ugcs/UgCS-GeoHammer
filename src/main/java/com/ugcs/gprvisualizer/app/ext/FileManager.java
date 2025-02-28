@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -204,6 +205,10 @@ public class FileManager {
 
 	public List<SgyFile> getCsvFiles() {
 		return files.stream().filter(CsvFile.class::isInstance).collect(Collectors.toList());
+	}
+
+	public List<SgyFile> getFiles() {
+		return Collections.unmodifiableList(files);
 	}
 
 	public int getFilesCount() {

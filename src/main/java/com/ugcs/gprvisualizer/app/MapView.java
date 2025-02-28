@@ -209,26 +209,12 @@ public class MapView implements InitializingBean {
         	
         	if (event.getClickCount() == 2) {
         		Point2D p = getLocalCoords(event);
-        		LatLon ll = model.getMapField().screenTolatLon(p);
-        		Trace trace = TraceUtils.findNearestTrace(
-        				model.getTraces(), ll);
-
-				//int indexInFile = trace.getFile().getTraces().indexOf(trace);
-
-				if (trace.getFile() instanceof CsvFile) {
-					Optional<SensorLineChart> chart = model.getChart((CsvFile) trace.getFile());
-					if (chart.isPresent()) {
-						chart.get().setSelectedTrace(trace.getIndexInFile());
-					} 
-				} else {
-					model.getProfileField(trace.getFile()).setMiddleTrace(trace.getIndexInSet());
-				}				
-				model.createClickPlace(trace.getFile(), trace);
+        		LatLon location = model.getMapField().screenTolatLon(p);
+				model.selectNearestTrace(location);
 			}
 		}
 	};
-	
-	
+
 	public Node getCenter() {
 		
 		toolBar.setDisable(true);

@@ -1,29 +1,32 @@
 package com.ugcs.gprvisualizer.gpr;
 
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.ugcs.gprvisualizer.app.*;
 import com.ugcs.gprvisualizer.app.auxcontrol.*;
+import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
 import com.ugcs.gprvisualizer.event.BaseEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.utils.TraceUtils;
 import javafx.scene.layout.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -32,11 +35,9 @@ import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.FileChangeType;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
-import com.github.thecoldwine.sigrun.common.ext.ProfileField;
 import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.ext.FileManager;
-import com.ugcs.gprvisualizer.draw.ShapeHolder;
 import com.ugcs.gprvisualizer.math.MinMaxAvg;
 
 import javafx.application.Platform;
@@ -55,6 +56,9 @@ public class Model implements InitializingBean {
 	public static final int TOP_MARGIN = 50;
 	public static final int CHART_MIN_HEIGHT = 400;
 
+	@Value( "${trace.lookup.threshold}" )
+	private Double traceLookupThreshold;
+
 	private boolean loading = false; 
 	
 	private final MapField field = new MapField();
@@ -65,7 +69,7 @@ public class Model implements InitializingBean {
 	
 	private final List<BaseObject> auxElements = new ArrayList<>();
 
-	private List<BaseObject> controls = null;
+	private final List<ClickPlace> selectedTraces = new ArrayList<>();
 
 	private boolean kmlToFlagAvailable = false;
 
@@ -81,6 +85,7 @@ public class Model implements InitializingBean {
 
 	private final ApplicationEventPublisher eventPublisher;
 
+	private SgyFile currentFile;
 
 	public Model(FileManager fileManager, PrefSettings prefSettings, ApplicationEventPublisher eventPublisher) {
 		this.prefSettings = prefSettings;
@@ -113,6 +118,10 @@ public class Model implements InitializingBean {
 		return fileManager;
 	}
 
+	public SgyFile getCurrentFile() {
+		return currentFile;
+	}
+
 	public Set<FileChangeType> getChanges() {
 		return changes;
 	}
@@ -125,14 +134,6 @@ public class Model implements InitializingBean {
 		return List.copyOf(combinedElements);
 	}
 
-	public List<BaseObject> getControls() {
-		return controls;
-	}
-
-	public void setControls(List<BaseObject> controls) {
-		this.controls = controls;
-	}
-	
 	public void updateAuxElements() {
 		gprCharts.values().forEach(
 				GPRChart::updateAuxElements
@@ -342,14 +343,6 @@ public class Model implements InitializingBean {
 		return Optional.ofNullable(csvFiles.get(csvFile));
     }
 
-	public void chartsClearSelection() {
-		csvFiles.forEach((file, chart) -> {
-			if (Platform.isFxApplicationThread()) {
-				chart.removeVerticalMarker();
-			}
-		});
-	}
-
 	public void chartsZoomOut() {
 		csvFiles.forEach((file, chart) -> {
 			chart.zoomToFit();
@@ -496,6 +489,20 @@ public class Model implements InitializingBean {
 		return selected;
     }
 
+	public boolean selectAndScrollToChart(SgyFile file) {
+		FileDataContainer container = null;
+		if (file instanceof CsvFile csvFile) {
+			container = getChart(csvFile).orElse(null);
+		}
+		if (file instanceof GprFile gprFile) {
+			container = getProfileField(gprFile);
+		}
+		if (container == null) {
+			return false;
+		}
+		return selectAndScrollToChart(container);
+	}
+
 	private ScrollPane findScrollPane(Node node) {
         Parent parent = node.getParent();
         while (parent != null) {
@@ -518,10 +525,124 @@ public class Model implements InitializingBean {
         scrollPane.setVvalue(vValue < 0 ? Double.POSITIVE_INFINITY : vValue);
     }
 
-	public void createClickPlace(SgyFile file, Trace trace) {
-		ClickPlace fp = new ClickPlace(file, trace);
-		fp.setSelected(true);
-		setControls(Arrays.asList(fp));
+	public List<ClickPlace> getSelectedTraces() {
+		return Collections.unmodifiableList(selectedTraces);
+	}
+
+	public ClickPlace getSelectedTrace(SgyFile file) {
+		if (file == null) {
+			return null;
+		}
+		for (ClickPlace clickPlace : selectedTraces) {
+			if (Objects.equals(file, clickPlace.getTrace().getFile())) {
+				return clickPlace;
+			}
+		}
+		return null;
+	}
+
+	public void selectTrace(Trace trace) {
+		selectTrace(trace, false);
+	}
+
+	public void selectTrace(Trace trace, boolean focusOnChart) {
+		if (trace == null) {
+			return;
+		}
+
+		selectedTraces.clear();
+		selectedTraces.add(toClickPlace(trace, true));
+		for (SgyFile file : fileManager.getFiles()) {
+			if (Objects.equals(file, trace.getFile())) {
+				continue;
+			}
+			Trace nearestInFile = TraceUtils.findNearestTrace(
+					file.getTraces(),
+					trace.getLatLon(),
+					traceLookupThreshold);
+			if (nearestInFile != null) {
+				selectedTraces.add(toClickPlace(nearestInFile, false));
+			}
+		}
+
+		Platform.runLater(() -> {
+			for (SgyFile file : fileManager.getFiles()) {
+				boolean focusOnTrace = focusOnChart || !Objects.equals(file, trace.getFile());
+				updateSelectedTraceOnChart(file, focusOnTrace);
+			}
+			if (focusOnChart) {
+				selectAndScrollToChart(trace.getFile());
+			}
+		});
+	}
+
+	public void selectNearestTrace(LatLon location) {
+		if (location == null) {
+			return;
+		}
+		Trace nearestTrace = TraceUtils.findNearestTrace(getTraces(), location);
+		selectTrace(nearestTrace, true);
+	}
+
+	public void clearSelectedTrace(SgyFile file) {
+		selectedTraces.removeIf(x -> Objects.equals(x.getTrace().getFile(), file));
+		Platform.runLater(() -> updateSelectedTraceOnChart(file, false));
+	}
+
+	public void clearSelectedTraces() {
+		selectedTraces.clear();
+		Platform.runLater(() -> {
+			for (SgyFile file : fileManager.getFiles()) {
+				updateSelectedTraceOnChart(file, false);
+			}
+		});
+	}
+
+	private void updateSelectedTraceOnChart(SgyFile file, boolean focusOnTrace) {
+		if (file == null) {
+			return;
+		}
+		ClickPlace clickPlace = getSelectedTrace(file);
+		if (file instanceof CsvFile csvFile) {
+			Optional<SensorLineChart> chart = getChart(csvFile);
+			chart.ifPresent(sensorLineChart -> {
+				if (clickPlace != null) {
+					Trace trace = clickPlace.getTrace();
+					// TODO focusOnTrace does not affect behavior
+					sensorLineChart.setSelectedTrace(trace.getIndexInFile());
+				} else {
+					sensorLineChart.removeVerticalMarker();
+				}
+			});
+		}
+		if (file instanceof GprFile gprFile) {
+			GPRChart chart = getProfileField(gprFile);
+			if (chart != null) {
+				if (clickPlace != null) {
+					if (focusOnTrace) {
+						Trace trace = clickPlace.getTrace();
+						chart.setMiddleTrace(trace.getIndexInSet());
+					}
+				}
+				// trigger repaint
+				chart.update();
+			}
+		}
+	}
+
+	private ClickPlace toClickPlace(Trace trace, boolean selected) {
+		ClickPlace clickPlace = new ClickPlace(trace.getFile(), trace);
+		clickPlace.setSelected(selected);
+		return clickPlace;
+	}
+
+	public void focusMapOnTrace(Trace trace) {
+		if (trace == null) {
+			return;
+		}
+
+		field.setSceneCenter(trace.getLatLon());
+		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.mapscroll));
 	}
 
     public Collection<SensorLineChart> getCharts() {
@@ -575,5 +696,15 @@ public class Model implements InitializingBean {
 					Platform.runLater(v::updateChartName)
 			);
 		}
+	}
+
+	@EventListener
+	private void fileSelected(FileSelectedEvent event) {
+		currentFile = event.getFile();
+	}
+
+	@EventListener
+	private void fileClosed(FileClosedEvent event) {
+		clearSelectedTrace(event.getSgyFile());
 	}
 }
