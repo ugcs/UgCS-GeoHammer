@@ -7,6 +7,7 @@ import com.ugcs.gprvisualizer.app.quality.QualityIssue;
 import com.ugcs.gprvisualizer.app.quality.Segment;
 import com.ugcs.gprvisualizer.app.quality.StripeQualityIssue;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
+import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.Check;
 import javafx.geometry.Point2D;
 import org.springframework.context.event.EventListener;
@@ -30,6 +31,15 @@ public class QualityLayer extends BaseLayer {
     private void onFileSelected(FileSelectedEvent event) {
         if (event.getFile() == null && issues != null && !issues.isEmpty()) {
             issues.clear();
+        }
+    }
+
+    @EventListener
+    private void somethingChanged(WhatChanged changed) {
+        if (changed.isTraceCut()) {
+            if (issues != null) {
+                issues.clear();
+            }
         }
     }
 
