@@ -245,7 +245,7 @@ public class CsvFile extends SgyFile {
     @Override
     public void updateInternalIndexes() {
         super.updateInternalIndexes();
-        for (int i = 0; i < getTraces().size(); i++) {
+        for (int i = 0; i < Math.min(getGeoData().size(), getTraces().size()); i++) {
             getGeoData().get(i).setTraceNumber(i);
         }
     }
