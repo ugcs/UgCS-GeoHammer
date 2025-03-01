@@ -616,7 +616,6 @@ public class OptionPane extends VBox implements InitializingBean {
 	private void applyMedianCorrection(int value) {
 		var chart = model.getChart((CsvFile) selectedFile);
 		chart.ifPresent(c -> c.medianCorrection(c.getSelectedSeriesName(), value));
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}
 
 	private void applyMedianCorrectionToAll(int value) {
@@ -627,7 +626,6 @@ public class OptionPane extends VBox implements InitializingBean {
 					.filter(c -> c.isSameTemplate((CsvFile) selectedFile))
 					.forEach(c -> c.medianCorrection(seriesName, value));
 		});
-		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.csvDataFiltered));
 	}	
 
 	private void toggleQualityLayer(boolean active) {

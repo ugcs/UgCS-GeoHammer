@@ -5,9 +5,11 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
@@ -17,10 +19,13 @@ import com.ugcs.gprvisualizer.app.OptionPane;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.math.IDWInterpolator;
 import edu.mines.jtk.interp.SplinesGridder2;
+import javafx.application.Platform;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.index.kdtree.KdNode;
 import org.locationtech.jts.index.kdtree.KdTree;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,6 +38,25 @@ import com.ugcs.gprvisualizer.math.CoordinatesMath;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
+/**
+ * Layer responsible for grid visualization of GPR data.
+ * 
+ * This implementation supports two interpolation methods:
+ * 1. Splines interpolation (default):
+ *    - Uses SplinesGridder2 with high tension (0.9999f)
+ *    - Suitable for dense, regular data
+ *    - Works well with small to medium cell sizes
+ * 
+ * 2. IDW (Inverse Distance Weighting):
+ *    - Better handling of large cell sizes
+ *    - Prevents artifacts in sparse data areas
+ *    - Adaptive search radius based on data density
+ *    - Configurable power parameter for distance weighting
+ * 
+ * The interpolation method can be selected through GriddingParamsSetted event.
+ * For large cell sizes or irregular data distribution, IDW is recommended
+ * to avoid interpolation artifacts.
+ */
 @Component
 public class GridLayer extends BaseLayer implements InitializingBean {
 
@@ -62,6 +86,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	private CsvFile file;
 	private double cellSize;
 	private double blankingDistance;
+	private GriddingParamsSetted currentParams;
 
 	private volatile boolean recalcGrid;
 	private boolean toAll;
@@ -72,13 +97,15 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 		q = new ThrQueue(model, mapView) {
 			protected void draw(BufferedImage backImg, MapField field) {
-				optionPane.griddingProgress(true);
+				if (recalcGrid) {
+					optionPane.griddingProgress(true);
+				}
 
 				Graphics2D g2 = (Graphics2D) backImg.getGraphics();
 				g2.translate(backImg.getWidth() / 2, backImg.getHeight() / 2);
 				drawOnMapField(g2, field);
 			}
-			
+
 			public void ready() {
 				optionPane.griddingProgress(false);
 				getRepaintListener().repaint();
@@ -87,7 +114,7 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 		optionPane.getGridding().addEventHandler(ActionEvent.ACTION, showMapListener);
 	}
-		
+
 	@Override
 	public void draw(Graphics2D g2, MapField currentField) {
 		if (currentField.getSceneCenter() == null || !isActive()) {
@@ -111,9 +138,8 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 		}
 	}
 
-	record DataPoint(double latitude, double longitude, double value) implements Comparable<DataPoint> {
-
-		DataPoint {
+	public static record DataPoint(double latitude, double longitude, double value) implements Comparable<DataPoint> {
+		public DataPoint {
 			if (latitude < -90 || latitude > 90) {
 				throw new IllegalArgumentException("Latitude must be in range [-90, 90]");
 			}
@@ -151,32 +177,47 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	private LatLon maxLatLon;
 	private float[][] gridData;
 
+	/**
+	 * Draws the grid visualization for a given file on the map field.
+	 * 
+	 * The method performs the following steps:
+	 * 1. Collects data points from the file
+	 * 2. Creates a grid based on cell size
+	 * 3. Interpolates missing values using either:
+	 *    - IDW interpolation (for large cell sizes)
+	 *    - Splines interpolation (for small/medium cell sizes)
+	 * 4. Renders the interpolated grid
+	 * 
+	 * The interpolation method is selected based on GriddingParamsSetted configuration.
+	 */
 	private void drawFileOnMapField(Graphics2D g2, MapField field, CsvFile csvFile) {
+
+		var minValue = optionPane.getGriddingRangeSlider().isDisabled() ? null : (float) optionPane.getGriddingRangeSlider().getLowValue();
+		var maxValue = optionPane.getGriddingRangeSlider().isDisabled() ? null : (float) optionPane.getGriddingRangeSlider().getHighValue();
 
 		if (recalcGrid) {
 			var chart = model.getChart(csvFile);
 			String sensor = chart.get().getSelectedSeriesName();
 
-			//if (chart.isPresent()) {
-			//	sensor = chart.get().getSelectedSeriesName();
-			//} else {
-			//	sensor = GeoData.Semantic.TMI.getName();
-			//}
+			var startFiltering = System.currentTimeMillis();
 
 			dataPoints = new ArrayList<>();
 			for(CsvFile csvFile1: model.getFileManager().getCsvFiles().stream().map(f -> (CsvFile)f).filter(f ->
 					toAll ? f.isSameTemplate(csvFile) : f.equals(csvFile)).toList()) {
 				dataPoints.addAll(getDataPoints(csvFile1, sensor));
 			}
-			dataPoints = getMedianValues(dataPoints);
 
+			dataPoints = getMedianValues(dataPoints);
 			double minLon = dataPoints.stream().mapToDouble(DataPoint::longitude).min().orElseThrow();
 			double maxLon = dataPoints.stream().mapToDouble(DataPoint::longitude).max().orElseThrow();
 			double minLat = dataPoints.stream().mapToDouble(DataPoint::latitude).min().orElseThrow();
 			double maxLat = dataPoints.stream().mapToDouble(DataPoint::latitude).max().orElseThrow();
-
 			minLatLon = new LatLon(minLat, minLon);
 			maxLatLon = new LatLon(maxLat, maxLon);
+
+			List<Double> valuesList = new ArrayList<>(dataPoints.stream().map(p -> p.value).toList());
+			var median = calculateMedian(valuesList);
+			//var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
 
 			int gridSizeX = (int) Math.max(new LatLon(minLat, minLon).getDistance(new LatLon(minLat, maxLon)),
 					new LatLon(maxLat, minLon).getDistance(new LatLon(maxLat, maxLon)));
@@ -193,43 +234,81 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 			gridData = new float[gridSizeX][gridSizeY];
 
-			var average = dataPoints.stream().mapToDouble(p -> p.value).average().getAsDouble();
-            //List<Double> valuesList = new ArrayList<>(dataPoints.stream().map(p -> p.value).toList());
-			//var average = calculateMedian(valuesList);
-			//var average = 0.0f;
-
-			for (DataPoint point : dataPoints) {
-				int xIndex = (int) ((point.longitude - minLon) / lonStep);
-				int yIndex = (int) ((point.latitude - minLat) / latStep);
-				try {
-					gridData[xIndex][yIndex] = (float) point.value;
-				} catch (ArrayIndexOutOfBoundsException e) {
-					System.out.println("xIndex = " + xIndex + " yIndex = " + yIndex);
+			boolean[][] m = new boolean[gridSizeX][gridSizeY];
+			for (int i = 0; i < gridSizeX; i++) {
+				for (int j = 0; j < gridSizeY; j++) {
+					m[i][j] = true;
 				}
 			}
 
-			int n1 = gridData[0].length;
-			int n2 = gridData.length;
-			boolean[][] m = new boolean[n2][n1];
-			for (int i2=0; i2<n2; ++i2)
-				for (int i1=0; i1<n1; ++i1)
-					m[i2][i1] = gridData[i2][i1] == 0; //average;
+			Map<String, List<Double>> points = new HashMap<>();
+			for (DataPoint point : dataPoints) {
+				int xIndex = (int) ((point.longitude - minLon) / lonStep);
+				int yIndex = (int) ((point.latitude - minLat) / latStep);
 
-			KdTree kdTree = buildKdTree(dataPoints);
+				String key = xIndex + "," + yIndex;
+				points.computeIfAbsent(key, (k -> new ArrayList<Double>())).add(point.value);
+			}
 
-			double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
-			double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
+			var gridBDx = gridSizeX / (gridSizeX * cellSize / blankingDistance);
+			var gridBDy = gridSizeY / (gridSizeY * cellSize / blankingDistance);
+			var visiblePoints = new boolean[gridSizeX][gridSizeY];
+
+			for (Map.Entry<String, List<Double>> entry : points.entrySet()) {
+				String[] coords = entry.getKey().split(",");
+				int xIndex = Integer.parseInt(coords[0]);
+				int yIndex = Integer.parseInt(coords[1]);
+				double medianValue = calculateMedian(entry.getValue());
+				try {
+					gridData[xIndex][yIndex] = (float) medianValue;
+					m[xIndex][yIndex] = false;
+
+					for (int dx = -(int)gridBDx; dx <= gridBDx; dx++) {
+						for (int dy = -(int)gridBDy; dy <= gridBDy; dy++) {
+							int nx = xIndex + dx;
+							int ny = yIndex + dy;
+							if (nx >= 0 && nx < gridSizeX && ny >= 0 && ny < gridSizeY) {
+								visiblePoints[nx][ny] = true;
+							}
+						}
+					}
+
+
+				} catch (ArrayIndexOutOfBoundsException e) {
+					System.out.println("Out of bounds - xIndex = " + xIndex + " yIndex = " + yIndex);
+				}
+			}
+
+			//double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
+			//double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
+
+			// Build a minimal polygon containing all data points and check current point.
+			//var geomFactory = new org.locationtech.jts.geom.GeometryFactory();
+			//var hullPolygon = geomFactory.createPolygon(new org.locationtech.jts.algorithm.ConvexHull(
+			//		dataPoints.stream()
+			//				.map(p -> new Coordinate(p.longitude, p.latitude))
+			//				.toArray(Coordinate[]::new), new GeometryFactory())
+			//		.getConvexHull()
+			//		.getCoordinates());
+
 
 			int count = 0;
+
+			m = thinOutBooleanGrid(m);
+
 			for (int i = 0; i < gridData.length; i++) {
 				for (int j = 0; j < gridData[0].length; j++) {
 
-					if (gridData[i][j] != 0) {
+					//if (gridData[i][j] != 0) {
+					//	continue;
+					//}
+
+					if (!m[i][j]) {
 						continue;
 					}
 
-					double lat = minLatLon.getLatDgr() + j * latStep;
-					double lon = minLatLon.getLonDgr() + i * lonStep;
+					//double lat = minLatLon.getLatDgr() + j * latStep;
+					//double lon = minLatLon.getLonDgr() + i * lonStep;
 
 					//TODO: convert to use nearest neighbors
 					//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
@@ -237,66 +316,242 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					//	continue;
 					//}
 
-					var delta = 1;
-					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
+					//var delta = 1;
+					//List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
 
-					gridData[i][j] = (float) average;//Float.NaN;
+					//gridData[i][j] = (float) average;//Float.NaN;
 
-					if (neighbors.isEmpty()) {
+					//if (neighbors.isEmpty()) {
 						//gridData[i][j] = (float) average;//Float.NaN;
+					//	m[i][j] = false;
+					//	count++;
+					//}
+
+					gridData[i][j] = (float) median;
+					//if (!hullPolygon.contains(geomFactory.createPoint(new Coordinate(lon, lat)))) {
+					//	m[i][j] = false;
+					//}
+
+					if (!visiblePoints[i][j]) {
 						m[i][j] = false;
 						count++;
 					}
 				}
 			}
 
+			System.out.println("Filtering complete in " + (System.currentTimeMillis() - startFiltering) / 1000 + "s");
+			System.out.println("Aditional points: " + count);
 
-			var gridder = new SplinesGridder2();
-			//gridder.setTension(0.999f);
-			gridder.setTension(0.9999f);
-			//gridder.setTension(0.0f);
-			gridder.gridMissing(m, gridData);
+			if (1 != 1 && currentParams != null && currentParams.getInterpolationMethod() == GriddingParamsSetted.InterpolationMethod.IDW) {
+				System.out.println("IDW interpolation");
 
-			//var minValue = ArrayMath.min(gridData);
-			//var maxValue = ArrayMath.max(gridData);
-			//System.out.println("minValue = " + minValue + " maxValue = " + maxValue);
+				Collections.shuffle(dataPoints);
+				KdTree kdTree = buildKdTree(dataPoints);
+				System.out.println("kdTree depth: " + kdTree.depth());
 
-			//KdTree kdTree = buildKdTree(dataPoints);
+				// Initialize IDW interpolator with configured parameters
+				var idwInterpolator = new IDWInterpolator(
+					kdTree,
+					currentParams.getIdwPower(),
+					currentParams.getIdwMinPoints(),
+					cellSize * 2, // max search radius
+					cellSize     // initial search radius
+				);
 
-			//double lonStepBD = (maxLatLon.getLonDgr() - minLatLon.getLonDgr()) / (gridSizeX * cellSize / blankingDistance);
-			//double latStepBD = (maxLatLon.getLatDgr() - minLatLon.getLatDgr()) / (gridSizeY * cellSize / blankingDistance);
+				// Interpolate missing values using IDW
+				for (int i = 0; i < gridData.length; i++) {
+					for (int j = 0; j < gridData[0].length; j++) {
+						if (m[i][j]) { // if point is missing
+							double lon = minLatLon.getLonDgr() + i * lonStep;
+							double lat = minLatLon.getLatDgr() + j * latStep;
+							double interpolatedValue = idwInterpolator.interpolate(lon, lat);
+							gridData[i][j] = (float) interpolatedValue;
+						}
+					}
+				}
+			} else {
+				System.out.println("Splines interpolation");
+				var start = System.currentTimeMillis();
+				// Use original splines interpolation
+				var gridder = new SplinesGridder2();
+				var maxIterations = 100;
+				var tension = 0f;
 
-			//int count = 0;
+				gridder.setMaxIterations(maxIterations); // 200 if the anomaly
+				gridder.setTension(tension); //0.9999999f); - maximum
+				gridder.gridMissing(m, gridData);
+				if (gridder.getIterationCount() >= maxIterations) {
+					tension = 0.999999f;
+					maxIterations = 200;
+					gridder.setTension(tension);
+					gridder.setMaxIterations(maxIterations);
+					gridder.gridMissing(m, gridData);
+				}
+				System.out.println("Iterations: " + gridder.getIterationCount() + " time: " + (System.currentTimeMillis() - start) / 1000 + "s" + " tension: " + tension + " maxIterations: " + maxIterations);
+			}
+
+			System.out.println("Interpolation complete");
+
 			for (int i = 0; i < gridData.length; i++) {
 				for (int j = 0; j < gridData[0].length; j++) {
 
-					double lat = minLatLon.getLatDgr() + j * latStep;
-					double lon = minLatLon.getLonDgr() + i * lonStep;
+					//double lat = minLatLon.getLatDgr() + j * latStep;
+					//double lon = minLatLon.getLonDgr() + i * lonStep;
 
-					//TODO: convert to use nearest neighbors
-					//if (!isInBlankingDistanceToKnownPoints(lat, lon, dataPoints, blankingDistance)) {
+					//if (!hullPolygon.contains(geomFactory.createPoint(new Coordinate(lon, lat)))) {
 					//	gridData[i][j] = Float.NaN;
 					//	continue;
 					//}
 
-					var delta = 1;
-					List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
-					if (neighbors.isEmpty()) {
+					if (!visiblePoints[i][j]) {
 						gridData[i][j] = Float.NaN;
-						//count++;
 					}
+
+					//if (!hullPolygon.contains(geomFactory.createPoint(new Coordinate(lon, lat)))) {
+					//	gridData[i][j] = Float.NaN;
+					//} else {
+					//	var delta = 1;
+						//List<KdNode> neighbors = kdTree.query(new Envelope(lon - delta*lonStepBD, lon + delta*lonStepBD, lat - delta * latStepBD, lat + delta * latStepBD)); // maxNeighbors);
+						//if (neighbors.isEmpty()) {
+						//	gridData[i][j] = Float.NaN;
+						//count++;
+						//}
+					//}
 				}
 			}
+
 			recalcGrid = false;
 		}
-
-		var minValue = optionPane.getGriddingRangeSlider().isDisabled() ? null : (float) optionPane.getGriddingRangeSlider().getLowValue();
-		var maxValue = optionPane.getGriddingRangeSlider().isDisabled() ? null : (float) optionPane.getGriddingRangeSlider().getHighValue();
 
 		if (minValue == null || maxValue == null) {
 			return;
 		}
 
+		System.out.println("Printing minValue = " + minValue + " maxValue = " + maxValue);
+		print(g2, field, minValue, maxValue);
+	}
+
+
+	/**
+	 * Before thinning, determine the minimum number of true values per row and column.
+	 */
+	private static int[] computeRowColMin(boolean[][] gridData) {
+		int rows = gridData.length;
+		int cols = rows > 0 ? gridData[0].length : 0;
+		int minRowTrue = Integer.MAX_VALUE;
+		int[] rowCounts = new int[rows];
+		int[] colCounts = new int[cols];
+
+		for (int i = 0; i < rows; i++) {
+			int countRow = 0;
+			for (int j = 0; j < cols; j++) {
+				if (!gridData[i][j]) {
+					countRow++;
+					colCounts[j]++;
+				}
+			}
+			rowCounts[i] = countRow;
+		}
+		int rowsum = 0;
+		int rowcount = 0;
+		for (int i = 0; i < rows; i++) {
+			if (rowCounts[i] > cols * 0.01) {
+				rowsum += rowCounts[i];
+				rowcount++;
+			}
+		}
+
+		int colsum = 0;
+		int colcount = 0;
+		for (int j = 0; j < cols; j++) {
+			if (colCounts[j] > rows * 0.01) {
+				colsum += colCounts[j];
+				colcount++;
+			}
+		}
+		return new int[]{rowsum / (rowcount != 0 ? rowcount : 1), colsum / (colcount != 0 ? colcount : 1)};
+	}
+
+	/**
+	 * Thin out the matrix by rows and columns so that the minimum density is not reduced.
+	 * If almost all cells are filled, the array is returned unchanged.
+	 */
+	public static boolean[][] thinOutBooleanGrid(boolean[][] gridData) {
+		int rows = gridData.length;
+		int cols = rows > 0 ? gridData[0].length : 0;
+
+		int[] minValues = computeRowColMin(gridData);
+		int minRowTrue = minValues[0];
+		int minColTrue = minValues[1];
+
+		if (minRowTrue >= cols * 0.9 && minColTrue >= rows * 0.9 || minRowTrue == 0 && minColTrue == 0) {
+			return gridData;
+		}
+
+		double avg = Math.min(0.22, Math.min((double) minRowTrue / cols, (double) minColTrue / rows));
+
+		if (avg < 0.05) {
+			return gridData;
+		}
+
+		boolean[][] result = new boolean[rows][cols];
+		for (int i = 0; i < rows; i++) {
+			System.arraycopy(gridData[i], 0, result[i], 0, cols);
+		}
+
+		for (int i = 0; i < rows; i++) {
+			List<Integer> trueIndices = new ArrayList<>();
+			for (int j = 0; j < cols; j++) {
+				if (!result[i][j]) {
+					trueIndices.add(j);
+				}
+			}
+			int count = trueIndices.size();
+			minRowTrue = (int) (avg * cols);
+			if (count > minRowTrue && minRowTrue > 0) {
+				List<Integer> keepIndices = new ArrayList<>();
+				double step = (double) (count - 1) / (minRowTrue - 1);
+				for (int k = 0; k < minRowTrue; k++) {
+					int index = trueIndices.get((int)Math.round(k * step));
+					keepIndices.add(index);
+				}
+				for (int j = 0; j < cols; j++) {
+					result[i][j] = true;
+				}
+				for (int j : keepIndices) {
+					result[i][j] = false;
+				}
+			}
+		}
+
+		for (int j = 0; j < cols; j++) {
+			List<Integer> trueIndices = new ArrayList<>();
+			for (int i = 0; i < rows; i++) {
+				if (!result[i][j]) {
+					trueIndices.add(i);
+				}
+			}
+			int count = trueIndices.size();
+			minColTrue = (int) (avg * rows);
+			if (count > minColTrue && minColTrue > 0) {
+				List<Integer> keepIndices = new ArrayList<>();
+				double step = (double) (count - 1) / (minColTrue - 1);
+				for (int k = 0; k < minColTrue; k++) {
+					int index = trueIndices.get((int)Math.round(k * step));
+					keepIndices.add(index);
+				}
+				for (int i = 0; i < rows; i++) {
+					result[i][j] = true;
+				}
+				for (int i : keepIndices) {
+					result[i][j] = false;
+				}
+			}
+		}
+		return result;
+	}
+
+	private void print(Graphics2D g2, MapField field, Float minValue, Float maxValue) {
 		int gridSizeX = gridData.length;
 		int gridSizeY = gridData[0].length;
 
@@ -311,28 +566,28 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 
 		System.out.println("cellWidth = " + cellWidth + " cellHeight = " + cellHeight);
 
-			for (int i = 0; i < gridData.length; i++) {
-				for (int j = 0; j < gridData[0].length; j++) {
-					try {
-						var value = gridData[i][j];
-						if (Double.isNaN(value) || Float.isNaN(value)) {
-							continue;
-						}
-
-						Color color = getColorForValue(value, minValue, maxValue);
-						g2.setColor(color);
-
-						double lat = minLatLon.getLatDgr() + j * latStep;
-						double lon = minLatLon.getLonDgr() + i * lonStep;
-
-						var point = field.latLonToScreen(new LatLon(lat, lon));
-						g2.fillRect((int) point.getX(), (int) point.getY(), (int) cellWidth, (int) cellHeight);
-					} catch (Exception e) {
-						//System.out.println(e.getMessage());
-						//System.err.println(e);
+		for (int i = 0; i < gridData.length; i++) {
+			for (int j = 0; j < gridData[0].length; j++) {
+				try {
+					var value = gridData[i][j];
+					if (Double.isNaN(value) || Float.isNaN(value)) {
+						continue;
 					}
+
+					Color color = getColorForValue(value, minValue, maxValue);
+					g2.setColor(color);
+
+					double lat = minLatLon.getLatDgr() + j * latStep;
+					double lon = minLatLon.getLonDgr() + i * lonStep;
+
+					var point = field.latLonToScreen(new LatLon(lat, lon));
+					g2.fillRect((int) point.getX(), (int) point.getY(), (int) cellWidth, (int) cellHeight);
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+					//System.err.println(e);
 				}
 			}
+		}
 	}
 
 	private List<DataPoint> getDataPoints(CsvFile csvFile, String sensor) {
@@ -397,15 +652,30 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				|| changed.isWindowresized()
 				|| changed.isJustdraw()) {
 			q.add();
-		} else if (changed.isTraceCut()
-				|| changed.isCsvDataFiltered()) {
+		} else if (changed.isCsvDataFiltered()) {
 			recalcGrid = true;
 			q.add();
+		} else if (changed.isTraceCut()) {
+			//recalcGrid = true;
+			setActive(false);
+			//q.add();
 		}
 	}
 
+	/**
+	 * Handles grid parameter updates from the UI.
+	 * 
+	 * Updates include:
+	 * - Cell size for grid resolution
+	 * - Blanking distance for data filtering
+	 * - Interpolation method selection
+	 * - IDW-specific parameters (when IDW is selected)
+	 * 
+	 * Triggers grid recalculation when parameters change.
+	 */
 	@EventListener(GriddingParamsSetted.class)
 	private void gridParamsSetted(GriddingParamsSetted griddingParamsSetted) {
+		currentParams = griddingParamsSetted;
 		cellSize = griddingParamsSetted.getCellSize();
 		blankingDistance = griddingParamsSetted.getBlankingDistance();
 		toAll = griddingParamsSetted.isToAll();
