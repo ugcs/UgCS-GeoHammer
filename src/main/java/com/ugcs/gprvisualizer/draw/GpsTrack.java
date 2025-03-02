@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
@@ -16,6 +17,7 @@ import com.github.thecoldwine.sigrun.common.ext.Trace;
 import com.ugcs.gprvisualizer.app.MapView;
 import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.utils.Range;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.event.EventListener;
@@ -113,34 +115,28 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 	}
 
 	private double drawTraceLines(Graphics2D g2, MapField field, double sumdist, double threshold, SgyFile sgyFile) {
-		Point2D prevPoint = null;
-		List<Trace> traces = sgyFile.getTraces();
-
-		//for (int tr = 0; tr < traces.size(); tr++) {
-		for(Trace trace : traces) {
-			
-			if (prevPoint == null) {
-				
-				prevPoint = field.latLonToScreen(
-						trace.getLatLon());
-				sumdist = 0;
-				
-			} else {
-				//prev point exists
-				
-				sumdist += trace.getPrevDist();
-				
-				if (sumdist >= threshold) {
-					
-					Point2D pointNext = field.latLonToScreen(trace.getLatLon());
-							
-					g2.drawLine((int) prevPoint.getX(),
-							(int) prevPoint.getY(),
-							(int) pointNext.getX(),
-							(int) pointNext.getY());
-					
-					prevPoint = pointNext;
-					sumdist = 0;
+		if (sgyFile instanceof CsvFile csvFile) {
+			var ranges = csvFile.getLineRanges();
+			for(Range range: ranges.values()) {
+				Point2D prevPoint = null;
+				var traces = csvFile.getTraces().subList(range.getMin().intValue(), range.getMax().intValue());
+				for(Trace trace : traces) {
+					if (prevPoint == null) {
+						prevPoint = field.latLonToScreen(trace.getLatLon());
+						sumdist = 0;
+					} else {
+						//prev point exists
+						sumdist += trace.getPrevDist();
+						if (sumdist >= threshold) {
+							Point2D pointNext = field.latLonToScreen(trace.getLatLon());
+							g2.drawLine((int) prevPoint.getX(),
+									(int) prevPoint.getY(),
+									(int) pointNext.getX(),
+									(int) pointNext.getY());
+							prevPoint = pointNext;
+							sumdist = 0;
+						}
+					}
 				}
 			}
 		}

@@ -13,10 +13,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.ugcs.gprvisualizer.app.AppContext;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
+import com.ugcs.gprvisualizer.utils.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,4 +252,34 @@ public class CsvFile extends SgyFile {
             getGeoData().get(i).setTraceNumber(i);
         }
     }
+
+    public SortedMap<Integer, Range> getLineRanges() {
+        List<GeoData> values = getGeoData();
+        // line index -> [first index, last index]
+        TreeMap<Integer, Range> ranges = new TreeMap<>();
+        if (values == null)
+            return ranges;
+
+        int lineIndex = 0;
+        int lineStart = 0;
+        for (int i = 0; i < values.size(); i++) {
+            GeoData value = values.get(i);
+            if (value == null)
+                continue;
+
+            int valueLineIndex = value.getLineIndex();
+            if (valueLineIndex != lineIndex) {
+                if (i > lineStart) {
+                    ranges.put(lineIndex, new Range(lineStart, i - 1));
+                }
+                lineIndex = valueLineIndex;
+                lineStart = i;
+            }
+        }
+        if (values.size() > lineStart) {
+            ranges.put(lineIndex, new Range(lineStart, values.size() - 1));
+        }
+        return ranges;
+    }
+
 }
