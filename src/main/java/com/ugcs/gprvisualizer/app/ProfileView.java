@@ -180,6 +180,7 @@ public class ProfileView implements InitializingBean {
 					model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
 				}
 			}
+			gprPane.fitFull();
 		}
 
 		if (closedFile instanceof CsvFile csvFile) {
@@ -215,9 +216,10 @@ public class ProfileView implements InitializingBean {
 					vbox.setMinHeight(Math.max(400, vbox.getScene().getHeight() / 2));
 				}
 
+				gprPane.fitFull();
+
 				fileSelected(new FileSelectedEvent(this, f));
 				model.selectAndScrollToChart(gprPane);
-
 			});
 		}
 

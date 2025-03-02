@@ -675,19 +675,24 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
     }
 
     public void fit(int maxSamples, int tracesCount) {
-        double vertScale = (double) getField().getViewDimension().height
-                / (double) maxSamples;
+        double vertScale = 1.0;
+        if (getField().getViewDimension().height != 0) {
+            vertScale = (double) getField().getViewDimension().height
+                    / (double) maxSamples;
+        }
         double zoom = Math.log(vertScale) / Math.log(ZOOM_A);
 
         setZoom((int) zoom);
         setStartSample(0);
 
-        double h = (double) (getField().getViewDimension().width
-                - getField().getLeftRuleRect().width - 20)
-                / ((double) tracesCount);
+        double h = 0.1;
+        if (getField().getViewDimension().width != 0) {
+            h = (double) (getField().getViewDimension().width
+                    - getField().getLeftRuleRect().width - 30)
+                    / ((double) tracesCount);
+        }
 
         double realAspect = h / getVScale();
-
         setRealAspect(realAspect);
     }
 

@@ -16,7 +16,7 @@ public abstract class ScrollableData {
     private double vertScale = 1.0;
 
     private int zoom = 1;
-    public static final double ZOOM_A = 1.2;
+    public static final double ZOOM_A = 1;
 
     private final ProfileScroll profileScroll;
 
