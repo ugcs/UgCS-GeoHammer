@@ -201,34 +201,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         return plotDataList;
     }
 
-    private SortedMap<Integer, Range> getLineRanges(List<GeoData> values) {
-        // line index -> [first index, last index]
-        TreeMap<Integer, Range> ranges = new TreeMap<>();
-        if (values == null)
-            return ranges;
-
-        int lineIndex = 0;
-        int lineStart = 0;
-        for (int i = 0; i < values.size(); i++) {
-            GeoData value = values.get(i);
-            if (value == null)
-                continue;
-
-            int valueLineIndex = value.getLineIndex();
-            if (valueLineIndex != lineIndex) {
-                if (i > lineStart) {
-                    ranges.put(lineIndex, new Range(lineStart, i - 1));
-                }
-                lineIndex = valueLineIndex;
-                lineStart = i;
-            }
-        }
-        if (values.size() > lineStart) {
-            ranges.put(lineIndex, new Range(lineStart, values.size() - 1));
-        }
-        return ranges;
-    }
-
     private Color getColor(String semantic) {
         return model.getColorBySemantic(semantic);
     }
@@ -299,7 +271,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
     public VBox createChartWithMultipleYAxes(CsvFile file, List<PlotData> plotDataList) {
 
         this.file = file;
-        this.lineRanges = getLineRanges(file.getGeoData());
+        this.lineRanges = file.getLineRanges();
 
         // Using StackPane to overlay charts
         this.chartsContainer = new StackPane();
