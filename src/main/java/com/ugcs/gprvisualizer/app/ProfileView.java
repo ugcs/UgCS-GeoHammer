@@ -268,7 +268,7 @@ public class ProfileView implements InitializingBean {
 		ProfileScroll profileScroll = getFileProfileScroll(event.getFile());
 		setProfileScroll(profileScroll);
 
-		if (event.getFile() != null && !event.getFile().equals(currentFile)) {
+		if (event.getFile() != null) {
 			currentFile = event.getFile();
 			if (currentFile instanceof GprFile) {
 				var gprChart = model.getProfileField(currentFile);
