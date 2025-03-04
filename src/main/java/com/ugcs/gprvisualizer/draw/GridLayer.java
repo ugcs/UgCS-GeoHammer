@@ -127,14 +127,14 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 	public void drawOnMapField(Graphics2D g2, MapField field) {
 		if (isActive()) {
 			if (recalcGrid) {
-				setActive(false);
-				getRepaintListener().repaint();
+				//setActive(false);
+				//getRepaintListener().repaint();
 			}
 
 			if (file != null && cellSize != 0 && blankingDistance != 0) {
 				drawFileOnMapField(g2, field, file);
 			}
-			setActive(optionPane.getGridding().isSelected());
+			setActive(isActive() && optionPane.getGridding().isSelected());
 		}
 	}
 
@@ -584,7 +584,6 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 					g2.fillRect((int) point.getX(), (int) point.getY(), (int) cellWidth, (int) cellHeight);
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
-					//System.err.println(e);
 				}
 			}
 		}
@@ -640,25 +639,25 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 		this.file = event.getFile() instanceof CsvFile ? (CsvFile) event.getFile() : null;
 		toAll = false;
 		recalcGrid = true;
-		setActive(false);
-		q.add();
+		//setActive(false);
+		//q.add();
 	}
 
 	@EventListener
 	private void somethingChanged(WhatChanged changed) {
-		if (changed.isZoom()
-				|| changed.isAdjusting() 
-				|| changed.isMapscroll() 
-				|| changed.isWindowresized()
+		if (changed.isZoom() || changed.isWindowresized()
+				|| changed.isAdjusting()
+				|| changed.isMapscroll()
 				|| changed.isJustdraw()) {
-			q.add();
+			if (isActive()) {
+				//q.add();
+			}
 		} else if (changed.isCsvDataFiltered()) {
 			recalcGrid = true;
 			q.add();
 		} else if (changed.isTraceCut()) {
-			//recalcGrid = true;
+			recalcGrid = true;
 			setActive(false);
-			//q.add();
 		}
 	}
 
