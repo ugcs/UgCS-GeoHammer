@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.GprFile;
@@ -100,8 +101,6 @@ public class ProfileView implements InitializingBean {
 	}
 
 	private void prepareToolbar() {
-		toolBar.setDisable(true);
-
 		toolBar.getItems().addAll(saver.getToolNodes());
 		toolBar.getItems().add(getSpacer());
 		
@@ -115,6 +114,13 @@ public class ProfileView implements InitializingBean {
 		toolBar.getItems().add(zoomOutBtn);
 		toolBar.getItems().add(fitBtn);
 		toolBar.getItems().add(getSpacer());
+
+		enableToolbar();
+	}
+
+	private void enableToolbar() {
+		toolBar.getItems().forEach(toolBarItem -> toolBarItem.setDisable(!model.isActive()));
+		toolBar.getItems().getFirst().setDisable(false);
 	}
 
 	private VBox center;
@@ -175,7 +181,7 @@ public class ProfileView implements InitializingBean {
 				currentFile = null;
 				model.publishEvent(new FileSelectedEvent(this, currentFile));
 			} else {
-				if (currentFile.equals(closedFile)) {
+				if (currentFile != null && currentFile.equals(closedFile)) {
 					//TODO: maybe need to fix
 					model.publishEvent(new FileSelectedEvent(this, gprPane.getField().getSgyFiles()));
 				}
@@ -199,7 +205,7 @@ public class ProfileView implements InitializingBean {
 	private void fileOpened(FileOpenedEvent event) {
 
 		List<File> openedFiles = event.getFiles();
-		for (File file : openedFiles) {
+		openedFiles.stream().flatMap(f -> f.isDirectory() ? Stream.of(f.listFiles()) : Stream.of(f)).forEach(file -> {
 			System.out.println("ProfileView.fileOpened " + file.getAbsolutePath());
 			model.getFileManager().getGprFiles().stream().filter(f -> f.getFile().equals(file)).findFirst().ifPresent(f -> {
 				System.out.println("Loaded traces: " + f.getTraces().size());
@@ -221,9 +227,9 @@ public class ProfileView implements InitializingBean {
 				fileSelected(new FileSelectedEvent(this, f));
 				model.selectAndScrollToChart(gprPane);
 			});
-		}
+		});
 
-		toolBar.setDisable(!model.isActive());
+		enableToolbar();
 	}
 
 	private void setProfileScroll(ProfileScroll profileScroll) {

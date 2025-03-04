@@ -93,9 +93,8 @@ public class ClickPlace extends BaseObjectImpl { //, MouseHandler {
 			g2.setStroke(VERTICAL_STROKE);
 			g2.setColor(Color.blue);
 			g2.setXORMode(Color.gray);
-			g2.drawLine(R_HOR, Model.TOP_MARGIN, R_HOR, gprChart.sampleToScreen(
-					gprChart.getLastVisibleSample(
-							profField.getLeftRuleRect().height)));
+			g2.drawLine(R_HOR, R_VER * 2 , R_HOR,
+			gprChart.sampleToScreen(gprChart.getField().getMaxHeightInSamples()) - Model.TOP_MARGIN + R_VER * 2);
 			g2.setPaintMode();
 			g2.translate(-rect.x, -rect.y);
 		}
@@ -106,7 +105,7 @@ public class ClickPlace extends BaseObjectImpl { //, MouseHandler {
 		int x = gprChart.traceToScreen(trace.getIndexInSet());
 				
 		Rectangle rect = new Rectangle(
-				x - R_HOR, Model.TOP_MARGIN - R_VER * 2, 
+				x - R_HOR, Model.TOP_MARGIN - R_VER * 2,
 				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
@@ -116,7 +115,7 @@ public class ClickPlace extends BaseObjectImpl { //, MouseHandler {
 		Point2D p =  mapField.latLonToScreen(trace.getLatLon());		
 		
 		Rectangle rect = new Rectangle(
-				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2, 
+				(int) p.getX() - R_HOR, (int) p.getY() - R_VER * 2,
 				R_HOR * 2, R_VER * 2);
 		return rect;
 	}
