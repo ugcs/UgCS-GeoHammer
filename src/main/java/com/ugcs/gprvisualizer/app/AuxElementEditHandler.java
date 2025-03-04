@@ -1,9 +1,11 @@
 package com.ugcs.gprvisualizer.app;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import com.github.thecoldwine.sigrun.common.ext.GprFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
@@ -74,28 +76,30 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 			return; // no trace selected in a current file
 		}
 
-		int traceIndex = file instanceof CsvFile
+		SgyFile traceFile = selectedTrace.getTrace().getFile();
+		int traceIndex = traceFile instanceof CsvFile
 				? selectedTrace.getTrace().getIndexInFile()
 				: selectedTrace.getTrace().getIndexInSet();
 
-		int localTraceIndex = file.getOffset().globalToLocal(traceIndex);
-		if (localTraceIndex < 0 || localTraceIndex >= file.getTraces().size()) {
+		int localTraceIndex = traceFile.getOffset().globalToLocal(traceIndex);
+		if (localTraceIndex < 0 || localTraceIndex >= traceFile.getTraces().size()) {
 			log.warn("Marker trace outside of the current file");
 			return;
 		}
 		FoundPlace mark = new FoundPlace(
-				file.getTraces().get(localTraceIndex),
-				file.getOffset(),
+				//traceFile.getTraces().get(localTraceIndex),
+				selectedTrace.getTrace(),
+				traceFile.getOffset(),
 				model);
 		mark.setSelected(true);
 
 		// clear current selection in file
-		selectMark(file, null);
+		selectMark(traceFile, null);
 
-		file.getAuxElements().add(mark);
-		file.setUnsaved(true);
+		traceFile.getAuxElements().add(mark);
+		traceFile.setUnsaved(true);
 
-		model.clearSelectedTrace(file);
+		model.clearSelectedTrace(traceFile);
 		model.updateAuxElements();
 		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
@@ -106,25 +110,27 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 			return;
 		}
 
-		BaseObject firstSelected = file.getAuxElements().stream()
-				.filter(x -> x instanceof FoundPlace)
-				.filter(BaseObject::isSelected)
+		List<FoundPlace> marks = getMarks(model.asScrollableData(model.getFileChart(file)));
+		FoundPlace selectedMark = marks.stream()
+				.filter(FoundPlace::isSelected)
 				.findFirst()
 				.orElse(null);
-
-		if (firstSelected instanceof FoundPlace mark) {
-			if (file instanceof CsvFile csvFile) {
-				model.getChart(csvFile).ifPresent(lineChart ->
-						lineChart.removeFlag(mark)
-				);
-			}
-
-			file.getAuxElements().remove(mark);
-			file.setUnsaved(true);
-
-			model.updateAuxElements();
-			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		if (selectedMark == null) {
+			return;
 		}
+
+		SgyFile traceFile = selectedMark.getTrace().getFile();
+		if (traceFile instanceof CsvFile csvFile) {
+			model.getChart(csvFile).ifPresent(lineChart ->
+					lineChart.removeFlag(selectedMark)
+			);
+		}
+
+		traceFile.getAuxElements().remove(selectedMark);
+		traceFile.setUnsaved(true);
+
+		model.updateAuxElements();
+		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
 	private void removeAllMarks(ActionEvent event) {
@@ -136,15 +142,22 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 			return;
 		}
 
-		if (file instanceof CsvFile csvFile) {
-			model.getChart(csvFile).ifPresent(SensorLineChart::clearFlags);
+		List<FoundPlace> marks = getMarks(model.asScrollableData(model.getFileChart(file)));
+		Set<SgyFile> traceFiles = new HashSet<>();
+		for (FoundPlace mark : marks) {
+			traceFiles.add(mark.getTrace().getFile());
 		}
-
-		file.getAuxElements().clear();
-		file.setUnsaved(true);
-
-		model.updateAuxElements();
-		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		for (SgyFile traceFile : traceFiles) {
+			if (traceFile instanceof CsvFile csvFile) {
+				model.getChart(csvFile).ifPresent(SensorLineChart::clearFlags);
+			}
+			traceFile.getAuxElements().clear();
+			traceFile.setUnsaved(true);
+		}
+		if (!traceFiles.isEmpty()) {
+			model.updateAuxElements();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		}
 	}
 
 	private boolean confirmMarksRemoval() {

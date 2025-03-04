@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -475,6 +474,9 @@ public class Model implements InitializingBean {
 	}
 
 	public void scrollToChart(FileDataContainer fileDataContainer) {
+		if (fileDataContainer == null) {
+			return;
+		}
 		Node node = fileDataContainer.getRootNode();
 		ScrollPane scrollPane = findScrollPane(node);
 		if (scrollPane != null) {
@@ -490,17 +492,10 @@ public class Model implements InitializingBean {
     }
 
 	public boolean selectAndScrollToChart(SgyFile file) {
-		FileDataContainer container = null;
-		if (file instanceof CsvFile csvFile) {
-			container = getChart(csvFile).orElse(null);
-		}
-		if (file instanceof GprFile gprFile) {
-			container = getProfileField(gprFile);
-		}
-		if (container == null) {
-			return false;
-		}
-		return selectAndScrollToChart(container);
+		FileDataContainer chart = getFileChart(file);
+		return chart != null
+				? selectAndScrollToChart(chart)
+				: false;
 	}
 
 	private ScrollPane findScrollPane(Node node) {
@@ -534,11 +529,52 @@ public class Model implements InitializingBean {
 			return null;
 		}
 		for (ClickPlace clickPlace : selectedTraces) {
-			if (Objects.equals(file, clickPlace.getTrace().getFile())) {
+			if (areOnSameChart(file, clickPlace.getTrace().getFile())) {
 				return clickPlace;
 			}
 		}
 		return null;
+	}
+
+	private boolean areOnSameChart(SgyFile a, SgyFile b) {
+		if (a != null && a.equals(b)) {
+			return true;
+		}
+		FileDataContainer aChart = getFileChart(a);
+		FileDataContainer bChart = getFileChart(b);
+		return aChart != null && aChart.equals(bChart);
+	}
+
+	public ScrollableData asScrollableData(FileDataContainer chart) {
+		if (chart instanceof SensorLineChart lineChart) {
+			return lineChart;
+		}
+		if (chart instanceof GPRChart gprChart) {
+			return gprChart;
+		}
+		return null;
+	}
+
+	public FileDataContainer getFileChart(SgyFile file) {
+		if (file instanceof CsvFile csvFile) {
+			return getChart(csvFile).orElse(null);
+		}
+		if (file instanceof GprFile gprFile) {
+			return getProfileField(gprFile);
+		}
+		return null;
+	}
+
+	private Map<FileDataContainer, Set<SgyFile>> groupFilesByChart() {
+		Map<FileDataContainer, Set<SgyFile>> filesByChart = new HashMap<>();
+		for (SgyFile file : fileManager.getFiles()) {
+			FileDataContainer chart = getFileChart(file);
+			if (chart != null) {
+				filesByChart.computeIfAbsent(chart, k -> new HashSet<>())
+						.add(file);
+			}
+		}
+		return filesByChart;
 	}
 
 	public void selectTrace(Trace trace) {
@@ -552,22 +588,25 @@ public class Model implements InitializingBean {
 
 		selectedTraces.clear();
 		selectedTraces.add(toClickPlace(trace, true));
-		for (SgyFile file : fileManager.getFiles()) {
-			if (Objects.equals(file, trace.getFile())) {
-				continue;
+
+		// allow only single trace selection for each chart
+		Map<FileDataContainer, Set<SgyFile>> filesByChart = groupFilesByChart();
+		for (Set<SgyFile> chartFiles : filesByChart.values()) {
+			if (chartFiles.contains(trace.getFile())) {
+				continue; // skip chart of the primary trace
 			}
-			Trace nearestInFile = TraceUtils.findNearestTrace(
-					file.getTraces(),
+			Trace nearestInChart = TraceUtils.findNearestTraceInFiles(
+					chartFiles,
 					trace.getLatLon(),
 					traceLookupThreshold);
-			if (nearestInFile != null) {
-				selectedTraces.add(toClickPlace(nearestInFile, false));
+			if (nearestInChart != null) {
+				selectedTraces.add(toClickPlace(nearestInChart, false));
 			}
 		}
 
 		Platform.runLater(() -> {
 			for (SgyFile file : fileManager.getFiles()) {
-				boolean focusOnTrace = focusOnChart || !Objects.equals(file, trace.getFile());
+				boolean focusOnTrace = focusOnChart || !areOnSameChart(file, trace.getFile());
 				updateSelectedTraceOnChart(file, focusOnTrace);
 			}
 			if (focusOnChart) {
@@ -585,7 +624,7 @@ public class Model implements InitializingBean {
 	}
 
 	public void clearSelectedTrace(SgyFile file) {
-		selectedTraces.removeIf(x -> Objects.equals(x.getTrace().getFile(), file));
+		selectedTraces.removeIf(x -> areOnSameChart(file, x.getTrace().getFile()));
 		Platform.runLater(() -> updateSelectedTraceOnChart(file, false));
 	}
 
