@@ -57,6 +57,80 @@ public class Loader {
             event.consume();
         }
     };
+
+	/**
+	 * Attempts to load and process the specified list of files based on their type.
+	 * The method supports processing `constPoints`, KML, and CSV files. If the file
+	 * type is recognized, it invokes the appropriate file-handling logic. For unsupported
+	 * or unprocessed cases, the method initializes a background task with progress
+	 * tracking to handle the file processing.
+	 *
+	 * @param files the list of files to be loaded; each file is evaluated to determine
+	 *              its type and processed accordingly
+	 * @return true if the files are successfully loaded and processed; false if need some aditional logic for processing.
+	 */
+	public boolean load(List<File> files) {
+		if (isConstPointsFile(files)) {
+			openConstPointFile(files);
+			return true;
+		}
+
+		if (isKmlFile(files)) {
+			openKmlFile(files);
+			return true;
+		}
+
+		if (isCsvFile(files)) {
+			model.setLoading(true);
+			openCSVFiles(files);
+			model.publishEvent(new FileOpenedEvent(this, files));
+			model.setLoading(false);
+			return true;
+		}
+
+		//TODO: fix unsaved for the CSV files
+		//if (model.stopUnsaved()) {
+		//	return;
+		//}
+
+		ProgressTask loadTask = new ProgressTask() {
+			@Override
+			public void run(ProgressListener listener) {
+				try {
+
+					loadWithNotify(files, listener);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+
+					MessageBoxHelper.showError(
+							"Can`t open files",
+							"Probably file has incorrect format");
+
+					model.closeAllCharts();
+					//model.getFileManager().getFiles().clear();
+					model.getChartsContainer().getChildren().clear();
+
+					model.updateAuxElements();
+					model.initField();
+				}
+			}
+		};
+
+		new TaskRunner(status, loadTask).start();
+		return false;
+	}
+
+	private void openConstPointFile(final List<File> files) {
+		ConstPointsFile cpf = new ConstPointsFile();
+		cpf.load(files.get(0));
+
+		for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
+			cpf.calcVerticalCutNearestPoints(sgyFile);
+		}
+
+		model.updateAuxElements();
+	}
     
     private final EventHandler<DragEvent> dropHandler = new EventHandler<DragEvent>() {
         @Override
@@ -67,72 +141,13 @@ public class Loader {
         		return;
         	}
         	
-         	final List<File> files = db.getFiles();  
-         	
-			if (isConstPointsFile(files)) {
-				openConstPointFile(files);				
-				return;				
-			} 
+         	final List<File> files = db.getFiles();
 
-			if (isKmlFile(files)) {
-				openKmlFile(files);
-				return;
-			}
-			
-			if (isCsvFile(files)) {
-				model.setLoading(true);
-				openCSVFiles(files);
-				model.publishEvent(new FileOpenedEvent(this, files));
-				model.setLoading(false);
-				return;
-			}
+			if (load(files)) return;
 
-			//TODO: fix unsaved for the CSV files
-			//if (model.stopUnsaved()) {
-        	//	return;
-        	//}
-        	
-        	ProgressTask loadTask = new ProgressTask() {
-				@Override
-				public void run(ProgressListener listener) {
-					try {  
-						
-						loadWithNotify(files, listener);
-				
-					} catch (Exception e) {
-						e.printStackTrace();
-						
-						MessageBoxHelper.showError(
-							"Can`t open files", 
-							"Probably file has incorrect format");
-						
-						model.closeAllCharts();	
-						//model.getFileManager().getFiles().clear();
-						model.getChartsContainer().getChildren().clear();
-
-						model.updateAuxElements();
-						model.initField();
-					}
-				}
-        	};
-        	
-			new TaskRunner(status, loadTask).start();
-        	
-            event.setDropCompleted(true);
+			event.setDropCompleted(true);
             event.consume();
         }
-
-		private void openConstPointFile(final List<File> files) {
-			ConstPointsFile cpf = new ConstPointsFile();
-			cpf.load(files.get(0));
-			
-			for (SgyFile sgyFile : model.getFileManager().getGprFiles()) {
-				cpf.calcVerticalCutNearestPoints(sgyFile);
-			}
-			
-			model.updateAuxElements();
-		}
-
     };
 
 	private void openCSVFiles(List<File> files) {

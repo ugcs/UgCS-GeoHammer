@@ -37,11 +37,13 @@ public class Saver implements ToolProducer, InitializingBean {
 
 	private final Button buttonSave = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE, new Button());
 	private final Button buttonSaveTo = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE_TO, new Button());
+	private final Button buttonOpen = ResourceImageHolder.setButtonImage(ResourceImageHolder.OPEN, new Button());
 
 	{
 		buttonSave.setTooltip(new Tooltip("Save"));
 		buttonSaveTo.setTooltip(new Tooltip("Save to.."));
-	}	
+		buttonOpen.setTooltip(new Tooltip("Open files"));
+	}
 	
 	@Autowired
 	private Model model;
@@ -137,6 +139,27 @@ public class Saver implements ToolProducer, InitializingBean {
 		    	
 		    }
 		});
+
+		buttonOpen.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent e) {
+
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Open file");
+
+				if (!model.getFileManager().getFiles().isEmpty()) {
+					SgyFile lastFile = model.getFileManager().getFiles().getLast();
+					fileChooser.setInitialDirectory(lastFile.getFile().getParentFile());
+				}
+
+				List<File> files = fileChooser.showOpenMultipleDialog(AppContext.stage);
+				if (!files.isEmpty()) {
+					System.out.println("Selected: " + files);
+					loader.load(files);
+				}
+			}
+		});
 		
 		buttonSaveTo.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -177,7 +200,7 @@ public class Saver implements ToolProducer, InitializingBean {
 	
 	@Override
 	public List<Node> getToolNodes() {		
-		return List.of(buttonSave, buttonSaveTo);
+		return List.of(buttonOpen, buttonSave, buttonSaveTo);
 	}
 	
 	private List<File> saveTheSame() {
