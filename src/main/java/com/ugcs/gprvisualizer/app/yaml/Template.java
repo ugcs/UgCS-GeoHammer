@@ -15,6 +15,7 @@ public class Template {
     private FileType fileType = FileType.Unknown;
     private String matchRegex;
     private FileFormat fileFormat;
+    private String dataValidation;
     private DataMapping dataMapping;
     private SkipLinesTo skipLinesTo;
 
@@ -149,6 +150,21 @@ public class Template {
         this.fileFormat = fileFormat;
     }
 
+    /**
+     * Get data validation expression of the data values.
+     */
+    public String getDataValidation() {
+        return dataValidation;
+    }
+
+    /**
+     * Set data validation expression of the data values.
+     * @param dataValidation
+     */
+    public void setDataValidation(String dataValidation) {
+        this.dataValidation = dataValidation;
+    }
+
     // Getters and Setters for dataMapping, skipLinesTo
 
     /**
@@ -200,6 +216,7 @@ public class Template {
                 ", fileType=" + fileType +
                 ", matchRegex='" + matchRegex + '\'' +
                 ", fileFormat=" + fileFormat +
+                ", dataValidation=" + dataValidation +
                 ", dataMapping=" + dataMapping +
                 '}';
     }
