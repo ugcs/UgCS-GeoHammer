@@ -55,6 +55,10 @@ public class WhatChanged extends BaseEvent {
 
 	public boolean isCsvDataFiltered() { return change == Change.csvDataFiltered; }
 
+	public boolean isGriddingRangeChanged() {
+		return change == Change.griddingRange;
+	}
+
 
 	public enum Change {
 
@@ -69,6 +73,7 @@ public class WhatChanged extends BaseEvent {
 		adjusting,
 		updateButtons,
 		fileSelected,
-		csvDataFiltered;
+		csvDataFiltered,
+		griddingRange;
 	}
 }

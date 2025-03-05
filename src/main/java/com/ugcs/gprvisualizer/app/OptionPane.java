@@ -393,12 +393,12 @@ public class OptionPane extends VBox implements InitializingBean {
 
 		griddingRangeSlider.lowValueProperty().addListener((obs, oldVal, newVal) -> {
 				minLabel.setText("Min: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
-				eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+				eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.griddingRange));
 		});
 
 		griddingRangeSlider.highValueProperty().addListener((obs, oldVal, newVal) -> {
 			maxLabel.setText("Max: " + newVal.intValue());//String.format("%.2f", newVal.doubleValue()));
-			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.griddingRange));
 		});
 
 		VBox vbox = new VBox(10, griddingRangeSlider, coloursInput);

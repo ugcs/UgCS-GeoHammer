@@ -45,7 +45,7 @@ public class ProfileView implements InitializingBean {
 	
 	private final Button zoomInBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_IN, new Button());
 	private final Button zoomOutBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.ZOOM_OUT, new Button());
-	private final Button fitBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.FIT, new Button());
+	private final Button fitBtn = ResourceImageHolder.setButtonImage(ResourceImageHolder.FIT_CHART, new Button());
 
 	private SgyFile currentFile;
 

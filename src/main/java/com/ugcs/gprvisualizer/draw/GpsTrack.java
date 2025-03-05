@@ -120,23 +120,32 @@ public class GpsTrack extends BaseLayer implements InitializingBean {
 			for(Range range: ranges.values()) {
 				Point2D prevPoint = null;
 				var traces = csvFile.getTraces().subList(range.getMin().intValue(), range.getMax().intValue());
-				for(Trace trace : traces) {
-					if (prevPoint == null) {
-						prevPoint = field.latLonToScreen(trace.getLatLon());
-						sumdist = 0;
-					} else {
-						//prev point exists
-						sumdist += trace.getPrevDist();
-						if (sumdist >= threshold) {
-							Point2D pointNext = field.latLonToScreen(trace.getLatLon());
-							g2.drawLine((int) prevPoint.getX(),
-									(int) prevPoint.getY(),
-									(int) pointNext.getX(),
-									(int) pointNext.getY());
-							prevPoint = pointNext;
-							sumdist = 0;
-						}
-					}
+				sumdist = renderTraceLines(g2, field, sumdist, threshold, traces, prevPoint);
+			}
+		} else {
+			Point2D prevPoint = null;
+			var traces = sgyFile.getTraces();
+			sumdist = renderTraceLines(g2, field, sumdist, threshold, traces, prevPoint);
+		}
+		return sumdist;
+	}
+
+	private static double renderTraceLines(Graphics2D g2, MapField field, double sumdist, double threshold, List<Trace> traces, Point2D prevPoint) {
+		for(Trace trace : traces) {
+			if (prevPoint == null) {
+				prevPoint = field.latLonToScreen(trace.getLatLon());
+				sumdist = 0;
+			} else {
+				//prev point exists
+				sumdist += trace.getPrevDist();
+				if (sumdist >= threshold) {
+					Point2D pointNext = field.latLonToScreen(trace.getLatLon());
+					g2.drawLine((int) prevPoint.getX(),
+							(int) prevPoint.getY(),
+							(int) pointNext.getX(),
+							(int) pointNext.getY());
+					prevPoint = pointNext;
+					sumdist = 0;
 				}
 			}
 		}

@@ -649,8 +649,12 @@ public class GridLayer extends BaseLayer implements InitializingBean {
 				|| changed.isAdjusting()
 				|| changed.isMapscroll()
 				|| changed.isJustdraw()) {
-			if (isActive()) {
+			//if (isActive()) {
 				//q.add();
+			//}
+		} else if (changed.isGriddingRangeChanged()) {
+			if (isActive()) {
+				q.add();
 			}
 		} else if (changed.isCsvDataFiltered()) {
 			recalcGrid = true;
