@@ -36,7 +36,11 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 	private final Color flagColor = Color.getHSBColor((float) Math.random(), 0.9f, 0.97f);
 	private Trace traceInFile;
 	private VerticalCutPart offset;	
-	
+
+	public Trace getTrace() {
+		return traceInFile;
+	}
+
 	public int getTraceInFile() {
 		return traceInFile.getIndexInFile();
 	}
@@ -100,7 +104,11 @@ public class FoundPlace extends BaseObjectImpl { //, MouseHandler {
 		TraceSample ts = profField.screenToTraceSample(point); //, offset);
 		
 		traceInFile = traceInFile.getFile()
-				.getTraces().get(Math.min(offset.getTraces() - 1, Math.max(0, ts.getTrace())));
+				.getTraces().get(
+						Math.min(offset.getTraces() - 1,
+						Math.max(
+								0,
+								offset.globalToLocal(ts.getTrace()))));
 
 		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		

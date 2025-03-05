@@ -12,6 +12,7 @@ import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.CloseAllFilesButton;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthHeight;
 import com.ugcs.gprvisualizer.app.auxcontrol.DepthStart;
+import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.auxcontrol.RemoveFileButton;
 import com.ugcs.gprvisualizer.draw.PrismDrawer;
 import com.ugcs.gprvisualizer.draw.ShapeHolder;
@@ -41,10 +42,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class GPRChart extends ScrollableData implements FileDataContainer {
+public class GPRChart extends Chart {
 
     private static final Color BACK_GROUD_COLOR = new Color(244, 244, 244);
     private static final Stroke AMP_STROKE = new BasicStroke(1.0f);
@@ -380,11 +382,8 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
 
         for (ClickPlace clickPlace : model.getSelectedTraces()) {
             Trace trace = clickPlace.getTrace();
-            if (trace.getFile() instanceof GprFile gprFile) {
-                GPRChart traceChart = model.getProfileField(gprFile);
-                if (Objects.equals(this, traceChart)) {
-                    clickPlace.drawOnCut(g2, this);
-                }
+            if (trace != null && equals(model.getFileChart(trace.getFile()))) {
+                clickPlace.drawOnCut(g2, this);
             }
         }
     }
@@ -763,8 +762,48 @@ public class GPRChart extends ScrollableData implements FileDataContainer {
                 sampleToScreen(ts.getSample()) + (int) (getVScale() / 2));
     }
 
-    public void update() {
+    @Override
+    public List<SgyFile> getFiles() {
+        return Collections.unmodifiableList(profileField.getSgyFiles());
+    }
+
+    @Override
+    public void selectTrace(Trace trace, boolean focus) {
+        if (trace != null && focus) {
+            setMiddleTrace(trace.getIndexInSet());
+        }
+        // no data stored in a chart,
+        // and is taken from model on repaint
         updateScroll();
         repaint();
+    }
+
+    @Override
+    public List<FoundPlace> getFlags() {
+        return auxElements.stream()
+                .filter(x -> x instanceof FoundPlace)
+                .map(x -> (FoundPlace)x)
+                .toList();
+    }
+
+    @Override
+    public void selectFlag(FoundPlace flag) {
+        getFlags().forEach(x ->
+                x.setSelected(Objects.equals(x, flag)));
+    }
+
+    @Override
+    public void addFlag(FoundPlace flag) {
+        auxElements.add(flag);
+    }
+
+    @Override
+    public void removeFlag(FoundPlace flag) {
+        auxElements.remove(flag);
+    }
+
+    @Override
+    public void clearFlags() {
+        auxElements.removeIf(x -> x instanceof FoundPlace);
     }
 }

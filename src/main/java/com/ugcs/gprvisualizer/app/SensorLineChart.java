@@ -71,7 +71,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
 
-public class SensorLineChart extends ScrollableData implements FileDataContainer {
+public class SensorLineChart extends Chart {
 
     private static final double ZOOM_STEP = 1.38;
 
@@ -111,40 +111,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         this.eventPublisher = eventPublisher;
         this.settings = settings;
         this.auxEditHandler = auxEditHandler;
-    }
-
-    public void setSelectedTrace(int traceNumber) {
-
-        int selectedX = traceNumber; /// scale;
-        NumberAxis xAxis = (NumberAxis) lastLineChart.getXAxis();
-        var dataSize = lastLineChart.plotData.data().size();
-
-        if (selectedX < 0 || selectedX > dataSize) {
-            log.error("Selected trace number: {} is out of range: {}", traceNumber, dataSize);
-            return;
-        }
-
-        log.debug("Selected trace number: {}", traceNumber);
-
-        if (xAxis.getLowerBound() > selectedX || xAxis.getUpperBound() < selectedX) {
-
-            int delta = (int)(xAxis.getUpperBound() - xAxis.getLowerBound());
-
-            int lowerIndex = Math.clamp(selectedX - delta / 2, 0, dataSize - delta);
-            int upperIndex = Math.clamp(selectedX + delta / 2, delta, dataSize);
-
-            log.debug("Shifted charts, lowerIndex: {} upperIndex: {} size: {}", lowerIndex, upperIndex, dataSize);
-
-            for (LineChartWithMarkers chart: charts) {
-                var yAxis = (NumberAxis) chart.getYAxis();
-
-                ZoomRect zoomRect = new ZoomRect(lowerIndex, upperIndex, yAxis.getLowerBound(), yAxis.getUpperBound());
-                chart.setZoomRect(zoomRect);
-                chart.updateLineChartData();
-            }
-        }
-        putVerticalMarker(selectedX);
-        updateProfileScroll();
     }
 
     private EventHandler<MouseEvent> mouseClickHandler = new EventHandler<MouseEvent>() {
@@ -397,7 +363,7 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                                 subfile.setAuxElements(auxElements);
                                 subfile.updateInternalIndexes();
 
-                                model.clearSelectedTrace(file);
+                                model.clearSelectedTrace(this);
                                 model.getFileManager().removeFile(file);
                                 model.getFileManager().addFile(subfile);
                                 model.updateChart(subfile);
@@ -612,31 +578,6 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
         }
         ZoomRect zoomRect = selectedChart.outZoomRect;
         return zoomRect.xMax.intValue() - zoomRect.xMin.intValue() + 1;
-    }
-
-    public void selectFlag(FoundPlace fp) {
-        foundPlaces.keySet().forEach(f -> {
-            var markerBox = (Pane) foundPlaces.get(f).getNode();
-            Line l = (Line) markerBox.getChildren().get(1);
-            l.setStrokeType(StrokeType.CENTERED);
-            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
-            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
-                    ch -> ((Shape) ch).setStrokeType(StrokeType.CENTERED)
-            );
-            f.setSelected(false);
-        });
-
-        // null -> clear selection
-        if (fp != null) {
-            var markerBox = (Pane) foundPlaces.get(fp).getNode();
-            Line l = (Line) markerBox.getChildren().get(1);
-            l.setStrokeType(StrokeType.OUTSIDE);
-            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
-            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
-                    ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
-            );
-            fp.setSelected(true);
-        }
     }
 
     private List<Data<Number, Number>> getSubsampleInRange(List<Number> data, int lowerIndex, int upperIndex,
@@ -1725,20 +1666,104 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
                 : null;
     }
 
+    @Override
+    public List<SgyFile> getFiles() {
+        return List.of(file);
+    }
+
+    @Override
+    public void selectTrace(Trace trace, boolean focus) {
+        if (trace == null) {
+            // clear selection
+            removeVerticalMarker();
+            return;
+        }
+
+        // TODO focus does not affect behavior
+
+        int selectedX = trace.getIndexInFile();
+        NumberAxis xAxis = (NumberAxis) lastLineChart.getXAxis();
+        var dataSize = lastLineChart.plotData.data().size();
+
+        if (selectedX < 0 || selectedX > dataSize) {
+            log.error("Selected trace index: {} is out of range: {}", selectedX, dataSize);
+            return;
+        }
+
+        log.debug("Selected trace index: {}", selectedX);
+
+        if (xAxis.getLowerBound() > selectedX || xAxis.getUpperBound() < selectedX) {
+
+            int delta = (int)(xAxis.getUpperBound() - xAxis.getLowerBound());
+
+            int lowerIndex = Math.clamp(selectedX - delta / 2, 0, dataSize - delta);
+            int upperIndex = Math.clamp(selectedX + delta / 2, delta, dataSize);
+
+            log.debug("Shifted charts, lowerIndex: {} upperIndex: {} size: {}", lowerIndex, upperIndex, dataSize);
+
+            for (LineChartWithMarkers chart: charts) {
+                var yAxis = (NumberAxis) chart.getYAxis();
+
+                ZoomRect zoomRect = new ZoomRect(lowerIndex, upperIndex, yAxis.getLowerBound(), yAxis.getUpperBound());
+                chart.setZoomRect(zoomRect);
+                chart.updateLineChartData();
+            }
+        }
+        putVerticalMarker(selectedX);
+        updateProfileScroll();
+    }
+
+    @Override
     public List<FoundPlace> getFlags() {
         return new ArrayList<>(foundPlaces.keySet());
     }
 
-    public void addFlag(FoundPlace fp) {
-        if (!foundPlaces.containsKey(fp)) {
-            putFoundPlace(fp);
+    @Override
+    public void selectFlag(FoundPlace flag) {
+        foundPlaces.keySet().forEach(f -> {
+            var markerBox = (Pane) foundPlaces.get(f).getNode();
+            Line l = (Line) markerBox.getChildren().get(1);
+            l.setStrokeType(StrokeType.CENTERED);
+            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
+            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
+                    ch -> ((Shape) ch).setStrokeType(StrokeType.CENTERED)
+            );
+            f.setSelected(false);
+        });
+
+        // null -> clear selection
+        if (flag != null) {
+            var markerBox = (Pane) foundPlaces.get(flag).getNode();
+            Line l = (Line) markerBox.getChildren().get(1);
+            l.setStrokeType(StrokeType.OUTSIDE);
+            var fm = (Pane) ((Pane) markerBox.getChildren().get(0)).getChildren().get(0);
+            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
+                    ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
+            );
+            flag.setSelected(true);
+        }
+    }
+
+    @Override
+    public void addFlag(FoundPlace flag) {
+        if (!foundPlaces.containsKey(flag)) {
+            putFoundPlace(flag);
             removeVerticalMarker();
-            if (fp.isSelected()) {
-                selectFlag(fp);
+            if (flag.isSelected()) {
+                selectFlag(flag);
             }
         }
     }
 
+    @Override
+    public void removeFlag(FoundPlace flag) {
+        Data<Number, Number> marker = foundPlaces.remove(flag);
+        if (marker != null && lastLineChart != null) {
+            lastLineChart.removeVerticalValueMarker(marker);
+        }
+    }
+
+    @Override
     public void clearFlags() {
         if (lastLineChart != null) {
             for (Data<Number, Number> marker : foundPlaces.values()) {
@@ -1746,12 +1771,5 @@ public class SensorLineChart extends ScrollableData implements FileDataContainer
             }
         }
         foundPlaces.clear();
-    }
-
-    public void removeFlag(FoundPlace fp) {
-        Data<Number, Number> marker = foundPlaces.remove(fp);
-        if (marker != null && lastLineChart != null) {
-            lastLineChart.removeVerticalValueMarker(marker);
-        }
     }
 }

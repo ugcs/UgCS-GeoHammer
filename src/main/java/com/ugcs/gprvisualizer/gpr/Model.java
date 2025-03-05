@@ -25,6 +25,8 @@ import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.TraceUtils;
 import javafx.scene.layout.*;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -55,6 +57,8 @@ public class Model implements InitializingBean {
 
 	public static final int TOP_MARGIN = 50;
 	public static final int CHART_MIN_HEIGHT = 400;
+
+	private static final Logger log = LoggerFactory.getLogger(Model.class);
 
 	@Value( "${trace.lookup.threshold}" )
 	private Double traceLookupThreshold;
@@ -475,6 +479,9 @@ public class Model implements InitializingBean {
 	}
 
 	public void scrollToChart(FileDataContainer fileDataContainer) {
+		if (fileDataContainer == null) {
+			return;
+		}
 		Node node = fileDataContainer.getRootNode();
 		ScrollPane scrollPane = findScrollPane(node);
 		if (scrollPane != null) {
@@ -488,20 +495,6 @@ public class Model implements InitializingBean {
 		scrollToChart(fileDataContainer);
 		return selected;
     }
-
-	public boolean selectAndScrollToChart(SgyFile file) {
-		FileDataContainer container = null;
-		if (file instanceof CsvFile csvFile) {
-			container = getChart(csvFile).orElse(null);
-		}
-		if (file instanceof GprFile gprFile) {
-			container = getProfileField(gprFile);
-		}
-		if (container == null) {
-			return false;
-		}
-		return selectAndScrollToChart(container);
-	}
 
 	private ScrollPane findScrollPane(Node node) {
         Parent parent = node.getParent();
@@ -524,117 +517,6 @@ public class Model implements InitializingBean {
 
         scrollPane.setVvalue(vValue < 0 ? Double.POSITIVE_INFINITY : vValue);
     }
-
-	public List<ClickPlace> getSelectedTraces() {
-		return Collections.unmodifiableList(selectedTraces);
-	}
-
-	public ClickPlace getSelectedTrace(SgyFile file) {
-		if (file == null) {
-			return null;
-		}
-		for (ClickPlace clickPlace : selectedTraces) {
-			if (Objects.equals(file, clickPlace.getTrace().getFile())) {
-				return clickPlace;
-			}
-		}
-		return null;
-	}
-
-	public void selectTrace(Trace trace) {
-		selectTrace(trace, false);
-	}
-
-	public void selectTrace(Trace trace, boolean focusOnChart) {
-		if (trace == null) {
-			return;
-		}
-
-		selectedTraces.clear();
-		selectedTraces.add(toClickPlace(trace, true));
-		for (SgyFile file : fileManager.getFiles()) {
-			if (Objects.equals(file, trace.getFile())) {
-				continue;
-			}
-			Trace nearestInFile = TraceUtils.findNearestTrace(
-					file.getTraces(),
-					trace.getLatLon(),
-					traceLookupThreshold);
-			if (nearestInFile != null) {
-				selectedTraces.add(toClickPlace(nearestInFile, false));
-			}
-		}
-
-		Platform.runLater(() -> {
-			for (SgyFile file : fileManager.getFiles()) {
-				boolean focusOnTrace = focusOnChart || !Objects.equals(file, trace.getFile());
-				updateSelectedTraceOnChart(file, focusOnTrace);
-			}
-			if (focusOnChart) {
-				selectAndScrollToChart(trace.getFile());
-			}
-		});
-	}
-
-	public void selectNearestTrace(LatLon location) {
-		if (location == null) {
-			return;
-		}
-		Trace nearestTrace = TraceUtils.findNearestTrace(getTraces(), location);
-		selectTrace(nearestTrace, true);
-	}
-
-	public void clearSelectedTrace(SgyFile file) {
-		selectedTraces.removeIf(x -> Objects.equals(x.getTrace().getFile(), file));
-		Platform.runLater(() -> updateSelectedTraceOnChart(file, false));
-	}
-
-	public void clearSelectedTraces() {
-		selectedTraces.clear();
-		Platform.runLater(() -> {
-			for (SgyFile file : fileManager.getFiles()) {
-				updateSelectedTraceOnChart(file, false);
-			}
-		});
-	}
-
-	private void updateSelectedTraceOnChart(SgyFile file, boolean focusOnTrace) {
-		if (file == null) {
-			return;
-		}
-		ClickPlace clickPlace = getSelectedTrace(file);
-		if (file instanceof CsvFile csvFile) {
-			Optional<SensorLineChart> chart = getChart(csvFile);
-			chart.ifPresent(sensorLineChart -> {
-				if (clickPlace != null) {
-					Trace trace = clickPlace.getTrace();
-					// TODO focusOnTrace does not affect behavior
-					sensorLineChart.setSelectedTrace(trace.getIndexInFile());
-				} else {
-					sensorLineChart.removeVerticalMarker();
-				}
-			});
-		}
-		if (file instanceof GprFile gprFile) {
-			GPRChart chart = getProfileField(gprFile);
-			if (chart != null) {
-				if (clickPlace != null) {
-					if (focusOnTrace) {
-						Trace trace = clickPlace.getTrace();
-						chart.setMiddleTrace(trace.getIndexInSet());
-					}
-				}
-				// trigger repaint
-				chart.update();
-			}
-		}
-	}
-
-	private ClickPlace toClickPlace(Trace trace, boolean selected) {
-		ClickPlace clickPlace = new ClickPlace(trace.getFile(), trace);
-		clickPlace.setSelected(selected);
-		return clickPlace;
-	}
 
 	public void focusMapOnTrace(Trace trace) {
 		if (trace == null) {
@@ -705,6 +587,213 @@ public class Model implements InitializingBean {
 
 	@EventListener
 	private void fileClosed(FileClosedEvent event) {
-		clearSelectedTrace(event.getSgyFile());
+		Chart chart = getFileChart(event.getSgyFile());
+		clearSelectedTrace(chart);
+	}
+
+	// charts
+
+	public List<Chart> getAllFileCharts() {
+		List<Chart> charts = new ArrayList<>();
+		charts.addAll(csvFiles.values());
+		charts.addAll(gprCharts.values());
+		return charts;
+	}
+
+	public Chart getFileChart(SgyFile file) {
+		if (file instanceof CsvFile csvFile) {
+			return getChart(csvFile).orElse(null);
+		}
+		if (file instanceof GprFile gprFile) {
+			return getProfileField(gprFile);
+		}
+		return null;
+	}
+
+	// trace selection
+
+	public List<ClickPlace> getSelectedTraces() {
+		return Collections.unmodifiableList(selectedTraces);
+	}
+
+	public ClickPlace getSelectedTrace(Chart chart) {
+		if (chart == null) {
+			return null;
+		}
+		for (ClickPlace clickPlace : selectedTraces) {
+			SgyFile traceFile = clickPlace.getTrace().getFile();
+			if (Objects.equals(chart, getFileChart(traceFile))) {
+				return clickPlace;
+			}
+		}
+		return null;
+	}
+
+	public void selectNearestTrace(LatLon location) {
+		if (location == null) {
+			return;
+		}
+		Trace nearestTrace = TraceUtils.findNearestTrace(getTraces(), location);
+		selectTrace(nearestTrace, true);
+	}
+
+	public void selectTrace(Trace trace) {
+		selectTrace(trace, false);
+	}
+
+	public void selectTrace(Trace trace, boolean focusOnChart) {
+		if (trace == null) {
+			return;
+		}
+
+		selectedTraces.clear();
+		selectedTraces.add(toClickPlace(trace, true));
+
+		Chart traceChart = getFileChart(trace.getFile());
+		for (Chart chart : getAllFileCharts()) {
+			if (Objects.equals(chart, traceChart)) {
+				continue;
+			}
+			Trace nearestInChart = TraceUtils.findNearestTraceInFiles(
+					chart.getFiles(),
+					trace.getLatLon(),
+					traceLookupThreshold);
+			if (nearestInChart != null) {
+				selectedTraces.add(toClickPlace(nearestInChart, false));
+			}
+		}
+
+		Platform.runLater(() -> {
+			for (Chart chart : getAllFileCharts()) {
+				boolean focusOnTrace = focusOnChart || !Objects.equals(chart, traceChart);
+				updateSelectedTraceOnChart(chart, focusOnTrace);
+			}
+			if (focusOnChart) {
+				selectAndScrollToChart(traceChart);
+			}
+		});
+	}
+
+	private ClickPlace toClickPlace(Trace trace, boolean selected) {
+		ClickPlace clickPlace = new ClickPlace(trace.getFile(), trace);
+		clickPlace.setSelected(selected);
+		return clickPlace;
+	}
+
+	public void clearSelectedTrace(Chart chart) {
+		selectedTraces.removeIf(x -> Objects.equals(chart, getFileChart(x.getTrace().getFile())));
+		Platform.runLater(() -> updateSelectedTraceOnChart(chart, false));
+	}
+
+	public void clearSelectedTraces() {
+		selectedTraces.clear();
+		Platform.runLater(() -> {
+			for (Chart chart : getAllFileCharts()) {
+				updateSelectedTraceOnChart(chart, false);
+			}
+		});
+	}
+
+	private void updateSelectedTraceOnChart(Chart chart, boolean focusOnTrace) {
+		if (chart == null) {
+			return;
+		}
+		ClickPlace clickPlace = getSelectedTrace(chart);
+		Trace trace = clickPlace != null
+				? clickPlace.getTrace()
+				: null;
+		chart.selectTrace(trace, focusOnTrace);
+	}
+
+	// flags
+
+	public void createFlagOnSelection(Chart chart) {
+		if (chart == null) {
+			return;
+		}
+
+		ClickPlace selectedTrace = getSelectedTrace(chart);
+		if (selectedTrace == null) {
+			return; // no trace selected in a chart
+		}
+		FoundPlace flag = toFlag(selectedTrace);
+		if (flag == null) {
+			return;
+		}
+		flag.setSelected(true);
+
+		// clear current selection in file
+		chart.selectFlag(null);
+		chart.addFlag(flag);
+
+		SgyFile traceFile = selectedTrace.getTrace().getFile();
+		traceFile.getAuxElements().add(flag);
+		traceFile.setUnsaved(true);
+
+		clearSelectedTrace(chart);
+
+		updateAuxElements();
+		publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+	}
+
+	private FoundPlace toFlag(ClickPlace selectedTrace) {
+		if (selectedTrace == null) {
+			return null;
+		}
+
+		Trace trace = selectedTrace.getTrace();
+		SgyFile traceFile = trace.getFile();
+		int traceIndex = traceFile instanceof CsvFile
+				? trace.getIndexInFile()
+				: trace.getIndexInSet();
+
+		int localTraceIndex = traceFile.getOffset().globalToLocal(traceIndex);
+		if (localTraceIndex < 0 || localTraceIndex >= traceFile.getTraces().size()) {
+			log.warn("Flag outside of the current file bounds");
+			return null;
+		}
+
+		return new FoundPlace(trace, traceFile.getOffset(), this);
+	}
+
+	public void removeSelectedFlag(Chart chart) {
+		if (chart == null) {
+			return;
+		}
+
+		List<FoundPlace> flags = chart.getFlags();
+		FoundPlace selectedFlag = flags.stream()
+				.filter(FoundPlace::isSelected)
+				.findFirst()
+				.orElse(null);
+		if (selectedFlag == null) {
+			return;
+		}
+
+		chart.removeFlag(selectedFlag);
+
+		SgyFile traceFile = selectedFlag.getTrace().getFile();
+		traceFile.getAuxElements().remove(selectedFlag);
+		traceFile.setUnsaved(true);
+
+		updateAuxElements();
+		publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+	}
+
+	public void removeAllFlags(Chart chart) {
+		if (chart == null) {
+			return;
+		}
+
+		chart.clearFlags();
+		for (SgyFile file : chart.getFiles()) {
+			boolean modified = file.getAuxElements().removeIf(
+					x -> x instanceof FoundPlace);
+			if (modified) {
+				file.setUnsaved(true);
+			}
+		}
+		updateAuxElements();
+		publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 }

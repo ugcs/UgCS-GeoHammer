@@ -2,21 +2,17 @@ package com.ugcs.gprvisualizer.app;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import com.github.thecoldwine.sigrun.common.ext.GprFile;
+import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObjectImpl;
-import com.ugcs.gprvisualizer.app.auxcontrol.ClickPlace;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import javafx.event.ActionEvent;
 import javafx.geometry.Point2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.ResourceImageHolder;
-import com.github.thecoldwine.sigrun.common.ext.SgyFile;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.gpr.Model;
@@ -64,87 +60,27 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 	}
 
 	private void createMark(ActionEvent event) {
-		SgyFile file = model.getCurrentFile();
-		if (file == null) {
+		Chart chart = model.getFileChart(model.getCurrentFile());
+		if (chart == null) {
 			return;
 		}
-
-		ClickPlace selectedTrace = model.getSelectedTrace(file);
-		if (selectedTrace == null) {
-			return; // no trace selected in a current file
-		}
-
-		int traceIndex = file instanceof CsvFile
-				? selectedTrace.getTrace().getIndexInFile()
-				: selectedTrace.getTrace().getIndexInSet();
-
-		int localTraceIndex = file.getOffset().globalToLocal(traceIndex);
-		if (localTraceIndex < 0 || localTraceIndex >= file.getTraces().size()) {
-			log.warn("Marker trace outside of the current file");
-			return;
-		}
-		FoundPlace mark = new FoundPlace(
-				file.getTraces().get(localTraceIndex),
-				file.getOffset(),
-				model);
-		mark.setSelected(true);
-
-		// clear current selection in file
-		selectMark(file, null);
-
-		file.getAuxElements().add(mark);
-		file.setUnsaved(true);
-
-		model.clearSelectedTrace(file);
-		model.updateAuxElements();
-		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.createFlagOnSelection(chart);
 	}
 
 	private void removeSelectedMark(ActionEvent event) {
-		SgyFile file = model.getCurrentFile();
-		if (file == null) {
+		Chart chart = model.getFileChart(model.getCurrentFile());
+		if (chart == null) {
 			return;
 		}
-
-		BaseObject firstSelected = file.getAuxElements().stream()
-				.filter(x -> x instanceof FoundPlace)
-				.filter(BaseObject::isSelected)
-				.findFirst()
-				.orElse(null);
-
-		if (firstSelected instanceof FoundPlace mark) {
-			if (file instanceof CsvFile csvFile) {
-				model.getChart(csvFile).ifPresent(lineChart ->
-						lineChart.removeFlag(mark)
-				);
-			}
-
-			file.getAuxElements().remove(mark);
-			file.setUnsaved(true);
-
-			model.updateAuxElements();
-			model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
-		}
+		model.removeSelectedFlag(chart);
 	}
 
 	private void removeAllMarks(ActionEvent event) {
-		SgyFile file = model.getCurrentFile();
-		if (file == null) {
+		Chart chart = model.getFileChart(model.getCurrentFile());
+		if (chart == null || !confirmMarksRemoval()) {
 			return;
 		}
-		if (!confirmMarksRemoval()) {
-			return;
-		}
-
-		if (file instanceof CsvFile csvFile) {
-			model.getChart(csvFile).ifPresent(SensorLineChart::clearFlags);
-		}
-
-		file.getAuxElements().clear();
-		file.setUnsaved(true);
-
-		model.updateAuxElements();
-		model.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
+		model.removeAllFlags(chart);
 	}
 
 	private boolean confirmMarksRemoval() {
@@ -160,8 +96,10 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 	public boolean mousePressHandle(Point2D localPoint, ScrollableData profField) {
 		BaseObject element = lookupElement(localPoint, profField);
 		if (element != null) {
-			if (element instanceof FoundPlace mark) {
-				selectMark(profField, mark);
+			if (element instanceof FoundPlace flag) {
+				SgyFile traceFile = flag.getTrace().getFile();
+				Chart chart = model.getFileChart(traceFile);
+				chart.selectFlag(flag);
 			} else {
 				// select on a drag period
 				element.setSelected(true);
@@ -170,39 +108,6 @@ public class AuxElementEditHandler extends BaseObjectImpl {
 		}
 		mouseInput = element;
 		return mouseInput != null;
-	}
-
-	private List<FoundPlace> getMarks(ScrollableData profField) {
-		if (profField instanceof SensorLineChart lineChart) {
-			return lineChart.getFlags();
-		}
-		if (profField instanceof GPRChart gprChart) {
-			return gprChart.getAuxElements().stream()
-					.filter(x -> x instanceof FoundPlace)
-					.map(x -> (FoundPlace)x)
-					.toList();
-		}
-		return List.of();
-	}
-
-	private void selectMark(ScrollableData profField, FoundPlace mark) {
-		if (profField instanceof SensorLineChart lineChart) {
-			lineChart.selectFlag(mark);
-		}
-		if (profField instanceof GPRChart gprChart) {
-			List<FoundPlace> marks = getMarks(gprChart);
-			marks.forEach(m ->
-					m.setSelected(Objects.equals(m, mark)));
-		}
-	}
-
-	private void selectMark(SgyFile file, FoundPlace mark) {
-		if (file instanceof CsvFile csvFile) {
-			selectMark(model.getChart(csvFile).orElse(null), mark);
-		}
-		if (file instanceof GprFile gprFile) {
-			selectMark(model.getProfileField(gprFile), mark);
-		}
 	}
 
 	private BaseObject lookupElement(Point2D localPoint, ScrollableData profField) {
