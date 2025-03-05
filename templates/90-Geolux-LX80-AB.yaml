@@ -16,6 +16,8 @@
     decimal-separator: '.'
     # Applies to CSV type. The symbol to separate values from line in CSV file;
     separator: ','
+  # Applied on a quality check to all data values
+  data-validation: '{LX:SNR} > 30 && {LX:SD} < 100'
   # Mapping data from source file to data. Requierd fields (latitude, longitude, time and date or date-time)
   data-mapping:
     latitude:

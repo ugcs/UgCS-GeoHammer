@@ -16,6 +16,8 @@
     decimal-separator: '.'
     # Applies to CSV type. The symbol to separate values from line in CSV file;
     separator: ','
+  # Applied on a quality check to all data values
+  data-validation: '{Data valid} == 1'
   # Mapping data from source file to data. Requierd fields (latitude, longitude, time and date or date-time)
   data-mapping:
     latitude:
@@ -49,3 +51,6 @@
       - header: "TMI_anomaly"
         semantic: "TMI_anomaly"
         units: "nT"
+      - header: "Data valid"
+        semantic: "Data valid"
+        units: ""
