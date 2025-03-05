@@ -6,7 +6,7 @@
   file-type: CSV
   # Applies to the first 10 not empty lines of the file to detect template
   match-regex: >-
-    ^.*Date,Time,Latitude,Longitude,Heading.*Altitude,Altitude AGL,TMI,Bx,By,Bz.*
+    ^.*Date,Time,Latitude,Longitude,Heading.*Altitude AGL,TMI,Bx,By,Bz.*
   file-format:
   # Applies to CSV type. 'true' if the file has headers, otherwise false
     has-header: true
@@ -32,16 +32,16 @@
       format: 'yyyy/MM/dd' # Format to parse date from column;
     data-values:
       - header: "TMI"
-        semantic: "Total field anomaly [nT]"
+        semantic: "TMI"
         units: "nT"
       - header: "Bx"
-        semantic: "Bx [nT]"
+        semantic: "Bx"
         units: "nT"
       - header: "By"
-        semantic: "By [nT]"
+        semantic: "By"
         units: "nT"
       - header: "Bz"
-        semantic: "Bz [nT]"
+        semantic: "Bz"
         units: "nT"
       - header: "Next WP"
         semantic: "Line"
@@ -52,6 +52,6 @@
       - header: "Altitude"
         semantic: "Altitude"
         units: "m"
-      - header: "TMI_anomaly"
-        semantic: "Total field anomaly [nT]_anomaly"
+      - header: "TMI anomaly"
+        semantic: "TMI_anomaly"
         units: "nT"
