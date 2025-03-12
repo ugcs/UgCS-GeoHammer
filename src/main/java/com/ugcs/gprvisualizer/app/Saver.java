@@ -3,13 +3,14 @@ package com.ugcs.gprvisualizer.app;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
-import com.ugcs.gprvisualizer.event.FileOpenedEvent;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
+import com.ugcs.gprvisualizer.gpr.PrefSettings;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,6 +36,9 @@ import javafx.stage.FileChooser;
 @Component
 public class Saver implements ToolProducer, InitializingBean {
 
+	public static final String LAST_OPEN_FOLDER_SETTING_KEY = "last_open_folder";
+	public static final String SAVER_SETTINGS_GROUP_KEY = "saver";
+
 	private final Button buttonSave = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE, new Button());
 	private final Button buttonSaveTo = ResourceImageHolder.setButtonImage(ResourceImageHolder.SAVE_TO, new Button());
 	private final Button buttonOpen = ResourceImageHolder.setButtonImage(ResourceImageHolder.OPEN, new Button());
@@ -56,6 +60,9 @@ public class Saver implements ToolProducer, InitializingBean {
 
 	@Autowired
 	private ApplicationEventPublisher eventPublisher;
+
+	@Autowired
+	private PrefSettings prefSettings;
 
 	private SgyFile selectedFile;
 	
@@ -140,6 +147,8 @@ public class Saver implements ToolProducer, InitializingBean {
 		    }
 		});
 
+
+
 		buttonOpen.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -148,14 +157,16 @@ public class Saver implements ToolProducer, InitializingBean {
 				FileChooser fileChooser = new FileChooser();
 				fileChooser.setTitle("Open file");
 
-				if (!model.getFileManager().getFiles().isEmpty()) {
-					SgyFile lastFile = model.getFileManager().getFiles().getLast();
-					fileChooser.setInitialDirectory(lastFile.getFile().getParentFile());
+				var lastOpenFolderPath = prefSettings.getSetting(SAVER_SETTINGS_GROUP_KEY, LAST_OPEN_FOLDER_SETTING_KEY);
+				if (lastOpenFolderPath != null) {
+					fileChooser.setInitialDirectory(new File(lastOpenFolderPath));
 				}
 
 				List<File> files = fileChooser.showOpenMultipleDialog(AppContext.stage);
 				if (!files.isEmpty()) {
 					System.out.println("Selected: " + files);
+					lastOpenFolderPath = files.getFirst().getParentFile().getAbsolutePath();
+					prefSettings.saveSetting(SAVER_SETTINGS_GROUP_KEY, Map.of(LAST_OPEN_FOLDER_SETTING_KEY, lastOpenFolderPath));
 					loader.load(files);
 				}
 			}

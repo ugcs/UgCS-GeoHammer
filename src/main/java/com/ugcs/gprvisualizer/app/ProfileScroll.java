@@ -19,16 +19,16 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-public class ProfileScroll extends Canvas {
+public final class ProfileScroll extends Canvas {
 
-	static final int HEIGHT = 24;
-	static final int SIDE_WIDTH = 20;
-	static final int CENTER_MARGIN = 5; 
-	static final int V_MARGIN = 4;
-	static final int V_GRAY_MARGIN = 7;
+	public static final int HEIGHT = 24;
+	private static final int SIDE_WIDTH = 20;
+	private static final int CENTER_MARGIN = 5;
+	private static final int V_MARGIN = 4;
+	private static final int V_GRAY_MARGIN = 7;
 
-	double start;
-	double finish;
+	private double start = 0;
+	private double finish = Double.MAX_VALUE;
 	
 	double pressX;
 	double pressXInBar;
@@ -82,7 +82,6 @@ public class ProfileScroll extends Canvas {
 			recalcField();
 			draw();
 			changeListener.changed(null, null, null);
-			
 		}
 	};
 
@@ -263,7 +262,7 @@ public class ProfileScroll extends Canvas {
 		int width = (int) getWidth();
 		int height = (int) getHeight();
 
-		double tracesFull = 0;
+		double tracesFull = 1;
 		double center;
 		double tracesVisible;
 
