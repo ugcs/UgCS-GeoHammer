@@ -1,17 +1,17 @@
 package com.ugcs.gprvisualizer.app.quality;
 
-import com.ugcs.gprvisualizer.app.parcers.GeoData;
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class QualityControl {
 
-    public List<QualityIssue> getQualityIssues(List<GeoData> values, List<QualityCheck> checks) {
+    public List<QualityIssue> getQualityIssues(List<CsvFile> files, List<QualityCheck> checks) {
 
         List<QualityIssue> result = new ArrayList<>();
         for (QualityCheck check : checks) {
-            List<QualityIssue> issues = check.check(values);
+            List<QualityIssue> issues = check.check(files);
             if (issues == null || issues.isEmpty()) {
                 continue;
             }

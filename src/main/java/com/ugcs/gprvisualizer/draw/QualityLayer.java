@@ -1,21 +1,24 @@
 package com.ugcs.gprvisualizer.draw;
 
 import com.github.thecoldwine.sigrun.common.ext.GoogleCoordUtils;
+import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.MapField;
 import com.ugcs.gprvisualizer.app.quality.PointQualityIssue;
+import com.ugcs.gprvisualizer.app.quality.PolygonQualityIssue;
 import com.ugcs.gprvisualizer.app.quality.QualityIssue;
-import com.ugcs.gprvisualizer.app.quality.Segment;
-import com.ugcs.gprvisualizer.app.quality.StripeQualityIssue;
+import com.ugcs.gprvisualizer.app.quality.Spatial;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
 import com.ugcs.gprvisualizer.event.WhatChanged;
 import com.ugcs.gprvisualizer.utils.Check;
 import javafx.geometry.Point2D;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -60,63 +63,55 @@ public class QualityLayer extends BaseLayer {
             if (issue instanceof PointQualityIssue pointIssue) {
                 drawPointIssue(g2, field, pointIssue);
             }
-            if (issue instanceof StripeQualityIssue stripeIssue) {
-                drawStripeIssue(g2, field, stripeIssue);
+            if (issue instanceof PolygonQualityIssue polygonIssue) {
+                drawPolygonIssue(g2, field, polygonIssue);
             }
         }
     }
 
     private void drawPointIssue(Graphics2D g2, MapField field, PointQualityIssue pointIssue) {
-        Point2D center = field.latLonToScreen(pointIssue.getCenter());
-
-        double pixelSize = GoogleCoordUtils.getPixelSize(pointIssue.getCenter(), field.getZoom());
+        LatLon center = Spatial.toLatLon(pointIssue.getCenter());
+        double pixelSize = GoogleCoordUtils.getPixelSize(center, field.getZoom());
         double r = Math.max(1.5, pointIssue.getRadius() / pixelSize);
 
+        Point2D centerScreen = field.latLonToScreen(center);
         g2.setColor(pointIssue.getColor());
         g2.fillOval(
-                (int) (center.getX() - r),
-                (int) (center.getY() - r),
+                (int) (centerScreen.getX() - r),
+                (int) (centerScreen.getY() - r),
                 (int) (2 * r),
                 (int) (2 * r));
     }
 
-    private void drawStripeIssue(Graphics2D g2, MapField field, StripeQualityIssue stripeIssue) {
-        Segment segment = stripeIssue.getSegment();
-        Point2D p1 = field.latLonToScreen(segment.getFrom());
-        Point2D p2 = field.latLonToScreen(segment.getTo());
+    private void drawPolygonIssue(Graphics2D g2, MapField field, PolygonQualityIssue polygonIssue) {
+        Polygon polygon = polygonIssue.getPolygon();
+        Path2D path = new Path2D.Double(Path2D.WIND_NON_ZERO);
 
-        double pixelSize = GoogleCoordUtils.getPixelSize(
-                segment.getFrom(),
-                field.getZoom());
-        double width = Math.max(1.0, stripeIssue.getWidth() / pixelSize);
-
-        // direction vector
-        Point2D d = p2.subtract(p1);
-
-        // orthogonal to direction, scaled by half width
-        Point2D n = new Point2D(-d.getY(), d.getX())
-                .normalize()
-                .multiply(0.5 * width);
-
-        List<Point2D> points = Arrays.asList(
-                p1.add(n),
-                p1.subtract(n),
-                p2.subtract(n),
-                p2.add(n)
-        );
-
-        Path2D stripe = new Path2D.Double();
-        for (int i = 0; i < points.size(); i++) {
-            Point2D point = points.get(i);
-            if (i == 0) {
-                stripe.moveTo(point.getX(), point.getY());
-            } else {
-                stripe.lineTo(point.getX(), point.getY());
-            }
+        addRing(path, field, polygon.getExteriorRing());
+        int numHoles = polygon.getNumInteriorRing();
+        for (int i = 0; i < numHoles; i++) {
+            addRing(path, field, polygon.getInteriorRingN(i));
         }
-        stripe.closePath();
 
-        g2.setColor(stripeIssue.getColor());
-        g2.fill(stripe);
+        g2.setColor(polygonIssue.getColor());
+        g2.fill(path);
+    }
+
+    private void addRing(Path2D path, MapField field, LinearRing ring) {
+        if (ring == null) {
+            return;
+        }
+
+        Coordinate[] points = ring.getCoordinates();
+        if (points.length == 0) {
+            return;
+        }
+        Point2D point = field.latLonToScreen(Spatial.toLatLon(points[0]));
+        path.moveTo(point.getX(), point.getY());
+        for (int i = 1; i < points.length - 1; i++) {
+            point = field.latLonToScreen(Spatial.toLatLon(points[i]));
+            path.lineTo(point.getX(), point.getY());
+        }
+        path.closePath();
     }
 }

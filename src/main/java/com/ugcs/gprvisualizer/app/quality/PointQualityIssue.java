@@ -1,18 +1,18 @@
 package com.ugcs.gprvisualizer.app.quality;
 
-import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.ugcs.gprvisualizer.utils.Check;
+import org.locationtech.jts.geom.Coordinate;
 
 import java.awt.Color;
 
 public class PointQualityIssue extends QualityIssue {
 
-    private final LatLon center;
+    private final Coordinate center;
 
     // in meters
     private final double radius;
 
-    public PointQualityIssue(Color color, LatLon center, double radius) {
+    public PointQualityIssue(Color color, Coordinate center, double radius) {
         super(color);
 
         Check.notNull(center);
@@ -22,7 +22,7 @@ public class PointQualityIssue extends QualityIssue {
         this.radius = radius;
     }
 
-    public LatLon getCenter() {
+    public Coordinate getCenter() {
         return center;
     }
 
