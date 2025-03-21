@@ -3,12 +3,14 @@ package com.ugcs.gprvisualizer.app.quality;
 import com.ezylang.evalex.BaseException;
 import com.ezylang.evalex.Expression;
 import com.ezylang.evalex.data.EvaluationValue;
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.google.common.base.Strings;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
 import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.app.yaml.Template;
 import com.ugcs.gprvisualizer.utils.Check;
+import org.locationtech.jts.geom.Coordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,23 +21,34 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DataCheck implements QualityCheck {
+public class DataCheck extends FileQualityCheck {
 
     private static final Logger log = LoggerFactory.getLogger(DataCheck.class);
 
     private static final double MIN_RADIUS = 0.15;
 
-    private final DataValidation validation;
-
     private final double radius;
 
-    public DataCheck(DataValidation validation, double radius) {
-        this.validation = validation;
+    public DataCheck(double radius) {
         this.radius = Math.max(radius, MIN_RADIUS);
     }
 
     @Override
-    public List<QualityIssue> check(List<GeoData> values) {
+    public List<QualityIssue> checkFile(CsvFile file) {
+        if (file == null) {
+            return List.of();
+        }
+
+        Template template = file.getParser().getTemplate();
+        DataValidation validation = DataCheck.buildDataValidation(template);
+        if (validation == null) {
+            return List.of();
+        }
+
+        return checkValues(file.getGeoData(), validation);
+    }
+
+    private List<QualityIssue> checkValues(List<GeoData> values, DataValidation validation) {
         if (values == null) {
             return List.of();
         }
@@ -102,7 +115,7 @@ public class DataCheck implements QualityCheck {
     }
 
     private QualityIssue createDataIssue(GeoData value) {
-        LatLon center = new LatLon(value.getLatitude(), value.getLongitude());
+        Coordinate center = new Coordinate(value.getLongitude(), value.getLatitude());
         return new PointQualityIssue(
                 QualityColors.DATA,
                 center,

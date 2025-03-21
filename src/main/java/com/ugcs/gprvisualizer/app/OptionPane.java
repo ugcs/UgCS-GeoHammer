@@ -1,6 +1,5 @@
 package com.ugcs.gprvisualizer.app;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +15,6 @@ import com.ugcs.gprvisualizer.app.quality.LineDistanceCheck;
 import com.ugcs.gprvisualizer.app.quality.QualityCheck;
 import com.ugcs.gprvisualizer.app.quality.QualityControl;
 import com.ugcs.gprvisualizer.app.quality.QualityIssue;
-import com.ugcs.gprvisualizer.app.yaml.Template;
 import com.ugcs.gprvisualizer.draw.QualityLayer;
 import com.ugcs.gprvisualizer.event.GriddingParamsSetted;
 import com.ugcs.gprvisualizer.event.FileSelectedEvent;
@@ -639,15 +637,12 @@ public class OptionPane extends VBox implements InitializingBean {
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}
 
-	private List<QualityCheck> createQualityChecks(Template template, QualityControlParams params) {
+	private List<QualityCheck> createQualityChecks(QualityControlParams params) {
 		return Arrays.asList(
 				new LineDistanceCheck(
-						params.maxLineDistance,
-						params.lineDistanceTolerance,
-						0.5 * params.maxLineDistance
+						params.maxLineDistance + params.lineDistanceTolerance
 				),
 				new DataCheck(
-						DataCheck.buildDataValidation(template),
 						0.35 * params.maxLineDistance
 				),
 				new AltitudeCheck(
@@ -661,9 +656,10 @@ public class OptionPane extends VBox implements InitializingBean {
 	private void applyQualityControl(QualityControlParams params) {
 		if (selectedFile instanceof CsvFile csvFile) {
 			QualityControl qualityControl = new QualityControl();
-			Template template = csvFile.getParser().getTemplate();
-			List<QualityCheck> checks = createQualityChecks(template, params);
-			List<QualityIssue> issues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
+			List<CsvFile> files = List.of(csvFile);
+			List<QualityCheck> checks = createQualityChecks(params);
+			List<QualityIssue> issues = qualityControl.getQualityIssues(files, checks);
+
 			mapView.getQualityLayer().setIssues(issues);
 			eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 		}
@@ -671,15 +667,13 @@ public class OptionPane extends VBox implements InitializingBean {
 
 	private void applyQualityControlToAll(QualityControlParams params) {
 		QualityControl qualityControl = new QualityControl();
-		List<QualityIssue> issues = new ArrayList<>();
-		for (SgyFile file : model.getFileManager().getCsvFiles()) {
-			if (file instanceof CsvFile csvFile) {
-				Template template = csvFile.getParser().getTemplate();
-				List<QualityCheck> checks = createQualityChecks(template, params);
-				List<QualityIssue> fileIssues = qualityControl.getQualityIssues(csvFile.getGeoData(), checks);
-				issues.addAll(fileIssues);
-			}
-		}
+		List<CsvFile> files = model.getFileManager().getCsvFiles().stream()
+				.filter(f -> f instanceof CsvFile)
+				.map(f -> (CsvFile)f)
+				.toList();
+		List<QualityCheck> checks = createQualityChecks(params);
+		List<QualityIssue> issues = qualityControl.getQualityIssues(files, checks);
+
 		mapView.getQualityLayer().setIssues(issues);
 		eventPublisher.publishEvent(new WhatChanged(this, WhatChanged.Change.justdraw));
 	}

@@ -1,5 +1,6 @@
 package com.ugcs.gprvisualizer.app.quality;
 
+import com.github.thecoldwine.sigrun.common.ext.CsvFile;
 import com.github.thecoldwine.sigrun.common.ext.LatLon;
 import com.github.thecoldwine.sigrun.common.ext.SphericalMercator;
 import com.ugcs.gprvisualizer.app.parcers.GeoData;
@@ -7,15 +8,20 @@ import com.ugcs.gprvisualizer.app.parcers.SensorValue;
 import com.ugcs.gprvisualizer.math.DouglasPeucker;
 import com.ugcs.gprvisualizer.utils.Range;
 import javafx.geometry.Point2D;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineSegment;
+import org.locationtech.jts.geom.Polygon;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class AltitudeCheck implements QualityCheck {
+public class AltitudeCheck extends FileQualityCheck {
 
     private static final double MIN_WIDTH = 0.15;
     private static final double DISTANCE_THRESHOLD = MIN_WIDTH / 2;
+
+    private final GeometryFactory gf = new GeometryFactory();
 
     private final double max;
     private final double tolerance;
@@ -28,7 +34,11 @@ public class AltitudeCheck implements QualityCheck {
     }
 
     @Override
-    public List<QualityIssue> check(List<GeoData> values) {
+    public List<QualityIssue> checkFile(CsvFile file) {
+        return file != null ? checkValues(file.getGeoData()) : List.of();
+    }
+
+    private List<QualityIssue> checkValues(List<GeoData> values) {
         if (values == null) {
             return List.of();
         }
@@ -101,17 +111,21 @@ public class AltitudeCheck implements QualityCheck {
     }
 
     private QualityIssue createStripeIssue(LatLon from, LatLon to, Point2D defaultDirection) {
-        Segment segment = new Segment(from, to);
+        // Lproj / L = k
+        double k = SphericalMercator.scaleFactorAt(from.getLatDgr());
+        LineSegment segment = new LineSegment(
+                Spatial.toCoordinate(SphericalMercator.project(from)),
+                Spatial.toCoordinate(SphericalMercator.project(to)));
 
-        double minLength = width;
+        double minLength = k * width;
         if (segment.getLength() < minLength) {
-            segment = segment.expand(minLength, defaultDirection);
+            segment = Spatial.expandSegment(segment, minLength,
+                    Spatial.toCoordinate(defaultDirection));
         }
-
-        return new StripeQualityIssue(
+        // stripe in a projected space
+        Polygon stripe = Spatial.orthoBuffer(segment, k * 0.5 * width);
+        return new PolygonQualityIssue(
                 QualityColors.ALTITUDE,
-                segment,
-                width
-        );
+                gf.createPolygon(Spatial.toGeodetic(stripe.getCoordinates())));
     }
 }
