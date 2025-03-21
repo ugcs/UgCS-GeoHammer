@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.github.thecoldwine.sigrun.common.ext.*;
+import com.google.common.base.Strings;
 import com.ugcs.gprvisualizer.app.auxcontrol.BaseObject;
 import com.ugcs.gprvisualizer.app.auxcontrol.FoundPlace;
 import com.ugcs.gprvisualizer.app.events.FileClosedEvent;
@@ -1579,6 +1580,13 @@ public class SensorLineChart extends Chart {
     }
 
     public void medianCorrection(String seriesName, int window) {
+        if (Strings.isNullOrEmpty(seriesName)) {
+            return;
+        }
+        if (seriesName.endsWith(ANOMALY_SERIES_SUFFIX)) {
+            seriesName = seriesName.substring(0,
+                    seriesName.length() - ANOMALY_SERIES_SUFFIX.length());
+        }
         LineChartWithMarkers chart = getDataChart(seriesName);
         if (chart == null) {
             return;
