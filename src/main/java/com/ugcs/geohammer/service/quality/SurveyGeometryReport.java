@@ -10,6 +10,8 @@ public record SurveyGeometryReport(
         int tieLineCount,
         double primaryLineOrientation,
         double tieLineOrientation,
+        List<Integer> primaryLineIds,
+        List<Integer> tieLineIds,
         List<List<LatLon>> primaryLinePaths,
         List<List<LatLon>> tieLinePaths,
         Distribution sampleSpacing,

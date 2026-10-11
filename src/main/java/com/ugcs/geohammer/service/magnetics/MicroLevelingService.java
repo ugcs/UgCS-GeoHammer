@@ -2,6 +2,7 @@ package com.ugcs.geohammer.service.magnetics;
 
 import com.ugcs.geohammer.format.GeoData;
 import com.ugcs.geohammer.model.LatLon;
+import com.ugcs.geohammer.service.gridding.GriddingResult;
 import com.ugcs.geohammer.util.Check;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,52 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class MicroLevelingService {
+
+    public MicroLevelingSuggestions suggestParameters(List<GeoData> data, GriddingResult noiseGrid,
+                                                       Set<Integer> primaryLineIds, double primaryLineSpacing) {
+        Check.notEmpty(data);
+        Check.notNull(noiseGrid);
+        Check.notEmpty(primaryLineIds);
+        Check.condition(primaryLineSpacing > 0, "Primary-line spacing must be positive");
+        List<Double> samples = new ArrayList<>();
+        for (GeoData value : data) {
+            if (!primaryLineIds.contains(value.getLineOrDefault(0)) || value.getLatLon() == null) continue;
+            double noise = sampleGrid(noiseGrid, value.getLatLon());
+            if (Double.isFinite(noise)) samples.add(noise);
+        }
+        Check.condition(!samples.isEmpty(), "The noise grid does not overlap any primary-line samples");
+        double median = median(samples);
+        List<Double> deviations = new ArrayList<>(samples.size());
+        for (double sample : samples) deviations.add(Math.abs(sample - median));
+        double maximum = 3 * median(deviations);
+        if (maximum == 0) {
+            for (double sample : samples) maximum = Math.max(maximum, Math.abs(sample - median));
+        }
+        return new MicroLevelingSuggestions(4 * primaryLineSpacing, maximum);
+    }
+
+    public GridMicroLevelingResult level(List<GeoData> data, GriddingResult noiseGrid, GridMicroLevelingOptions options) {
+        Check.notEmpty(data);
+        Check.notNull(noiseGrid);
+        Check.notNull(options);
+        List<@Nullable Number> corrections = empty(data.size());
+        Map<Integer, List<GridSample>> lines = collectGridSamples(data, options.inputSeries(), options.primaryLineIds(), noiseGrid);
+        for (List<GridSample> line : lines.values()) {
+            smoothAndLimit(line, options.smoothingWavelength(), options.maximumCorrection(), corrections);
+        }
+        List<@Nullable Number> leveled = new ArrayList<>(data.size());
+        for (int index = 0; index < data.size(); index++) {
+            Number value = data.get(index).getNumber(options.inputSeries());
+            Number correction = corrections.get(index);
+            leveled.add(value == null || !Double.isFinite(value.doubleValue()) ? null
+                    : value.doubleValue() - (correction == null ? 0 : correction.doubleValue()));
+        }
+        return new GridMicroLevelingResult(leveled, corrections);
+    }
 
     public List<@Nullable Number> level(List<GeoData> data, String series, int windowSize) {
         Check.notEmpty(data);
@@ -65,6 +109,66 @@ public class MicroLevelingService {
         return samplesByLine;
     }
 
+    private static Map<Integer, List<GridSample>> collectGridSamples(List<GeoData> data, String series, Set<Integer> primaryLines,
+                                                                       GriddingResult grid) {
+        Map<Integer, List<GridSample>> result = new LinkedHashMap<>();
+        for (int index = 0; index < data.size(); index++) {
+            GeoData value = data.get(index);
+            if (!primaryLines.contains(value.getLineOrDefault(0)) || value.getNumber(series) == null || value.getLatLon() == null) {
+                continue;
+            }
+            double noise = sampleGrid(grid, value.getLatLon());
+            if (!Double.isFinite(noise)) {
+                continue;
+            }
+            List<GridSample> line = result.computeIfAbsent(value.getLineOrDefault(0), ignored -> new ArrayList<>());
+            double distance = line.isEmpty() ? 0 : line.getLast().distance() + line.getLast().location().getDistance(value.getLatLon());
+            line.add(new GridSample(index, value.getLatLon(), distance, noise));
+        }
+        return result;
+    }
+
+    private static void smoothAndLimit(List<GridSample> line, double wavelength, double maximum, List<@Nullable Number> corrections) {
+        for (int index = 0; index < line.size(); index++) {
+            GridSample sample = line.get(index);
+            double weightedSum = 0;
+            double weightSum = 0;
+            double sigma = wavelength / 2.355;
+            for (GridSample neighbor : line) {
+                double delta = neighbor.distance() - sample.distance();
+                if (Math.abs(delta) > 3 * sigma) continue;
+                double weight = Math.exp(-(delta * delta) / (2 * sigma * sigma));
+                weightedSum += weight * neighbor.noise();
+                weightSum += weight;
+            }
+            double correction = weightedSum / weightSum;
+            corrections.set(sample.dataIndex(), Math.clamp(correction, -maximum, maximum));
+        }
+    }
+
+    private static double sampleGrid(GriddingResult grid, LatLon location) {
+        float[][] values = grid.grid();
+        double x = (location.getLonDgr() - grid.minLatLon().getLonDgr())
+                / (grid.maxLatLon().getLonDgr() - grid.minLatLon().getLonDgr()) * values.length - 0.5;
+        double y = (location.getLatDgr() - grid.minLatLon().getLatDgr())
+                / (grid.maxLatLon().getLatDgr() - grid.minLatLon().getLatDgr()) * values[0].length - 0.5;
+        int x0 = (int) Math.floor(x);
+        int y0 = (int) Math.floor(y);
+        if (x0 < 0 || y0 < 0 || x0 + 1 >= values.length || y0 + 1 >= values[0].length) return Double.NaN;
+        double dx = x - x0;
+        double dy = y - y0;
+        float a = values[x0][y0]; float b = values[x0 + 1][y0];
+        float c = values[x0][y0 + 1]; float d = values[x0 + 1][y0 + 1];
+        if (Float.isNaN(a) || Float.isNaN(b) || Float.isNaN(c) || Float.isNaN(d)) return Double.NaN;
+        return a * (1 - dx) * (1 - dy) + b * dx * (1 - dy) + c * (1 - dx) * dy + d * dx * dy;
+    }
+
+    private static List<@Nullable Number> empty(int size) {
+        List<@Nullable Number> result = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) result.add(null);
+        return result;
+    }
+
     private static void alignDirections(List<Line> lines) {
         Line reference = null;
         for (Line line : lines) {
@@ -108,6 +212,9 @@ public class MicroLevelingService {
     }
 
     private record Sample(int dataIndex, double value, @Nullable LatLon latLon) {
+    }
+
+    private record GridSample(int dataIndex, LatLon location, double distance, double noise) {
     }
 
     private static class Line {

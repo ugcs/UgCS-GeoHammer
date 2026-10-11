@@ -17,6 +17,7 @@ public class RecipeReplayService {
     private final HeadingCorrectionService headingCorrectionService;
     private final LineLevelingService lineLevelingService;
     private final CrossoverLevelingService crossoverLevelingService;
+    private final ConventionalLevelingService conventionalLevelingService;
     private final MicroLevelingService microLevelingService;
     private final RegionalRemovalService regionalRemovalService;
     private final MagneticProcessingWorkflow processingWorkflow;
@@ -24,6 +25,7 @@ public class RecipeReplayService {
     public RecipeReplayService(IgrfRemovalService igrfRemovalService, DiurnalCorrectionService diurnalCorrectionService,
                                HeadingCorrectionService headingCorrectionService,
                                LineLevelingService lineLevelingService, CrossoverLevelingService crossoverLevelingService,
+                               ConventionalLevelingService conventionalLevelingService,
                                MicroLevelingService microLevelingService, RegionalRemovalService regionalRemovalService,
                                MagneticProcessingWorkflow processingWorkflow) {
         this.igrfRemovalService = igrfRemovalService;
@@ -31,6 +33,7 @@ public class RecipeReplayService {
         this.headingCorrectionService = headingCorrectionService;
         this.lineLevelingService = lineLevelingService;
         this.crossoverLevelingService = crossoverLevelingService;
+        this.conventionalLevelingService = conventionalLevelingService;
         this.microLevelingService = microLevelingService;
         this.regionalRemovalService = regionalRemovalService;
         this.processingWorkflow = processingWorkflow;
@@ -99,6 +102,19 @@ public class RecipeReplayService {
             Set<Integer> ties = tieLines(step);
             chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), crossoverLevelingService.level(chart.getFile().getGeoData(), step.inputSeries(), ties).values());
             processingWorkflow.recordCrossoverLeveling(chart.getFile(), step.inputSeries(), step.outputSeries(), ties);
+            return;
+        }
+        if (method.equals("conventional-tie-line")) {
+            Set<Integer> ties = tieLines(step);
+            TieLineCorrectionModel model = TieLineCorrectionModel.valueOf(step.settings().get("correctionModel"));
+            int order = integerSetting(step, "polynomialOrder");
+            ConventionalLevelingOptions options = new ConventionalLevelingOptions(step.inputSeries(), step.outputSeries(), ties,
+                    model, order);
+            ConventionalLevelingResult result = conventionalLevelingService.level(chart.getFile().getGeoData(), options);
+            chart.createDerivedSeries(step.outputSeries() + "_TIE_CORRECTION", step.inputSeries(), result.tieCorrections());
+            chart.createDerivedSeries(step.outputSeries() + "_LINE_CORRECTION", step.inputSeries(), result.surveyCorrections());
+            chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), result.values());
+            processingWorkflow.recordConventionalLeveling(chart.getFile(), options);
             return;
         }
         throw new IllegalArgumentException("Unsupported line-leveling method: " + method);

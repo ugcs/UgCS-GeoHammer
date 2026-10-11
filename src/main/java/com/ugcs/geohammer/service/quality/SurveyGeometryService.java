@@ -40,7 +40,8 @@ public class SurveyGeometryService {
         double cellSize = recommendCellSize(primarySummary);
         double blankingDistance = recommendBlankingDistance(primarySummary);
         return new SurveyGeometryReport(lines.size(), families.primary().lines().size(), families.tieLines().lines().size(),
-                families.primary().orientation(), tiePeaks.orientation(), toPaths(families.primary()),
+                families.primary().orientation(), tiePeaks.orientation(), toIds(families.primary()),
+                toIds(families.tieLines()), toPaths(families.primary()),
                 toPaths(families.tieLines()), sampleSummary, primarySummary, summarize(headings),
                 List.copyOf(sampleSpacing), List.copyOf(primaryLineSpacing), List.copyOf(headings),
                 tiePeaks.spacing(), tiePeaks.peakPositions().size(), tiePeaks.densityPositions(),
@@ -56,6 +57,16 @@ public class SurveyGeometryService {
         return List.copyOf(paths);
     }
 
+    private static List<Integer> toIds(LineFamily family) {
+        List<Integer> ids = new ArrayList<>();
+        for (LineGeometry line : family.lines()) {
+            if (!ids.contains(line.id())) {
+                ids.add(line.id());
+            }
+        }
+        return List.copyOf(ids);
+    }
+
     private static List<LineGeometry> collectLines(List<GeoData> data) {
         List<LineGeometry> lines = new ArrayList<>();
         List<LatLon> points = new ArrayList<>();
@@ -66,7 +77,7 @@ public class SurveyGeometryService {
             }
             Integer line = value.getLineOrDefault(0);
             if (currentLine != null && !line.equals(currentLine)) {
-                addLine(lines, points);
+                addLine(lines, currentLine, points);
                 points = new ArrayList<>();
             }
             currentLine = line;
@@ -75,11 +86,13 @@ public class SurveyGeometryService {
                 points.add(point);
             }
         }
-        addLine(lines, points);
+        if (currentLine != null) {
+            addLine(lines, currentLine, points);
+        }
         return lines;
     }
 
-    private static void addLine(List<LineGeometry> lines, List<LatLon> points) {
+    private static void addLine(List<LineGeometry> lines, int id, List<LatLon> points) {
         if (points.size() < 2) {
             return;
         }
@@ -91,7 +104,7 @@ public class SurveyGeometryService {
         }
         LatLon center = new LatLon(latitude / points.size(), longitude / points.size());
         double orientation = points.getFirst().getBearing(points.getLast()) % 180.0;
-        lines.add(new LineGeometry(points, center, orientation));
+        lines.add(new LineGeometry(id, points, center, orientation));
     }
 
     private static void collectSegments(List<LatLon> points, List<Double> sampleSpacing, List<Double> headings) {
@@ -389,7 +402,7 @@ public class SurveyGeometryService {
         return primaryLineSpacing.median() * 2.0;
     }
 
-    private record LineGeometry(List<LatLon> points, LatLon center, double orientation) {
+    private record LineGeometry(int id, List<LatLon> points, LatLon center, double orientation) {
     }
 
     private record LineFamily(List<LineGeometry> lines, double orientation) {
