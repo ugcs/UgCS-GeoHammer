@@ -69,6 +69,21 @@ public class MagneticProcessingWorkflow {
                 Map.of("method", "tie-line-crossover", "tieLineIds", lineIds.toString()));
     }
 
+    public void recordConventionalLeveling(SgyFile file, ConventionalLevelingOptions options) {
+        Check.notNull(options);
+        StringBuilder lineIds = new StringBuilder();
+        for (Integer tieLine : options.tieLineIds()) {
+            if (!lineIds.isEmpty()) {
+                lineIds.append(',');
+            }
+            lineIds.append(tieLine);
+        }
+        record(file, MagneticProcessingStepType.LINE_LEVELING, options.inputSeries(), options.outputSeries(),
+                Map.of("method", "conventional-tie-line", "tieLineIds", lineIds.toString(),
+                        "correctionModel", options.correctionModel().name(),
+                        "polynomialOrder", Integer.toString(options.polynomialOrder())));
+    }
+
     public void recordMicroLeveling(SgyFile file, MicroLevelingOptions options) {
         Check.notNull(options);
         record(file, MagneticProcessingStepType.MICRO_LEVELING,

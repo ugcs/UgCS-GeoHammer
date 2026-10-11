@@ -6,21 +6,27 @@ import com.ugcs.geohammer.format.csv.CsvFile;
 import com.ugcs.geohammer.model.Model;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
 import com.ugcs.geohammer.model.event.SeriesUpdatedEvent;
-import com.ugcs.geohammer.service.magnetics.CrossoverLevelingResult;
-import com.ugcs.geohammer.service.magnetics.CrossoverLevelingService;
+import com.ugcs.geohammer.service.magnetics.ConventionalLevelingOptions;
+import com.ugcs.geohammer.service.magnetics.ConventionalLevelingResult;
+import com.ugcs.geohammer.service.magnetics.ConventionalLevelingService;
 import com.ugcs.geohammer.service.magnetics.MagneticProcessingWorkflow;
+import com.ugcs.geohammer.service.magnetics.TieLineCorrectionModel;
+import com.ugcs.geohammer.service.quality.SurveyGeometryReport;
+import com.ugcs.geohammer.service.quality.SurveyGeometryService;
 import com.ugcs.geohammer.view.Dialogs;
 import com.ugcs.geohammer.view.control.InputWithTopLabel;
 import com.ugcs.geohammer.view.control.NodeWithTopLabel;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -29,9 +35,11 @@ public class CrossoverLevelingTool extends FilterToolView {
 
     private final Model model;
 
-    private final CrossoverLevelingService levelingService;
+    private final ConventionalLevelingService levelingService;
 
     private final MagneticProcessingWorkflow processingWorkflow;
+
+    private final SurveyGeometryService surveyGeometryService;
 
     private final ComboBox<String> inputSeriesSelector;
 
@@ -39,18 +47,24 @@ public class CrossoverLevelingTool extends FilterToolView {
 
     private final TextField outputSeriesInput;
 
+    private final ComboBox<TieLineCorrectionModel> correctionModelSelector;
+
+    private final ComboBox<Integer> polynomialOrderSelector;
+
     private final Label availableLines;
 
     private final Label diagnostics;
 
-    public CrossoverLevelingTool(Model model, CrossoverLevelingService levelingService,
-                                 MagneticProcessingWorkflow processingWorkflow, ExecutorService executor) {
+    public CrossoverLevelingTool(Model model, ConventionalLevelingService levelingService,
+                                 MagneticProcessingWorkflow processingWorkflow, SurveyGeometryService surveyGeometryService,
+                                 ExecutorService executor) {
         super(executor);
         this.model = model;
         this.levelingService = levelingService;
         this.processingWorkflow = processingWorkflow;
+        this.surveyGeometryService = surveyGeometryService;
 
-        InputWithTopLabel outputSeries = new InputWithTopLabel("Crossover-leveled series");
+        InputWithTopLabel outputSeries = new InputWithTopLabel("Leveled magnetic series");
         outputSeriesInput = outputSeries.getInput();
         outputSeriesInput.textProperty().addListener((observable, oldValue, newValue) -> validateInput());
 
@@ -69,16 +83,34 @@ public class CrossoverLevelingTool extends FilterToolView {
         tieLinesInput.setPromptText("For example: 5, 10, 15");
         tieLinesInput.textProperty().addListener((observable, oldValue, newValue) -> validateInput());
 
+        correctionModelSelector = new ComboBox<>();
+        correctionModelSelector.getItems().setAll(TieLineCorrectionModel.values());
+        correctionModelSelector.setValue(TieLineCorrectionModel.MEDIAN);
+        correctionModelSelector.setMaxWidth(Double.MAX_VALUE);
+        correctionModelSelector.setOnAction(event -> updateCorrectionModel());
+
+        polynomialOrderSelector = new ComboBox<>();
+        polynomialOrderSelector.getItems().setAll(0, 1, 2, 3);
+        polynomialOrderSelector.setValue(1);
+        polynomialOrderSelector.setMaxWidth(Double.MAX_VALUE);
+
+        Button useDetectedTieLines = new Button("Use detected tie lines");
+        useDetectedTieLines.setOnAction(event -> detectTieLines());
+
         availableLines = new Label();
         diagnostics = new Label();
 
         inputContainer.getChildren().setAll(
                 new NodeWithTopLabel<>("Magnetic series", inputSeriesSelector),
                 tieLines,
+                useDetectedTieLines,
                 availableLines,
+                new NodeWithTopLabel<>("Tie-line correction", correctionModelSelector),
+                new NodeWithTopLabel<>("Polynomial order", polynomialOrderSelector),
                 outputSeries,
                 diagnostics
         );
+        updateCorrectionModel();
         showApply(true);
     }
 
@@ -130,6 +162,41 @@ public class CrossoverLevelingTool extends FilterToolView {
         return lines;
     }
 
+    private void updateCorrectionModel() {
+        boolean polynomial = correctionModelSelector.getValue() == TieLineCorrectionModel.POLYNOMIAL;
+        polynomialOrderSelector.setDisable(!polynomial);
+    }
+
+    private void detectTieLines() {
+        SgyFile file = selectedFile;
+        if (file == null) {
+            return;
+        }
+        submitAction(() -> {
+            SurveyGeometryReport report = surveyGeometryService.analyze(file.getGeoData());
+            Platform.runLater(() -> {
+                if (!Objects.equals(file, selectedFile)) {
+                    return;
+                }
+                tieLinesInput.setText(formatLineIds(report.tieLineIds()));
+                diagnostics.setText("Detected %d non-primary line IDs; review and edit before applying."
+                        .formatted(report.tieLineIds().size()));
+            });
+            return report;
+        });
+    }
+
+    private static String formatLineIds(Iterable<Integer> lineIds) {
+        StringBuilder text = new StringBuilder();
+        for (Integer lineId : lineIds) {
+            if (!text.isEmpty()) {
+                text.append(", ");
+            }
+            text.append(lineId);
+        }
+        return text.toString();
+    }
+
     @Override
     protected void onApply(ActionEvent event) {
         if (!(model.getChart(selectedFile) instanceof SensorLineChart chart)) {
@@ -138,16 +205,22 @@ public class CrossoverLevelingTool extends FilterToolView {
         String inputSeries = inputSeriesSelector.getValue();
         String outputSeries = outputSeriesInput.getText().trim();
         Set<Integer> tieLines = parseTieLines();
-        if (inputSeries == null || tieLines.isEmpty()) {
+        TieLineCorrectionModel correctionModel = correctionModelSelector.getValue();
+        Integer polynomialOrder = polynomialOrderSelector.getValue();
+        if (inputSeries == null || tieLines.isEmpty() || correctionModel == null || polynomialOrder == null) {
             return;
         }
         submitAction(() -> {
             try {
-                CrossoverLevelingResult result = levelingService.level(chart.getFile().getGeoData(), inputSeries, tieLines);
+                ConventionalLevelingOptions options = new ConventionalLevelingOptions(inputSeries, outputSeries, tieLines,
+                        correctionModel, polynomialOrder);
+                ConventionalLevelingResult result = levelingService.level(chart.getFile().getGeoData(), options);
+                chart.createDerivedSeries(outputSeries + "_TIE_CORRECTION", inputSeries, result.tieCorrections());
+                chart.createDerivedSeries(outputSeries + "_LINE_CORRECTION", inputSeries, result.surveyCorrections());
                 chart.createDerivedSeries(outputSeries, inputSeries, result.values());
-                processingWorkflow.recordCrossoverLeveling(chart.getFile(), inputSeries, outputSeries, tieLines);
-                Platform.runLater(() -> diagnostics.setText("Crossovers: %d, RMS error: %.2f"
-                        .formatted(result.crossovers().size(), result.rmsError())));
+                processingWorkflow.recordConventionalLeveling(chart.getFile(), options);
+                Platform.runLater(() -> diagnostics.setText("Crossovers: %d; RMS mis-tie: %.2f -> %.2f"
+                        .formatted(result.crossovers().size(), result.before().rms(), result.after().rms())));
             } catch (IllegalArgumentException e) {
                 Platform.runLater(() -> Dialogs.showError("Crossover leveling", e.getMessage()));
             }
