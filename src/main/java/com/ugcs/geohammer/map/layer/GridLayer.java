@@ -34,6 +34,7 @@ import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.math.AnalyticSignal;
 import com.ugcs.geohammer.math.AnalyticSignalFilter;
 import com.ugcs.geohammer.math.ReductionToPoleFilter;
+import com.ugcs.geohammer.math.VerticalContinuationFilter;
 import com.ugcs.geohammer.service.palette.Palettes;
 import com.ugcs.geohammer.model.Range;
 import com.ugcs.geohammer.util.Check;
@@ -373,7 +374,13 @@ public final class GridLayer extends BaseLayer {
                     values = new ReductionToPoleFilter(values, result.minLatLon(), result.maxLatLon(),
                             filter.rtpInclination(), filter.rtpDeclination()).apply();
                 }
-                if (filter.analyticSignal()) {
+                if (filter.upwardContinuation()) {
+                    values = new VerticalContinuationFilter(values, result.minLatLon(), result.maxLatLon(),
+                            filter.continuationDistance(), true).apply();
+                } else if (filter.downwardContinuation()) {
+                    values = new VerticalContinuationFilter(values, result.minLatLon(), result.maxLatLon(),
+                            filter.continuationDistance(), false).apply();
+                } else if (filter.analyticSignal()) {
                     AnalyticSignalFilter analyticSignalFilter = new AnalyticSignalFilter(
                             values,
                             result.minLatLon(),
@@ -446,6 +453,9 @@ public final class GridLayer extends BaseLayer {
                 || !Objects.equals(grid.filter().horizontalGradientMagnitude(), filter.horizontalGradientMagnitude())
                 || !Objects.equals(grid.filter().firstVerticalDerivative(), filter.firstVerticalDerivative())
                 || !Objects.equals(grid.filter().reductionToPole(), filter.reductionToPole())
+                || !Objects.equals(grid.filter().upwardContinuation(), filter.upwardContinuation())
+                || !Objects.equals(grid.filter().downwardContinuation(), filter.downwardContinuation())
+                || !Objects.equals(grid.filter().continuationDistance(), filter.continuationDistance())
                 || !Objects.equals(grid.filter().rtpInclination(), filter.rtpInclination())
                 || !Objects.equals(grid.filter().rtpDeclination(), filter.rtpDeclination());
     }
