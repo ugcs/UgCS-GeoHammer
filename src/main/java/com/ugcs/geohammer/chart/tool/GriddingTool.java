@@ -114,6 +114,10 @@ public class GriddingTool extends FilterToolView {
 
     private final CheckBox analyticSignal;
 
+    private final CheckBox horizontalGradientMagnitude;
+
+    private final CheckBox firstVerticalDerivative;
+
     private final CheckBox reductionToPole;
 
     private final TextField rtpInclinationInput;
@@ -274,19 +278,17 @@ public class GriddingTool extends FilterToolView {
         smoothing.selectedProperty().addListener(this::onFilterOptionChange);
 
         analyticSignal = new CheckBox("Analytic signal");
+        horizontalGradientMagnitude = new CheckBox("Horizontal gradient magnitude (HGM)");
+        firstVerticalDerivative = new CheckBox("First vertical derivative (1VD)");
         reductionToPole = new CheckBox("Reduction to pole");
-        reductionToPole.selectedProperty().addListener((observable, oldValue, selected) -> {
-            if (selected) {
-                analyticSignal.setSelected(false);
-            }
-            onFilterOptionChange(observable, oldValue, selected);
-        });
-        analyticSignal.selectedProperty().addListener((observable, oldValue, selected) -> {
-            if (selected) {
-                reductionToPole.setSelected(false);
-            }
-            onFilterOptionChange(observable, oldValue, selected);
-        });
+        analyticSignal.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(analyticSignal));
+        horizontalGradientMagnitude.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(horizontalGradientMagnitude));
+        firstVerticalDerivative.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(firstVerticalDerivative));
+        reductionToPole.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(reductionToPole));
 
         InputWithTopLabel rtpInclination = new InputWithTopLabel("RTP inclination (degrees)");
         rtpInclinationInput = rtpInclination.getInput();
@@ -309,6 +311,8 @@ public class GriddingTool extends FilterToolView {
                 hillShading,
                 smoothing,
                 analyticSignal,
+                horizontalGradientMagnitude,
+                firstVerticalDerivative,
                 reductionToPole,
                 rtpInclination,
                 rtpDeclination,
@@ -338,6 +342,28 @@ public class GriddingTool extends FilterToolView {
 
     private void updateOpacityValue(double transparency) {
         opacityValue.setText(Math.round(transparency * 100.0) + "%");
+    }
+
+    private void onProductSelectionChanged(CheckBox selectedProduct) {
+        boolean wasIgnoringEvents = ignoreFilterEvents.getAndSet(true);
+        if (selectedProduct.isSelected()) {
+            if (selectedProduct != analyticSignal) {
+                analyticSignal.setSelected(false);
+            }
+            if (selectedProduct != horizontalGradientMagnitude) {
+                horizontalGradientMagnitude.setSelected(false);
+            }
+            if (selectedProduct != firstVerticalDerivative) {
+                firstVerticalDerivative.setSelected(false);
+            }
+            if (selectedProduct != reductionToPole) {
+                reductionToPole.setSelected(false);
+            }
+        }
+        ignoreFilterEvents.set(wasIgnoringEvents);
+        if (!wasIgnoringEvents) {
+            applyFilter();
+        }
     }
 
     @Override
@@ -772,6 +798,8 @@ public class GriddingTool extends FilterToolView {
         ignoreFilterEvents.set(true);
         try {
             analyticSignal.setSelected(filter.analyticSignal());
+            horizontalGradientMagnitude.setSelected(filter.horizontalGradientMagnitude());
+            firstVerticalDerivative.setSelected(filter.firstVerticalDerivative());
             reductionToPole.setSelected(filter.reductionToPole());
             rtpInclinationInput.setText(Text.formatNumber(filter.rtpInclination()));
             rtpDeclinationInput.setText(Text.formatNumber(filter.rtpDeclination()));
@@ -850,6 +878,8 @@ public class GriddingTool extends FilterToolView {
         return new GriddingFilter(
                 new Range(rangeSlider.getLowValue(), rangeSlider.getHighValue()),
                 analyticSignal.isSelected(),
+                horizontalGradientMagnitude.isSelected(),
+                firstVerticalDerivative.isSelected(),
                 reductionToPole.isSelected(),
                 getRtpDirection(rtpInclinationInput, 60.0),
                 getRtpDirection(rtpDeclinationInput, 0.0),

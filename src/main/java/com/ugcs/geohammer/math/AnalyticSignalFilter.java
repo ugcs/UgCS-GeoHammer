@@ -114,6 +114,34 @@ public class AnalyticSignalFilter {
         return new AnalyticSignal(magnitudes);
     }
 
+    public float[][] evaluateHorizontalGradientMagnitude() {
+        float[][] magnitudes = new float[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (Float.isNaN(gridSource[i][j])) {
+                    magnitudes[i][j] = Float.NaN;
+                    continue;
+                }
+                float dx = getXDerivative(i, j);
+                float dy = getYDerivative(i, j);
+                magnitudes[i][j] = (float) Math.sqrt(dx * dx + dy * dy);
+            }
+        }
+        return magnitudes;
+    }
+
+    public float[][] evaluateFirstVerticalDerivative() {
+        float[][] derivative = getZDerivativeMatrix();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (Float.isNaN(gridSource[i][j])) {
+                    derivative[i][j] = Float.NaN;
+                }
+            }
+        }
+        return derivative;
+    }
+
     // x-direction derivative
     private float getXDerivative(int i, int j) {
         if (i > 1 && i < m - 2) {

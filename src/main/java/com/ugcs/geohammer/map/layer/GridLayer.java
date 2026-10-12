@@ -358,7 +358,7 @@ public final class GridLayer extends BaseLayer {
 
             if (updateValues) {
                 values = result.grid();
-                if (filter.analyticSignal()) {
+                if (filter.usesDerivativeProduct()) {
                     // center values before smoothing, as both smoothing and the filter
                     // lose float precision near the base level
                     values = AnalyticSignalFilter.center(values);
@@ -379,9 +379,21 @@ public final class GridLayer extends BaseLayer {
                             result.minLatLon(),
                             result.maxLatLon());
                     values = analyticSignalFilter.evaluate().magnitudes();
+                } else if (filter.horizontalGradientMagnitude()) {
+                    AnalyticSignalFilter derivativeFilter = new AnalyticSignalFilter(
+                            values,
+                            result.minLatLon(),
+                            result.maxLatLon());
+                    values = derivativeFilter.evaluateHorizontalGradientMagnitude();
+                } else if (filter.firstVerticalDerivative()) {
+                    AnalyticSignalFilter derivativeFilter = new AnalyticSignalFilter(
+                            values,
+                            result.minLatLon(),
+                            result.maxLatLon());
+                    values = derivativeFilter.evaluateFirstVerticalDerivative();
                 }
                 sortedValues = sortGridValues(values);
-                range = filter.analyticSignal()
+                range = filter.usesDerivativeProduct()
                         ? AnalyticSignal.getRange(sortedValues, 0.02)
                         : filter.range();
                 zFactor = HillShading.getZFactor(values, HillShading.MEAN_SLOPE);
@@ -389,7 +401,7 @@ public final class GridLayer extends BaseLayer {
                 values = grid.values();
                 sortedValues = grid.sortedValues();
                 zFactor = grid.zFactor();
-                if (filter.analyticSignal()) {
+                if (filter.usesDerivativeProduct()) {
                     range = grid.range();
                 } else {
                     range = filter.range();
@@ -431,6 +443,8 @@ public final class GridLayer extends BaseLayer {
                 || grid.filter() == null
                 || !Objects.equals(grid.filter().smoothing(), filter.smoothing())
                 || !Objects.equals(grid.filter().analyticSignal(), filter.analyticSignal())
+                || !Objects.equals(grid.filter().horizontalGradientMagnitude(), filter.horizontalGradientMagnitude())
+                || !Objects.equals(grid.filter().firstVerticalDerivative(), filter.firstVerticalDerivative())
                 || !Objects.equals(grid.filter().reductionToPole(), filter.reductionToPole())
                 || !Objects.equals(grid.filter().rtpInclination(), filter.rtpInclination())
                 || !Objects.equals(grid.filter().rtpDeclination(), filter.rtpDeclination());
