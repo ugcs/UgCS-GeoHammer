@@ -99,6 +99,8 @@ public class GriddingTool extends FilterToolView {
 
     private final ComboBox<String> displayedGridSelector;
 
+    private final CheckBox showGrid;
+
     private final TextField cellSizeInput;
 
     private final TextField blankingDistanceInput;
@@ -158,9 +160,14 @@ public class GriddingTool extends FilterToolView {
         displayedGridSelector.setMaxWidth(Double.MAX_VALUE);
         displayedGridSelector.setOnAction(event -> onDisplayedGridSelected());
 
+        showGrid = new CheckBox("Show grid on map");
+        showGrid.setSelected(gridLayer.isActive());
+        showGrid.setOnAction(event -> setGridVisible(showGrid.isSelected()));
+
         VBox gridSelectionGroup = createGroup(
                 new NodeWithTopLabel<>("Input series", inputSeriesSelector),
-                new NodeWithTopLabel<>("Displayed saved grid", displayedGridSelector));
+                new NodeWithTopLabel<>("Displayed saved grid", displayedGridSelector),
+                showGrid);
 
         InputWithTopLabel cellSizeWithLabel = new InputWithTopLabel("Cell size (m)");
         cellSizeInput = cellSizeWithLabel.getInput();
@@ -351,19 +358,20 @@ public class GriddingTool extends FilterToolView {
         slider.lowValueProperty().addListener((observable, oldValue, newValue) -> {
             minInput.setText(Formats.prettyForRange(newValue, rangeSlider.getMin(), rangeSlider.getMax()));
             if (!ignoreFilterEvents.get()) {
-                applyFilter();
+                applyPaletteRange();
             }
         });
 
         slider.highValueProperty().addListener((observable, oldValue, newValue) -> {
             maxInput.setText(Formats.prettyForRange(newValue, rangeSlider.getMin(), rangeSlider.getMax()));
             if (!ignoreFilterEvents.get()) {
-                applyFilter();
+                applyPaletteRange();
             }
         });
 
         slider.setOnMouseReleased(event -> {
             expandRangeSlider();
+            applyFilter();
         });
 
         minInput.setOnKeyPressed(event -> {
@@ -526,6 +534,9 @@ public class GriddingTool extends FilterToolView {
     private void onDisplayedGridSelected() {
         if (!updatingGridSelectors) {
             gridLayer.setDisplayedSeries(selectedFile, displayedGridSelector.getValue());
+            GriddingResult result = gridLayer.getResult(selectedFile, displayedGridSelector.getValue());
+            updateFilterInputs(gridLayer.getFilter(selectedFile, displayedGridSelector.getValue()));
+            updateParamInputs(result != null ? result.params() : null);
         }
     }
 
@@ -533,16 +544,12 @@ public class GriddingTool extends FilterToolView {
     public void updateView() {
         updateInputSeries();
         updateDisplayedGridSelector();
+        showGrid.setSelected(gridLayer.isActive());
     }
 
-    @Override
-    public void show(boolean show) {
-        super.show(show);
-
-        if (gridLayer != null && gridLayer.isActive() != show) {
-            gridLayer.setActive(show);
-            gridLayer.submitDraw();
-        }
+    private void setGridVisible(boolean visible) {
+        gridLayer.setActive(visible);
+        gridLayer.submitDraw();
     }
 
     // range slider
@@ -872,11 +879,22 @@ public class GriddingTool extends FilterToolView {
     }
 
     private void publishFilter() {
-        SgyFile file = selectedFile;
-        String seriesName = getInputSeries();
+        publishFilter(getDisplayedGridSeries());
+    }
 
+    private void publishFilter(String seriesName) {
+        SgyFile file = selectedFile;
         GriddingFilter filter = getFilter();
         gridLayer.setFilter(file, seriesName, filter);
+    }
+
+    private String getDisplayedGridSeries() {
+        String seriesName = displayedGridSelector.getValue();
+        return !Strings.isNullOrEmpty(seriesName) ? seriesName : getInputSeries();
+    }
+
+    private void applyPaletteRange() {
+        publishFilter();
     }
 
     private void applyFilter() {
@@ -892,7 +910,7 @@ public class GriddingTool extends FilterToolView {
 
         var future = submitAction(() -> {
             showParamsChangedWarning(false);
-            publishFilter();
+            publishFilter(seriesName);
             GriddingResult result = griddingService.runGridding(files, seriesName, params);
             for (SgyFile targetFile : files) {
                 gridLayer.setResult(targetFile, result);
