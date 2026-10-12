@@ -47,6 +47,10 @@ public class XyzMapProvider implements MapProvider, Closeable {
 				Thread.ofVirtual().factory());
 	}
 
+	public boolean usesProvider(Class<? extends XyzTileProvider> type) {
+		return type.isInstance(tileProvider);
+	}
+
 	@Override
 	public void close() {
 		tilePool.shutdown();
