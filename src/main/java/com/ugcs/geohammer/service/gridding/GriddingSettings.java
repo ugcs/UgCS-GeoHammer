@@ -41,6 +41,8 @@ public class GriddingSettings {
     public GriddingFilter loadFilter(SgyFile file, String seriesName, Range defaultRange) {
         Range range = defaultRange;
         boolean analyticSignal = false;
+        boolean horizontalGradientMagnitude = false;
+        boolean firstVerticalDerivative = false;
         boolean reductionToPole = false;
         double rtpInclination = 60.0;
         double rtpDeclination = 0.0;
@@ -59,6 +61,10 @@ public class GriddingSettings {
                 }
             }
             analyticSignal = settings.getBooleanOrDefault("gridding_analytic_signal_enabled", templateName, analyticSignal);
+            horizontalGradientMagnitude = settings.getBooleanOrDefault(
+                    "gridding_horizontal_gradient_magnitude_enabled", templateName, horizontalGradientMagnitude);
+            firstVerticalDerivative = settings.getBooleanOrDefault(
+                    "gridding_first_vertical_derivative_enabled", templateName, firstVerticalDerivative);
             reductionToPole = settings.getBooleanOrDefault("gridding_rtp_enabled", templateName, reductionToPole);
             rtpInclination = settings.getDoubleOrDefault("gridding_rtp_inclination", templateName, rtpInclination);
             rtpDeclination = settings.getDoubleOrDefault("gridding_rtp_declination", templateName, rtpDeclination);
@@ -71,6 +77,8 @@ public class GriddingSettings {
         return new GriddingFilter(
                 range,
                 analyticSignal,
+                horizontalGradientMagnitude,
+                firstVerticalDerivative,
                 reductionToPole,
                 rtpInclination,
                 rtpDeclination,
@@ -105,6 +113,10 @@ public class GriddingSettings {
         settings.setValue("gridding_hillshading_enabled", templateName, Boolean.toString(filter.hillShading()));
         settings.setValue("gridding_smoothing_enabled", templateName, Boolean.toString(filter.smoothing()));
         settings.setValue("gridding_analytic_signal_enabled", templateName, Boolean.toString(filter.analyticSignal()));
+        settings.setValue("gridding_horizontal_gradient_magnitude_enabled", templateName,
+                Boolean.toString(filter.horizontalGradientMagnitude()));
+        settings.setValue("gridding_first_vertical_derivative_enabled", templateName,
+                Boolean.toString(filter.firstVerticalDerivative()));
         settings.setValue("gridding_rtp_enabled", templateName, Boolean.toString(filter.reductionToPole()));
         settings.setValue("gridding_rtp_inclination", templateName, Text.formatNumber(filter.rtpInclination()));
         settings.setValue("gridding_rtp_declination", templateName, Text.formatNumber(filter.rtpDeclination()));

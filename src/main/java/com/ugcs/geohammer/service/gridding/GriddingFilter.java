@@ -7,6 +7,8 @@ import com.ugcs.geohammer.service.palette.SpectrumType;
 public record GriddingFilter(
         Range range,
         boolean analyticSignal,
+        boolean horizontalGradientMagnitude,
+        boolean firstVerticalDerivative,
         boolean reductionToPole,
         double rtpInclination,
         double rtpDeclination,
@@ -15,4 +17,7 @@ public record GriddingFilter(
         PaletteType paletteType,
         SpectrumType spectrumType
 ) {
+    public boolean usesDerivativeProduct() {
+        return analyticSignal || horizontalGradientMagnitude || firstVerticalDerivative;
+    }
 }

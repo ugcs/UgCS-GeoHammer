@@ -71,6 +71,10 @@ public class RunGridding extends McpTool {
         addProperty(schema, "analytic_signal", "boolean",
                 "Show the analytic signal magnitude instead of the series values; the color scale "
                 + "then spans the signal values and range_min and range_max are not applied.");
+        addProperty(schema, "horizontal_gradient_magnitude", "boolean",
+                "Show horizontal gradient magnitude (HGM) instead of the series values.");
+        addProperty(schema, "first_vertical_derivative", "boolean",
+                "Show the first vertical derivative (1VD) instead of the series values.");
         addProperty(schema, "smoothing", "boolean", "Apply Gaussian smoothing to the grid.");
         addProperty(schema, "hill_shading", "boolean", "Apply hill-shading to the grid colors.");
         ObjectNode palette = addProperty(schema, "palette", "string",
@@ -131,10 +135,27 @@ public class RunGridding extends McpTool {
                         + "current range is " + formatRange(current.range()));
             }
         }
+        boolean analyticSignal = optionalBoolean(args, "analytic_signal", current.analyticSignal());
+        boolean horizontalGradientMagnitude = optionalBoolean(args, "horizontal_gradient_magnitude",
+                current.horizontalGradientMagnitude());
+        boolean firstVerticalDerivative = optionalBoolean(args, "first_vertical_derivative",
+                current.firstVerticalDerivative());
+        boolean reductionToPole = current.reductionToPole();
+        if (analyticSignal) {
+            horizontalGradientMagnitude = false;
+            firstVerticalDerivative = false;
+        } else if (horizontalGradientMagnitude) {
+            firstVerticalDerivative = false;
+        }
+        if (analyticSignal || horizontalGradientMagnitude || firstVerticalDerivative) {
+            reductionToPole = false;
+        }
         GriddingFilter filter = new GriddingFilter(
                 range,
-                optionalBoolean(args, "analytic_signal", current.analyticSignal()),
-                current.reductionToPole(),
+                analyticSignal,
+                horizontalGradientMagnitude,
+                firstVerticalDerivative,
+                reductionToPole,
                 current.rtpInclination(),
                 current.rtpDeclination(),
                 optionalBoolean(args, "hill_shading", current.hillShading()),
@@ -165,10 +186,12 @@ public class RunGridding extends McpTool {
                     + ", grid size " + width + " x " + height + " cells";
         }
         return text(message
-                + "; display: range " + (filter.analyticSignal() ? "auto" : formatRange(filter.range()))
+                + "; display: range " + (filter.usesDerivativeProduct() ? "auto" : formatRange(filter.range()))
                 + ", palette " + enumName(filter.paletteType())
                 + ", spectrum " + enumName(filter.spectrumType())
                 + ", analytic signal " + onOff(filter.analyticSignal())
+                + ", HGM " + onOff(filter.horizontalGradientMagnitude())
+                + ", 1VD " + onOff(filter.firstVerticalDerivative())
                 + ", smoothing " + onOff(filter.smoothing())
                 + ", hill-shading " + onOff(filter.hillShading()));
     }
