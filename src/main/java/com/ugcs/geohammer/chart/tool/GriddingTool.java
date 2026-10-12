@@ -120,6 +120,12 @@ public class GriddingTool extends FilterToolView {
 
     private final CheckBox reductionToPole;
 
+    private final CheckBox upwardContinuation;
+
+    private final CheckBox downwardContinuation;
+
+    private final TextField continuationDistanceInput;
+
     private final TextField rtpInclinationInput;
 
     private final TextField rtpDeclinationInput;
@@ -281,6 +287,8 @@ public class GriddingTool extends FilterToolView {
         horizontalGradientMagnitude = new CheckBox("Horizontal gradient magnitude (HGM)");
         firstVerticalDerivative = new CheckBox("First vertical derivative (1VD)");
         reductionToPole = new CheckBox("Reduction to pole");
+        upwardContinuation = new CheckBox("Upward continuation");
+        downwardContinuation = new CheckBox("Downward continuation");
         analyticSignal.selectedProperty().addListener((observable, oldValue, selected) ->
                 onProductSelectionChanged(analyticSignal));
         horizontalGradientMagnitude.selectedProperty().addListener((observable, oldValue, selected) ->
@@ -289,6 +297,15 @@ public class GriddingTool extends FilterToolView {
                 onProductSelectionChanged(firstVerticalDerivative));
         reductionToPole.selectedProperty().addListener((observable, oldValue, selected) ->
                 onProductSelectionChanged(reductionToPole));
+        upwardContinuation.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(upwardContinuation));
+        downwardContinuation.selectedProperty().addListener((observable, oldValue, selected) ->
+                onProductSelectionChanged(downwardContinuation));
+
+        InputWithTopLabel continuationDistance = new InputWithTopLabel("Continuation height (m)");
+        continuationDistanceInput = continuationDistance.getInput();
+        continuationDistanceInput.setText("100");
+        continuationDistanceInput.textProperty().addListener(this::onContinuationDistanceChange);
 
         InputWithTopLabel rtpInclination = new InputWithTopLabel("RTP inclination (degrees)");
         rtpInclinationInput = rtpInclination.getInput();
@@ -314,6 +331,9 @@ public class GriddingTool extends FilterToolView {
                 horizontalGradientMagnitude,
                 firstVerticalDerivative,
                 reductionToPole,
+                upwardContinuation,
+                downwardContinuation,
+                continuationDistance,
                 rtpInclination,
                 rtpDeclination,
                 rtpFallbackDate,
@@ -358,6 +378,12 @@ public class GriddingTool extends FilterToolView {
             }
             if (selectedProduct != reductionToPole) {
                 reductionToPole.setSelected(false);
+            }
+            if (selectedProduct != upwardContinuation) {
+                upwardContinuation.setSelected(false);
+            }
+            if (selectedProduct != downwardContinuation) {
+                downwardContinuation.setSelected(false);
             }
         }
         ignoreFilterEvents.set(wasIgnoringEvents);
@@ -801,6 +827,9 @@ public class GriddingTool extends FilterToolView {
             horizontalGradientMagnitude.setSelected(filter.horizontalGradientMagnitude());
             firstVerticalDerivative.setSelected(filter.firstVerticalDerivative());
             reductionToPole.setSelected(filter.reductionToPole());
+            upwardContinuation.setSelected(filter.upwardContinuation());
+            downwardContinuation.setSelected(filter.downwardContinuation());
+            continuationDistanceInput.setText(Text.formatNumber(filter.continuationDistance()));
             rtpInclinationInput.setText(Text.formatNumber(filter.rtpInclination()));
             rtpDeclinationInput.setText(Text.formatNumber(filter.rtpDeclination()));
             hillShading.setSelected(filter.hillShading());
@@ -881,6 +910,9 @@ public class GriddingTool extends FilterToolView {
                 horizontalGradientMagnitude.isSelected(),
                 firstVerticalDerivative.isSelected(),
                 reductionToPole.isSelected(),
+                upwardContinuation.isSelected(),
+                downwardContinuation.isSelected(),
+                getContinuationDistance(),
                 getRtpDirection(rtpInclinationInput, 60.0),
                 getRtpDirection(rtpDeclinationInput, 0.0),
                 hillShading.isSelected(),
@@ -894,6 +926,18 @@ public class GriddingTool extends FilterToolView {
         if (!ignoreFilterEvents.get() && reductionToPole.isSelected()) {
             applyFilter();
         }
+    }
+
+    private void onContinuationDistanceChange(ObservableValue<? extends String> observable, String oldValue,
+                                              String newValue) {
+        if (!ignoreFilterEvents.get() && (upwardContinuation.isSelected() || downwardContinuation.isSelected())) {
+            applyFilter();
+        }
+    }
+
+    private double getContinuationDistance() {
+        Double distance = Text.parseDouble(continuationDistanceInput.getText());
+        return distance != null && Double.isFinite(distance) && distance > 0.0 ? distance : 100.0;
     }
 
     private void updateRtpDirection() {

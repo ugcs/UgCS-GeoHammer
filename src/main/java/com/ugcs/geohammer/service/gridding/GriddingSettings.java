@@ -44,6 +44,9 @@ public class GriddingSettings {
         boolean horizontalGradientMagnitude = false;
         boolean firstVerticalDerivative = false;
         boolean reductionToPole = false;
+        boolean upwardContinuation = false;
+        boolean downwardContinuation = false;
+        double continuationDistance = 100.0;
         double rtpInclination = 60.0;
         double rtpDeclination = 0.0;
         boolean hillShading = false;
@@ -66,6 +69,15 @@ public class GriddingSettings {
             firstVerticalDerivative = settings.getBooleanOrDefault(
                     "gridding_first_vertical_derivative_enabled", templateName, firstVerticalDerivative);
             reductionToPole = settings.getBooleanOrDefault("gridding_rtp_enabled", templateName, reductionToPole);
+            upwardContinuation = settings.getBooleanOrDefault(
+                    "gridding_upward_continuation_enabled", templateName, upwardContinuation);
+            downwardContinuation = settings.getBooleanOrDefault(
+                    "gridding_downward_continuation_enabled", templateName, downwardContinuation);
+            continuationDistance = settings.getDoubleOrDefault(
+                    "gridding_continuation_distance", templateName, continuationDistance);
+            if (continuationDistance <= 0.0) {
+                continuationDistance = 100.0;
+            }
             rtpInclination = settings.getDoubleOrDefault("gridding_rtp_inclination", templateName, rtpInclination);
             rtpDeclination = settings.getDoubleOrDefault("gridding_rtp_declination", templateName, rtpDeclination);
             hillShading = settings.getBooleanOrDefault("gridding_hillshading_enabled", templateName, hillShading);
@@ -80,6 +92,9 @@ public class GriddingSettings {
                 horizontalGradientMagnitude,
                 firstVerticalDerivative,
                 reductionToPole,
+                upwardContinuation,
+                downwardContinuation,
+                continuationDistance,
                 rtpInclination,
                 rtpDeclination,
                 hillShading,
@@ -118,6 +133,12 @@ public class GriddingSettings {
         settings.setValue("gridding_first_vertical_derivative_enabled", templateName,
                 Boolean.toString(filter.firstVerticalDerivative()));
         settings.setValue("gridding_rtp_enabled", templateName, Boolean.toString(filter.reductionToPole()));
+        settings.setValue("gridding_upward_continuation_enabled", templateName,
+                Boolean.toString(filter.upwardContinuation()));
+        settings.setValue("gridding_downward_continuation_enabled", templateName,
+                Boolean.toString(filter.downwardContinuation()));
+        settings.setValue("gridding_continuation_distance", templateName,
+                Text.formatNumber(filter.continuationDistance()));
         settings.setValue("gridding_rtp_inclination", templateName, Text.formatNumber(filter.rtpInclination()));
         settings.setValue("gridding_rtp_declination", templateName, Text.formatNumber(filter.rtpDeclination()));
         settings.setValue("gridding_palette", templateName, filter.paletteType().name());

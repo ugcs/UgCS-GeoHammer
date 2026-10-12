@@ -75,6 +75,12 @@ public class RunGridding extends McpTool {
                 "Show horizontal gradient magnitude (HGM) instead of the series values.");
         addProperty(schema, "first_vertical_derivative", "boolean",
                 "Show the first vertical derivative (1VD) instead of the series values.");
+        addProperty(schema, "upward_continuation", "boolean",
+                "Apply upward continuation using continuation_height meters.");
+        addProperty(schema, "downward_continuation", "boolean",
+                "Apply downward continuation using continuation_height meters; this amplifies short-wavelength noise.");
+        addProperty(schema, "continuation_height", "number",
+                "Vertical continuation distance in meters; must be positive.");
         addProperty(schema, "smoothing", "boolean", "Apply Gaussian smoothing to the grid.");
         addProperty(schema, "hill_shading", "boolean", "Apply hill-shading to the grid colors.");
         ObjectNode palette = addProperty(schema, "palette", "string",
@@ -95,6 +101,7 @@ public class RunGridding extends McpTool {
         Double rangeMax = optionalDouble(args, "range_max");
         String paletteArg = optionalString(args, "palette");
         String spectrumArg = optionalString(args, "spectrum");
+        Double continuationHeight = optionalDouble(args, "continuation_height");
 
         SgyFile dataFile = resolveFile(fileName);
         GriddingResult currentResult = gridLayer.getResult(dataFile);
@@ -141,13 +148,29 @@ public class RunGridding extends McpTool {
         boolean firstVerticalDerivative = optionalBoolean(args, "first_vertical_derivative",
                 current.firstVerticalDerivative());
         boolean reductionToPole = current.reductionToPole();
+        boolean upwardContinuation = optionalBoolean(args, "upward_continuation", current.upwardContinuation());
+        boolean downwardContinuation = optionalBoolean(args, "downward_continuation", current.downwardContinuation());
+        double continuationDistance = continuationHeight != null ? continuationHeight : current.continuationDistance();
+        if (!Double.isFinite(continuationDistance) || continuationDistance <= 0.0) {
+            throw new IllegalArgumentException("continuation_height must be a positive finite value");
+        }
         if (analyticSignal) {
             horizontalGradientMagnitude = false;
             firstVerticalDerivative = false;
+            upwardContinuation = false;
+            downwardContinuation = false;
         } else if (horizontalGradientMagnitude) {
             firstVerticalDerivative = false;
+            upwardContinuation = false;
+            downwardContinuation = false;
+        } else if (firstVerticalDerivative) {
+            upwardContinuation = false;
+            downwardContinuation = false;
+        } else if (upwardContinuation) {
+            downwardContinuation = false;
         }
-        if (analyticSignal || horizontalGradientMagnitude || firstVerticalDerivative) {
+        if (analyticSignal || horizontalGradientMagnitude || firstVerticalDerivative
+                || upwardContinuation || downwardContinuation) {
             reductionToPole = false;
         }
         GriddingFilter filter = new GriddingFilter(
@@ -156,6 +179,9 @@ public class RunGridding extends McpTool {
                 horizontalGradientMagnitude,
                 firstVerticalDerivative,
                 reductionToPole,
+                upwardContinuation,
+                downwardContinuation,
+                continuationDistance,
                 current.rtpInclination(),
                 current.rtpDeclination(),
                 optionalBoolean(args, "hill_shading", current.hillShading()),
@@ -192,6 +218,8 @@ public class RunGridding extends McpTool {
                 + ", analytic signal " + onOff(filter.analyticSignal())
                 + ", HGM " + onOff(filter.horizontalGradientMagnitude())
                 + ", 1VD " + onOff(filter.firstVerticalDerivative())
+                + ", upward continuation " + onOff(filter.upwardContinuation())
+                + ", downward continuation " + onOff(filter.downwardContinuation())
                 + ", smoothing " + onOff(filter.smoothing())
                 + ", hill-shading " + onOff(filter.hillShading()));
     }
