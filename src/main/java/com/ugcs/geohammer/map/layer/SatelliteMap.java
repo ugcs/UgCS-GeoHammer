@@ -13,6 +13,7 @@ import com.ugcs.geohammer.map.provider.HereMapProvider;
 import com.ugcs.geohammer.map.provider.MacrostratTileProvider;
 import com.ugcs.geohammer.map.provider.MacrostratGeologyService;
 import com.ugcs.geohammer.map.provider.OsmTileProvider;
+import com.ugcs.geohammer.map.provider.Usgs3depTileProvider;
 import com.ugcs.geohammer.map.provider.XyzMapProvider;
 import com.ugcs.geohammer.model.ActivationPolicy;
 import com.ugcs.geohammer.model.ToolNode;
@@ -92,13 +93,14 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 			}
 		};
 
-        optionsMenuBtn.getItems().addAll(menuItem1, menuItem2, menuItem3, menuItem4, menuItem5);
+		optionsMenuBtn.getItems().addAll(menuItem1, menuItem2, menuItem3, menuItem4, menuItem5, menuItem6);
 		ToggleGroup toggleGroup = new ToggleGroup();
 		menuItem1.setToggleGroup(toggleGroup);
 		menuItem2.setToggleGroup(toggleGroup);
 		menuItem3.setToggleGroup(toggleGroup);
         menuItem4.setToggleGroup(toggleGroup);
         menuItem5.setToggleGroup(toggleGroup);
+		menuItem6.setToggleGroup(toggleGroup);
 
 		menuItem1.setOnAction(e -> {
 			closeCurrentProvider();
@@ -136,10 +138,19 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 			updateIdentifyAvailability();
         });
 
+		menuItem5.setOnAction(e -> {
+			closeCurrentProvider();
+			model.getMapField().setMapProvider(new XyzMapProvider(new Usgs3depTileProvider(buildInfo.getBuildVersion())));
+			setActive(model.getMapField().getMapProvider() != null);
+			clearTiles();
+			model.publishEvent(new WhatChanged(this, WhatChanged.Change.mapzoom));
+			updateIdentifyAvailability();
+		});
+
 		menuItem2.setSelected(true);
 		menuItem2.fire();
 
-        menuItem5.setOnAction(e -> {
+		menuItem6.setOnAction(e -> {
 			closeCurrentProvider();
 			model.getMapField().setMapProvider(null);
 			setActive(model.getMapField().getMapProvider() != null);
@@ -153,7 +164,8 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	RadioMenuItem menuItem2 = new RadioMenuItem("here.com");
 	RadioMenuItem menuItem3 = new RadioMenuItem("open street map");
 	RadioMenuItem menuItem4 = new RadioMenuItem("geologic map (Macrostrat)");
-	RadioMenuItem menuItem5 = new RadioMenuItem("turn off");
+	RadioMenuItem menuItem5 = new RadioMenuItem("USGS 3DEP multidirectional hillshade");
+	RadioMenuItem menuItem6 = new RadioMenuItem("turn off");
 
 	private final ToggleButton identifyGeologyButton = new ToggleButton("Identify geology");
 
