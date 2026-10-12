@@ -76,7 +76,7 @@ public class SceneContent extends BorderPane implements InitializingBean {
 		// tools
 		toolPane = createPane(optionPane);
 		toolPane.setMinWidth(200);
-		toolPane.setMaxWidth(350);
+		toolPane.setMaxWidth(600);
 		toolPane.setPrefHeight(350);
 
 		SplitPane splitPane = new SplitPane(mapPane, chartPane, toolPane);
