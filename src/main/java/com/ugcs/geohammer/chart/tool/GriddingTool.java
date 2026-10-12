@@ -45,6 +45,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -125,6 +126,10 @@ public class GriddingTool extends FilterToolView {
 
     private final ComboBox<SpectrumType> spectrumSelector;
 
+    private final Slider opacitySlider;
+
+    private final Label opacityValue;
+
     private boolean updatingGridSelectors;
 
     public GriddingTool(
@@ -202,6 +207,23 @@ public class GriddingTool extends FilterToolView {
                 showPalette);
         paletteGroup.setAlignment(Pos.BASELINE_CENTER);
         VBox.setMargin(paletteGroup,  new Insets(2, 0, 0, 0));
+
+        opacitySlider = new Slider(0.0, 1.0, 1.0 - gridLayer.getOpacity());
+        opacitySlider.setBlockIncrement(0.05);
+        HBox.setHgrow(opacitySlider, Priority.ALWAYS);
+
+        opacityValue = new Label();
+        updateOpacityValue(opacitySlider.getValue());
+        opacitySlider.valueProperty().addListener((observable, oldValue, value) -> {
+            gridLayer.setOpacity(1.0 - value.doubleValue());
+            updateOpacityValue(value.doubleValue());
+        });
+
+        HBox opacityGroup = new HBox(Views.DEFAULT_SPACING,
+                new Label("Grid transparency"),
+                opacitySlider,
+                opacityValue);
+        opacityGroup.setAlignment(Pos.BASELINE_CENTER);
 
         // range slider
 
@@ -300,6 +322,7 @@ public class GriddingTool extends FilterToolView {
                 inputGroup,
                 rangeGroup,
                 paletteGroup,
+                opacityGroup,
                 postProcessingGroup);
 
         showApply(true);
@@ -311,6 +334,10 @@ public class GriddingTool extends FilterToolView {
         group.getStyleClass().add("group");
         VBox.setMargin(group,  new Insets(Views.DEFAULT_SPACING, 0, Views.DEFAULT_SPACING, 0));
         return group;
+    }
+
+    private void updateOpacityValue(double transparency) {
+        opacityValue.setText(Math.round(transparency * 100.0) + "%");
     }
 
     @Override

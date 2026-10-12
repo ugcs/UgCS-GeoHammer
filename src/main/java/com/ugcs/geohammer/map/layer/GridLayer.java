@@ -1,6 +1,8 @@
 package com.ugcs.geohammer.map.layer;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -89,6 +91,8 @@ public final class GridLayer extends BaseLayer {
 
     private final ConcurrentMap<SgyFile, Grid> gridCache = new ConcurrentHashMap<>();
 
+    private volatile float opacity = 1.0f;
+
     public GridLayer(Model model, ExecutorService executor) {
         this.model = model;
         this.executor = executor;
@@ -108,6 +112,15 @@ public final class GridLayer extends BaseLayer {
 
     public boolean hasResult(SgyFile file) {
         return getResult(file) != null;
+    }
+
+    public double getOpacity() {
+        return opacity;
+    }
+
+    public void setOpacity(double opacity) {
+        this.opacity = (float) Math.clamp(opacity, 0.0, 1.0);
+        submitDraw();
     }
 
     public GriddingResult getResult(SgyFile file) {
@@ -257,42 +270,48 @@ public final class GridLayer extends BaseLayer {
             cellY[j] = (int) Math.round(field.latLonToScreen(new LatLon(lat, minLatLon.getLonDgr())).getY());
         }
 
-        for (int i = 0; i < gridWidth; i++) {
-            for (int j = 0; j < gridHeight; j++) {
-                try {
-                    float value = grid.values[i][j];
-                    if (Float.isNaN(value)) {
-                        continue;
+        Composite composite = g2.getComposite();
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+        try {
+            for (int i = 0; i < gridWidth; i++) {
+                for (int j = 0; j < gridHeight; j++) {
+                    try {
+                        float value = grid.values[i][j];
+                        if (Float.isNaN(value)) {
+                            continue;
+                        }
+
+                        Color color = grid.palette.getColor(value);
+
+                        // Apply hill-shading if enabled
+                        if (grid.filter.hillShading()) {
+                            // Calculate illumination for this cell
+                            double illumination = HillShading.computeIllumination(
+                                    grid.values,
+                                    i,
+                                    j,
+                                    grid.zFactor
+                            );
+
+                            // Apply hill-shading to the color
+                            color = HillShading.apply(
+                                    color,
+                                    illumination
+                            );
+                        }
+
+                        g2.setColor(color);
+
+                        // cellY descend with the row index, as screen y grows southward
+                        g2.fillRect(cellX[i], cellY[j + 1],
+                                cellX[i + 1] - cellX[i], cellY[j] - cellY[j + 1]);
+                    } catch (Exception e) {
+                        log.error("Error", e);
                     }
-
-                    Color color = grid.palette.getColor(value);
-
-                    // Apply hill-shading if enabled
-                    if (grid.filter.hillShading()) {
-                        // Calculate illumination for this cell
-                        double illumination = HillShading.computeIllumination(
-                                grid.values,
-                                i,
-                                j,
-                                grid.zFactor
-                        );
-
-                        // Apply hill-shading to the color
-                        color = HillShading.apply(
-                                color,
-                                illumination
-                        );
-                    }
-
-                    g2.setColor(color);
-
-                    // cellY descend with the row index, as screen y grows southward
-                    g2.fillRect(cellX[i], cellY[j + 1],
-                            cellX[i + 1] - cellX[i], cellY[j] - cellY[j + 1]);
-                } catch (Exception e) {
-                    log.error("Error", e);
                 }
             }
+        } finally {
+            g2.setComposite(composite);
         }
     }
 
