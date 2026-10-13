@@ -178,7 +178,39 @@ public final class GridLayer extends BaseLayer {
         }
     }
 
-    private void removeResult(SgyFile file) {
+    public boolean removeResult(SgyFile file, String seriesName) {
+        if (file == null || seriesName == null) {
+            return false;
+        }
+
+        ConcurrentMap<String, GriddingResult> fileResults = results.get(file.getFile());
+        if (fileResults == null || fileResults.remove(seriesName) == null) {
+            return false;
+        }
+
+        TemplateSeriesKey templateSeries = TemplateSeriesKey.ofSeries(file, seriesName);
+        if (templateSeries != null) {
+            filters.remove(templateSeries);
+        }
+
+        if (fileResults.isEmpty()) {
+            results.remove(file.getFile(), fileResults);
+            displayedSeries.remove(file.getFile());
+        } else if (Objects.equals(displayedSeries.get(file.getFile()), seriesName)) {
+            String nextSeries = null;
+            for (String candidate : fileResults.keySet()) {
+                if (nextSeries == null || candidate.compareTo(nextSeries) < 0) {
+                    nextSeries = candidate;
+                }
+            }
+            displayedSeries.put(file.getFile(), nextSeries);
+        }
+
+        updateGrid(file, true);
+        return true;
+    }
+
+    private void removeAllResults(SgyFile file) {
         if (file != null) {
             results.remove(file.getFile());
             displayedSeries.remove(file.getFile());
@@ -537,7 +569,7 @@ public final class GridLayer extends BaseLayer {
     private void onFileClosed(FileClosedEvent event) {
         SgyFile file = event.getFile();
         if (file != null) {
-            removeResult(file);
+            removeAllResults(file);
             pendingExecutors.remove(file);
             submitDraw();
         }

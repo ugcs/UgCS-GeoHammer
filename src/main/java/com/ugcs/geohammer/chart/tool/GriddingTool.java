@@ -1,6 +1,7 @@
 package com.ugcs.geohammer.chart.tool;
 
 import com.ugcs.geohammer.chart.csv.SensorLineChart;
+import com.ugcs.geohammer.AppContext;
 import com.ugcs.geohammer.format.SgyFile;
 import com.ugcs.geohammer.format.GeoData;
 import com.ugcs.geohammer.format.csv.CsvFile;
@@ -42,6 +43,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -99,6 +103,8 @@ public class GriddingTool extends FilterToolView {
     private final ComboBox<String> inputSeriesSelector;
 
     private final ComboBox<String> displayedGridSelector;
+
+    private final Button deleteGridButton;
 
     private final CheckBox showGrid;
 
@@ -175,13 +181,20 @@ public class GriddingTool extends FilterToolView {
         displayedGridSelector.setMaxWidth(Double.MAX_VALUE);
         displayedGridSelector.setOnAction(event -> onDisplayedGridSelected());
 
+        deleteGridButton = new Button("Delete");
+        deleteGridButton.setTooltip(new javafx.scene.control.Tooltip("Delete the selected saved grid"));
+        deleteGridButton.setDisable(true);
+        deleteGridButton.setOnAction(event -> deleteSelectedGrid());
+        HBox.setHgrow(displayedGridSelector, Priority.ALWAYS);
+        HBox displayedGridControls = new HBox(Views.DEFAULT_SPACING, displayedGridSelector, deleteGridButton);
+
         showGrid = new CheckBox("Show grid on map");
         showGrid.setSelected(gridLayer.isActive());
         showGrid.setOnAction(event -> setGridVisible(showGrid.isSelected()));
 
         VBox gridSelectionGroup = createGroup(
                 new NodeWithTopLabel<>("Input series", inputSeriesSelector),
-                new NodeWithTopLabel<>("Displayed saved grid", displayedGridSelector),
+                new NodeWithTopLabel<>("Displayed saved grid", displayedGridControls),
                 showGrid);
 
         InputWithTopLabel cellSizeWithLabel = new InputWithTopLabel("Cell size (m)");
@@ -593,6 +606,7 @@ public class GriddingTool extends FilterToolView {
         } finally {
             updatingGridSelectors = false;
         }
+        deleteGridButton.setDisable(displayedGridSelector.getValue() == null);
     }
 
     private void onInputSeriesSelected() {
@@ -617,6 +631,36 @@ public class GriddingTool extends FilterToolView {
             updateFilterInputs(gridLayer.getFilter(selectedFile, displayedGridSelector.getValue()));
             updateParamInputs(result != null ? result.params() : null);
         }
+        deleteGridButton.setDisable(displayedGridSelector.getValue() == null);
+    }
+
+    private void deleteSelectedGrid() {
+        SgyFile file = selectedFile;
+        String seriesName = displayedGridSelector.getValue();
+        if (file == null || Strings.isNullOrEmpty(seriesName) || !confirmGridDeletion(seriesName)) {
+            return;
+        }
+        if (!gridLayer.removeResult(file, seriesName)) {
+            return;
+        }
+
+        updateDisplayedGridSelector();
+        String displayedSeries = displayedGridSelector.getValue();
+        GriddingResult result = gridLayer.getResult(file, displayedSeries);
+        updateParamInputs(result != null ? result.params() : null);
+        updateFilterInputs(gridLayer.getFilter(file, displayedSeries));
+        onInputChange();
+    }
+
+    private boolean confirmGridDeletion(String seriesName) {
+        ButtonType delete = new ButtonType("Delete grid", ButtonBar.ButtonData.OK_DONE);
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION,
+                "Remove the saved grid for '" + seriesName + "'? The source data will not be changed.",
+                ButtonType.CANCEL, delete);
+        confirmation.setTitle("Delete saved grid");
+        confirmation.setHeaderText("Delete grid '" + seriesName + "'?");
+        confirmation.initOwner(AppContext.stage);
+        return confirmation.showAndWait().orElse(ButtonType.CANCEL) == delete;
     }
 
     @Override
