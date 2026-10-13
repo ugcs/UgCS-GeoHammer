@@ -20,7 +20,7 @@ public class TraceCutInitializer {
 		List<Point2D> scrpos = new ArrayList<>();
 		double sx = 0;
 		double sy = 0;
-		for (SgyFile file : model.getFileManager().getFiles()) {
+		for (SgyFile file : model.getExpandedFiles()) {
 			for (GeoData value : Nulls.toEmpty(file.getGeoData())) {
 				LatLon latlon = value.getLatLon();
 				if (latlon == null) {

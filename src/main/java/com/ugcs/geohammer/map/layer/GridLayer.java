@@ -25,6 +25,7 @@ import com.ugcs.geohammer.service.gridding.GriddingParams;
 import com.ugcs.geohammer.service.gridding.GriddingResult;
 import com.ugcs.geohammer.service.palette.Palette;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
+import com.ugcs.geohammer.model.event.FileCollapsedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.math.AnalyticSignal;
 import com.ugcs.geohammer.math.AnalyticSignalFilter;
@@ -169,12 +170,12 @@ public final class GridLayer extends BaseLayer {
         }
 
         SgyFile last = selectedFile; // to draw on top
-        for (SgyFile file : model.getFileManager().getFiles()) {
+        for (SgyFile file : model.getExpandedFiles()) {
             if (!Objects.equals(file, last) && hasResult(file)) {
                 drawGrid(g2, field, file);
             }
         }
-        if (hasResult(last)) {
+        if (hasResult(last) && !model.isCollapsed(last)) {
             drawGrid(g2, field, last);
         }
     }
@@ -434,6 +435,13 @@ public final class GridLayer extends BaseLayer {
             if (isActive()) {
                 submitDraw();
             }
+        }
+    }
+
+    @EventListener
+    private void onFileCollapsed(FileCollapsedEvent event) {
+        if (isActive() && hasResult(event.getFile())) {
+            submitDraw();
         }
     }
 

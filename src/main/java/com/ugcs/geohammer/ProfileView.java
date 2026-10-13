@@ -24,7 +24,6 @@ import com.ugcs.geohammer.service.TraceTransform;
 import com.ugcs.geohammer.view.Dialogs;
 import com.ugcs.geohammer.view.ResourceImageHolder;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -320,14 +319,6 @@ public class ProfileView implements InitializingBean {
 
 		if (selectedFile!= null) {
 			currentFile = selectedFile;
-			if (currentFile instanceof TraceFile traceFile) {
-				var gprChart = model.getGprChart(traceFile);
-				if (gprChart != null) {
-					ChangeListener<Number> sp2SizeListener = (observable, oldValue, newValue) -> updateGprChartSize(gprChart);
-					center.widthProperty().addListener(sp2SizeListener);
-					((VBox) gprChart.getRootNode()).heightProperty().addListener(sp2SizeListener);
-				}
-			}
 		}
 
 		activateTools();
@@ -367,15 +358,6 @@ public class ProfileView implements InitializingBean {
 				Dialogs.showError("Error", "Error switching channel: " + e.getMessage());
 			}
 		}
-	}
-
-	private void updateGprChartSize(GPRChart chart) {
-		if (chart == null) {
-			return;
-		}
-		chart.setSize(
-				(int) (center.getWidth() - 30),
-				(int) (Math.max(400, ((VBox) chart.getRootNode()).getHeight()) - 6));
 	}
 
 	private Region getFixedWidthSpacer() {

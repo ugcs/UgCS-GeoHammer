@@ -129,6 +129,8 @@ public final class ProfileScroll extends Canvas {
 	public ProfileScroll(ScrollableData scrollable) {
 		this.scrollable = scrollable;
 
+		getStyleClass().add("profile-scroll");
+
 		addEventFilter(MouseEvent.DRAG_DETECTED, this::onMouseDragDetected);
 		addEventFilter(MouseEvent.MOUSE_DRAGGED, this::onMouseDragged);
 		addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, this::onMouseDragReleased);

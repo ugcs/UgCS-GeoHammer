@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.util.List;
 
+import com.ugcs.geohammer.chart.Chart;
+import com.ugcs.geohammer.chart.gpr.ProfileField;
 import com.ugcs.geohammer.model.LatLon;
 import com.ugcs.geohammer.model.MapField;
 import com.ugcs.geohammer.format.gpr.Trace;
@@ -25,19 +27,17 @@ import com.ugcs.geohammer.model.Model;
 
 public class FoundPlace extends PositionalObject {
 
-	private static final int R_HOR_M = ShapeHolder.flag.getBounds().width / 2;
+	private static final int ICON_WIDTH = ShapeHolder.FLAG.getBounds().width;
 
-	private static final int R_VER_M = ShapeHolder.flag.getBounds().height / 2;
+	private static final int ICON_HEIGHT = ShapeHolder.FLAG.getBounds().height;
+
+	public static final Color SELECTED_COLOR = Color.green;
 
 	public static final Stroke SELECTED_STROKE = new BasicStroke(2.0f);
-	
-	private static final float[] DASH = {7.0f, 2.0f};
 
-	private static final Stroke VERTICAL_STROKE =
-			new BasicStroke(1.0f,
-                BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_MITER,
-                10.0f, DASH, 0.0f);
+	private static final Stroke VERTICAL_STROKE = new BasicStroke(1.0f);
+
+	public static final int FLAG_POLE_HEIGHT = 18;
 
 	private Color flagColor = Color.getHSBColor((float) Math.random(), 0.9f, 0.97f);
 
@@ -133,10 +133,10 @@ public class FoundPlace extends PositionalObject {
 		
 		g2.translate(rect.x, rect.y + rect.height);
 		
-		g2.fill(ShapeHolder.flag);
+		g2.fill(ShapeHolder.FLAG);
 		
 		g2.setColor(Color.BLACK);
-		g2.draw(ShapeHolder.flag);
+		g2.draw(ShapeHolder.FLAG);
 		g2.translate(-rect.x, -(rect.y + rect.height));
 	}
 
@@ -151,26 +151,23 @@ public class FoundPlace extends PositionalObject {
 					profField.getClipTopMainRect().height);
 
 			Rectangle rect = getRect(gprChart);
+			g2.translate(rect.x, rect.y + rect.height);
 
 			g2.setColor(flagColor);
-
-			g2.translate(rect.x, rect.y + rect.height);
-			g2.fill(ShapeHolder.flag);
+			g2.setStroke(VERTICAL_STROKE);
+			if (isSelected()) {
+				g2.setColor(SELECTED_COLOR);
+			}
+			g2.fill(ShapeHolder.FLAG);
 
 			if (isSelected()) {
-				g2.setColor(Color.green);
+				g2.setColor(flagColor);
 				g2.setStroke(SELECTED_STROKE);
-				g2.draw(ShapeHolder.flag);
-
-				g2.setStroke(VERTICAL_STROKE);
-				g2.setColor(Color.blue);
-				g2.setXORMode(Color.gray);
-				int maxSamples = gprChart.getField().getMaxHeightInSamples();
-				g2.drawLine(
-						0, 0,
-						0, gprChart.sampleToScreen(maxSamples) - Model.TOP_MARGIN);
-				g2.setPaintMode();
+				g2.draw(ShapeHolder.FLAG);
 			}
+
+			int maxSamples = profField.getMaxHeightInSamples();
+			g2.drawLine(1, 0, 1, gprChart.sampleToScreen(maxSamples) - (rect.y + rect.height));
 
 			g2.translate(-rect.x, -(rect.y + rect.height));
 		}
@@ -178,19 +175,13 @@ public class FoundPlace extends PositionalObject {
 	
 	private Rectangle getRect(ScrollableData scrollableData) {
 		int x = scrollableData.traceToScreen(getTraceIndex());
-		Rectangle rect = new Rectangle(x, 
-				Model.TOP_MARGIN - R_VER_M * 2,
-				R_HOR_M * 2,
-				R_VER_M * 2);
-		return rect;
+		int y = ProfileField.TOP_MARGIN + Chart.MARKER_OFFSET;
+		return new Rectangle(x, y - ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
 	}
 	
 	private Rectangle getRect(MapField mapField) {
 		Point2D p = mapField.latLonToScreen(trace.getLatLon());
-		
-		Rectangle rect = new Rectangle((int) p.getX(), (int) p.getY() - R_VER_M * 2, 
-				R_HOR_M * 2, R_VER_M * 2);
-		return rect;
+		return new Rectangle((int) p.getX(), (int) p.getY() - ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
 	}
 
 	@Override

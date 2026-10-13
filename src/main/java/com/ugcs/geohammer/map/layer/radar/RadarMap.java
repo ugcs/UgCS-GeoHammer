@@ -15,6 +15,7 @@ import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.model.ActivationPolicy;
 import com.ugcs.geohammer.model.ToolNode;
 import com.ugcs.geohammer.model.event.FileClosedEvent;
+import com.ugcs.geohammer.model.event.FileCollapsedEvent;
 import com.ugcs.geohammer.model.event.FileOpenedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.util.PaletteBuilder;
@@ -186,6 +187,13 @@ public class RadarMap extends BaseLayer {
 		}
 	}
 
+	@EventListener
+	private void onFileCollapsed(FileCollapsedEvent event) {
+		if (event.getFile() instanceof TraceFile) {
+			renderQueue.submit();
+		}
+	}
+
 	private void updateIntensities(boolean refresh) {
 		for (TraceFile file : model.getFileManager().getGprFiles()) {
 			double[] intensity = intensities.get(file);
@@ -208,6 +216,9 @@ public class RadarMap extends BaseLayer {
 
 	public void drawCircles(MapField field, DblArray buffer) {
 		for (TraceFile file : model.getFileManager().getGprFiles()) {
+			if (model.isCollapsed(file)) {
+				continue;
+			}
 			drawFileCircles(file, field, buffer);
 		}
 	}

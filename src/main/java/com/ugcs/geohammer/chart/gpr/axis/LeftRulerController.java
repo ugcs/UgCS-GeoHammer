@@ -2,9 +2,11 @@ package com.ugcs.geohammer.chart.gpr.axis;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
 
 import com.ugcs.geohammer.AppContext;
 import com.ugcs.geohammer.chart.gpr.GPRChart;
@@ -19,111 +21,57 @@ import com.ugcs.geohammer.model.element.BaseObject;
 import com.ugcs.geohammer.model.element.BaseObjectImpl;
 
 public class LeftRulerController {
+
+	// toggle box along the text (vertical on screen) and across it
+	private static final int TOGGLE_WIDTH = 55;
+
+	private static final int TOGGLE_HEIGHT = 20;
+
+	// from the right edge of the ruler to the toggle center
+	private static final int TOGGLE_RIGHT_OFFSET = 20;
+
 	public static Stroke STROKE = new BasicStroke(1.0f);
-	
-	public interface Converter {
-		Pair<Integer, Integer> convert(int s, int f);
-		
-		int back(int unt);
-		
-		String getUnit();
-	}
-	
 
-	private final Converter[] list;
+	private final Converter[] converters;
+
 	private int index = 0;
-	
-	public LeftRulerController(ProfileField profileField) {
-		list = new Converter[] {
-                new SamplConverter(), new NanosecConverter(profileField.getFile())
-        };
-	}
-	
-	public Converter getConverter() {
-		return list[index];
-	}
-	
-	public void nextConverter() {
-		index = (index + 1) % list.length;
-	}
-	
-	
-	static class SamplConverter implements Converter {
 
-		@Override
-		public Pair<Integer, Integer> convert(int s, int f) {
-			return Pair.of(s, f);
-		}
-		
-		public int back(int unt) {
-			return unt;
-		}
-
-		@Override
-		public String getUnit() {
-			return "smpl";
-		}		
-	}
-
-	static class NanosecConverter implements Converter {
-
-		private final TraceFile sgyFile;
-
-		public NanosecConverter(TraceFile sgyFile) {
-			this.sgyFile = sgyFile;
-		}
-
-		@Override
-		public Pair<Integer, Integer> convert(int s, int f) {
-			int sampleInterval = sgyFile.getSampleInterval();
-
-			return Pair.of(
-					(int)Math.ceil(sampleInterval * s / 1000.0),
-					sampleInterval * f / 1000);
-		}
-		
-		public int back(int unt) {
-			TraceFile fl = sgyFile;
-			return unt * 1000 / fl.getSampleInterval();
-		}
-
-		@Override
-		public String getUnit() {
-			return "  ns";
-		}		
-	}
-	
-	public BaseObject getTB() {
-		return tb;
-	}
-
-	private final BaseObject tb = new BaseObjectImpl() {
+	private final BaseObject toggle = new BaseObjectImpl() {
 
 		@Override
 		public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
-			if (scrollableData instanceof GPRChart gprChart) {
-				Color strokeColor = Colors.awtColor(AppContext.getTheme().strokeColor());
-
-				//setClip(g2, profField.getInfoRect());
-				g2.setClip(null);
-				Rectangle r = getRect(gprChart.getField());
-
-				g2.setStroke(STROKE);
-				g2.setColor(Colors.opaque(strokeColor, 0.25f));
-				g2.drawRoundRect(r.x, r.y, r.width, r.height, 7, 7);
-
-				g2.setColor(strokeColor);
-				String text = getConverter().getUnit();
-				int width = g2.getFontMetrics().stringWidth(text);
-				g2.drawString(text, r.x + r.width - width - 6, r.y + r.height - 7);
+			if (!(scrollableData instanceof GPRChart gprChart)) {
+				return;
 			}
+
+			Color strokeColor = Colors.awtColor(AppContext.getTheme().strokeColor());
+			g2.setClip(null);
+
+			Rectangle r = getRect(gprChart.getField());
+			AffineTransform transform = g2.getTransform();
+			g2.translate(r.getCenterX(), r.getCenterY());
+			g2.rotate(-0.5 * Math.PI); // 90 degrees CCW, text reads bottom to top
+
+			g2.setStroke(STROKE);
+			g2.setColor(Colors.opaque(strokeColor, 0.25f));
+			g2.drawRoundRect(-TOGGLE_WIDTH / 2, -TOGGLE_HEIGHT / 2, TOGGLE_WIDTH, TOGGLE_HEIGHT, 7, 7);
+
+			g2.setColor(strokeColor);
+			String text = getConverter().getUnit();
+			FontMetrics fm = g2.getFontMetrics();
+			g2.drawString(text, -fm.stringWidth(text) / 2, (fm.getAscent() - fm.getDescent()) / 2);
+
+			g2.setTransform(transform);
 		}
 
-		//@Override
 		private Rectangle getRect(ProfileField profField) {
-				Rectangle  r = profField.getInfoRect();
-				return new Rectangle(profField.getVisibleStart() + r.x + 12, r.y + r.height - 35,
-						r.width - 15, 20);
+			Rectangle ruleRect = profField.getLeftRuleRect();
+			Rectangle mainRect = profField.getMainRect();
+			int centerX = profField.getVisibleStart() + ruleRect.x + ruleRect.width - TOGGLE_RIGHT_OFFSET;
+			int centerY = mainRect.y + mainRect.height / 2;
+			return new Rectangle(
+					centerX - TOGGLE_HEIGHT / 2, centerY - TOGGLE_WIDTH / 2,
+					TOGGLE_HEIGHT, TOGGLE_WIDTH);
 		}
 
 		@Override
@@ -145,4 +93,75 @@ public class LeftRulerController {
 		}
 	};
 
+	public LeftRulerController(ProfileField profileField) {
+		converters = new Converter[] {
+                new SampleConverter(), new TimeConverter(profileField.getFile())
+        };
+	}
+	
+	public Converter getConverter() {
+		return converters[index];
+	}
+	
+	public void nextConverter() {
+		index = (index + 1) % converters.length;
+	}
+
+	public BaseObject getToggle() {
+		return toggle;
+	}
+
+	public interface Converter {
+
+		Pair<Integer, Integer> convert(int s, int f);
+
+		int back(int unt);
+
+		String getUnit();
+	}
+
+	static class SampleConverter implements Converter {
+
+		@Override
+		public Pair<Integer, Integer> convert(int s, int f) {
+			return Pair.of(s, f);
+		}
+
+		public int back(int unt) {
+			return unt;
+		}
+
+		@Override
+		public String getUnit() {
+			return "samples";
+		}
+	}
+
+	static class TimeConverter implements Converter {
+
+		private final TraceFile sgyFile;
+
+		public TimeConverter(TraceFile sgyFile) {
+			this.sgyFile = sgyFile;
+		}
+
+		@Override
+		public Pair<Integer, Integer> convert(int s, int f) {
+			int sampleInterval = sgyFile.getSampleInterval();
+
+			return Pair.of(
+					(int)Math.ceil(sampleInterval * s / 1000.0),
+					sampleInterval * f / 1000);
+		}
+
+		public int back(int unt) {
+			TraceFile fl = sgyFile;
+			return unt * 1000 / fl.getSampleInterval();
+		}
+
+		@Override
+		public String getUnit() {
+			return "ns";
+		}
+	}
 }

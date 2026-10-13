@@ -2,6 +2,17 @@
     -fx-background-color: transparent;
 }
 
+.chart-name {
+    -fx-font-family: "Verdana";
+    -fx-font-weight: bold;
+    -fx-font-size: 8;
+    -fx-text-fill: -color-text;
+}
+
+.profile-scroll:disabled {
+    -fx-opacity: 0.4;
+}
+
 /* custom classes */
 
 .surface {
