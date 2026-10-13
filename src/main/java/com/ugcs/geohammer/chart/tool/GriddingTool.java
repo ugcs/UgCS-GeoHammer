@@ -1169,10 +1169,11 @@ public class GriddingTool extends FilterToolView {
             if (!Objects.equals(file, selectedFile)) {
                 return;
             }
-            GriddingResult result = gridLayer.getResult(file, getInputSeries());
-            updateParamInputs(result != null ? result.params() : null);
-            updateFilterInputs(gridLayer.getFilter(file, getInputSeries()));
             updateDisplayedGridSelector();
+            String displayedSeries = getDisplayedGridSeries();
+            GriddingResult result = gridLayer.getResult(file, displayedSeries);
+            updateParamInputs(result != null ? result.params() : null);
+            updateFilterInputs(gridLayer.getFilter(file, displayedSeries));
         });
     }
 
