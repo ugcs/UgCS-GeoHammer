@@ -6,7 +6,9 @@ import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+import com.ugcs.geohammer.format.SgyFile;
 import com.ugcs.geohammer.map.RenderQueue;
 import com.ugcs.geohammer.map.provider.GoogleTileProvider;
 import com.ugcs.geohammer.map.provider.HereMapProvider;
@@ -33,6 +35,8 @@ import org.springframework.stereotype.Component;
 
 import com.ugcs.geohammer.model.LatLon;
 import com.ugcs.geohammer.model.MapField;
+import com.ugcs.geohammer.model.TraceKey;
+import com.ugcs.geohammer.util.Traces;
 import com.ugcs.geohammer.view.ResourceImageHolder;
 import com.ugcs.geohammer.view.Dialogs;
 import com.ugcs.geohammer.view.status.Status;
@@ -44,6 +48,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.Locale;
 
 @Component
 public class SatelliteMap extends BaseLayer implements InitializingBean {
@@ -56,15 +61,18 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 	private final BuildInfo buildInfo;
 	private final MacrostratGeologyService geologyService;
 
+	private final GridLayer gridLayer;
+
 	private int lastTileZoom = -1;
 
 	public SatelliteMap(Model model, Status status, Settings settings, BuildInfo buildInfo,
-						MacrostratGeologyService geologyService) {
+						MacrostratGeologyService geologyService, GridLayer gridLayer) {
 		this.model = model;
 		this.status = status;
 		this.settings = settings;
 		this.buildInfo = buildInfo;
 		this.geologyService = geologyService;
+		this.gridLayer = gridLayer;
 		identifyGeologyButton.setTooltip(new Tooltip("Identify geology at the next map click"));
 		identifyGeologyButton.setDisable(true);
 		identifyGeologyButton.setOnAction(event -> status.showMessage(
@@ -243,11 +251,38 @@ public class SatelliteMap extends BaseLayer implements InitializingBean {
 
 		dragField = new MapField(model.getMapField());
 
-		status.showMessage(click.toString(), "Coordinates");
+		status.showMessage(formatLocationReadout(click), "Coordinates");
 
 		getRepaintListener().repaint();
 
 		return true;
+	}
+
+	private String formatLocationReadout(LatLon location) {
+		StringBuilder readout = new StringBuilder(location.toString());
+		Integer line = findClosestLine(location);
+		if (line != null) {
+			readout.append(" | Line ").append(line);
+		}
+
+		GridLayer.Grid grid = gridLayer.getCurrentGrid();
+		if (grid == null) {
+			return readout.toString();
+		}
+		double value = gridLayer.getCurrentGridValue(location).orElse(Double.NaN);
+		if (!Double.isNaN(value)) {
+			readout.append(String.format(Locale.ROOT, " | %s: %.3f", grid.seriesName(), value));
+		}
+		return readout.toString();
+	}
+
+	private Integer findClosestLine(LatLon location) {
+		SgyFile file = model.getCurrentFile();
+		if (file == null) {
+			return null;
+		}
+		Optional<TraceKey> trace = Traces.findNearestTrace(file, location);
+		return trace.isPresent() ? file.getGeoData().get(trace.get().getIndex()).getLine() : null;
 	}
 
 	private void identify(LatLon location) {
