@@ -20,14 +20,11 @@ public class RecipeReplayService {
     private final ConventionalLevelingService conventionalLevelingService;
     private final MicroLevelingService microLevelingService;
     private final RegionalRemovalService regionalRemovalService;
-    private final MagneticProcessingWorkflow processingWorkflow;
-
     public RecipeReplayService(IgrfRemovalService igrfRemovalService, DiurnalCorrectionService diurnalCorrectionService,
                                HeadingCorrectionService headingCorrectionService,
                                LineLevelingService lineLevelingService, CrossoverLevelingService crossoverLevelingService,
                                ConventionalLevelingService conventionalLevelingService,
-                               MicroLevelingService microLevelingService, RegionalRemovalService regionalRemovalService,
-                               MagneticProcessingWorkflow processingWorkflow) {
+                               MicroLevelingService microLevelingService, RegionalRemovalService regionalRemovalService) {
         this.igrfRemovalService = igrfRemovalService;
         this.diurnalCorrectionService = diurnalCorrectionService;
         this.headingCorrectionService = headingCorrectionService;
@@ -36,7 +33,6 @@ public class RecipeReplayService {
         this.conventionalLevelingService = conventionalLevelingService;
         this.microLevelingService = microLevelingService;
         this.regionalRemovalService = regionalRemovalService;
-        this.processingWorkflow = processingWorkflow;
     }
 
     public void replay(SensorLineChart chart, List<MagneticProcessingStep> steps) {
@@ -54,23 +50,19 @@ public class RecipeReplayService {
                 Instant fallback = step.settings().containsKey("fallbackTimestamp")
                         ? Instant.parse(step.settings().get("fallbackTimestamp")) : null;
                 chart.createDerivedSeries(output, input, igrfRemovalService.remove(chart.getFile().getGeoData(), input, fallback));
-                processingWorkflow.recordIgrfRemoval(chart.getFile(), new IgrfRemovalOptions(input, output, fallback));
             }
             case HEADING_CORRECTION -> {
                 int bins = integerSetting(step, "headingBins");
                 chart.createDerivedSeries(output, input, headingCorrectionService.correct(chart.getFile().getGeoData(), input, bins).values());
-                processingWorkflow.recordHeadingCorrection(chart.getFile(), new HeadingCorrectionOptions(input, output, bins));
             }
             case LINE_LEVELING -> replayLineLeveling(chart, step);
             case MICRO_LEVELING -> {
                 int window = integerSetting(step, "windowSize");
                 chart.createDerivedSeries(output, input, microLevelingService.level(chart.getFile().getGeoData(), input, window));
-                processingWorkflow.recordMicroLeveling(chart.getFile(), new MicroLevelingOptions(input, output, window));
             }
             case REGIONAL_REMOVAL -> {
                 int order = integerSetting(step, "polynomialOrder");
                 chart.createDerivedSeries(output, input, regionalRemovalService.remove(chart.getFile().getGeoData(), input, order).values());
-                processingWorkflow.recordRegionalRemoval(chart.getFile(), new RegionalRemovalOptions(input, output, order));
             }
         }
     }
@@ -87,21 +79,17 @@ public class RecipeReplayService {
                 ? Double.valueOf(step.settings().get("referenceField")) : null;
         chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), diurnalCorrectionService.correctSynchronized(
                 chart.getFile().getGeoData(), step.inputSeries(), baseSeries, referenceField).values());
-        processingWorkflow.recordDiurnalCorrection(chart.getFile(), new DiurnalCorrectionOptions(step.inputSeries(),
-                step.outputSeries(), baseSeries, true, referenceField));
     }
 
     private void replayLineLeveling(SensorLineChart chart, MagneticProcessingStep step) {
         String method = step.settings().getOrDefault("method", "line-median");
         if (method.equals("line-median")) {
             chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), lineLevelingService.level(chart.getFile().getGeoData(), step.inputSeries()));
-            processingWorkflow.recordLineLeveling(chart.getFile(), new LineLevelingOptions(step.inputSeries(), step.outputSeries()));
             return;
         }
         if (method.equals("tie-line-crossover")) {
             Set<Integer> ties = tieLines(step);
             chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), crossoverLevelingService.level(chart.getFile().getGeoData(), step.inputSeries(), ties).values());
-            processingWorkflow.recordCrossoverLeveling(chart.getFile(), step.inputSeries(), step.outputSeries(), ties);
             return;
         }
         if (method.equals("conventional-tie-line")) {
@@ -114,7 +102,6 @@ public class RecipeReplayService {
             chart.createDerivedSeries(step.outputSeries() + "_TIE_CORRECTION", step.inputSeries(), result.tieCorrections());
             chart.createDerivedSeries(step.outputSeries() + "_LINE_CORRECTION", step.inputSeries(), result.surveyCorrections());
             chart.createDerivedSeries(step.outputSeries(), step.inputSeries(), result.values());
-            processingWorkflow.recordConventionalLeveling(chart.getFile(), options);
             return;
         }
         throw new IllegalArgumentException("Unsupported line-leveling method: " + method);

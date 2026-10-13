@@ -67,13 +67,36 @@ public class MagneticProcessingHistory {
             removed = steps.remove(file) != null;
         }
         if (removed) {
+            saveRecipe(file);
+            model.publishEvent(new MagneticProcessingUpdatedEvent(this, file));
+        }
+    }
+
+    public void removeStep(SgyFile file, int index) {
+        Check.notNull(file);
+
+        boolean removed = false;
+        synchronized (steps) {
+            List<MagneticProcessingStep> fileSteps = steps.get(file);
+            if (fileSteps != null && index >= 0 && index < fileSteps.size()) {
+                fileSteps.remove(index);
+                if (fileSteps.isEmpty()) {
+                    steps.remove(file);
+                }
+                removed = true;
+            }
+        }
+        if (removed) {
+            saveRecipe(file);
             model.publishEvent(new MagneticProcessingUpdatedEvent(this, file));
         }
     }
 
     @EventListener
     private void onFileClosed(FileClosedEvent event) {
-        clear(event.getFile());
+        synchronized (steps) {
+            steps.remove(event.getFile());
+        }
     }
 
     @EventListener

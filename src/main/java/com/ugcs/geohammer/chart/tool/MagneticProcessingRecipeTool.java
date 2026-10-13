@@ -19,7 +19,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -46,7 +47,11 @@ public class MagneticProcessingRecipeTool extends ToolView {
 
     private final ExecutorService executor;
 
-    private final TextArea recipeText;
+    private final ListView<MagneticProcessingStep> recipeSteps;
+
+    private final Button removeStepButton;
+
+    private final Button clearRecipeButton;
 
     private final Button exportButton;
 
@@ -56,7 +61,9 @@ public class MagneticProcessingRecipeTool extends ToolView {
 
     private final Label importStatus;
 
-    private RecipeValidationResult importedRecipe;
+    private RecipeValidationResult validatedRecipe;
+
+    private boolean displayingImportedRecipe;
 
     public MagneticProcessingRecipeTool(Model model, MagneticProcessingHistory processingHistory,
                                         MagneticProcessingRecipeStore recipeStore, RecipeValidationService validationService,
@@ -68,10 +75,23 @@ public class MagneticProcessingRecipeTool extends ToolView {
         this.replayService = replayService;
         this.executor = executor;
 
-        recipeText = new TextArea();
-        recipeText.setEditable(false);
-        recipeText.setWrapText(true);
-        recipeText.setPrefRowCount(5);
+        recipeSteps = new ListView<>();
+        recipeSteps.setPrefHeight(160);
+        recipeSteps.setCellFactory(view -> new ListCell<>() {
+            @Override
+            protected void updateItem(MagneticProcessingStep step, boolean empty) {
+                super.updateItem(step, empty);
+                setText(empty || step == null ? null : formatStep(getIndex(), step));
+            }
+        });
+        recipeSteps.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> updateRecipeActionButtons());
+
+        removeStepButton = new Button("Remove selected step");
+        removeStepButton.setOnAction(event -> removeSelectedStep());
+
+        clearRecipeButton = new Button("Clear recipe");
+        clearRecipeButton.setOnAction(event -> clearRecipe());
 
         exportButton = new Button("Export recipe");
         exportButton.setOnAction(event -> exportRecipe());
@@ -86,7 +106,10 @@ public class MagneticProcessingRecipeTool extends ToolView {
 
         getChildren().add(Tools.createToolContainer(
                 new Label("Recipes are saved automatically beside the survey file."),
-                recipeText,
+                new Label("Recorded recipe steps"),
+                recipeSteps,
+                removeStepButton,
+                clearRecipeButton,
                 importStatus,
                 importButton,
                 replayButton,
@@ -102,12 +125,30 @@ public class MagneticProcessingRecipeTool extends ToolView {
     @Override
     public void updateView() {
         List<MagneticProcessingStep> steps = selectedFile != null ? processingHistory.getSteps(selectedFile) : List.of();
-        recipeText.setText(formatSteps(steps));
+        displayingImportedRecipe = false;
+        recipeSteps.getItems().setAll(steps);
+        recipeSteps.getSelectionModel().clearSelection();
         exportButton.setDisable(selectedFile == null || selectedFile.getFile() == null || steps.isEmpty());
         importButton.setDisable(selectedFile == null);
+        validateCurrentRecipe(steps);
+        updateRecipeActionButtons();
+    }
+
+    private void validateCurrentRecipe(List<MagneticProcessingStep> steps) {
+        validatedRecipe = null;
         replayButton.setDisable(true);
         importStatus.setText("");
-        importedRecipe = null;
+        if (selectedFile == null || steps.isEmpty()) {
+            return;
+        }
+        RecipeValidationResult result = validationService.validate(selectedFile, steps);
+        if (result.isValid()) {
+            validatedRecipe = result;
+            replayButton.setDisable(false);
+            importStatus.setText("Saved recipe is valid for this survey and ready to replay.");
+        } else {
+            importStatus.setText("Saved recipe cannot be replayed:\n" + String.join("\n", result.errors()));
+        }
     }
 
     private void exportRecipe() {
@@ -149,6 +190,8 @@ public class MagneticProcessingRecipeTool extends ToolView {
         if (recipeFile == null) {
             return;
         }
+        validatedRecipe = null;
+        replayButton.setDisable(true);
         SgyFile file = selectedFile;
         executor.submit(() -> {
             try {
@@ -164,18 +207,51 @@ public class MagneticProcessingRecipeTool extends ToolView {
         if (selectedFile != file) {
             return;
         }
-        recipeText.setText(formatSteps(result.steps()));
+        displayingImportedRecipe = true;
+        recipeSteps.getItems().setAll(result.steps());
+        recipeSteps.getSelectionModel().clearSelection();
+        updateRecipeActionButtons();
         if (result.isValid()) {
             importStatus.setText("Recipe '" + recipeFile.getName() + "' is valid for this survey. No steps were run.");
-            importedRecipe = result;
+            validatedRecipe = result;
             replayButton.setDisable(false);
         } else {
             importStatus.setText("Recipe cannot be replayed:\n" + String.join("\n", result.errors()));
         }
     }
 
+    private void removeSelectedStep() {
+        if (selectedFile == null || displayingImportedRecipe) {
+            return;
+        }
+        int index = recipeSteps.getSelectionModel().getSelectedIndex();
+        if (index >= 0) {
+            processingHistory.removeStep(selectedFile, index);
+        }
+    }
+
+    private void clearRecipe() {
+        if (selectedFile == null || displayingImportedRecipe || recipeSteps.getItems().isEmpty()) {
+            return;
+        }
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION,
+                "Clear all recorded recipe steps? This does not delete any derived series.",
+                ButtonType.CANCEL, ButtonType.OK);
+        confirmation.initOwner(AppContext.stage);
+        Optional<ButtonType> response = confirmation.showAndWait();
+        if (response.isPresent() && response.get() == ButtonType.OK) {
+            processingHistory.clear(selectedFile);
+        }
+    }
+
+    private void updateRecipeActionButtons() {
+        boolean editable = selectedFile != null && !displayingImportedRecipe;
+        removeStepButton.setDisable(!editable || recipeSteps.getSelectionModel().getSelectedIndex() < 0);
+        clearRecipeButton.setDisable(!editable || recipeSteps.getItems().isEmpty());
+    }
+
     private void replayRecipe() {
-        if (!(model.getChart(selectedFile) instanceof SensorLineChart chart) || importedRecipe == null) {
+        if (!(model.getChart(selectedFile) instanceof SensorLineChart chart) || validatedRecipe == null) {
             return;
         }
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION,
@@ -186,7 +262,7 @@ public class MagneticProcessingRecipeTool extends ToolView {
         if (response.isEmpty() || response.get() != ButtonType.OK) {
             return;
         }
-        List<MagneticProcessingStep> steps = importedRecipe.steps();
+        List<MagneticProcessingStep> steps = validatedRecipe.steps();
         replayButton.setDisable(true);
         executor.submit(() -> {
             try {
@@ -198,21 +274,12 @@ public class MagneticProcessingRecipeTool extends ToolView {
         });
     }
 
-    private static String formatSteps(List<MagneticProcessingStep> steps) {
-        if (steps.isEmpty()) {
-            return "No magnetic processing steps recorded.";
-        }
+    private static String formatStep(int index, MagneticProcessingStep step) {
         StringBuilder text = new StringBuilder();
-        for (int index = 0; index < steps.size(); index++) {
-            MagneticProcessingStep step = steps.get(index);
-            if (index > 0) {
-                text.append('\n');
-            }
-            text.append(index + 1).append(". ").append(step.type()).append(": ")
-                    .append(step.inputSeries()).append(" -> ").append(step.outputSeries());
-            if (!step.settings().isEmpty()) {
-                text.append("  ").append(step.settings());
-            }
+        text.append(index + 1).append(". ").append(step.type()).append(": ")
+                .append(step.inputSeries()).append(" -> ").append(step.outputSeries());
+        if (!step.settings().isEmpty()) {
+            text.append("  ").append(step.settings());
         }
         return text.toString();
     }
