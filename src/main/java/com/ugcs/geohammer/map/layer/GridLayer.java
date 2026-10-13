@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -318,6 +319,40 @@ public final class GridLayer extends BaseLayer {
 
     public Grid getCurrentGrid() {
         return getGrid(selectedFile);
+    }
+
+    public OptionalDouble getCurrentGridValue(LatLon location) {
+        Grid grid = getCurrentGrid();
+        if (grid == null || location == null) {
+            return OptionalDouble.empty();
+        }
+
+        float[][] values = grid.values();
+        int width = values.length;
+        int height = width > 0 ? values[0].length : 0;
+        if (height == 0) {
+            return OptionalDouble.empty();
+        }
+
+        double minLongitude = grid.minLatLon().getLonDgr();
+        double maxLongitude = grid.maxLatLon().getLonDgr();
+        double minLatitude = grid.minLatLon().getLatDgr();
+        double maxLatitude = grid.maxLatLon().getLatDgr();
+        if (location.getLonDgr() < minLongitude || location.getLonDgr() > maxLongitude
+                || location.getLatDgr() < minLatitude || location.getLatDgr() > maxLatitude) {
+            return OptionalDouble.empty();
+        }
+
+        double longitudeSpan = maxLongitude - minLongitude;
+        double latitudeSpan = maxLatitude - minLatitude;
+        if (longitudeSpan <= 0 || latitudeSpan <= 0) {
+            return OptionalDouble.empty();
+        }
+
+        int x = Math.min((int) ((location.getLonDgr() - minLongitude) / longitudeSpan * width), width - 1);
+        int y = Math.min((int) ((location.getLatDgr() - minLatitude) / latitudeSpan * height), height - 1);
+        float value = values[x][y];
+        return Float.isNaN(value) ? OptionalDouble.empty() : OptionalDouble.of(value);
     }
 
     public Grid getGrid(SgyFile file) {
