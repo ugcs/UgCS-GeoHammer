@@ -60,8 +60,6 @@ public class Model implements InitializingBean {
 
 	private static final Logger log = LoggerFactory.getLogger(Model.class);
 
-	public static final int TOP_MARGIN = 60;
-
 	public static final double DEFAULT_LOOKUP_THRESHOLD = 1.0;
 
 	private static final String PREF_TRACE = "trace";
@@ -262,6 +260,21 @@ public class Model implements InitializingBean {
         return getChart(file) instanceof GPRChart gprChart ? gprChart : null;
     }
 
+    public boolean isCollapsed(@Nullable SgyFile file) {
+        Chart chart = getChart(file);
+        return chart != null && chart.isCollapsed();
+    }
+
+    public List<SgyFile> getExpandedFiles() {
+        List<SgyFile> expandedFiles = new ArrayList<>();
+        for (SgyFile file : fileManager.getFiles()) {
+            if (!isCollapsed(file)) {
+                expandedFiles.add(file);
+            }
+        }
+        return expandedFiles;
+    }
+
     public SensorLineChart getCsvChart(CsvFile file) {
         return getChart(file) instanceof SensorLineChart csvChart ? csvChart : null;
     }
@@ -330,7 +343,7 @@ public class Model implements InitializingBean {
         charts.put(file, chart);
 
         // create new chart contents
-        var newChartBox = (VBox)chart.getRootNode();
+        VBox newChartBox = chart.getRootNode();
 		newChartBox.getStyleClass().add("data-chart");
 
         // add to container keeping position
@@ -364,6 +377,7 @@ public class Model implements InitializingBean {
             fileManager.removeFile(file);
             chartsContainer.getChildren().remove(chart.getRootNode());
             charts.remove(file);
+            chart.dispose();
 
             chart = createChart(file);
             fileManager.addFile(file);
@@ -384,13 +398,6 @@ public class Model implements InitializingBean {
     }
 
     // close chart
-
-    public void closeAllCharts() {
-        charts.forEach((file, chart) -> {
-            chart.close(false);
-        });
-        charts.clear();
-    }
 
     public void removeChart(SgyFile sgyFile) {
         Chart removed = charts.remove(sgyFile);
@@ -619,7 +626,7 @@ public class Model implements InitializingBean {
 		if (location == null) {
 			return;
 		}
-		Optional<TraceKey> nearestTrace = Traces.findNearestTraceInFiles(fileManager.getFiles(), location);
+		Optional<TraceKey> nearestTrace = Traces.findNearestTraceInFiles(getExpandedFiles(), location);
 		nearestTrace.ifPresent(trace -> {
 			selectTrace(trace, true);
 		});

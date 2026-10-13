@@ -31,38 +31,18 @@ import javafx.geometry.Point2D;
  */
 public class HorizontalRulerController {
 
+    // distance from the canvas bottom to the toggle top
+    private static final int TOGGLE_BOTTOM_OFFSET = 25;
+
+    private static final int TOGGLE_HEIGHT = 20;
+
     public static Stroke STROKE = new BasicStroke(1.0f);
 
     private final Model model;
 
     private final TraceFile file;
 
-    public HorizontalRulerController(Model model, TraceFile file) {
-        this.model = model;
-        this.file = file;
-    }
-
-    public BaseObject getTB() {
-        return tb;
-    }
-
-    public TraceUnit getUnit() {
-        String templateName = Templates.getTemplateName(file);
-        TemplateSettings templateSettings = model.getTemplateSettings();
-        return templateSettings.getTraceUnit(templateName);
-    }
-
-    public void setUnit(TraceUnit traceUnit) {
-        if (traceUnit == null ) {
-            return;
-        }
-
-        String templateName = Templates.getTemplateName(file);
-        TemplateSettings templateSettings = model.getTemplateSettings();
-        templateSettings.setTraceUnit(templateName, traceUnit);
-    }
-
-    private final BaseObject tb = new BaseObjectImpl() {
+    private final BaseObject toggle = new BaseObjectImpl() {
 
         @Override
         public void drawOnCut(Graphics2D g2, ScrollableData scrollableData) {
@@ -102,10 +82,11 @@ public class HorizontalRulerController {
         }
 
         private Rectangle getRect(ProfileField profField) {
-            Rectangle r = profField.getInfoRect();
-            Rectangle mainRect = profField.getMainRect();
-            return new Rectangle(profField.getVisibleStart() + (r.x / 2), mainRect.height + profField.getBottomRuleRect().height + 35,
-                    r.width - 15, 20);
+            Rectangle infoRect = profField.getInfoRect();
+            Rectangle bottomRuleRect = profField.getBottomRuleRect();
+            int x = profField.getVisibleStart() + infoRect.x / 2;
+            int y = bottomRuleRect.y + bottomRuleRect.height - TOGGLE_BOTTOM_OFFSET;
+            return new Rectangle(x, y, infoRect.width - 15, TOGGLE_HEIGHT);
         }
 
         @Override
@@ -140,4 +121,29 @@ public class HorizontalRulerController {
             );
         }
     };
+
+    public HorizontalRulerController(Model model, TraceFile file) {
+        this.model = model;
+        this.file = file;
+    }
+
+    public BaseObject getToggle() {
+        return toggle;
+    }
+
+    public TraceUnit getUnit() {
+        String templateName = Templates.getTemplateName(file);
+        TemplateSettings templateSettings = model.getTemplateSettings();
+        return templateSettings.getTraceUnit(templateName);
+    }
+
+    public void setUnit(TraceUnit traceUnit) {
+        if (traceUnit == null ) {
+            return;
+        }
+
+        String templateName = Templates.getTemplateName(file);
+        TemplateSettings templateSettings = model.getTemplateSettings();
+        templateSettings.setTraceUnit(templateName, traceUnit);
+    }
 }

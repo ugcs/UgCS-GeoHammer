@@ -18,6 +18,7 @@ import com.ugcs.geohammer.view.ResourceImageHolder;
 import com.ugcs.geohammer.format.SgyFile;
 import com.ugcs.geohammer.chart.Chart;
 import com.ugcs.geohammer.model.event.FileClosedEvent;
+import com.ugcs.geohammer.model.event.FileCollapsedEvent;
 import com.ugcs.geohammer.format.GeoData;
 import com.ugcs.geohammer.model.event.FileOpenedEvent;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
@@ -96,6 +97,9 @@ public class GpsTrack extends BaseLayer {
 		// Make a copy to avoid concurrent modification
 		SgyFile[] files = model.getFileManager().getFiles().toArray(new SgyFile[0]);
 		for (SgyFile sgyFile : files) {
+			if (model.isCollapsed(sgyFile)) {
+				continue;
+			}
 			drawTraceLines(g2, field, sgyFile);
 		}
 	}
@@ -183,6 +187,11 @@ public class GpsTrack extends BaseLayer {
 
 	@EventListener
 	private void fileSelected(FileSelectedEvent fileSelectedEvent) {
+		q.submit();
+	}
+
+	@EventListener
+	private void onFileCollapsed(FileCollapsedEvent event) {
 		q.submit();
 	}
 

@@ -53,6 +53,16 @@ changes), `scripts/` (Python scripts). User settings: `~/.geohammer/templates-se
   Take the snapshot before mutating. Series filters are intentionally not undoable (they add new columns).
 - **Model** (`Model`) is the central state: open files and their charts, current file, map viewport (`MapField`),
   selected traces, flags. Most components get it injected.
+- **Charts**: `Chart` builds every chart's root: a shared `ChartHeader` (close button, file name, eye toggle; a double
+  click on the header toggles collapse) above the content node a subclass passes to `setContent`. The header exposes
+  its state and controls (`collapsedProperty()`, `getCloseButton()`) and the chart subscribes; new header controls
+  follow the same pattern instead of constructor callbacks. Close goes through `Chart.close()`.
+- **Chart markers**: flags and selection pins sit `Chart.MARKER_OFFSET` below the plot top on both chart types (GPR:
+  below `ProfileField.TOP_MARGIN`); the flag geometry is shared via `FoundPlace.FLAG_POLE_HEIGHT` and
+  `ShapeHolder.FLAG`. GPR canvas margins live in `ProfileField` (`TOP_MARGIN`, `BOTTOM_MARGIN`).
+- **Collapsed files**: a collapsed chart shows only its header, and its file is left out of the map and map line
+  cropping. Session-only view state owned by the header; query it with `Model.isCollapsed`/`getExpandedFiles`.
+  Processing, saving and MCP tools ignore it.
 - **Locking** (`SgyFile.withLock`) and optimistic version checks are used only by the MCP layer; UI paths do not lock.
 
 # Runtime
@@ -83,6 +93,7 @@ publishing thread; listeners that touch UI must tolerate non-FX publishers. Find
 - `FileSelectedEvent` — active file changed (null when cleared). Tools and layers reload their state for it.
 - `FileClosedEvent` — file closed; drop all per-file state (caches, undo frames, grids).
 - `FileUpdatedEvent` — file columns or data changed (published by `Model.reload`).
+- `FileCollapsedEvent` — file chart collapsed or expanded; map layers re-render.
 - `FileRenameEvent` — file saved under a new name; re-key per-file state.
 - `SeriesSelectedEvent` / `SeriesUpdatedEvent` — series selected / visibility or selection changed.
 - `GridUpdatedEvent` — grid computed or cleared for a file.
