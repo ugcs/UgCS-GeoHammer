@@ -51,10 +51,10 @@ public class OptionPane extends VBox {
 
         toolContainer = new VBox(2 * Views.DEFAULT_SPACING,
                 new ToolToggleBox(statisticsTool, "Statistics"),
-                new ToolToggleBox(lowPassTool, "Low-pass filter"),
+                new ToolToggleBox(surveyGeometryQcTool, "Survey geometry QC"),
                 new ToolToggleBox(griddingTool, "Gridding"),
+                new ToolToggleBox(magneticProcessingRecipeTool, "Processing recipe"),
                 new ToolToggleBox(timeLagTool, "GNSS time-lag"),
-                new ToolToggleBox(runningMedianTool, "Running median filter"),
                 new ToolToggleBox(diurnalCorrectionTool, "Diurnal correction"),
                 new ToolToggleBox(igrfRemovalTool, "IGRF removal"),
                 new ToolToggleBox(headingCorrectionTool, "Heading correction"),
@@ -62,13 +62,13 @@ public class OptionPane extends VBox {
                 new ToolToggleBox(extractNoiseTool, "Extract noise"),
                 new ToolToggleBox(microLevelingTool, "Micro-leveling"),
                 new ToolToggleBox(regionalRemovalTool, "Regional removal"),
-                new ToolToggleBox(magneticProcessingRecipeTool, "Processing recipe"),
-                new ToolToggleBox(surveyGeometryQcTool, "Survey geometry QC"),
+                new ToolToggleBox(lowPassTool, "Low-pass filter"),
+                new ToolToggleBox(runningMedianTool, "Running median filter"),
+                new ToolToggleBox(qualityControlTool, "Quality control"),
+                new ToolToggleBox(scriptExecutionTool, "Scripts"),
                 new ToolToggleBox(gprBackgroundTool, "Background"),
                 new ToolToggleBox(gprGriddingTool, "Gridding"),
-                new ToolToggleBox(gprElevationTool, "Elevation"),
-                new ToolToggleBox(qualityControlTool, "Quality control"),
-                new ToolToggleBox(scriptExecutionTool, "Scripts")
+                new ToolToggleBox(gprElevationTool, "Elevation")
         );
         toolContainer.setPadding(new Insets(10, 8, 10, 8));
 
