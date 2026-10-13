@@ -355,7 +355,40 @@ public final class GridLayer extends BaseLayer {
 
     public OptionalDouble getCurrentGridValue(LatLon location) {
         Grid grid = getCurrentGrid();
-        if (grid == null || location == null) {
+        return grid != null ? getGridValue(grid, location) : OptionalDouble.empty();
+    }
+
+    public @Nullable GridReference getGridAt(LatLon location) {
+        if (!isActive() || location == null) {
+            return null;
+        }
+
+        GridReference selected = getGridAt(selectedFile, location);
+        if (selected != null) {
+            return selected;
+        }
+        List<SgyFile> files = model.getFileManager().getFiles();
+        for (int i = files.size() - 1; i >= 0; i--) {
+            SgyFile file = files.get(i);
+            if (!Objects.equals(file, selectedFile)) {
+                GridReference grid = getGridAt(file, location);
+                if (grid != null) {
+                    return grid;
+                }
+            }
+        }
+        return null;
+    }
+
+    private @Nullable GridReference getGridAt(SgyFile file, LatLon location) {
+        Grid grid = getGrid(file);
+        return grid != null && getGridValue(grid, location).isPresent()
+                ? new GridReference(file, grid)
+                : null;
+    }
+
+    private static OptionalDouble getGridValue(Grid grid, LatLon location) {
+        if (location == null) {
             return OptionalDouble.empty();
         }
 
@@ -618,5 +651,8 @@ public final class GridLayer extends BaseLayer {
             double zFactor,
             GriddingFilter filter
     ) {
+    }
+
+    public record GridReference(SgyFile file, Grid grid) {
     }
 }

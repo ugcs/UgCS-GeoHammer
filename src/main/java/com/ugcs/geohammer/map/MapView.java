@@ -6,9 +6,13 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
+import com.ugcs.geohammer.AppContext;
 import com.ugcs.geohammer.format.SgyFile;
 import com.ugcs.geohammer.map.layer.MapRuler;
 import com.ugcs.geohammer.map.layer.TraceCutter;
@@ -27,8 +31,11 @@ import com.ugcs.geohammer.map.layer.SurveyLineFamilyLayer;
 import com.ugcs.geohammer.map.layer.radar.RadarMap;
 import com.ugcs.geohammer.map.layer.SatelliteMap;
 import com.ugcs.geohammer.model.event.WhatChanged;
+import com.ugcs.geohammer.service.TaskService;
+import com.ugcs.geohammer.service.gridding.GeoTiffGridExporter;
 
 import com.ugcs.geohammer.view.PaintLimiter;
+import com.ugcs.geohammer.view.Dialogs;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
@@ -58,10 +65,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.stage.FileChooser;
 
 import com.ugcs.geohammer.model.event.FileOpenedEvent;
 
@@ -85,6 +95,15 @@ public class MapView implements InitializingBean, DisposableBean {
 	
 	@Autowired
 	private ApplicationEventPublisher eventPublisher;
+
+	@Autowired
+	private TaskService taskService;
+
+	@Autowired
+	private GeoTiffGridExporter geoTiffGridExporter;
+
+	@Autowired
+	private ExecutorService executor;
 	
 	@Autowired
 	private SatelliteMap satelliteMap;
@@ -188,11 +207,22 @@ public class MapView implements InitializingBean, DisposableBean {
 		}
 		if (event.getClickCount() == 1 && event.getButton() == MouseButton.SECONDARY) {
 			Point2D point = getLocalCoords(event);
-			for (Layer layer : layers) {
+			for (int i = layers.size() - 1; i >= 0; i--) {
+				Layer layer = layers.get(i);
+				if (layer == gridLayer) {
+					continue;
+				}
 				if (layer.mouseRightClick(point)) {
 					event.consume();
-					break;
+					return;
 				}
+			}
+			LatLon location = model.getMapField().screenTolatLon(point);
+			GridLayer.GridReference grid = gridLayer.getGridAt(location);
+			if (grid != null) {
+				showGridMenu(event, grid);
+				event.consume();
+				return;
 			}
 		}
 		if (event.getClickCount() == 2) {
@@ -201,6 +231,42 @@ public class MapView implements InitializingBean, DisposableBean {
 			model.selectNearestTrace(location);
 		}
     };
+
+	private void showGridMenu(MouseEvent event, GridLayer.GridReference grid) {
+		MenuItem export = new MenuItem("Export GeoTIFF");
+		export.setOnAction(action -> exportGrid(grid));
+		ContextMenu menu = new ContextMenu(export);
+		menu.show(imageView, event.getScreenX(), event.getScreenY());
+	}
+
+	private void exportGrid(GridLayer.GridReference gridReference) {
+		GridLayer.Grid grid = gridReference.grid();
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Export grid as GeoTIFF");
+		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GeoTIFF (*.tif)", "*.tif", "*.tiff"));
+		chooser.setInitialFileName(grid.seriesName().replaceAll("[^A-Za-z0-9._-]", "_") + ".tif");
+		File source = gridReference.file().getFile();
+		File parent = source != null ? source.getParentFile() : null;
+		if (parent != null && parent.isDirectory()) {
+			chooser.setInitialDirectory(parent);
+		}
+		File target = chooser.showSaveDialog(AppContext.stage);
+		if (target == null) {
+			return;
+		}
+
+		Future<Void> future = executor.submit(() -> {
+			geoTiffGridExporter.export(grid, target);
+			return null;
+		});
+		taskService.registerTask(future, "Exporting " + grid.seriesName()).whenComplete((result, error) -> {
+			if (error != null) {
+				Dialogs.showError("Grid export", "Unable to export the grid.", error);
+			} else {
+				Dialogs.showInformation("Grid export", "Exported GeoTIFF to " + target.getAbsolutePath());
+			}
+		});
+	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {

@@ -18,6 +18,7 @@ import com.ugcs.geohammer.model.event.SeriesUpdatedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.service.TaskService;
 import com.ugcs.geohammer.service.gridding.GriddingFilter;
+import com.ugcs.geohammer.service.gridding.GeoTiffGridExporter;
 import com.ugcs.geohammer.service.gridding.GriddingParams;
 import com.ugcs.geohammer.service.gridding.GriddingSettings;
 import com.ugcs.geohammer.service.gridding.GriddingResult;
@@ -68,7 +69,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.stage.FileChooser;
+import java.io.File;
 
 @Component
 public class GriddingTool extends FilterToolView {
@@ -82,6 +86,8 @@ public class GriddingTool extends FilterToolView {
     private final GridLayer gridLayer;
 
     private final GriddingService griddingService;
+
+    private final GeoTiffGridExporter geoTiffGridExporter;
 
     private final TaskService taskService;
 
@@ -105,6 +111,8 @@ public class GriddingTool extends FilterToolView {
     private final ComboBox<String> displayedGridSelector;
 
     private final Button deleteGridButton;
+
+    private final Button exportGridButton;
 
     private final CheckBox showGrid;
 
@@ -153,6 +161,7 @@ public class GriddingTool extends FilterToolView {
             GridLayer gridLayer,
             PaletteView paletteView,
             GriddingService griddingService,
+            GeoTiffGridExporter geoTiffGridExporter,
             GriddingSettings griddingSettings,
             RtpDirectionService rtpDirectionService,
             TaskService taskService,
@@ -164,6 +173,7 @@ public class GriddingTool extends FilterToolView {
         this.gridLayer = gridLayer;
         this.paletteView = paletteView;
         this.griddingService = griddingService;
+        this.geoTiffGridExporter = geoTiffGridExporter;
         this.griddingSettings = griddingSettings;
         this.rtpDirectionService = rtpDirectionService;
         this.taskService = taskService;
@@ -188,6 +198,12 @@ public class GriddingTool extends FilterToolView {
         HBox.setHgrow(displayedGridSelector, Priority.ALWAYS);
         HBox displayedGridControls = new HBox(Views.DEFAULT_SPACING, displayedGridSelector, deleteGridButton);
 
+        exportGridButton = new Button("Export GeoTIFF");
+        exportGridButton.setTooltip(new javafx.scene.control.Tooltip("Export the selected saved grid as a GeoTIFF"));
+        exportGridButton.setDisable(true);
+        exportGridButton.setMaxWidth(Double.MAX_VALUE);
+        exportGridButton.setOnAction(event -> exportSelectedGrid());
+
         showGrid = new CheckBox("Show grid on map");
         showGrid.setSelected(gridLayer.isActive());
         showGrid.setOnAction(event -> setGridVisible(showGrid.isSelected()));
@@ -195,6 +211,7 @@ public class GriddingTool extends FilterToolView {
         VBox gridSelectionGroup = createGroup(
                 new NodeWithTopLabel<>("Input series", inputSeriesSelector),
                 new NodeWithTopLabel<>("Displayed saved grid", displayedGridControls),
+                exportGridButton,
                 showGrid);
 
         InputWithTopLabel cellSizeWithLabel = new InputWithTopLabel("Cell size (m)");
@@ -606,7 +623,7 @@ public class GriddingTool extends FilterToolView {
         } finally {
             updatingGridSelectors = false;
         }
-        deleteGridButton.setDisable(displayedGridSelector.getValue() == null);
+        updateSavedGridActions();
     }
 
     private void onInputSeriesSelected() {
@@ -631,7 +648,7 @@ public class GriddingTool extends FilterToolView {
             updateFilterInputs(gridLayer.getFilter(selectedFile, displayedGridSelector.getValue()));
             updateParamInputs(result != null ? result.params() : null);
         }
-        deleteGridButton.setDisable(displayedGridSelector.getValue() == null);
+        updateSavedGridActions();
     }
 
     private void deleteSelectedGrid() {
@@ -661,6 +678,52 @@ public class GriddingTool extends FilterToolView {
         confirmation.setHeaderText("Delete grid '" + seriesName + "'?");
         confirmation.initOwner(AppContext.stage);
         return confirmation.showAndWait().orElse(ButtonType.CANCEL) == delete;
+    }
+
+    private void updateSavedGridActions() {
+        String seriesName = displayedGridSelector.getValue();
+        deleteGridButton.setDisable(seriesName == null);
+        GridLayer.Grid grid = gridLayer.getGrid(selectedFile);
+        exportGridButton.setDisable(grid == null || !Objects.equals(grid.seriesName(), seriesName));
+    }
+
+    private void exportSelectedGrid() {
+        SgyFile file = selectedFile;
+        String seriesName = displayedGridSelector.getValue();
+        GridLayer.Grid grid = gridLayer.getGrid(file);
+        if (file == null || Strings.isNullOrEmpty(seriesName) || grid == null) {
+            return;
+        }
+        if (!Objects.equals(grid.seriesName(), seriesName)) {
+            Dialogs.showInformation("Grid export", "The selected grid is still being prepared. Please try again shortly.");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Export grid as GeoTIFF");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GeoTIFF (*.tif)", "*.tif", "*.tiff"));
+        chooser.setInitialFileName(seriesName.replaceAll("[^A-Za-z0-9._-]", "_") + ".tif");
+        File source = file.getFile();
+        File parent = source != null ? source.getParentFile() : null;
+        if (parent != null && parent.isDirectory()) {
+            chooser.setInitialDirectory(parent);
+        }
+        File target = chooser.showSaveDialog(AppContext.stage);
+        if (target == null) {
+            return;
+        }
+
+        Future<Void> future = submitAction(() -> {
+            geoTiffGridExporter.export(grid, target);
+            return null;
+        });
+        taskService.registerTask(future, "Exporting " + seriesName).whenComplete((result, error) -> {
+            if (error != null) {
+                Dialogs.showError("Grid export", "Unable to export the grid.", error);
+            } else {
+                Dialogs.showInformation("Grid export", "Exported GeoTIFF to " + target.getAbsolutePath());
+            }
+        });
     }
 
     @Override
