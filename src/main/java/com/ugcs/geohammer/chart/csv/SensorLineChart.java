@@ -36,6 +36,7 @@ import com.ugcs.geohammer.model.ColumnSchema;
 import com.ugcs.geohammer.format.csv.parser.ColumnView;
 import com.ugcs.geohammer.model.Semantic;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
+import com.ugcs.geohammer.model.event.CursorTrackingEvent;
 import com.ugcs.geohammer.model.event.FileUpdatedEvent;
 import com.ugcs.geohammer.model.event.SeriesUpdatedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
@@ -118,6 +119,8 @@ public class SensorLineChart extends Chart {
     private final Map<FoundPlace, Data<Number, Number>> flagMarkers = new HashMap<>();
 
     private @Nullable Data<Number, Number> selectionMarker;
+
+    private @Nullable Data<Number, Number> trackingMarker;
 
     // view
 
@@ -247,6 +250,7 @@ public class SensorLineChart extends Chart {
         setSelectionHandlers(chart);
         setScrollHandlers(chart);
         setClickHandlers(chart);
+        setTrackingHandlers(chart);
 
         chartsContainer.getChildren().add(chart);
         return chart;
@@ -412,6 +416,19 @@ public class SensorLineChart extends Chart {
                 event.consume();
             }
         });
+    }
+
+    private void setTrackingHandlers(LineChartWithMarkers chart) {
+        chart.setOnMouseMoved(event -> {
+            Axis<Number> xAxis = chart.getXAxis();
+            Point2D point = xAxis.screenToLocal(event.getScreenX(), event.getScreenY());
+            Number xValue = xAxis.getValueForDisplay(point.getX());
+            int traceIndex = (int) Math.round(xValue.doubleValue());
+            if (traceIndex >= 0 && traceIndex < file.numTraces()) {
+                model.publishEvent(new CursorTrackingEvent(this, new TraceKey(file, traceIndex)));
+            }
+        });
+        chart.setOnMouseExited(event -> model.publishEvent(new CursorTrackingEvent(this, null)));
     }
 
     @Override
@@ -814,6 +831,24 @@ public class SensorLineChart extends Chart {
         if (selectionMarker != null) {
             interactiveChart.removeMarker(selectionMarker);
             selectionMarker = null;
+        }
+    }
+
+    public void createTrackingMarker(int traceIndex) {
+        if (trackingMarker != null) {
+            interactiveChart.removeMarker(trackingMarker);
+        }
+        trackingMarker = new Data<>(traceIndex, 0);
+        Line line = new Line();
+        line.setStroke(Color.web("0x00d9ffff"));
+        line.setStrokeWidth(1.5);
+        interactiveChart.addMarker(trackingMarker, line, null, null, true);
+    }
+
+    public void clearTrackingMarker() {
+        if (trackingMarker != null) {
+            interactiveChart.removeMarker(trackingMarker);
+            trackingMarker = null;
         }
     }
 

@@ -19,6 +19,7 @@ import com.ugcs.geohammer.model.event.UndoStackChanged;
 import com.ugcs.geohammer.settings.SettingsView;
 import com.ugcs.geohammer.map.layer.BaseLayer;
 import com.ugcs.geohammer.map.layer.GpsTrack;
+import com.ugcs.geohammer.map.layer.CursorTrackingLayer;
 import com.ugcs.geohammer.map.layer.GridLayer;
 import com.ugcs.geohammer.map.layer.Layer;
 import com.ugcs.geohammer.map.layer.QualityLayer;
@@ -93,6 +94,9 @@ public class MapView implements InitializingBean, DisposableBean {
 
 	@Autowired
 	private GpsTrack gpsTrackMap;
+
+	@Autowired
+	private CursorTrackingLayer cursorTrackingLayer;
 
 	@Autowired
 	private ZoomControlsView zoomControlsView;
@@ -207,6 +211,8 @@ public class MapView implements InitializingBean, DisposableBean {
 		
 		gpsTrackMap.setRepaintListener(listener);
 
+		cursorTrackingLayer.setRepaintListener(listener);
+
 		gridLayer.setRepaintListener(listener);
 
 		qualityLayer.setRepaintListener(listener);
@@ -220,6 +226,7 @@ public class MapView implements InitializingBean, DisposableBean {
 		layers.add(gpsTrackMap);
 		layers.add(surveyLineFamilyLayer);
 		layers.add(new FoundTracesLayer(model));
+		layers.add(cursorTrackingLayer);
 
 		//TODO: bad style
 		traceCutter.setListener(listener);
@@ -337,6 +344,8 @@ public class MapView implements InitializingBean, DisposableBean {
 		    }
 		});		
 		imageView.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseMoveHandler);
+		imageView.setOnMouseMoved(mouseMoveHandler);
+		imageView.setOnMouseExited(event -> cursorTrackingLayer.clearTrace());
 		imageView.addEventFilter(MouseDragEvent.MOUSE_DRAG_RELEASED, 
 				new EventHandler<MouseDragEvent>() {
 			@Override
@@ -379,6 +388,8 @@ public class MapView implements InitializingBean, DisposableBean {
 		appendTools(radarMap);
 
 		appendTools(gpsTrackMap);
+
+		appendTools(cursorTrackingLayer);
 	}
 
 	private void appendTools(ToolProducer producer) {
