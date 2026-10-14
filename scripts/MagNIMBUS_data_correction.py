@@ -6,7 +6,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import butter, filtfilt, iirnotch
 
-from script_utils import detect_separator, semantic_column, LATITUDE, LONGITUDE
+from script_utils import detect_separator
 
 
 MAG_SAMPLE_RATE_HZ = 250  # frequency of data in Hz - need to change to measure real frequency (!)
@@ -172,8 +172,8 @@ def fit_platform_model(data):
 
 
 def filter_positional(data):
-    lat_col = semantic_column(LATITUDE)
-    lon_col = semantic_column(LONGITUDE)
+    lat_col = args.latitude_column
+    lon_col = args.longitude_column
 
     data[lat_col] = data[lat_col].mask(data[lat_col].shift() == data[lat_col])
     data[lon_col] = data[lon_col].mask(data[lon_col].shift() == data[lon_col])
@@ -430,6 +430,8 @@ def main():
     parser.add_argument("--include-altitude-amsl", action="store_true", help="Include altitude AMSL")
     parser.add_argument("--include-accelerometer", action="store_true", help="Include accelerometer")
     parser.add_argument("--quantile-regression", action="store_true", help="Quantile regression")
+    parser.add_argument("--latitude-column", default="Latitude", help="Latitude column name (default: Latitude)")
+    parser.add_argument("--longitude-column", default="Longitude", help="Longitude column name (default: Longitude)")
     args = parser.parse_args()
 
     input_file = args.file_path

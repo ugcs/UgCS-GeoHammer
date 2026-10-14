@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from script_utils import detect_separator, semantic_column, LATITUDE, LONGITUDE, LINE
+from script_utils import detect_separator
 
 LAG_SUFFIX = "_LAG"
 EARTH_RADIUS = 6371000.0
@@ -96,8 +96,8 @@ def source_rows(rows, shift, line_starts, line_ends):
     return source, ok
 
 
-def file_line_ranges(data):
-    line_col = resolve_column(data, semantic_column(LINE))
+def file_line_ranges(data, line_column):
+    line_col = resolve_column(data, line_column)
     if line_col is None:
         return [(0, len(data))]
     return split_runs(data[line_col].to_numpy())
@@ -323,6 +323,9 @@ def main():
                     " opposite directions and writes the shifted series to <column>_LAG."
     )
     parser.add_argument("file_path", help="File path")
+    parser.add_argument("--line-column", default="Line", help="Line column name (default: Line)")
+    parser.add_argument("--latitude-column", default="Latitude", help="Latitude column name (default: Latitude)")
+    parser.add_argument("--longitude-column", default="Longitude", help="Longitude column name (default: Longitude)")
     parser.add_argument("--column", default="TMI", help="Series to estimate the lag on (default: TMI)")
     args = parser.parse_args()
 
@@ -335,11 +338,11 @@ def main():
 
     value_col = require_column(data, args.column)
     values = pd.to_numeric(data[value_col], errors="coerce").to_numpy(dtype=float)
-    lat = pd.to_numeric(data[require_column(data, semantic_column(LATITUDE))], errors="coerce").to_numpy(dtype=float)
-    lon = pd.to_numeric(data[require_column(data, semantic_column(LONGITUDE))], errors="coerce").to_numpy(dtype=float)
+    lat = pd.to_numeric(data[require_column(data, args.latitude_column)], errors="coerce").to_numpy(dtype=float)
+    lon = pd.to_numeric(data[require_column(data, args.longitude_column)], errors="coerce").to_numpy(dtype=float)
     x, y = fill_repeated_positions(*to_local_meters(lat, lon))
 
-    line_ranges = file_line_ranges(data)
+    line_ranges = file_line_ranges(data, args.line_column)
     line_starts, line_ends = line_bounds(line_ranges, len(data))
     segments = detect_segments(x, y, line_starts, line_ends)
 

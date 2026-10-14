@@ -158,6 +158,9 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 			try {
 				for (ScriptParameter param : scriptMetadata.parameters()) {
 					param.validate();
+					if (!param.isVisible()) {
+						continue;
+					}
 					String initialValue = loadStoredParamValue(scriptMetadata.filename(), param.name(),
 							param.defaultValue());
 					parametersBox.getChildren().add(createParameterInput(param, initialValue));
@@ -322,6 +325,8 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 			case FILE_PATH -> createFilePathSelector(initialValue);
 			case FOLDER_PATH -> createFolderPathSelector(initialValue);
 			case ENUM -> createEnumSelector(param, initialValue);
+			case ORIGINAL_PATH -> throw new IllegalStateException(
+					"Parameter '" + param.name() + "' is resolved per file and has no input");
 		};
 	}
 
@@ -669,7 +674,9 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 		}
 		isUpdatingColumns.set(true);
 		String value = comboBox.getValue();
-		String defaultValue = param.defaultValue();
+		String defaultValue = param.semantic() != null && selectedFile != null
+				? param.getSemanticHeader(selectedFile)
+				: param.defaultValue();
 		comboBox.getItems().setAll(availableColumns);
 		if (value != null && availableColumns.contains(value)) {
 			comboBox.setValue(value);

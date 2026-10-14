@@ -9,12 +9,10 @@ from scipy.optimize import curve_fit
 from scipy.stats import norm
 import segyio
 from segyio import TraceField as TF
-from script_utils import normalize_input_stem
 
 
 def build_output_csv_path(original_path: str, output_dir: str) -> str:
     stem = os.path.splitext(os.path.basename(original_path))[0]
-    stem = normalize_input_stem(stem)
     out_name = stem + "_processed.csv"
 
     if not output_dir or not output_dir.strip():
@@ -296,7 +294,9 @@ def compute_velocities_for_mark_from_spectrum(sub_mean, vaxis_cm_s):
 def main():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("file_path", help="SEG-Y file path")
-    parser.add_argument("--output-dir", dest="output_dir", type=str, default="")
+    parser.add_argument("--original-path", default="", help="Source file path (default: file_path)")
+    parser.add_argument("--output-dir", dest="output_dir", type=str, default="",
+                        help="Output folder (default: folder of the source file)")
 
     args = parser.parse_args()
 
@@ -305,7 +305,7 @@ def main():
         print("No SGY selected. Exiting.")
         return
 
-    OUTPUT_CSV = build_output_csv_path(SEG_Y_FILE, args.output_dir)
+    OUTPUT_CSV = build_output_csv_path(args.original_path or SEG_Y_FILE, args.output_dir)
 
     print("\nUsing SGY:", SEG_Y_FILE)
     print("Saving CSV to:", OUTPUT_CSV, "\n")

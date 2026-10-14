@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.spatial import cKDTree
 from scipy.signal import find_peaks
 
-from script_utils import detect_separator, semantic_column, LATITUDE, LONGITUDE
+from script_utils import detect_separator
 
 
 def markExtremes(
@@ -135,8 +135,8 @@ def main():
     parser.add_argument("-w", "--window", required=True, type=int, help="Window (samples)")
     parser.add_argument("-r", "--radius", required=True, type=float, help="Clustering radius (meters)")
     parser.add_argument("--clear-marks", action="store_true", default=False, help="Clear all previous Mark values before writing new marks")
-    parser.add_argument("--lat-col", default=semantic_column(LATITUDE), help="Latitude column name")
-    parser.add_argument("--lon-col", default=semantic_column(LONGITUDE), help="Longitude column name")
+    parser.add_argument("--latitude-column", default="Latitude", help="Latitude column name")
+    parser.add_argument("--longitude-column", default="Longitude", help="Longitude column name")
     args = parser.parse_args()
 
     # Enforce positional indexing semantics throughout
@@ -154,8 +154,8 @@ def main():
         df,
         index_to_range,
         radius=args.radius,
-        latitude_column_name=args.lat_col,
-        longitude_column_name=args.lon_col,
+        latitude_column_name=args.latitude_column,
+        longitude_column_name=args.longitude_column,
     )
     print(f"Found anomalies after clustering: {len(clustered_map)} winners")
 

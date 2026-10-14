@@ -8,6 +8,20 @@
       "type": "FOLDER_PATH",
       "default_value": "",
       "required": true
+    },
+    {
+      "name": "original-path",
+      "type": "ORIGINAL_PATH"
+    },
+    {
+      "name": "latitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Latitude"
+    },
+    {
+      "name": "longitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Longitude"
     }
   ],
   "templates": ["csv"],

@@ -3,7 +3,7 @@ import os
 import argparse
 import pandas as pd
 import numpy as np
-from script_utils import normalize_input_stem, detect_separator
+from script_utils import detect_separator
 
 
 def check_column_exists(data, column):
@@ -115,7 +115,6 @@ def process_gradiometer(data, mark_indices, tmi_lower_col, tmi_upper_col, altitu
 
 def build_targets_path(input_path, output_dir):
     stem = os.path.splitext(os.path.basename(input_path))[0]
-    stem = normalize_input_stem(stem)
     targets_name = stem + "-targets.csv"
 
     # If output-dir is empty, use the original file's directory
@@ -134,6 +133,7 @@ def main():
     )
 
     parser.add_argument("file_path", help='File path')
+    parser.add_argument("--original-path", default="", help="Source file path (default: file_path)")
     parser.add_argument("--lower-sensor-column", default="TMI_LPF", help="Lower sensor column (default: TMI_LPF)")
     parser.add_argument("--upper-sensor-column", default="TMI_S_LPF", help="Upper sensor column (default: TMI_S_LPF)")
     parser.add_argument("--altitude-column", default="Altitude AGL", help="Altitude AGL column (default: Altitude_AGL)")
@@ -199,7 +199,7 @@ def main():
     data.to_csv(output_path, index=False, sep=separator)
 
     # Create targets file with only marked rows
-    targets_path = build_targets_path(input_path, args.output_dir)
+    targets_path = build_targets_path(args.original_path or input_path, args.output_dir)
     targets_data = data.loc[mark_indices]
     print(f"Writing targets file to {targets_path}")
     targets_data.to_csv(targets_path, index=False, sep=separator)

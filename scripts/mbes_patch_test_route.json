@@ -15,6 +15,10 @@
       "type": "FOLDER_PATH",
       "default_value": "",
       "required": true
+    },
+    {
+      "name": "original-path",
+      "type": "ORIGINAL_PATH"
     }
   ],
   "templates": [

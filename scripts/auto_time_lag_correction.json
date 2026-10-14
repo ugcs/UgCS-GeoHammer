@@ -8,6 +8,21 @@
       "type": "COLUMN_NAME",
       "default_value": "TMI",
       "required": true
+    },
+    {
+      "name": "line-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Line"
+    },
+    {
+      "name": "latitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Latitude"
+    },
+    {
+      "name": "longitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Longitude"
     }
   ],
   "templates": ["csv"]

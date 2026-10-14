@@ -7,6 +7,7 @@ import com.ugcs.geohammer.analytics.EventSender;
 import com.ugcs.geohammer.analytics.EventsFactory;
 import com.ugcs.geohammer.mcp.McpSession;
 import com.ugcs.geohammer.model.Model;
+import com.ugcs.geohammer.model.Semantic;
 import com.ugcs.geohammer.service.script.ScriptMetadata;
 import com.ugcs.geohammer.service.script.ScriptMetadataLoader;
 import com.ugcs.geohammer.service.script.ScriptParameter;
@@ -71,8 +72,13 @@ public class CreateScript extends ScriptTool {
                 + "df = pd.read_csv(args.file_path, sep=sep); ... "
                 + "df.to_csv(args.file_path, index=False, sep=sep). "
                 + "Templates name the position and line columns differently (e.g. lat/lon), so do not "
-                + "hard-code Latitude, Longitude or Line: from script_utils import semantic_column, "
-                + "LATITUDE, LONGITUDE, LINE; lat_col = semantic_column(LATITUDE). "
+                + "hard-code Latitude, Longitude or Line: declare a COLUMN_NAME parameter with a "
+                + "semantic, e.g. {\"name\": \"latitude-column\", \"type\": \"COLUMN_NAME\", \"semantic\": "
+                + "\"Latitude\"}; it receives the header of that column in each processed file and is "
+                + "hidden from the user unless visible is true. To name output files after the open "
+                + "file, declare {\"name\": \"original-path\", \"type\": \"ORIGINAL_PATH\"}: it "
+                + "receives the path of the open file rather than of its temporary copy and is never "
+                + "shown. "
                 + "To return results without changing data, print to stdout and leave the file "
                 + "unmodified; printed lines are shown to the user. A script with a LINE_INDEX parameter "
                 + "receives only the selected survey line and its output file is never loaded back "
@@ -125,6 +131,18 @@ public class CreateScript extends ScriptTool {
         enumValues.putObject("items").put("type", "string");
         addProperty(item, "min", "number", "Lower bound for INTEGER and DOUBLE.");
         addProperty(item, "max", "number", "Upper bound for INTEGER and DOUBLE.");
+        addProperty(item, "visible", "boolean",
+                "Whether the parameter is shown in the UI and accepted by {{run_script}}; default false "
+                + "for semantic columns and ORIGINAL_PATH (never visible), true otherwise. A hidden "
+                + "parameter gets its default_value.");
+        ObjectNode semantic = addProperty(item, "semantic", "string",
+                "For COLUMN_NAME only: the column role whose header the parameter receives for each "
+                + "processed file; the role name itself when the file has no such column. Not combined "
+                + "with default_value.");
+        ArrayNode semantics = semantic.putArray("enum");
+        for (Semantic value : Semantic.values()) {
+            semantics.add(value.getName());
+        }
         item.putArray("required").add("name").add("type");
         item.put("additionalProperties", false);
         return item;

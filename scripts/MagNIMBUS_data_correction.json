@@ -50,6 +50,16 @@
       "type": "BOOLEAN",
       "default_value": "false",
       "required": false
+    },
+    {
+      "name": "latitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Latitude"
+    },
+    {
+      "name": "longitude-column",
+      "type": "COLUMN_NAME",
+      "semantic": "Longitude"
     }
   ],
   "templates": ["MagNIMBUS"]
