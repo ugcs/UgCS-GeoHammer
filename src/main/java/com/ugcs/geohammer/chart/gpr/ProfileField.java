@@ -7,10 +7,13 @@ import java.util.List;
 import com.ugcs.geohammer.format.gpr.Trace;
 import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.model.IndexRange;
-import com.ugcs.geohammer.model.Model;
 import com.ugcs.geohammer.util.Check;
 
 public class ProfileField {
+
+	public static final int TOP_MARGIN = 20;
+
+	public static final int BOTTOM_MARGIN = 55;
 
 	private final TraceFile traceFile;
 
@@ -100,34 +103,33 @@ public class ProfileField {
 		int leftMargin = 30;
 		int ruleWidth = 90;
 		int infoWidth = 50;
-		int bottomRuleHeight = 65;
 
 		topRuleRect = new Rectangle(
 				leftMargin,
 				0,
 				viewDimension.width - leftMargin - ruleWidth,
-				Model.TOP_MARGIN - 1);
+				TOP_MARGIN - 1);
 		infoRect = new Rectangle(
 				leftMargin + topRuleRect.width,
 				0,
 				infoWidth,
-				Model.TOP_MARGIN - 1);
+				TOP_MARGIN - 1);
 		leftRuleRect = new Rectangle(
 				leftMargin + topRuleRect.width,
-				Model.TOP_MARGIN,
+				TOP_MARGIN,
 				ruleWidth,
-				viewDimension.height - Model.TOP_MARGIN);
+				viewDimension.height - TOP_MARGIN);
 		mainRect = new Rectangle(
 				leftMargin,
-				Model.TOP_MARGIN,
+				TOP_MARGIN,
 				viewDimension.width - leftMargin - ruleWidth,
-				viewDimension.height - Model.TOP_MARGIN - bottomRuleHeight);
+				viewDimension.height - TOP_MARGIN - BOTTOM_MARGIN);
 
 		bottomRuleRect = new Rectangle(
 				leftMargin,
-				viewDimension.height - bottomRuleHeight,
+				viewDimension.height - BOTTOM_MARGIN,
 				viewDimension.width - leftMargin - ruleWidth,
-				bottomRuleHeight
+				BOTTOM_MARGIN
 		);
 
 

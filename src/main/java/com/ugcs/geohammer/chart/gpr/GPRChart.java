@@ -10,7 +10,6 @@ import com.ugcs.geohammer.chart.gpr.axis.VerticalRulerDrawer;
 import com.ugcs.geohammer.model.TraceUnit;
 import com.ugcs.geohammer.view.Colors;
 import com.ugcs.geohammer.view.PaintLimiter;
-import com.ugcs.geohammer.view.ResourceImageHolder;
 import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.model.SelectedTrace;
 import com.ugcs.geohammer.model.TraceKey;
@@ -19,12 +18,10 @@ import com.ugcs.geohammer.model.element.AuxElementEditHandler;
 import com.ugcs.geohammer.model.element.CleverViewScrollHandler;
 import com.ugcs.geohammer.model.element.BaseObject;
 import com.ugcs.geohammer.model.element.ClickPlace;
-import com.ugcs.geohammer.model.element.CloseGprChartButton;
 import com.ugcs.geohammer.model.element.DepthHeight;
 import com.ugcs.geohammer.model.element.DepthStart;
 import com.ugcs.geohammer.model.element.FoundPlace;
 import com.ugcs.geohammer.model.element.RemoveLineButton;
-import com.ugcs.geohammer.model.event.FileClosedEvent;
 import com.ugcs.geohammer.format.GeoData;
 import com.ugcs.geohammer.model.element.ShapeHolder;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
@@ -37,10 +34,10 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WeakChangeListener;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
@@ -94,6 +91,9 @@ public class GPRChart extends Chart {
 
     private final PaintLimiter repaintLimiter = new PaintLimiter(60, () -> draw(width, height));
 
+    // registered weakly on the profile area, so a dropped chart is not kept alive by it
+    private final ChangeListener<Number> sizeListener = (observable, oldValue, newValue) -> updateSize();
+
     private final VBox vbox = new VBox();
 
     private final Canvas canvas = new Canvas(width, height);
@@ -127,9 +127,7 @@ public class GPRChart extends Chart {
         this.horizontalRulerController = new HorizontalRulerController(model, traceFile);
 
         vbox.getChildren().addAll(canvas);
-        vbox.setOnMouseClicked(event -> {
-            select();
-        });
+        setContent(vbox);
         prismDrawer = new PrismDrawer(model);
         initCanvas();
 
@@ -141,14 +139,12 @@ public class GPRChart extends Chart {
 
         scrollHandler = new CleverViewScrollHandler();
         updateAuxElements();
+        updateChartName();
     }
 
-    public void close() {
-        if (!confirmUnsavedChanges()) {
-            return;
-        }
+    @Override
+    public void dispose() {
         repaintLimiter.stop();
-        model.publishEvent(new FileClosedEvent(this, getFile()));
     }
 
     @Override
@@ -161,6 +157,16 @@ public class GPRChart extends Chart {
                 (int)(profileView.getCenter().getWidth() - 21),
                 (int)(Math.max(400, vbox.getHeight()) - 6));
         fitFull();
+
+        profileView.getCenter().widthProperty().addListener(new WeakChangeListener<>(sizeListener));
+        vbox.heightProperty().addListener(sizeListener);
+    }
+
+    private void updateSize() {
+        ProfileView profileView = AppContext.getInstance(ProfileView.class);
+        setSize(
+                (int)(profileView.getCenter().getWidth() - 30),
+                (int)(Math.max(400, vbox.getHeight()) - 6));
     }
 
     @Override
@@ -270,15 +276,6 @@ public class GPRChart extends Chart {
         getProfileScroll().syncFromScrollable();
     }
 
-    private void select() {
-        model.selectChart(this);
-    }
-
-    @Override
-    public Node getRootNode() {
-        return vbox;
-    }
-
     public Canvas getCanvas() {
         return canvas;
     }
@@ -296,6 +293,10 @@ public class GPRChart extends Chart {
     }
 
     private void draw(int width, int height) {
+        updateChartName();
+        if (isCollapsed()) {
+            return;
+        }
         if (width <= 0 || height <= 0 || !model.isActive() || profileField.getGprTracesCount() == 0) {
             return;
         }
@@ -342,7 +343,6 @@ public class GPRChart extends Chart {
                 clipTopMainRect.width,
                 clipTopMainRect.height);
 
-        drawFileName(g2, strokeColor);
         drawLines(g2);
 
         g2.translate(-(mainRect.x + mainRect.width / 2), 0);
@@ -415,14 +415,10 @@ public class GPRChart extends Chart {
             auxElements.add(removeLine);
         }
 
-        auxElements.add(new DepthStart(ShapeHolder.topSelection, new Tooltip(DEPTH_SLIDER_TOOLTIP)));
-        auxElements.add(new DepthHeight(ShapeHolder.botSelection, new Tooltip(DEPTH_SLIDER_TOOLTIP)));
-        auxElements.add(leftRulerController.getTB());
-        auxElements.add(horizontalRulerController.getTB());
-
-        // close button
-        auxElements.add(new CloseGprChartButton(
-                new TraceKey(file, 0), model));
+        auxElements.add(new DepthStart(ShapeHolder.TOP_SELECTION, new Tooltip(DEPTH_SLIDER_TOOLTIP)));
+        auxElements.add(new DepthHeight(ShapeHolder.BOTTOM_SELECTION, new Tooltip(DEPTH_SLIDER_TOOLTIP)));
+        auxElements.add(leftRulerController.getToggle());
+        auxElements.add(horizontalRulerController.getToggle());
     }
 
     public LeftRulerController getLeftRulerController() {
@@ -486,19 +482,6 @@ public class GPRChart extends Chart {
         }
     }
 
-    private void drawFileName(Graphics2D g2, Color strokeColor) {
-        Rectangle mainRect = profileField.getMainRect();
-        int rectStart = -mainRect.width / 2;
-
-        g2.setColor(strokeColor);
-        g2.setFont(BOLD_FONT);
-
-        int iconImageWidth = ResourceImageHolder.IMG_CLOSE_FILE.getWidth(null);
-        TraceFile file = getFile();
-        String fileName = (file.isUnsaved() ? "*" : "") + file.getFile().getName();
-        g2.drawString(fileName, rectStart + 10 + iconImageWidth, 21);
-    }
-
     private void drawLines(Graphics2D g2) {
         int selectedLineIndex;
         SelectedTrace selectedTrace = model.getSelectedTrace(this);
@@ -511,7 +494,7 @@ public class GPRChart extends Chart {
 
         Rectangle mainRect = profileField.getMainRect();
         int maxSamples = profileField.getMaxHeightInSamples();
-        int lineHeight = sampleToScreen(maxSamples) - Model.TOP_MARGIN;
+        int lineHeight = sampleToScreen(maxSamples) - ProfileField.TOP_MARGIN;
 
         NavigableMap<Integer, IndexRange> lineRanges = getFile().getLineRanges();
         for (Map.Entry<Integer, IndexRange> e : lineRanges.entrySet()) {

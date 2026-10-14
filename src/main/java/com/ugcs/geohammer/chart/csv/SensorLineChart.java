@@ -1,6 +1,5 @@
 package com.ugcs.geohammer.chart.csv;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,7 +54,6 @@ import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ValueAxis;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 
@@ -63,8 +61,6 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,9 +117,7 @@ public class SensorLineChart extends Chart {
 
     // view
 
-    private final VBox root;
-
-    private final Label chartName;
+    private final VBox content;
 
     private final StackPane chartsContainer;
 
@@ -145,46 +139,21 @@ public class SensorLineChart extends Chart {
 
         this.file = Check.notNull(file);
 
-        chartName = new Label();
-        chartName.setFont(Font.font("Verdana", FontWeight.BOLD, 8));
-        chartName.setTextFill(Color.rgb(60, 60, 60));
         updateChartName();
 
         // using StackPane to overlay charts
         chartsContainer = new StackPane();
-
-        ImageView close = ResourceImageHolder.getImageView("close.png");
-        close.setPickOnBounds(true);
-        close.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
-            close.setCursor(Cursor.HAND);
-        });
-        close.setOnMouseClicked(event -> {
-            event.consume();
-            close();
-        });
-
-        Region space = new Region();
-        HBox.setHgrow(space, Priority.ALWAYS);
-
-        HBox top = new HBox(close, chartName, space);
-        top.setPadding(new Insets(0, 0, 0, 16));
-        top.setSpacing(10);
-        top.setAlignment(Pos.CENTER_LEFT);
 
         selectionRect.setManaged(false);
         selectionRect.setFill(null);
         selectionRect.setStroke(Color.DODGERBLUE);
         selectionRect.setMouseTransparent(true);
 
-        root = new VBox(top, chartsContainer, selectionRect);
-        root.setFillWidth(true);
-        root.setSpacing(10);
-        root.setAlignment(Pos.CENTER_RIGHT);
-        root.setPadding(new Insets(10));
-
-        root.setOnMouseClicked(event -> {
-            model.selectChart(this);
-        });
+        content = new VBox(chartsContainer, selectionRect);
+        content.setFillWidth(true);
+        content.setAlignment(Pos.CENTER_RIGHT);
+        content.setPadding(new Insets(10, 10, 0, 10));
+        setContent(content);
 
         // lookup line header
         ColumnSchema schema = GeoData.getSchema(file.getGeoData());
@@ -331,11 +300,11 @@ public class SensorLineChart extends Chart {
     }
 
     private void setSelectionHandlers(LineChartWithMarkers chart) {
-        // selection coordinates in a root coordinate space
+        // selection coordinates in a content coordinate space
         DragBounds dragBounds = new DragBounds(Point2D.ZERO, Point2D.ZERO);
 
         chart.setOnMousePressed(event -> {
-            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, content);
             Point2D pointInScene = new Point2D(
                     event.getX() + chartBounds.getMinX(),
                     event.getY() + chartBounds.getMinY());
@@ -346,7 +315,7 @@ public class SensorLineChart extends Chart {
         });
 
         chart.setOnMouseDragged(event -> {
-            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, content);
             Point2D pointInScene = new Point2D(
                     event.getX() + chartBounds.getMinX(),
                     event.getY() + chartBounds.getMinY());
@@ -361,7 +330,7 @@ public class SensorLineChart extends Chart {
             }
 
             // convert selection coordinates to chart coordinates
-            Bounds chartBounds = Nodes.getBoundsInParent(chart, root);
+            Bounds chartBounds = Nodes.getBoundsInParent(chart, content);
             double startX = selectionRect.getX() - chartBounds.getMinX();
             double startY = selectionRect.getY() - chartBounds.getMinY();
             double endX = startX + selectionRect.getWidth();
@@ -417,11 +386,6 @@ public class SensorLineChart extends Chart {
     @Override
     public SgyFile getFile() {
         return file;
-    }
-
-    @Override
-    public VBox getRootNode() {
-        return root;
     }
 
     public Set<String> getSeriesNames() {
@@ -560,13 +524,6 @@ public class SensorLineChart extends Chart {
         }
     }
 
-    public void updateChartName() {
-        File source = file.getFile();
-        String fileName = (file.isUnsaved() ? "*" : "")
-                + (source != null ? source.getName() : "Noname");
-        chartName.setText(fileName);
-    }
-
     private void updateCharts() {
         for (LineChartWithMarkers chart : charts.values()) {
             chart.updateData();
@@ -583,12 +540,9 @@ public class SensorLineChart extends Chart {
     @Override
     public void init() {
         // adjust height
-        root.getChildren().forEach(node -> {
-            if (node instanceof StackPane) {
-                ((StackPane) node).setPrefHeight(Math.max(MIN_HEIGHT, node.getScene().getHeight()));
-                ((StackPane) node).setMinHeight(Math.max(MIN_HEIGHT, node.getScene().getHeight() / 2));
-            }
-        });
+        double sceneHeight = chartsContainer.getScene().getHeight();
+        chartsContainer.setPrefHeight(Math.max(MIN_HEIGHT, sceneHeight));
+        chartsContainer.setMinHeight(Math.max(MIN_HEIGHT, sceneHeight / 2));
     }
 
     @Override
@@ -640,13 +594,6 @@ public class SensorLineChart extends Chart {
 
         applyViewport(false);
 		updateChartName();
-    }
-
-    private void close() {
-        if (!confirmUnsavedChanges()) {
-            return;
-        }
-        close(true);
     }
 
     // zoom
@@ -882,11 +829,11 @@ public class SensorLineChart extends Chart {
 
         Line line = new Line();
         line.setStroke(Colors.fxColor(flag.getFlagColor()));
-        line.setStrokeWidth(0.8);
-        line.setTranslateY(46);
+        line.setStrokeWidth(1.0);
+        line.setTranslateY(Chart.MARKER_OFFSET);
 
         Pane flagIcon = createFlagIcon(flag);
-        flagIcon.setTranslateY(28);
+        flagIcon.setTranslateY(Chart.MARKER_OFFSET - FoundPlace.FLAG_POLE_HEIGHT);
 
         interactiveChart.addMarker(
                 flagMarker,
@@ -899,9 +846,10 @@ public class SensorLineChart extends Chart {
     }
 
     private Pane createFlagIcon(FoundPlace flag) {
-        Line flagPole = new Line(0, 0, 0, 18);
-        flagPole.setStroke(Color.BLACK);
-        flagPole.setStrokeWidth(0.8);
+        Color flagColor = Colors.fxColor(flag.getFlagColor());
+        Line flagPole = new Line(0, 0, 0, FoundPlace.FLAG_POLE_HEIGHT);
+        flagPole.setStroke(flagColor);
+        flagPole.setStrokeWidth(1.0);
 
         Polygon flagCloth = new Polygon();
         flagCloth.getPoints().addAll(0.0, 0.0,
@@ -909,9 +857,12 @@ public class SensorLineChart extends Chart {
                 10.0, 5.0,
                 15.0, 10.0,
                 0.0, 10.0);
-        flagCloth.setFill(Colors.fxColor(flag.getFlagColor()));
-        flagCloth.setStroke(Color.BLACK);
-        flagCloth.setStrokeWidth(0.8);
+        Color fillColor = flag.isSelected()
+                ? Colors.fxColor(FoundPlace.SELECTED_COLOR)
+                : flagColor;
+        flagCloth.setFill(fillColor);
+        flagCloth.setStroke(flagColor);
+        flagCloth.setStrokeWidth(1.0);
 
         Pane flagIcon = new Pane();
         flagIcon.getChildren().addAll(flagPole, flagCloth);
@@ -940,27 +891,38 @@ public class SensorLineChart extends Chart {
     @Override
     public void selectFlag(@Nullable FoundPlace flag) {
         flagMarkers.keySet().forEach(f -> {
-            var markerBox = (Pane) flagMarkers.get(f).getNode();
-            Line l = (Line) markerBox.getChildren().get(1);
-            l.setStrokeType(StrokeType.CENTERED);
-            var fm = (Pane) ((Pane) markerBox.getChildren().getFirst()).getChildren().getFirst();
-            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
-                    ch -> ((Shape) ch).setStrokeType(StrokeType.CENTERED)
-            );
+			Color flagColor = Colors.fxColor(f.getFlagColor());
+            Pane flagContainer = (Pane) flagMarkers.get(f).getNode();
+            updateFlagMarker(flagContainer, flagColor, 1.0);
             f.setSelected(false);
         });
 
         // null -> clear selection
         if (flag != null) {
-            var markerBox = (Pane) flagMarkers.get(flag).getNode();
-            Line l = (Line) markerBox.getChildren().get(1);
-            l.setStrokeType(StrokeType.OUTSIDE);
-            var fm = (Pane) ((Pane) markerBox.getChildren().getFirst()).getChildren().getFirst();
-            fm.getChildren().stream().filter(ch -> ch instanceof Shape).forEach(
-                    ch -> ((Shape) ch).setStrokeType(StrokeType.OUTSIDE)
-            );
+            Color flagColor = Colors.fxColor(FoundPlace.SELECTED_COLOR);
+            Pane flagContainer = (Pane) flagMarkers.get(flag).getNode();
+            updateFlagMarker(flagContainer, flagColor, 2.0);
             flag.setSelected(true);
         }
+    }
+
+    private void updateFlagMarker(Pane flagContainer, Color fill, double strokeWidth) {
+        if (flagContainer == null) {
+            return;
+        }
+        Pane iconContainer = (Pane) flagContainer.getChildren().getFirst();
+        Pane icon = (Pane) iconContainer.getChildren().getFirst();
+        icon.getChildren().forEach(c -> {
+            if (c instanceof Shape shape) {
+                shape.setStrokeType(StrokeType.CENTERED);
+                shape.setStrokeWidth(strokeWidth);
+                shape.setFill(fill);
+            }
+        });
+
+        Line line = (Line) flagContainer.getChildren().get(1);
+        line.setStrokeType(StrokeType.CENTERED);
+        line.setStrokeWidth(strokeWidth);
     }
 
     @Override
@@ -1461,16 +1423,6 @@ public class SensorLineChart extends Chart {
         }
 
         public void addMarker(Data<Number, Number> marker, SelectionType type) {
-            Color color = Colors.fxColor(switch (type) {
-				case USER -> ClickPlace.USER_COLOR;
-				case AUTO -> ClickPlace.AUTO_COLOR;
-			});
-
-            Line line = new Line();
-            line.setStroke(color);
-            line.setStrokeWidth(1);
-            line.setTranslateY(15);
-
             BufferedImage tintedBody = (BufferedImage) (switch (type) {
 				case USER -> ClickPlace.USER_IMAGE_BODY;
 				case AUTO -> ClickPlace.AUTO_IMAGE_BODY;
@@ -1478,7 +1430,17 @@ public class SensorLineChart extends Chart {
             ImageView bodyView = new ImageView(SwingFXUtils.toFXImage(tintedBody, null));
             ImageView borderView = ResourceImageHolder.getImageView("gps32.png");
             StackPane imagePane = new StackPane(bodyView, borderView);
-            imagePane.setTranslateY(17);
+			double iconHeight = bodyView.getImage().getHeight();
+            imagePane.setTranslateY(Chart.MARKER_OFFSET - iconHeight);
+
+            Color color = Colors.fxColor(switch (type) {
+                case USER -> ClickPlace.USER_COLOR;
+                case AUTO -> ClickPlace.AUTO_COLOR;
+            });
+            Line line = new Line();
+            line.setStroke(color);
+            line.setStrokeWidth(1);
+            line.setTranslateY(Chart.MARKER_OFFSET - iconHeight - 2);
 
             addMarker(marker, line, null, imagePane, true);
         }

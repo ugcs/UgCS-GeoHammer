@@ -224,7 +224,7 @@ public class TraceCutter implements Layer, InitializingBean {
 
 		List<Point2D> cropArea = getScreenPolygon(field);
 
-		List<SgyFile> files = model.getFileManager().getFiles();
+		List<SgyFile> files = model.getExpandedFiles();
 		traceTransform.cropLines(files, field, cropArea);
 	}
 
