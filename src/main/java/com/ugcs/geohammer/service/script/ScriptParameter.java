@@ -2,8 +2,14 @@ package com.ugcs.geohammer.service.script;
 
 import ch.randelshofer.fastdoubleparser.JavaDoubleParser;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ugcs.geohammer.format.GeoData;
+import com.ugcs.geohammer.format.SgyFile;
+import com.ugcs.geohammer.format.TraceFile;
+import com.ugcs.geohammer.model.ColumnSchema;
+import com.ugcs.geohammer.model.Semantic;
 import com.ugcs.geohammer.util.Check;
 import com.ugcs.geohammer.util.Strings;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
@@ -21,7 +27,10 @@ public record ScriptParameter(
         @JsonProperty("min")
         Double min,
         @JsonProperty("max")
-        Double max
+        Double max,
+        @JsonProperty("visible")
+        @Nullable Boolean declaredVisible,
+        @Nullable String semantic
 ) {
     public ScriptParameter {
 		name = Strings.nullToEmpty(name);
@@ -29,6 +38,27 @@ public record ScriptParameter(
             displayName = name;
         }
 		defaultValue = Strings.nullToEmpty(defaultValue);
+    }
+
+    // semantic columns and the original path take their value from each processed file
+    public boolean isDerivedFromFile() {
+        return semantic != null || type == ParameterType.ORIGINAL_PATH;
+    }
+
+    public boolean isVisible() {
+        return declaredVisible != null ? declaredVisible : !isDerivedFromFile();
+    }
+
+    // the column with this parameter's semantic in the file; the semantic name, which is also
+    // the default header, when the file has no such column
+    public String getSemanticHeader(SgyFile file) {
+        Check.notNull(semantic);
+        if (file instanceof TraceFile) {
+            return semantic;
+        }
+        ColumnSchema schema = GeoData.getSchema(file.getGeoData());
+        String header = schema != null ? schema.getHeaderBySemantic(semantic) : null;
+        return header != null ? header : semantic;
     }
 
     public String getLabel(String hint) {
@@ -42,9 +72,42 @@ public record ScriptParameter(
 		switch (type) {
 			case ENUM -> validateEnum();
 			case INTEGER -> validateInteger();
+			case ORIGINAL_PATH -> validateOriginalPath();
 			default -> { }
 		}
+		if (semantic != null) {
+			validateSemantic();
+		}
+		if (required && !isVisible() && !isDerivedFromFile() && defaultValue.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Parameter '" + name + "' is required and hidden but has no 'default_value'");
+		}
     }
+
+	private void validateOriginalPath() {
+		if (Boolean.TRUE.equals(declaredVisible)) {
+			throw new IllegalArgumentException(
+					"Parameter '" + name + "' has type ORIGINAL_PATH and cannot be visible");
+		}
+	}
+
+	private void validateSemantic() {
+		if (type != ParameterType.COLUMN_NAME) {
+			throw new IllegalArgumentException(
+					"Parameter '" + name + "' has 'semantic' but its type is not COLUMN_NAME");
+		}
+		if (!defaultValue.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Parameter '" + name + "' has both 'semantic' and 'default_value'");
+		}
+		for (Semantic value : Semantic.values()) {
+			if (value.getName().equals(semantic)) {
+				return;
+			}
+		}
+		throw new IllegalArgumentException(
+				"Parameter '" + name + "': unknown semantic '" + semantic + "'");
+	}
 
 	private void validateEnum() {
 		if (enumValues == null || enumValues.isEmpty()) {
@@ -140,6 +203,6 @@ public record ScriptParameter(
 	}
 
     public enum ParameterType {
-        STRING, INTEGER, DOUBLE, BOOLEAN, FILE_PATH, FOLDER_PATH, COLUMN_NAME, LINE_INDEX, ENUM
+        STRING, INTEGER, DOUBLE, BOOLEAN, FILE_PATH, FOLDER_PATH, COLUMN_NAME, LINE_INDEX, ENUM, ORIGINAL_PATH
     }
 }

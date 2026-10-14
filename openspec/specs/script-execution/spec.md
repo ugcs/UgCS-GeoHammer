@@ -1,0 +1,115 @@
+# script-execution Specification
+
+## Purpose
+
+Defines which values a Python script receives when it runs on open files, how GeoHammer resolves them for each
+processed file, and which of them users and agents may set.
+
+## Requirements
+
+### Requirement: Script inputs are declared in the script description
+
+A script SHALL receive, besides the path of the temporary copy of the processed file, only the parameters declared in
+its JSON description. GeoHammer SHALL NOT pass column names or other values to scripts through environment variables.
+
+#### Scenario: Script without declared parameters
+- **WHEN** a script declares no parameters and runs on a file
+- **THEN** the script receives only the path of the copy of that file
+
+#### Scenario: No column environment variables
+- **WHEN** a script runs on a CSV file whose template defines a latitude column
+- **THEN** the script environment contains no variable carrying that column name
+
+### Requirement: Hidden parameters are not set by users or agents
+
+A parameter declared with `"visible": false` SHALL NOT be shown in the script panel, its value SHALL NOT be stored
+between runs, it SHALL NOT be listed by the MCP script tools, and a run request that sets it SHALL be rejected. Its
+value SHALL be resolved by GeoHammer for each processed file.
+
+#### Scenario: Hidden parameter in the panel
+- **WHEN** the user selects a script with a hidden parameter in the script panel
+- **THEN** no input is shown for that parameter
+
+#### Scenario: Agent sets a hidden parameter
+- **WHEN** an agent runs a script through MCP and passes a value for a hidden parameter
+- **THEN** the run is rejected with an error naming the parameter and the script does not start
+
+#### Scenario: Hidden parameter with a default value
+- **WHEN** a hidden parameter is neither a semantic column nor an original path and declares a default value
+- **THEN** the script receives the default value on every run
+
+### Requirement: Parameter visibility defaults
+
+A parameter without the `visible` field SHALL be hidden when it is a semantic column or an original path parameter and
+visible otherwise.
+
+#### Scenario: Regular parameter without the flag
+- **WHEN** a DOUBLE parameter omits `visible`
+- **THEN** it is shown in the script panel
+
+#### Scenario: Semantic column without the flag
+- **WHEN** a COLUMN_NAME parameter declares a semantic and omits `visible`
+- **THEN** it is not shown in the script panel
+
+### Requirement: Semantic column parameters
+
+A COLUMN_NAME parameter that declares a semantic (Line, Latitude, Longitude, Altitude, Altitude AGL, TMI, Mark) SHALL
+receive, for each processed file, the header of the column that has this semantic in that file. When the file has no
+such column, the parameter SHALL receive the semantic name itself.
+
+#### Scenario: Template names the column differently
+- **WHEN** a script with a hidden Latitude column parameter runs on a file whose template maps latitude to column `lat`
+- **THEN** the script receives `lat` for that parameter
+
+#### Scenario: Several files with different templates
+- **WHEN** a script with a hidden Latitude column parameter runs on all files, one mapping latitude to `lat` and one to
+  `Latitude`
+- **THEN** the first run receives `lat` and the second receives `Latitude`
+
+#### Scenario: File without the semantic column
+- **WHEN** a script with a Latitude column parameter runs on a file that has no latitude column
+- **THEN** the script receives `Latitude` for that parameter
+
+### Requirement: Visible semantic columns can be overridden
+
+When a semantic column parameter is visible, the script panel SHALL preselect the column with that semantic in the
+selected file, and the user or agent SHALL be able to choose another column. A value chosen by the user or agent SHALL be passed
+as given; when no value is given, the value SHALL be resolved per processed file.
+
+#### Scenario: Preselected column
+- **WHEN** the user selects a script with a visible Latitude column parameter for a file mapping latitude to `lat`
+- **THEN** the parameter input shows `lat` selected
+
+#### Scenario: Agent omits a visible semantic column
+- **WHEN** an agent runs the script through MCP without a value for a visible Latitude column parameter
+- **THEN** the script receives the latitude column of the processed file
+
+### Requirement: Original path parameter
+
+A parameter of type ORIGINAL_PATH SHALL receive, for each processed file, the absolute path of the source file that
+is open in GeoHammer, not the path of its temporary copy. An ORIGINAL_PATH parameter SHALL always be hidden.
+
+#### Scenario: Original path of a processed file
+- **WHEN** a script with an original path parameter runs on `/data/survey/flight_01.sgy`
+- **THEN** the script receives `/data/survey/flight_01.sgy` for that parameter
+
+#### Scenario: Original path declared visible
+- **WHEN** a script description declares an ORIGINAL_PATH parameter with `"visible": true`
+- **THEN** the script is reported as having invalid metadata and cannot be run
+
+### Requirement: Output files are named after the source file
+
+Bundled scripts that create output files SHALL name them after the source file, keeping its full name stem.
+
+#### Scenario: Source name with a timestamp
+- **WHEN** the RSS processing script runs on `survey_20261009123456.sgy`
+- **THEN** the created CSV is named `survey_20261009123456_processed.csv`
+
+### Requirement: RSS results are written next to the source file
+
+The RSS processing script SHALL write its CSV to the folder of the source SGY file and SHALL NOT ask for an output
+folder.
+
+#### Scenario: RSS processing run
+- **WHEN** the user runs the RSS processing script on `/data/rss/line_3.sgy`
+- **THEN** the script panel shows no output folder input and the CSV is written to `/data/rss/line_3_processed.csv`

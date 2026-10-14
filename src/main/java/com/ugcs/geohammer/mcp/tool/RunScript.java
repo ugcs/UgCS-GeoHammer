@@ -10,6 +10,7 @@ import com.ugcs.geohammer.model.Model;
 import com.ugcs.geohammer.service.script.ScriptCoordinator;
 import com.ugcs.geohammer.service.script.ScriptMetadata;
 import com.ugcs.geohammer.service.script.ScriptMetadataLoader;
+import com.ugcs.geohammer.service.script.ScriptParameter;
 import com.ugcs.geohammer.service.script.ScriptPaths;
 import com.ugcs.geohammer.service.script.ScriptRunListener;
 import com.ugcs.geohammer.service.script.ScriptValidationException;
@@ -103,6 +104,14 @@ public class RunScript extends ScriptTool {
                 Map.Entry<String, JsonNode> field = fields.next();
                 JsonNode value = field.getValue();
                 params.put(field.getKey(), value.isTextual() ? value.asText() : value.toString());
+            }
+        }
+        for (ScriptParameter parameter : metadata.parameters()) {
+            // same metadata check as the Scripts panel
+            parameter.validate();
+            if (!parameter.isVisible() && params.containsKey(parameter.name())) {
+                throw new IllegalArgumentException("Parameter '" + parameter.name()
+                        + "' is set by GeoHammer and cannot be passed");
             }
         }
         try {

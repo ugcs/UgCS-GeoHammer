@@ -76,6 +76,8 @@ public record ScriptMetadata(
 	public void validateRequiredParameters(Map<String, String> parameters) throws ScriptValidationException {
 		List<String> missing = parameters().stream()
 				.filter(ScriptParameter::required)
+				// hidden values and values derived from the file are set when the script runs
+				.filter(p -> p.isVisible() && !p.isDerivedFromFile())
 				.filter(p -> !parameters.containsKey(p.name()) || parameters.get(p.name()).isEmpty())
 				.map(ScriptParameter::displayName)
 				.toList();

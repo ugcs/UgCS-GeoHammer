@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.interpolate import griddata, RBFInterpolator
 from scipy.spatial import cKDTree
 from scipy.signal import butter, filtfilt
-from script_utils import normalize_input_stem, detect_separator, semantic_column, LATITUDE, LONGITUDE
+from script_utils import detect_separator
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -755,7 +755,7 @@ def _process_anomaly_group(
 # ---------------------------------------------------------------------------
 
 def _build_targets_path(input_path, output_dir):
-    stem = normalize_input_stem(os.path.splitext(os.path.basename(input_path))[0])
+    stem = os.path.splitext(os.path.basename(input_path))[0]
     targets_name = stem + "-targets-as.csv"
     if not output_dir or not output_dir.strip():
         output_dir = os.path.dirname(os.path.abspath(input_path))
@@ -773,6 +773,12 @@ def main():
         description="Single-sensor magnetic distance/depth/weight estimation (2D Analytic Signal)."
     )
     parser.add_argument("file_path",                  help="Input CSV file path")
+    parser.add_argument("--original-path",            default="",
+                        help="Source file path (default: file_path)")
+    parser.add_argument("--latitude-column",          default="Latitude",
+                        help="Latitude column name (default: Latitude)")
+    parser.add_argument("--longitude-column",         default="Longitude",
+                        help="Longitude column name (default: Longitude)")
     parser.add_argument("--mag-column",               default="TMI",
                         help="TMI column name (default: TMI)")
     parser.add_argument("--altitude-agl-column",      default="Altitude AGL",
@@ -799,16 +805,16 @@ def main():
     data = data[original_cols]
 
     mag_col = resolve_column(data, mag_col) or mag_col
-    lat_col = resolve_column(data, semantic_column(LATITUDE))
-    lon_col = resolve_column(data, semantic_column(LONGITUDE))
+    lat_col = resolve_column(data, args.latitude_column)
+    lon_col = resolve_column(data, args.longitude_column)
 
     missing = []
     if mag_col not in data.columns:
         missing.append(mag_col)
     if lat_col is None:
-        missing.append(semantic_column(LATITUDE))
+        missing.append(args.latitude_column)
     if lon_col is None:
-        missing.append(semantic_column(LONGITUDE))
+        missing.append(args.longitude_column)
     if missing:
         print(f"Error: Missing required columns: {', '.join(missing)}")
         sys.exit(1)
@@ -960,7 +966,7 @@ def main():
     print(f"Writing result to {input_path}")
     data.to_csv(input_path, index=False, sep=separator)
 
-    targets_path = _build_targets_path(input_path, args.output_dir)
+    targets_path = _build_targets_path(args.original_path or input_path, args.output_dir)
     target_mask  = marks == 1
     targets_df   = data.loc[target_mask, original_cols + [
         "TMI_LPF",

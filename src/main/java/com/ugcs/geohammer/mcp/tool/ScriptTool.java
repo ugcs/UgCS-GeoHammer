@@ -55,6 +55,10 @@ public abstract class ScriptTool extends McpTool {
         node.put("supportedOnThisOs", metadata.supportsCurrentOs());
         ArrayNode parameters = node.putArray("parameters");
         for (ScriptParameter parameter : Nulls.toEmpty(metadata.parameters())) {
+            // hidden parameters are resolved by GeoHammer and cannot be passed
+            if (!parameter.isVisible()) {
+                continue;
+            }
             ObjectNode parameterNode = parameters.addObject();
             parameterNode.put("name", parameter.name());
             parameterNode.put("displayName", parameter.displayName());
@@ -62,6 +66,9 @@ public abstract class ScriptTool extends McpTool {
             parameterNode.put("required", parameter.required());
             if (!Strings.isNullOrEmpty(parameter.defaultValue())) {
                 parameterNode.put("defaultValue", parameter.defaultValue());
+            }
+            if (parameter.semantic() != null) {
+                parameterNode.put("semantic", parameter.semantic());
             }
             if (parameter.enumValues() != null && !parameter.enumValues().isEmpty()) {
                 ArrayNode enumValues = parameterNode.putArray("enumValues");

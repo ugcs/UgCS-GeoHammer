@@ -9,8 +9,6 @@ from xml.sax.saxutils import escape
 from scipy.ndimage import median_filter
 from shapely.geometry import LineString
 
-from script_utils import normalize_input_stem
-
 # cross-track TX beam width of the Cerulean Surveyor
 BEAM_WIDTH_DEG = 80.0
 
@@ -341,6 +339,7 @@ def write_kml(lines, path, document_name):
 def main():
     parser = argparse.ArgumentParser(description="Generate a MBES Patch Test route as KML")
     parser.add_argument("input", help="SVLOG file with the packets of the selected line")
+    parser.add_argument("--original-path", default="", help="source file path (default: input)")
     parser.add_argument("--line", type=int, required=True, help="index of the selected line")
     parser.add_argument("--output-dir", required=True, help="folder for the generated KML")
     args = parser.parse_args()
@@ -385,7 +384,7 @@ def main():
         "L6": to_geodetic(l5[::-1], latitude0, longitude0),
     }
 
-    stem = normalize_input_stem(os.path.splitext(os.path.basename(args.input))[0])
+    stem = os.path.splitext(os.path.basename(args.original_path or args.input))[0]
     output_path = os.path.join(args.output_dir, f"{stem}_line{args.line}_patchtest.kml")
     write_kml(lines, output_path, f"{stem} patch test (line {args.line})")
     print(f"Patch test route saved to {output_path}")

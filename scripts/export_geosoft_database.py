@@ -10,8 +10,6 @@ from pyproj import Transformer
 import geosoft.gxpy as gxpy
 import geosoft.gxpy.gdb as gxdb
 
-from script_utils import normalize_input_stem, semantic_column, LATITUDE, LONGITUDE
-
 
 _CHANNEL_NAME_RE = re.compile(r"[^A-Za-z0-9_]")
 
@@ -68,7 +66,6 @@ def project_to_utm(data, x_col, y_col, epsg):
 
 def build_output_gdb_path(input_path, output_dir):
     stem = os.path.splitext(os.path.basename(input_path))[0]
-    stem = normalize_input_stem(stem)
 
     if not output_dir or not output_dir.strip():
         output_dir = os.path.dirname(os.path.abspath(input_path))
@@ -112,6 +109,9 @@ def main():
         description="Export CSV measurements as a Geosoft Oasis Montaj database (.gdb)."
     )
     parser.add_argument("file_path", help="Input CSV file path")
+    parser.add_argument("--original-path", default="", help="Source file path (default: file_path)")
+    parser.add_argument("--latitude-column", default="Latitude", help="Latitude column name (default: Latitude)")
+    parser.add_argument("--longitude-column", default="Longitude", help="Longitude column name (default: Longitude)")
     parser.add_argument("--output-dir", default="",
                         help="Output directory for the .gdb (default: same as input)")
     args = parser.parse_args()
@@ -149,8 +149,8 @@ def main():
         print("Error: no numeric columns to export")
         sys.exit(1)
 
-    lon_col = semantic_column(LONGITUDE)
-    lat_col = semantic_column(LATITUDE)
+    lon_col = args.longitude_column
+    lat_col = args.latitude_column
     x_col = lon_col if lon_col in numeric_columns else None
     y_col = lat_col if lat_col in numeric_columns else None
     if x_col and y_col:
@@ -181,7 +181,7 @@ def main():
     channel_names = build_channel_names(columns, x_col, y_col)
     print(f"Channels: {channel_names}")
 
-    output_path = build_output_gdb_path(args.file_path, args.output_dir)
+    output_path = build_output_gdb_path(args.original_path or args.file_path, args.output_dir)
     base, _ = os.path.splitext(output_path)
     print(f"Creating database {base}.gdb")
 
