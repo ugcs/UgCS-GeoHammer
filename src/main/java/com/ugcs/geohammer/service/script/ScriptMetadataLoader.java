@@ -10,7 +10,7 @@ public interface ScriptMetadataLoader {
 	 *
 	 * @param scriptsDir the directory to load scripts from
 	 * @return a list of metadata for the scripts found in the directory
-	 * @throws IOException if an I/O error occurs while reading the directory or files
+	 * @throws IOException if an I/O error occurs while reading the directory
 	 */
 	List<ScriptMetadata> loadScriptMetadata(Path scriptsDir) throws IOException;
 }

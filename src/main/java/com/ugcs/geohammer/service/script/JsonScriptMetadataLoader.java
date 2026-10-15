@@ -1,6 +1,8 @@
 package com.ugcs.geohammer.service.script;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -12,6 +14,9 @@ import java.util.List;
 
 @Component
 public class JsonScriptMetadataLoader implements ScriptMetadataLoader {
+
+	private static final Logger log = LoggerFactory.getLogger(JsonScriptMetadataLoader.class);
+
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
@@ -24,7 +29,7 @@ public class JsonScriptMetadataLoader implements ScriptMetadataLoader {
 							objectMapper.readValue(metaFile.toFile(), ScriptMetadata.class);
 					scriptMetadata.add(script);
 				} catch (IOException e) {
-					throw new IOException("Error reading '" + metaFile.getFileName() + "': " + e.getMessage(), e);
+					log.warn("Skipped unreadable script description {}", metaFile.getFileName(), e);
 				}
 			}
 		}

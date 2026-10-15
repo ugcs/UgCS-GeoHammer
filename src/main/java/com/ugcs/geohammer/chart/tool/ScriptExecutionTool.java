@@ -39,6 +39,7 @@ import com.ugcs.geohammer.service.script.ScriptPaths;
 import com.ugcs.geohammer.service.script.ScriptRunListener;
 import com.ugcs.geohammer.service.script.ScriptValidationException;
 import com.ugcs.geohammer.util.FileNames;
+import com.ugcs.geohammer.util.ReentranceGuard;
 import com.ugcs.geohammer.util.Strings;
 import com.ugcs.geohammer.util.Templates;
 import com.ugcs.geohammer.view.Dialogs;
@@ -56,8 +57,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.TextField;
+import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -95,6 +98,8 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 
 	private final AtomicBoolean isUpdatingColumns = new AtomicBoolean(false);
 
+	private final ReentranceGuard scriptsReloadGuard = new ReentranceGuard();
+
 
 	public ScriptExecutionTool(Model model, ExecutorService executor, Status status, Settings settings,
 	                           ScriptCoordinator scriptCoordinator, ScriptPaths scriptPaths,
@@ -117,7 +122,11 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 
 		scriptsMetadataSelector.setCellFactory(param -> createScriptMetadataCell());
 		scriptsMetadataSelector.setButtonCell(createScriptMetadataCell());
+		scriptsMetadataSelector.setOnShowing(e -> scriptsReloadGuard.run(this::reloadScripts));
 		scriptsMetadataSelector.setOnAction(e -> {
+			if (scriptsReloadGuard.isLatched()) {
+				return;
+			}
 			ScriptMetadata scriptMetadata = scriptsMetadataSelector.getValue();
 			updateParametersBox(scriptMetadata);
 			String templateName = Templates.getTemplateName(selectedFile);
@@ -213,14 +222,7 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 	public void updateView() {
         SgyFile file = selectedFile;
 		try {
-			List<ScriptMetadata> loadedScriptsMetadata = getLoadedScriptsMetadata();
-			List<ScriptMetadata> osCompatibleScripts = new ArrayList<>();
-			for (ScriptMetadata metadata : loadedScriptsMetadata) {
-				if (metadata.supportsCurrentOs()) {
-					osCompatibleScripts.add(metadata);
-				}
-			}
-			scriptsMetadata = filterScriptsByTemplate(file, osCompatibleScripts);
+			scriptsMetadata = loadScriptsFor(file);
 		} catch (Exception e) {
 			scriptsMetadata = List.of();
 			Dialogs.showError("Failed to load scripts metadata", e);
@@ -231,9 +233,47 @@ public class ScriptExecutionTool extends FilterToolView implements ScriptRunList
 		refreshExecutionStatus(file);
 	}
 
-	private List<ScriptMetadata> getLoadedScriptsMetadata() throws IOException {
+	private List<ScriptMetadata> loadScriptsFor(@Nullable SgyFile file) throws IOException {
 		Path scriptsPath = scriptPaths.getScriptsPath();
-		return scriptMetadataLoader.loadScriptMetadata(scriptsPath);
+		List<ScriptMetadata> osCompatibleScripts = new ArrayList<>();
+		for (ScriptMetadata metadata : scriptMetadataLoader.loadScriptMetadata(scriptsPath)) {
+			if (metadata.supportsCurrentOs()) {
+				osCompatibleScripts.add(metadata);
+			}
+		}
+		return filterScriptsByTemplate(file, osCompatibleScripts);
+	}
+
+	private void reloadScripts() {
+		try {
+			scriptsMetadata = loadScriptsFor(selectedFile);
+		} catch (IOException e) {
+			log.warn("Failed to reload scripts", e);
+			return;
+		}
+		ScriptMetadata selected = scriptsMetadataSelector.getValue();
+		String selectedFilename = selected != null ? selected.filename() : null;
+		ScriptMetadata reselected = null;
+		for (ScriptMetadata metadata : scriptsMetadata) {
+			if (metadata.filename().equals(selectedFilename)) {
+				reselected = metadata;
+				break;
+			}
+		}
+		scriptsMetadataSelector.getItems().setAll(scriptsMetadata);
+		// JavaFX sizes the popup height before syncing the list item count (done in prefWidth)
+		if (scriptsMetadataSelector.getSkin() instanceof ComboBoxListViewSkin<?> skin) {
+			skin.getPopupContent().prefWidth(Region.USE_COMPUTED_SIZE);
+		}
+		if (reselected != null) {
+			scriptsMetadataSelector.getSelectionModel().select(reselected);
+		} else {
+			scriptsMetadataSelector.getSelectionModel().clearSelection();
+			scriptsMetadataSelector.setValue(null);
+			if (selected != null) {
+				updateParametersBox(null);
+			}
+		}
 	}
 
 	private List<ScriptMetadata> filterScriptsByTemplate(@Nullable SgyFile file, List<ScriptMetadata> scriptsMetadata) {
