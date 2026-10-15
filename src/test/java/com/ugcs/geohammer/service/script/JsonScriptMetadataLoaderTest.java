@@ -1,14 +1,10 @@
 package com.ugcs.geohammer.service.script;
 
-import com.ugcs.geohammer.service.script.JsonScriptMetadataLoader;
-import com.ugcs.geohammer.service.script.ScriptMetadata;
-import com.ugcs.geohammer.service.script.ScriptMetadataLoader;
 import org.junit.jupiter.api.Assertions;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,13 +30,20 @@ public class JsonScriptMetadataLoaderTest {
 	}
 
 	@Test
-	void throwsExceptionOnMalformedJson() throws Exception {
+	void skipsMalformedJson() throws Exception {
 		Path tempDir = Files.createTempDirectory("malformed-scripts");
 		Path badJson = tempDir.resolve("bad.json");
+		Path goodJson = tempDir.resolve("good.json");
 		Files.writeString(badJson, "{ this is not valid json }");
+		Files.writeString(goodJson, """
+				{"filename": "good.py", "display_name": "Good", "parameters": [], "templates": ["csv"]}
+				""");
 		ScriptMetadataLoader loader = new JsonScriptMetadataLoader();
-		assertThrows(IOException.class, () -> loader.loadScriptMetadata(tempDir));
+		List<ScriptMetadata> scripts = loader.loadScriptMetadata(tempDir);
+		assertEquals(1, scripts.size());
+		assertEquals("good.py", scripts.getFirst().filename());
 		Files.delete(badJson);
+		Files.delete(goodJson);
 		Files.delete(tempDir);
 	}
 
