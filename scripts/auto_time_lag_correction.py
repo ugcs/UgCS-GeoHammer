@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from script_utils import detect_separator
+from script_utils import read_input_csv
 
 LAG_SUFFIX = "_LAG"
 EARTH_RADIUS = 6371000.0
@@ -332,9 +332,8 @@ def main():
     input_path = args.file_path
     output_path = args.file_path
 
-    separator = detect_separator(input_path)
     # read as text so the file is written back without reformatting any value
-    data = pd.read_csv(input_path, sep=separator, dtype=str, keep_default_na=False)
+    data, separator = read_input_csv(input_path, dtype=str, keep_default_na=False)
 
     value_col = require_column(data, args.column)
     values = pd.to_numeric(data[value_col], errors="coerce").to_numpy(dtype=float)

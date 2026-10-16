@@ -2,7 +2,7 @@ import sys
 import argparse
 import pandas as pd
 
-from script_utils import detect_separator
+from script_utils import read_input_csv
 
 
 def check_column_exists(data, column):
@@ -41,8 +41,7 @@ def main():
     output_path = args.file_path
 
     print(f"Reading file {input_path}")
-    separator = detect_separator(input_path)
-    data = pd.read_csv(input_path, sep=separator)
+    data, separator = read_input_csv(input_path)
 
     print(f"Calculating gradient {args.lower_sensor_column} - {args.upper_sensor_column}")
     calculate_gradient(data, args.lower_sensor_column, args.upper_sensor_column)
