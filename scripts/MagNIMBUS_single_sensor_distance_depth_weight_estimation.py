@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.interpolate import griddata, RBFInterpolator
 from scipy.spatial import cKDTree
 from scipy.signal import butter, filtfilt
-from script_utils import detect_separator
+from script_utils import read_input_csv
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -792,9 +792,8 @@ def main():
     alt_agl_col = args.altitude_agl_column.strip()
 
     print(f"Reading {input_path}")
-    separator = detect_separator(input_path)
     try:
-        data = pd.read_csv(input_path, sep=separator)
+        data, separator = read_input_csv(input_path)
     except FileNotFoundError:
         print(f"Error: File not found: {input_path}")
         sys.exit(1)

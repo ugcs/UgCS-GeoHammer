@@ -6,7 +6,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import butter, filtfilt, iirnotch
 
-from script_utils import detect_separator
+from script_utils import read_input_csv
 
 
 MAG_SAMPLE_RATE_HZ = 250  # frequency of data in Hz - need to change to measure real frequency (!)
@@ -437,8 +437,7 @@ def main():
     input_file = args.file_path
     output_file = args.file_path
 
-    separator = detect_separator(input_file)
-    data = pd.read_csv(input_file, sep=separator)
+    data, separator = read_input_csv(input_file)
 
     print("Column names: ", data.columns)
 

@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.spatial import cKDTree
 from scipy.signal import find_peaks
 
-from script_utils import detect_separator
+from script_utils import read_input_csv
 
 
 def markExtremes(
@@ -140,8 +140,8 @@ def main():
     args = parser.parse_args()
 
     # Enforce positional indexing semantics throughout
-    separator = detect_separator(args.file_path)
-    df = pd.read_csv(args.file_path, sep=separator).reset_index(drop=True)
+    df, separator = read_input_csv(args.file_path)
+    df = df.reset_index(drop=True)
 
     index_to_range = markExtremes(
         df,

@@ -10,6 +10,8 @@ from pyproj import Transformer
 import geosoft.gxpy as gxpy
 import geosoft.gxpy.gdb as gxdb
 
+from script_utils import read_input_csv
+
 
 _CHANNEL_NAME_RE = re.compile(r"[^A-Za-z0-9_]")
 
@@ -129,7 +131,7 @@ def main():
         sys.exit(1)
 
     print(f"Reading {args.file_path}")
-    data = pd.read_csv(args.file_path)
+    data, _ = read_input_csv(args.file_path)
     print(f"Rows: {len(data)}, columns: {len(data.columns)}")
 
     if len(data) == 0:
