@@ -1,0 +1,22 @@
+  name: "Missing values"
+  file-type: CSV
+  match-regex: >-
+    ^Timestamp,Latitude,Longitude,LineNo,IntCol,FloatCol,MixedCol,CrossCol,Text$
+  file-format:
+    has-header: true
+    comment-prefix: '#'
+    decimal-separator: '.'
+    separator: ','
+  data-mapping:
+    latitude:
+      header: Latitude
+    longitude:
+      header: Longitude
+    timestamp:
+      header: Timestamp
+    data-values:
+      - header: "LineNo"
+        semantic: "Line"
+      - header: "IntCol"
+      - header: "FloatCol"
+      - header: "MixedCol"

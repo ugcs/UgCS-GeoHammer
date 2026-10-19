@@ -115,15 +115,14 @@ public final class MissingValues {
         }
     }
 
-    // fills empty values of the displayed data columns by linear interpolation
-    // within each line
+    // fills empty values of the displayed floating point data columns
+    // by linear interpolation within each line
     public static void fillGeoDataValues(List<GeoData> values) {
         if (Nulls.isNullOrEmpty(values)) {
             return;
         }
 
-        ColumnSchema schema = GeoData.getSchema(values);
-        List<Integer> columnIndices = getColumnsToFill(schema);
+        List<Integer> columnIndices = getColumnsToFill(values);
         if (columnIndices.isEmpty()) {
             return;
         }
@@ -141,14 +140,19 @@ public final class MissingValues {
         }
     }
 
-    private static List<Integer> getColumnsToFill(ColumnSchema schema) {
+    private static List<Integer> getColumnsToFill(List<GeoData> values) {
+        ColumnSchema schema = GeoData.getSchema(values);
         if (schema == null) {
             return List.of();
         }
         List<Integer> indices = new ArrayList<>(schema.numColumns());
         for (Column column : schema) {
-            if (column.isDisplay() && !Objects.equals(column.getSemantic(), Semantic.LINE.getName())) {
-                indices.add(schema.getColumnIndex(column.getHeader()));
+            if (!column.isDisplay() || Objects.equals(column.getSemantic(), Semantic.LINE.getName())) {
+                continue;
+            }
+            int columnIndex = schema.getColumnIndex(column.getHeader());
+            if (hasMissingValues(values, columnIndex) && hasFloatValues(values, columnIndex)) {
+                indices.add(columnIndex);
             }
         }
         return indices;
@@ -189,6 +193,15 @@ public final class MissingValues {
     private static boolean hasMissingValues(List<GeoData> values, int columnIndex) {
         for (GeoData value : Nulls.toEmpty(values)) {
             if (value.getValue(columnIndex) == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasFloatValues(List<GeoData> values, int columnIndex) {
+        for (GeoData value : Nulls.toEmpty(values)) {
+            if (value.getValue(columnIndex) instanceof Double) {
                 return true;
             }
         }
