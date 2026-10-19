@@ -16,7 +16,7 @@ rules:
     - Propose wide refactors explicitly instead of folding them into the change
   tasks:
     - Small, reviewable steps; touch only what the change needs
-    - No unit test tasks and no commit tasks
+    - For a new feature, add a task to write unit tests for its new behavior; no commit tasks
     - Add a task to update spec/ when the change makes its architecture or recipes inaccurate
     - >-
       End with a Verify group of two tasks: (1) run `mvn clean package` and fix new compilation errors and
