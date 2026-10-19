@@ -7,7 +7,9 @@
 - Fix root causes, not symptoms; guard related edge cases.
 - The user often edits code between turns: treat files on disk as current, build on those edits, never revert them.
 - When asked to advise, explain or check, answer only; do not modify code.
-- Never commit: all commits are made by hand. Do not add tests unless asked; run existing tests to catch regressions.
+- Never commit: all commits are made by hand.
+- New features come with unit tests for their new behavior; for other changes add tests only when asked. Always run
+  existing tests to catch regressions.
 
 ## Specs
 
