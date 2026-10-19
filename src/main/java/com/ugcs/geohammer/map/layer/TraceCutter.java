@@ -12,8 +12,10 @@ import com.ugcs.geohammer.service.TraceTransform;
 import com.ugcs.geohammer.model.TraceKey;
 import com.ugcs.geohammer.chart.Chart;
 import com.ugcs.geohammer.model.undo.UndoModel;
+import com.ugcs.geohammer.model.event.FileClosedEvent;
 import com.ugcs.geohammer.model.event.FileOpenedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.event.EventListener;
@@ -302,5 +304,24 @@ public class TraceCutter implements Layer, InitializingBean {
 		clear();
 		//undoFiles.clear();
 		initButtons();
+	}
+
+	@EventListener
+	private void onFileClosed(FileClosedEvent event) {
+		SgyFile closedFile = event.getFile();
+		if (closedFile == null) {
+			return;
+		}
+		List<SgyFile> files = model.getFileManager().getFiles();
+		boolean hasOtherFiles = files.size() > 1 || (files.size() == 1 && !files.contains(closedFile));
+		if (hasOtherFiles) {
+			return;
+		}
+		Platform.runLater(() -> {
+			if (buttonCutMode.isSelected()) {
+				buttonCutMode.setSelected(false);
+				updateCutMode();
+			}
+		});
 	}
 }
