@@ -97,6 +97,7 @@ publishing thread; listeners that touch UI must tolerate non-FX publishers. Find
 - `FileRenameEvent` — file saved under a new name; re-key per-file state.
 - `SeriesSelectedEvent` / `SeriesUpdatedEvent` — series selected / visibility or selection changed.
 - `GridUpdatedEvent` — grid computed or cleared for a file.
+- `FilterAppliedEvent` — a filter (`FilterType`) was applied to a file by the user; sent to usage analytics.
 - `DepthRangeUpdatedEvent` — GPR depth window changed; synced to other GPR charts.
 - `TemplateUnitChangedEvent` — x-axis unit changed; synced to charts with the same template.
 - `TaskRegisteredEvent` / `TaskCompletedEvent` — background task lifecycle (`TaskService` only).

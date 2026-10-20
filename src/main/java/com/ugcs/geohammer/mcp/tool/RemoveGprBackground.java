@@ -6,6 +6,8 @@ import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.mcp.McpSession;
 import com.ugcs.geohammer.mcp.McpTool;
 import com.ugcs.geohammer.model.Model;
+import com.ugcs.geohammer.model.event.FilterAppliedEvent;
+import com.ugcs.geohammer.model.event.FilterType;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.model.undo.UndoModel;
 
@@ -48,6 +50,7 @@ public class RemoveGprBackground extends McpTool {
         }
         // heavy computation runs on a background thread, as the UI tool does
         traceFile.removeBackground(undoModel);
+        model.publishEvent(new FilterAppliedEvent(this, traceFile, FilterType.BACKGROUND_REMOVAL));
         inFxThread(() -> {
             model.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
             return null;

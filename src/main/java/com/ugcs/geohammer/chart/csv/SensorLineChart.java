@@ -36,6 +36,8 @@ import com.ugcs.geohammer.format.csv.parser.ColumnView;
 import com.ugcs.geohammer.model.Semantic;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
 import com.ugcs.geohammer.model.event.FileUpdatedEvent;
+import com.ugcs.geohammer.model.event.FilterAppliedEvent;
+import com.ugcs.geohammer.model.event.FilterType;
 import com.ugcs.geohammer.model.event.SeriesUpdatedEvent;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.util.Check;
@@ -1028,8 +1030,10 @@ public class SensorLineChart extends Chart {
         }
     }
 
-    public void applyFilter(SequenceFilter filter, String seriesName, String filteredSeriesSuffix) {
+    public void applyFilter(SequenceFilter filter, FilterType filterType, String seriesName,
+            String filteredSeriesSuffix) {
         Check.notNull(filter);
+        Check.notNull(filterType);
         if (Strings.isNullOrEmpty(seriesName)) {
             return;
         }
@@ -1062,6 +1066,7 @@ public class SensorLineChart extends Chart {
 
         createFileColumn(filteredSeriesName, seriesName);
         setFileColumnValues(filteredSeriesName, filtered);
+        model.publishEvent(new FilterAppliedEvent(this, file, filterType));
 
         Platform.runLater(() -> {
             LineChartWithMarkers filteredChart = charts.get(filteredSeriesName);
@@ -1118,17 +1123,17 @@ public class SensorLineChart extends Chart {
 
     public void applyTimeLag(String seriesName, int shift) {
         TimeLagFilter filter = new TimeLagFilter(shift);
-        applyFilter(filter, seriesName, "_LAG");
+        applyFilter(filter, FilterType.TIME_LAG, seriesName, "_LAG");
     }
 
     public void applyLowPass(String seriesName, int order) {
         LowPassFilter filter = new LowPassFilter(order);
-        applyFilter(filter, seriesName, "_LPF");
+        applyFilter(filter, FilterType.LOW_PASS, seriesName, "_LPF");
     }
 
     public void applyRunningMedian(String seriesName, int window) {
         MedianCorrectionFilter filter = new MedianCorrectionFilter(window);
-        applyFilter(filter, seriesName, "_RM");
+        applyFilter(filter, FilterType.RUNNING_MEDIAN, seriesName, "_RM");
     }
 
     // chart
