@@ -76,8 +76,8 @@ jobs:
             --java-options '-Djava.library.path=$ROOTDIR/runtime/bin' \
             --runtime-image target/jre21 \
             --app-version ${{ steps.ver.outputs.app }} \
-            --vendor "SPH Engeneering" \
-            --copyright "© SPH Engeneering, 2024" \
+            --vendor "SPH Engineering" \
+            --copyright "© SPH Engineering, 2024–$(date +%Y)" \
             --icon assembly/windows/logo.ico
         shell: bash
 

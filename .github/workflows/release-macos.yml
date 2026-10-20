@@ -58,6 +58,9 @@ jobs:
       - name: Build
         run: mvn --batch-mode install -P macos-build -Dbuild.timestamp=${{ inputs.timestamp }} -Dassembly.timestamp=${{ inputs.timestamp }}
 
+      - name: Set bundle build number
+        run: /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ inputs.timestamp }}" target/installer/GeoHammer.app/Contents/Info.plist
+
       - name: Import developer id certificate
         env:
           CERT_P12: ${{ secrets.SIGNING_CERTIFICATE_P12 }}

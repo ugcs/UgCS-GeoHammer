@@ -51,6 +51,8 @@
         <assembly.timestamp>${build.timestamp}</assembly.timestamp>
 		<app.version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${build.timestamp}</app.version>
 		<dist.basename>${project.name}-${app.version}-${platform.suffix}</dist.basename>
+		<app.vendor>SPH Engineering</app.vendor>
+		<app.copyright>© ${app.vendor}, 2024–${build.year}</app.copyright>
 	</properties>
 	<repositories>
 		<repository>
@@ -264,6 +266,16 @@
 						<goals>
 							<goal>parse-version</goal>
 						</goals>
+					</execution>
+					<execution>
+						<id>build-year</id>
+						<goals>
+							<goal>timestamp-property</goal>
+						</goals>
+						<configuration>
+							<name>build.year</name>
+							<pattern>yyyy</pattern>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -636,8 +648,8 @@
 										<argument>--java-options</argument> <argument>-Djava.library.path=$ROOTDIR/runtime/bin</argument>
 										<argument>--runtime-image</argument> <argument>${project.build.directory}\jre21</argument>
 										<argument>--app-version</argument> <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</argument>
-										<argument>--vendor</argument> <argument>SPH Engeneering</argument>
-										<argument>--copyright</argument> <argument>© SPH Engeneering, 2024</argument>
+										<argument>--vendor</argument> <argument>${app.vendor}</argument>
+										<argument>--copyright</argument> <argument>${app.copyright}</argument>
 										<argument>--icon</argument> <argument>assembly\windows\logo.ico</argument>
 									</arguments>
 									<workingDirectory>${project.basedir}</workingDirectory>
@@ -782,8 +794,8 @@
 										<argument>--java-options</argument> <argument>-Dapple.awt.application.name=${project.name}</argument>
 										<argument>--runtime-image</argument> <argument>${project.build.directory}/jre21</argument>
 										<argument>--app-version</argument> <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</argument>
-										<argument>--vendor</argument> <argument>"SPH Engeneering"</argument>
-										<argument>--copyright</argument> <argument>"© SPH Engeneering, 2024"</argument>
+										<argument>--vendor</argument> <argument>${app.vendor}</argument>
+										<argument>--copyright</argument> <argument>${app.copyright}</argument>
 										<argument>--mac-package-identifier</argument> <argument>com.ugcs.geohammer</argument>
 										<argument>--mac-package-name</argument> <argument>${project.name}</argument>
 										<argument>--icon</argument> <argument>assembly/macos/logo.icns</argument>
