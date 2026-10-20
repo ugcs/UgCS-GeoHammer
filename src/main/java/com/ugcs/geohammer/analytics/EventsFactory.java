@@ -1,6 +1,7 @@
 package com.ugcs.geohammer.analytics;
 
 import com.ugcs.geohammer.analytics.amplitude.PublicIpAddressProvider;
+import com.ugcs.geohammer.model.event.FilterType;
 import com.ugcs.geohammer.release.Version;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +44,12 @@ public class EventsFactory {
         return new Event(EventType.SCRIPT_EXECUTION_STARTED, null, null, null)
                 .withProperty("script_name", scriptName)
                 .withProperty("python_version", pythonVersion);
+    }
+
+    public Event createFilterAppliedEvent(FilterType filterType, String template) {
+        return new Event(EventType.FILTER_APPLIED, null, null, null)
+                .withProperty("filter", filterType.getCode())
+                .withProperty("template", template);
     }
 
     public Event createMcpSessionInitEvent(String clientName, String clientVersion) {

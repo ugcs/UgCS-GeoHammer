@@ -8,6 +8,8 @@ import com.ugcs.geohammer.model.Model;
 import com.ugcs.geohammer.model.Range;
 import com.ugcs.geohammer.model.event.FileOpenedEvent;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
+import com.ugcs.geohammer.model.event.FilterAppliedEvent;
+import com.ugcs.geohammer.model.event.FilterType;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.model.undo.UndoModel;
 import com.ugcs.geohammer.service.gpr.CommandRegistry;
@@ -101,6 +103,7 @@ public class GprBackgroundTool extends FilterToolView {
             for (TraceFile traceFile : model.getFileManager().getGprFiles()) {
                 if (!traceFile.isBackgroundRemoved()) {
                     traceFile.removeBackground(undoModel);
+                    model.publishEvent(new FilterAppliedEvent(this, traceFile, FilterType.BACKGROUND_REMOVAL));
                 }
             }
             model.publishEvent(new WhatChanged(this, WhatChanged.Change.traceValues));
