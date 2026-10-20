@@ -1,5 +1,5 @@
 #define AppName "GeoHammer"
-#define AppPublisher "SPH Engeneering"
+#define AppPublisher "SPH Engineering"
 #define AppExeName "GeoHammer.exe"
 #define AppURL "https://github.com/ugcs/GeoHammer"
 #define AppProgId "GeoHammer.Data"
