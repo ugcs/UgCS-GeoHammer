@@ -4,6 +4,7 @@ import com.ugcs.geohammer.model.DataPoint;
 import edu.mines.jtk.interp.SplinesGridder2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.index.kdtree.KdTree;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.TestInstance;
 
+@Tag("performance")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GridInterpolationPerformanceTest {
 
