@@ -46,6 +46,9 @@
 
 		<gt.version>32.2</gt.version>
 
+		<!-- performance tests run on demand: mvn test -Dgroups=performance -DexcludedGroups= -->
+		<excludedGroups>performance</excludedGroups>
+
 		<build.timestamp>${maven.build.timestamp}</build.timestamp>
 		<maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
         <assembly.timestamp>${build.timestamp}</assembly.timestamp>
