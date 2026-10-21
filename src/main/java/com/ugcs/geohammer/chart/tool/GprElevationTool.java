@@ -9,6 +9,8 @@ import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.model.Model;
 import com.ugcs.geohammer.model.Range;
 import com.ugcs.geohammer.model.event.FileSelectedEvent;
+import com.ugcs.geohammer.model.event.FilterAppliedEvent;
+import com.ugcs.geohammer.model.event.FilterType;
 import com.ugcs.geohammer.model.event.WhatChanged;
 import com.ugcs.geohammer.model.undo.FileSnapshot;
 import com.ugcs.geohammer.model.undo.UndoFrame;
@@ -325,6 +327,7 @@ public class GprElevationTool extends FilterToolView {
                 submitAction(() -> {
                     saveUndoSnapshot(traceFile);
                     groundProfile.flattenSurface(traceFile, removeAirGap.isSelected());
+                    model.publishEvent(new FilterAppliedEvent(this, traceFile, FilterType.FLATTEN_SURFACE));
                     // reload chart
                     Chart chart = model.getChart(traceFile);
                     if (chart != null) {
