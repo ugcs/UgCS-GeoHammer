@@ -126,7 +126,7 @@ public class AltitudeCheck extends FileQualityCheck {
         // stripe in a projected space
         Polygon stripe = Spatial.orthoBuffer(segment, k * 0.5 * width);
         return new PolygonQualityIssue(
-                QualityColors.ALTITUDE,
+                QualityIssue.Type.ALTITUDE,
                 gf.createPolygon(Spatial.toGeodetic(stripe.getCoordinates())));
     }
 }

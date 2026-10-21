@@ -4,16 +4,19 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.ugcs.geohammer.map.MapColors;
 import com.ugcs.geohammer.map.RenderQueue;
 import com.ugcs.geohammer.model.ActivationPolicy;
 import com.ugcs.geohammer.model.MapField;
 import com.ugcs.geohammer.model.ToolNode;
+import com.ugcs.geohammer.view.Colors;
 import com.ugcs.geohammer.view.ResourceImageHolder;
 import com.ugcs.geohammer.format.SgyFile;
 import com.ugcs.geohammer.chart.Chart;
@@ -43,6 +46,7 @@ public class GpsTrack extends BaseLayer {
 	private static final double APPROXIMATION_THRESHOLD = 1.5;
 
 	private final Model model;
+
 	private final RenderQueue q;
 
 	public GpsTrack(Model model) {
@@ -114,32 +118,30 @@ public class GpsTrack extends BaseLayer {
 
 		var ranges = file.getLineRanges();
 		for (Map.Entry<Integer, IndexRange> e: ranges.entrySet()) {
+			Color color = MapColors.OTHER_TRACK;
+			float strokeWidth = 1f;
 			if (isSelectedFile) {
 				Integer lineIndex = e.getKey();
 				if (selectedLineIndex != null
 						&& selectedLineIndex.equals(lineIndex)
 						&& ranges.size() > 1) {
 					// selected line
-					g2.setStroke(new BasicStroke(3.0f));
-					g2.setColor(new Color(0xCFE34A));
+					color = MapColors.SELECTED_LINE;
+					strokeWidth = 3f;
 				} else {
 					// selected file
-					g2.setStroke(new BasicStroke(2.0f));
-					g2.setColor(new Color(0xFF2816));
+					color = MapColors.TRACK;
+					strokeWidth = 2f;
 				}
-			} else {
-				// not selected
-				g2.setStroke(new BasicStroke(1.0f));
-				g2.setColor(new Color(0xFA7D6E));
 			}
 
 			IndexRange range = e.getValue();
 			var traces = file.getGeoData().subList(range.from(), range.to());
-			renderTraceLines(g2, field, traces);
+			renderTraceLines(g2, field, traces, color, strokeWidth);
 		}
 	}
 
-	private static void renderTraceLines(Graphics2D g2, MapField field, List<GeoData> traces) {
+	private static void renderTraceLines(Graphics2D g2, MapField field, List<GeoData> traces, Color color, float strokeWidth) {
 		List<Point2D> points = new ArrayList<>(traces.size());
 		for (GeoData trace : traces) {
 			Point2D point = field.latLonToScreen(trace.getLatLon());
@@ -150,15 +152,23 @@ public class GpsTrack extends BaseLayer {
 		if (selected.size() < 2) {
 			return;
 		}
+
+		// one path per line: a translucent stroke paints segment joints once
+		Path2D path = new Path2D.Double();
+		Point2D first = points.get(selected.getFirst());
+		path.moveTo(first.getX(), first.getY());
 		for (int i = 1; i < selected.size(); i++) {
-			Point2D p1 = points.get(selected.get(i - 1));
-			Point2D p2 = points.get(selected.get(i));
-			g2.drawLine(
-					(int)p1.getX(),
-					(int)p1.getY(),
-					(int)p2.getX(),
-					(int)p2.getY());
+			Point2D p = points.get(selected.get(i));
+			path.lineTo(p.getX(), p.getY());
 		}
+
+		g2.setColor(Colors.opaque(color.darker().darker().darker(), 0.38f));
+		g2.setStroke(new BasicStroke(strokeWidth + 2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g2.draw(path);
+
+		g2.setColor(color);
+		g2.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g2.draw(path);
 	}
 
 	@EventListener

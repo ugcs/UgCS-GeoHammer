@@ -184,7 +184,7 @@ public class LineDistanceCheck implements QualityCheck {
 
     private QualityIssue createPolygonIssue(Polygon polygon) {
         return new PolygonQualityIssue(
-                QualityColors.LINE_DISTANCE,
+                QualityIssue.Type.LINE_DISTANCE,
                 gf.createPolygon(Spatial.toGeodetic(polygon.getCoordinates())));
     }
 }

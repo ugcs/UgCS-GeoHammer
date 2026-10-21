@@ -141,7 +141,7 @@ Locking, version checks and undo tracking are handled by `McpTools.callTool`.
 
 - `chart` — GPR and sensor charts; `chart/tool` — right-panel tools
 - `format` — file types, readers and writers
-- `map` — map view and layers (track, grid, satellite, radar, quality)
+- `map` — map view and layers (track, grid, satellite, radar, quality); layer drawing colors live in `MapColors`
 - `model` — `Model`, events, undo, templates, column schema
 - `service` — gridding, palettes, transforms, GPR processing, quality checks, Python scripts, tasks
 - `math` — interpolation, filters, statistics, projections
