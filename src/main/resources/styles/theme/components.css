@@ -338,3 +338,11 @@
 .accent {
     -fx-font-weight: bold;
 }
+
+.unit-combo-box > .list-cell {
+    -fx-padding: 0.333333em 0.166667em 0.333333em 0.5em;
+}
+
+.unit-combo-box > .arrow-button {
+    -fx-padding: 0.5em 0.5em 0.5em 0.333333em;
+}

@@ -14,8 +14,9 @@ import javafx.scene.text.Text;
 
 public class RulerMeasurementView extends BorderPane {
 
-  	private static final String DISTANCE_VALUE_SAMPLE = "00.00";
+	private static final String DISTANCE_VALUE_SAMPLE = "0000.00";
 	private static final String HEADING_VALUE_SAMPLE = "000.0°";
+	private static final double UNIT_COMBO_WIDTH = 48;
 
 	private final MapRuler mapRuler;
 	private final ComboBox<String> unitComboBox;
@@ -32,12 +33,14 @@ public class RulerMeasurementView extends BorderPane {
 								.toList())
 		);
 		distanceLabel.setMinWidth(measureTextWidth(DISTANCE_VALUE_SAMPLE, distanceLabel.getFont()));
+		distanceLabel.setAlignment(Pos.CENTER_RIGHT);
 		headingLabel.setMinWidth(measureTextWidth(HEADING_VALUE_SAMPLE, headingLabel.getFont()));
 		Label headingCaption = new Label("Heading:");
 		HBox.setMargin(headingCaption, new Insets(0, 0, 0, 20));
 
 		unitComboBox.setValue(TraceUnit.METERS.getLabel());
-		unitComboBox.setPrefWidth(65);
+		unitComboBox.getStyleClass().add("unit-combo-box");
+		unitComboBox.setPrefWidth(UNIT_COMBO_WIDTH);
 
 		distanceLabel.setPrefHeight(30);
 		headingLabel.setPrefHeight(30);
