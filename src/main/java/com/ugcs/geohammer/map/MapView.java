@@ -210,8 +210,8 @@ public class MapView implements InitializingBean, DisposableBean {
 		layers.add(satelliteMap);
 		layers.add(radarMap);
 		layers.add(gridLayer);
-		layers.add(qualityLayer);
 		layers.add(gpsTrackMap);
+		layers.add(qualityLayer);
 		layers.add(new FoundTracesLayer(model));
 
 		//TODO: bad style
@@ -465,26 +465,28 @@ public class MapView implements InitializingBean, DisposableBean {
 			return null;
 		}
 		
-		BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		
-		Graphics2D g2 = (Graphics2D) bi.getGraphics();
-		g2.setPaint(BACKGROUND_COLOR);
-		g2.fillRect(0, 0, bi.getWidth(), bi.getHeight());
-		
-		g2.translate(width / 2, height / 2);
-		
-		
-		MapField fixedField = new MapField(model.getMapField());
-		
-		for (Layer l : layers) {
-			try {
-				l.draw(g2, fixedField);
-			} catch (Exception e) {
-				log.error("Error drawing layer", e);
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2 = (Graphics2D) image.getGraphics();
+		try {
+			g2.setPaint(BACKGROUND_COLOR);
+			g2.fillRect(0, 0, image.getWidth(), image.getHeight());
+			g2.translate(width / 2, height / 2);
+
+			MapField fixedField = new MapField(model.getMapField());
+			for (Layer layer : layers) {
+				Graphics2D g = (Graphics2D) g2.create();
+				try {
+					layer.draw(g, fixedField);
+				} catch (Exception e) {
+					log.error("Error drawing layer", e);
+				} finally {
+					g.dispose();
+				}
 			}
+		} finally {
+			g2.dispose();
 		}
-		
-		return bi;
+		return image;
 	}
 
 	protected void updateUI() {

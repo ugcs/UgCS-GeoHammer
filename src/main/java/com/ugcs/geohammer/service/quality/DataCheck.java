@@ -115,7 +115,7 @@ public class DataCheck extends FileQualityCheck {
     private QualityIssue createDataIssue(GeoData value) {
         Coordinate center = new Coordinate(value.getLongitude(), value.getLatitude());
         return new PointQualityIssue(
-                QualityColors.DATA,
+                QualityIssue.Type.DATA,
                 center,
                 radius
         );

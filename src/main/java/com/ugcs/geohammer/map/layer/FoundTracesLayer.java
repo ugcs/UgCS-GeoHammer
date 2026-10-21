@@ -1,6 +1,5 @@
 package com.ugcs.geohammer.map.layer;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 
 import com.ugcs.geohammer.model.MapField;
@@ -15,8 +14,7 @@ import javafx.geometry.Point2D;
 
 public class FoundTracesLayer implements Layer {
 
-	private Model model;
-	private Color pointColor = Color.GREEN;
+	private final Model model;
 
 	public FoundTracesLayer(Model model) {
 		this.model = model;
@@ -24,8 +22,6 @@ public class FoundTracesLayer implements Layer {
 
 	@Override
 	public void draw(Graphics2D g2, MapField fixedField) {
-		g2.setColor(pointColor);
-		
 		for (BaseObject bo : model.getAuxElements()) {
 			if (isCollapsed(bo)) {
 				continue;

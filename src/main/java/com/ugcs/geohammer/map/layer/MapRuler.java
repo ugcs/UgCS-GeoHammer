@@ -1,7 +1,6 @@
 package com.ugcs.geohammer.map.layer;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Line2D;
@@ -10,6 +9,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ugcs.geohammer.map.MapColors;
 import com.ugcs.geohammer.model.ActivationPolicy;
 import com.ugcs.geohammer.model.LatLon;
 import com.ugcs.geohammer.model.MapField;
@@ -147,7 +147,7 @@ public class MapRuler implements Layer {
 		Point2D end = line.getLast();
 		Graphics2D g = (Graphics2D) g2.create();
 		try {
-			g.setColor(Color.GREEN);
+			g.setColor(MapColors.RULER_LINE);
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 			g.draw(new Line2D.Double(start.getX(), start.getY(), end.getX(), end.getY()));
@@ -157,13 +157,13 @@ public class MapRuler implements Layer {
 			g.dispose();
 		}
 
-		g2.setColor(Color.WHITE);
+		g2.setColor(MapColors.RULER_POINT);
 		for (Point2D p : line) {
 			g2.fill(new Rectangle2D.Double(p.getX() - RADIUS, p.getY() - RADIUS, 2 * RADIUS, 2 * RADIUS));
 		}
 
 		if (activePointIndex != null) {
-			g2.setColor(Color.BLUE);
+			g2.setColor(MapColors.RULER_SELECTED_POINT);
 			Point2D pa = line.get(activePointIndex);
 			g2.draw(new Rectangle2D.Double(pa.getX() - RADIUS, pa.getY() - RADIUS, 2 * RADIUS, 2 * RADIUS));
 		}

@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ugcs.geohammer.map.MapColors;
 import com.ugcs.geohammer.model.ActivationPolicy;
 import com.ugcs.geohammer.model.SelectedTrace;
 import com.ugcs.geohammer.model.ToolNode;
@@ -178,15 +179,15 @@ public class TraceCutter implements Layer, InitializingBean {
 			Point2D polygonPoint = polygonSelector.get(i);
 			Point2D nextPolygonPoint = polygonSelector.get((i + 1) % polygonSelector.numPoints());
 
-			drawLine(g2, polygonPoint, nextPolygonPoint, Color.YELLOW);
+			drawLine(g2, polygonPoint, nextPolygonPoint, MapColors.TRACE_CUTTER_LINE);
 
-			drawPoint(g2, polygonPoint, Color.WHITE);
+			drawPoint(g2, polygonPoint, MapColors.TRACE_CUTTER_POINT);
 
 			Point2D middlePoint = polygonSelector.getMiddle(i);
-			drawPoint(g2, middlePoint, Color.GRAY);
+			drawPoint(g2, middlePoint, MapColors.TRACE_CUTTER_MIDDLE_POINT);
 
 			if (polygonSelector.isSelected(i)) {
-				drawCircleBorder(g2, polygonPoint, Color.BLUE);
+				drawCircleBorder(g2, polygonPoint, MapColors.TRACE_CUTTER_SELECTED_POINT);
 			}
 		}
 	}
