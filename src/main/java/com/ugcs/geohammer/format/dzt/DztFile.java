@@ -10,7 +10,6 @@ import com.ugcs.geohammer.format.MultiChannelFile;
 import com.ugcs.geohammer.format.TraceFile;
 import com.ugcs.geohammer.format.gpr.Trace;
 import com.ugcs.geohammer.format.meta.Meta;
-import com.ugcs.geohammer.format.meta.TraceGeoData;
 import com.ugcs.geohammer.model.IndexRange;
 import com.ugcs.geohammer.model.element.BaseObject;
 import com.ugcs.geohammer.util.AuxElements;
@@ -73,6 +72,23 @@ public class DztFile extends TraceFile implements MultiChannelFile {
 	}
 
 	@Override
+	public void syncMeta() {
+		super.syncMeta();
+
+		if (meta == null) {
+			return;
+		}
+
+		// meta sample range applies to all channels, not only the selected one
+		IndexRange sampleRange = meta.getSampleRange();
+		for (DztChannel channel : channels) {
+			for (Trace trace : channel.getTraces()) {
+				trace.setSampleRange(sampleRange);
+			}
+		}
+	}
+
+	@Override
 	public int numChannels() {
 		return channels.size();
 	}
@@ -110,11 +126,19 @@ public class DztFile extends TraceFile implements MultiChannelFile {
 	@Override
 	public void save(File file, IndexRange range) throws IOException {
 		Check.notNull(file);
+		Check.notNull(range);
 		Check.notNull(sourceFile);
 
+		// range is in meta space;
+		// the writer and dzg take source file trace indices
+		int[] fileTraceIndices = new int[range.size()];
+		for (int i = 0; i < fileTraceIndices.length; i++) {
+			fileTraceIndices[i] = getFileTraceIndex(range.from() + i);
+		}
+
 		try (DztWriter w = new DztWriter(file)) {
-			w.write(channels, range);
-			dzg.save(getDzgFile(file), buildDzgMappings(range));
+			w.write(channels, fileTraceIndices);
+			dzg.save(getDzgFile(file), buildDzgMappings(fileTraceIndices));
 		}
 	}
 
@@ -124,27 +148,11 @@ public class DztFile extends TraceFile implements MultiChannelFile {
 		return new File(path);
 	}
 
-	private List<DzgFile.IndexMapping> buildDzgMappings(IndexRange range) {
-		Check.notNull(range);
-
-		int from = range.from();
-		int to = range.to();
-
+	private List<DzgFile.IndexMapping> buildDzgMappings(int[] fileTraceIndices) {
 		List<DzgFile.IndexMapping> mappings = new ArrayList<>();
-		if (meta != null) {
-			List<TraceGeoData> values = meta.getValues();
-			for (int i = from; i < to; i++) {
-				TraceGeoData value = values.get(i);
-				int traceIndex = value.getTraceIndex();
-				if (dzg.hasIndex(traceIndex)) {
-					mappings.add(new DzgFile.IndexMapping(i - from, traceIndex));
-				}
-			}
-		} else {
-			for (int i = from; i < to; i++) {
-				if (dzg.hasIndex(i)) {
-					mappings.add(new DzgFile.IndexMapping(i - from, i));
-				}
+		for (int i = 0; i < fileTraceIndices.length; i++) {
+			if (dzg.hasIndex(fileTraceIndices[i])) {
+				mappings.add(new DzgFile.IndexMapping(i, fileTraceIndices[i]));
 			}
 		}
 		return mappings;
