@@ -1,6 +1,5 @@
 package com.ugcs.geohammer.format;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.ugcs.geohammer.format.gpr.Trace;
@@ -23,5 +22,5 @@ public abstract class Channel {
 		return name;
 	}
 
-	public abstract List<Trace> getTraces() throws IOException;
+	public abstract List<Trace> getTraces();
 }

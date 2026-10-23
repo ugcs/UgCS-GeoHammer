@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 
 import com.ugcs.geohammer.format.gpr.Trace;
-import com.ugcs.geohammer.model.IndexRange;
 import com.ugcs.geohammer.util.Check;
 import com.ugcs.geohammer.util.Nulls;
 
@@ -33,11 +32,13 @@ public class DztWriter implements Closeable {
 		out.close();
 	}
 
-	public void write(List<DztChannel> channels, IndexRange range) throws IOException {
+	public void write(List<DztChannel> channels, int[] traceIndices) throws IOException {
 		Check.notEmpty(channels, "No channels to save");
+		Check.notNull(traceIndices);
+		validateTraceIndices(channels, traceIndices);
 
 		writeHeaders(channels);
-		writeChannels(channels, range);
+		writeChannels(channels, traceIndices);
 	}
 
 	private void writeHeaders(List<DztChannel> channels) throws IOException {
@@ -72,35 +73,35 @@ public class DztWriter implements Closeable {
 		buffer.putShort((short) (numSamples + 1));
 	}
 
-	private void writeChannels(List<DztChannel> channels, IndexRange range) throws IOException {
-		validateRange(channels, range);
-
+	private void writeChannels(List<DztChannel> channels, int[] traceIndices) throws IOException {
 		int numChannels = channels.size();
-		for (int traceIndex = range.from(); traceIndex < range.to(); traceIndex++) {
+		for (int i = 0; i < traceIndices.length; i++) {
 			if (Thread.currentThread().isInterrupted()) {
 				throw new CancellationException();
 			}
 			for (int channelIndex = 0; channelIndex < numChannels; channelIndex++) {
 				DztChannel channel = channels.get(channelIndex);
-				Trace trace = channel.getTraces().get(traceIndex);
-				writeSamples(channel.getHeader(), trace);
+				Trace trace = channel.getTraces().get(traceIndices[i]);
+				writeSamples(channel.getHeader(), trace, i);
 			}
 		}
 	}
 
-	private static void validateRange(List<DztChannel> channels, IndexRange range) {
+	private static void validateTraceIndices(List<DztChannel> channels, int[] traceIndices) {
 		for (int i = 0; i < channels.size(); i++) {
 			List<Trace> traces = channels.get(i).getTraces();
 			Check.notEmpty(traces, "Channel " + (i + 1) + " has no traces");
-			if (range.to() > traces.size()) {
-				throw new IllegalArgumentException("Range " + range
-						+ " exceeds channel " + (i + 1)
-						+ " size " + traces.size());
+			for (int traceIndex : traceIndices) {
+				if (traceIndex < 0 || traceIndex >= traces.size()) {
+					throw new IllegalArgumentException("Trace " + traceIndex
+							+ " is out of channel " + (i + 1)
+							+ " size " + traces.size());
+				}
 			}
 		}
 	}
 
-	private void writeSamples(DztHeader header, Trace trace) throws IOException {
+	private void writeSamples(DztHeader header, Trace trace, int index) throws IOException {
 		SampleCodec codec = SampleCodec.forBitDepth(header.rh_bits);
 		int numSamples = trace.numSamples();
 		int bufferSize = header.traceSize(numSamples);
@@ -109,7 +110,7 @@ public class DztWriter implements Closeable {
 				.allocate(bufferSize)
 				.order(ByteOrder.LITTLE_ENDIAN);
 
-		codec.write(buffer, trace.getIndex());
+		codec.write(buffer, index);
 		for (int sampleIndex = 0; sampleIndex < numSamples; sampleIndex++) {
 			codec.write(buffer, (int) trace.getSample(sampleIndex));
 		}
