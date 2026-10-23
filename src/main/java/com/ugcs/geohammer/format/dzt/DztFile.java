@@ -34,20 +34,12 @@ public class DztFile extends TraceFile implements MultiChannelFile {
 	}
 
 	@Override
-	public int getSampleInterval() {
-		return (int) selectedChannel().getHeader().rhf_range;
-	}
-
-	@Override
-	public double getSamplesToCmGrn() {
+	public double getSampleIntervalNanos() {
 		DztHeader header = selectedChannel().getHeader();
-		return header.rhf_depth * 100.0 / header.rh_nsamp;
-	}
-
-	@Override
-	public double getSamplesToCmAir() {
-		DztHeader header = selectedChannel().getHeader();
-		return header.rhf_depth * 100.0 / header.rh_nsamp;
+		if (header.rhf_range <= 0 || header.rh_nsamp <= 0) {
+			return 0;
+		}
+		return (double) header.rhf_range / header.rh_nsamp;
 	}
 
 	@Override

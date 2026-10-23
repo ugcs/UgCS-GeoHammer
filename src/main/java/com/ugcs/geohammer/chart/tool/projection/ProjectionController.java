@@ -127,15 +127,16 @@ public class ProjectionController {
         if (traces.isEmpty()) {
             return 0;
         }
-        int sampleInterval = file.getSampleInterval();
-        if (sampleInterval == 0) {
+        double sampleInterval = file.getSampleIntervalNanos();
+        if (sampleInterval <= 0) {
             return 0;
         }
         Trace trace = traces.getFirst();
         TraceHeader header = trace != null ? trace.getHeader() : null;
         Short delay = header != null ? header.getDelayRecordingTime() : null;
+        // gpr sgy delay is in picoseconds
         return delay != null
-                ? Math.max(0, delay / sampleInterval)
+                ? Math.max(0, (int) Math.round(delay / 1000.0 / sampleInterval))
                 : 0;
     }
 

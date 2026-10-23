@@ -25,7 +25,7 @@ public class GetGprInfo extends McpTool {
         ObjectNode tool = descriptor("Summary of an open GPR (ground penetrating radar) file. "
                 + "A GPR file is a sequence of traces; each trace is a column of amplitude samples "
                 + "along the time/depth axis recorded at one surface position. Returns the number of "
-                + "traces, samples per trace, sample interval, depth scale (centimeters per sample "
+                + "traces, samples per trace, sample interval in nanoseconds, depth scale (centimeters per sample "
                 + "in air and in ground, samples per meter), whether background noise was already "
                 + "removed, line count and unsaved status.");
         ObjectNode schema = objectSchema();
@@ -44,7 +44,7 @@ public class GetGprInfo extends McpTool {
         result.put("template", Templates.getTemplateName(traceFile));
         result.put("traces", traceFile.numTraces());
         result.put("samplesPerTrace", traceFile.maxSamples());
-        result.put("sampleInterval", traceFile.getSampleInterval());
+        result.put("sampleIntervalNanos", traceFile.getSampleIntervalNanos());
         result.put("cmPerSampleInAir", traceFile.getSamplesToCmAir());
         result.put("cmPerSampleInGround", traceFile.getSamplesToCmGrn());
         result.put("samplesPerMeter", traceFile.getSamplesPerMeter());

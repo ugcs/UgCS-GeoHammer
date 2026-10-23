@@ -42,9 +42,9 @@ import java.util.Set;
 
 public abstract class TraceFile extends SgyFileWithMeta {
 
-    protected static final double SPEED_SM_NS_VACUUM = 30.0;
+    private static final double SPEED_SM_NS_VACUUM = 30.0;
 
-    protected static final double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
+    private static final double SPEED_SM_NS_SOIL = SPEED_SM_NS_VACUUM / 3.0;
 
     private static final Logger log = LoggerFactory.getLogger(TraceFile.class);
 
@@ -137,15 +137,24 @@ public abstract class TraceFile extends SgyFileWithMeta {
         }
     }
 
-    public abstract int getSampleInterval();
+    public abstract double getSampleIntervalNanos();
 
-    public abstract double getSamplesToCmGrn();
+    public double getSamplesToCmGrn() {
+        // dist between 2 samples
+        return SPEED_SM_NS_SOIL * getSampleIntervalNanos() / 2;
+    }
 
-    public abstract double getSamplesToCmAir();
+    public double getSamplesToCmAir() {
+        // dist between 2 samples
+        return SPEED_SM_NS_VACUUM * getSampleIntervalNanos() / 2;
+    }
 
     public double getSamplesPerMeter() {
         // sample distance in cm
         double sampleDistance = getSamplesToCmAir();
+        if (sampleDistance <= 0) {
+            return 0;
+        }
         // num samples in a meter
         return 100.0 / sampleDistance;
     }

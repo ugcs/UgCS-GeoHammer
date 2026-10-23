@@ -139,6 +139,9 @@ public class LeftRulerController {
 
 	static class TimeConverter implements Converter {
 
+		// tolerance for rounding sample times to whole ns
+		private static final double EPS = 1e-9;
+
 		private final TraceFile sgyFile;
 
 		public TimeConverter(TraceFile sgyFile) {
@@ -147,16 +150,20 @@ public class LeftRulerController {
 
 		@Override
 		public Pair<Integer, Integer> convert(int s, int f) {
-			int sampleInterval = sgyFile.getSampleInterval();
+			double sampleInterval = sgyFile.getSampleIntervalNanos();
 
 			return Pair.of(
-					(int)Math.ceil(sampleInterval * s / 1000.0),
-					sampleInterval * f / 1000);
+					(int)Math.ceil(sampleInterval * s - EPS),
+					(int)Math.floor(sampleInterval * f + EPS));
 		}
 
+		@Override
 		public int back(int unt) {
-			TraceFile fl = sgyFile;
-			return unt * 1000 / fl.getSampleInterval();
+			double sampleInterval = sgyFile.getSampleIntervalNanos();
+			if (sampleInterval <= 0) {
+				return 0;
+			}
+			return (int)Math.round(unt / sampleInterval);
 		}
 
 		@Override
