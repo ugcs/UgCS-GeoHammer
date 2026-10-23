@@ -19,6 +19,9 @@ rules:
     - For a new feature, add a task to write unit tests for its new behavior; no commit tasks
     - Add a task to update spec/ when the change makes its architecture or recipes inaccurate
     - >-
+      No manual in-app check tasks unless the check is very critical; then add one task and only when the data it
+      needs is available
+    - >-
       End with a Verify group of two tasks: (1) run `mvn clean package` and fix new compilation errors and
       Error Prone/NullAway warnings; (2) if the `code-review` skill is available, invoke it (not the
       `code-review:code-review` plugin) on the uncommitted changes with the change's proposal and specs as the

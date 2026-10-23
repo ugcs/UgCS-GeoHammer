@@ -87,27 +87,14 @@ public class GprFile extends TraceFile {
     private ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
 
 	@Override
-	public int getSampleInterval() {
-		return binaryHeader.getSampleInterval();
+	public double getSampleIntervalNanos() {
+		// gpr sgy sample interval is in picoseconds
+		return Math.max(0, binaryHeader.getSampleInterval()) / 1000.0;
 	}
 
 	@Override
 	public FileSnapshot<TraceFile> createSnapshotWithTraces() {
 		return createSnapshotWithTraces(byteOrder);
-	}
-
-	@Override
-	public double getSamplesToCmGrn() {
-		// dist between 2 samples
-		double sampleIntervalNS = binaryHeader.getSampleInterval() / 1000.0;
-		return SPEED_SM_NS_SOIL * sampleIntervalNS / 2;
-	}
-
-	@Override
-	public double getSamplesToCmAir() {
-		// dist between 2 samples
-		double sampleIntervalNS = binaryHeader.getSampleInterval() / 1000.0;
-		return SPEED_SM_NS_VACUUM * sampleIntervalNS / 2;
 	}
 
 	@Override

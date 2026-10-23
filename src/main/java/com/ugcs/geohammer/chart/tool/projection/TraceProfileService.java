@@ -67,9 +67,7 @@ public class TraceProfileService {
         double relativePermittivity = projectionModel.getProjectionOptions().getRelativePermittivity();
         traceProfile.setRelativePermittivity(relativePermittivity);
 
-        // sgy sample interval is in microseconds
-        double sampleIntervalNanos = 1e-3 * file.getSampleInterval();
-        traceProfile.setSampleIntervalNanos(sampleIntervalNanos);
+        traceProfile.setSampleIntervalNanos(file.getSampleIntervalNanos());
 
         List<Point2D> projection = projectOrigins(file, range);
         double[] x = offsetsAlongLine(projection);
