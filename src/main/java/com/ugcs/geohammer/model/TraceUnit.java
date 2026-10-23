@@ -6,8 +6,8 @@ import java.util.List;
 public enum TraceUnit {
 	METERS("m", 1.0, true),
 	KILOMETERS("km", 0.001, true),
-	MILES("mi", 0.00062, true),
-	FEET("ft", 3.28084, true),
+	MILES("mi", 1 / 1609.344, true),
+	FEET("ft", 1 / 0.3048, true),
 	TIME("time", Double.NaN, false),
 	TRACES("traces", Double.NaN, false);
 
