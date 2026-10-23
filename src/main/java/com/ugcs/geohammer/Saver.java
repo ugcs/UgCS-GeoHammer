@@ -238,13 +238,18 @@ public class Saver implements ToolProducer, InitializingBean {
                 .findAny();
         if (alreadyOpened.isPresent()) {
             throw new IllegalArgumentException(
-                    "File in use. Close target file first: " + file);
+                    "File is open in GeoHammer: " + file + ". Choose another name or folder.");
         }
     }
 
 	private void saveToCsv(CsvFile csvFile, File toFile) throws IOException {
 		Check.notNull(csvFile);
 		Check.notNull(toFile);
+
+		if (Objects.equals(toFile, csvFile.getFile())) {
+			saveFile(csvFile);
+			return;
+		}
 
 		// check that target file is not open
         checkNotOpened(toFile);
